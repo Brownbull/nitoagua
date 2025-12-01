@@ -37,7 +37,7 @@ workflow_status:
         name: "Brainstorm Project"
         agent: "analyst"
         command: "/bmad:bmm:workflows:brainstorm-project"
-        status: "optional"
+        status: "docs/bmm-brainstorming-session-2025-11-30.md"
 
       - id: "research"
         name: "Research"
@@ -50,7 +50,7 @@ workflow_status:
         name: "Product Brief"
         agent: "analyst"
         command: "/bmad:bmm:workflows:product-brief"
-        status: "optional"
+        status: "docs/product-brief-nitoagua-2025-11-30.md"
 
   # Phase 1: Planning
   - phase: 1
