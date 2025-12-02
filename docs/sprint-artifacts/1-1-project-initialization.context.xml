@@ -1,0 +1,219 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1</storyId>
+    <title>Project Initialization</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-01</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-1-project-initialization.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>the Next.js project initialized with all core dependencies</iWant>
+    <soThat>I have a working development environment to build features</soThat>
+    <tasks>
+      <task id="1" ac="1,2">Create Next.js Project
+        <subtask>Run npx create-next-app@latest with TypeScript, Tailwind, ESLint, App Router, src-dir</subtask>
+        <subtask>Verify src/ directory structure created</subtask>
+        <subtask>Verify @/* alias in tsconfig.json</subtask>
+        <subtask>Test npm run dev starts successfully</subtask>
+      </task>
+      <task id="2" ac="3">Initialize shadcn/ui with Agua Pura Theme
+        <subtask>Run npx shadcn@latest init</subtask>
+        <subtask>Select New York style, Tailwind CSS variables, src/lib/utils.ts</subtask>
+        <subtask>Update tailwind.config.ts with Agua Pura colors (Primary: #0077B6, Secondary: #00A8E8)</subtask>
+        <subtask>Update src/app/globals.css with CSS variables</subtask>
+        <subtask>Configure system fonts</subtask>
+      </task>
+      <task id="3" ac="5">Add shadcn/ui Components
+        <subtask>Run npx shadcn@latest add button card input textarea select dialog toast badge tabs form</subtask>
+        <subtask>Verify components exist in src/components/ui/</subtask>
+        <subtask>Test import and render Button in page.tsx</subtask>
+      </task>
+      <task id="4" ac="4">Install Core Dependencies
+        <subtask>Run npm install @supabase/supabase-js @supabase/ssr zod date-fns</subtask>
+        <subtask>Verify in package.json</subtask>
+        <subtask>Create simple import test file</subtask>
+      </task>
+      <task id="5" ac="6">Create Environment Variables Template
+        <subtask>Create .env.local.example with Supabase vars</subtask>
+        <subtask>Verify .env.local in .gitignore</subtask>
+        <subtask>Document env vars in README.md</subtask>
+      </task>
+      <task id="6" ac="7,8">Verify Build
+        <subtask>Run npm run dev - verify no errors</subtask>
+        <subtask>Run npm run build - verify success</subtask>
+        <subtask>Run npm run lint - verify no ESLint errors</subtask>
+        <subtask>Commit initial working state</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1.1.1">Next.js 15.1 project exists with App Router, TypeScript, Tailwind CSS, ESLint</criterion>
+    <criterion id="AC1.1.2">src/ directory structure with @/* import alias configured in tsconfig.json</criterion>
+    <criterion id="AC1.1.3">shadcn/ui initialized with Agua Pura theme (Primary: #0077B6, Secondary: #00A8E8)</criterion>
+    <criterion id="AC1.1.4">Core dependencies installed: @supabase/supabase-js, @supabase/ssr, zod, date-fns</criterion>
+    <criterion id="AC1.1.5">shadcn/ui components available: button, card, input, textarea, select, dialog, toast, badge, tabs, form</criterion>
+    <criterion id="AC1.1.6">.env.local.example documents all required environment variables</criterion>
+    <criterion id="AC1.1.7">npm run dev starts the development server without errors</criterion>
+    <criterion id="AC1.1.8">npm run build completes successfully with no TypeScript or ESLint errors</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>Project Initialization</section>
+        <snippet>Execute npx create-next-app@latest nitoagua --typescript --tailwind --eslint --app --src-dir --import-alias "@/*". After init, install @supabase/supabase-js, @supabase/ssr, shadcn/ui components, zod, date-fns.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>Project Structure</section>
+        <snippet>src/ directory with app/, components/ui/, lib/, hooks/, types/ subdirectories. shadcn/ui components in src/components/ui/. Supabase clients in src/lib/supabase/.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>Naming Conventions</section>
+        <snippet>Files: kebab-case. Components: PascalCase. Functions/variables: camelCase. Constants: SCREAMING_SNAKE_CASE. Database: snake_case. Environment vars: SCREAMING_SNAKE_CASE.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>nitoagua UX Design Specification</title>
+        <section>Color System - Agua Pura Theme</section>
+        <snippet>Primary: #0077B6 (Ocean Blue), Secondary: #00A8E8 (Sky Blue), Primary Light: #CAF0F8, Primary Dark: #03045E. Success: #10B981, Warning: #F59E0B, Error: #EF4444.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>nitoagua UX Design Specification</title>
+        <section>Typography System</section>
+        <snippet>System fonts: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif. Minimum text 16px on mobile. H1: 24px/700, Body: 16px/400.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Story 1.1 Acceptance Criteria</section>
+        <snippet>AC1.1.1-8: Next.js 15.1 with App Router, src/ with @/* alias, shadcn/ui Agua Pura theme, core deps installed, shadcn components available, .env.local.example exists, npm run dev/build succeed.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 1.1: Project Initialization</section>
+        <snippet>First story in Epic 1. Creates foundation for all subsequent stories. Initialize Next.js, configure shadcn/ui with custom theme, install dependencies.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <!-- Greenfield project - no existing code artifacts -->
+      <!-- Files to be created by this story: -->
+      <expectedOutput>
+        <file kind="config" reason="TypeScript path aliases for @/* imports">tsconfig.json</file>
+        <file kind="config" reason="Agua Pura theme colors configuration">tailwind.config.ts</file>
+        <file kind="style" reason="CSS variables for theme colors">src/app/globals.css</file>
+        <file kind="layout" reason="Root layout with fonts and providers">src/app/layout.tsx</file>
+        <file kind="page" reason="Landing page with Button test">src/app/page.tsx</file>
+        <file kind="utility" reason="shadcn/ui cn() utility">src/lib/utils.ts</file>
+        <file kind="component" reason="shadcn/ui button component">src/components/ui/button.tsx</file>
+        <file kind="component" reason="shadcn/ui card component">src/components/ui/card.tsx</file>
+        <file kind="component" reason="shadcn/ui input component">src/components/ui/input.tsx</file>
+        <file kind="component" reason="shadcn/ui textarea component">src/components/ui/textarea.tsx</file>
+        <file kind="component" reason="shadcn/ui select component">src/components/ui/select.tsx</file>
+        <file kind="component" reason="shadcn/ui dialog component">src/components/ui/dialog.tsx</file>
+        <file kind="component" reason="shadcn/ui toast component">src/components/ui/toast.tsx</file>
+        <file kind="component" reason="shadcn/ui badge component">src/components/ui/badge.tsx</file>
+        <file kind="component" reason="shadcn/ui tabs component">src/components/ui/tabs.tsx</file>
+        <file kind="component" reason="shadcn/ui form component">src/components/ui/form.tsx</file>
+        <file kind="config" reason="shadcn/ui configuration">components.json</file>
+        <file kind="config" reason="Environment variables template">.env.local.example</file>
+      </expectedOutput>
+    </code>
+    <dependencies>
+      <node>
+        <package version="15.1.x" reason="Framework - App Router, Server Components">next</package>
+        <package version="19.x" reason="UI library">react</package>
+        <package version="19.x" reason="React DOM">react-dom</package>
+        <package version="5.x" reason="Type safety">typescript</package>
+        <package version="3.4.x" reason="Utility-first CSS">tailwindcss</package>
+        <package version="2.x" reason="Supabase database client">@supabase/supabase-js</package>
+        <package version="0.x" reason="SSR auth support for Next.js">@supabase/ssr</package>
+        <package version="3.x" reason="Schema validation">zod</package>
+        <package version="3.x" reason="Date formatting utilities">date-fns</package>
+        <package reason="shadcn/ui dependencies">class-variance-authority</package>
+        <package reason="shadcn/ui cn utility">clsx</package>
+        <package reason="Tailwind class merging">tailwind-merge</package>
+        <package reason="Radix UI primitives - dialog">@radix-ui/react-dialog</package>
+        <package reason="Radix UI primitives - select">@radix-ui/react-select</package>
+        <package reason="Radix UI primitives - tabs">@radix-ui/react-tabs</package>
+        <package reason="Radix UI primitives - toast">@radix-ui/react-toast</package>
+        <package reason="Radix UI primitives - label">@radix-ui/react-label</package>
+        <package reason="Radix UI primitives - slot">@radix-ui/react-slot</package>
+        <package reason="React Hook Form integration">react-hook-form</package>
+        <package reason="Zod resolver for React Hook Form">@hookform/resolvers</package>
+      </node>
+      <devDependencies>
+        <package reason="TypeScript type definitions">@types/node</package>
+        <package reason="React type definitions">@types/react</package>
+        <package reason="React DOM type definitions">@types/react-dom</package>
+        <package reason="Code linting">eslint</package>
+        <package reason="ESLint config for Next.js">eslint-config-next</package>
+        <package reason="PostCSS for Tailwind">postcss</package>
+        <package reason="Autoprefixer for CSS">autoprefixer</package>
+      </devDependencies>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint category="architecture">Use Next.js App Router (not Pages Router) - ADR-002</constraint>
+    <constraint category="architecture">Use src/ directory structure with @/* import alias</constraint>
+    <constraint category="architecture">All components in src/components/, utilities in src/lib/</constraint>
+    <constraint category="naming">Files: kebab-case (button.tsx). Components: PascalCase (Button)</constraint>
+    <constraint category="naming">Functions/variables: camelCase. Constants: SCREAMING_SNAKE_CASE</constraint>
+    <constraint category="style">Use Agua Pura theme colors: Primary #0077B6, Secondary #00A8E8</constraint>
+    <constraint category="style">System fonts only - no web font loading for performance</constraint>
+    <constraint category="testing">Must pass npm run build with zero TypeScript errors</constraint>
+    <constraint category="testing">Must pass npm run lint with zero ESLint errors</constraint>
+    <constraint category="performance">Target initial load under 3s on 3G connection</constraint>
+  </constraints>
+  <interfaces>
+    <!-- No external interfaces for this initialization story -->
+    <!-- Establishes patterns for future stories: -->
+    <pattern name="imports">
+      <order>1. React/Next.js imports</order>
+      <order>2. Third-party libraries</order>
+      <order>3. Internal aliases (@/)</order>
+      <order>4. Relative imports</order>
+      <order>5. Types</order>
+    </pattern>
+    <pattern name="shadcn-component">
+      <usage>import { Button } from "@/components/ui/button"</usage>
+    </pattern>
+  </interfaces>
+  <tests>
+    <standards>
+      This is a project initialization story with no application logic to test. Verification is through build and lint commands:
+      - TypeScript compilation via `npm run build`
+      - ESLint validation via `npm run lint`
+      - Dev server startup via `npm run dev`
+      Future stories will use Vitest for unit/integration tests.
+    </standards>
+    <locations>
+      <location>N/A - No tests in this story</location>
+      <location>Future: src/__tests__/ for unit tests</location>
+      <location>Future: e2e/ for end-to-end tests</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1.1.1">Verify Next.js version in package.json is 15.1.x</idea>
+      <idea ac="AC1.1.2">Verify @/* alias resolves correctly by importing from @/lib/utils</idea>
+      <idea ac="AC1.1.3">Verify primary color #0077B6 is set in tailwind.config.ts</idea>
+      <idea ac="AC1.1.4">Verify all core packages in package.json dependencies</idea>
+      <idea ac="AC1.1.5">Verify Button component renders without errors</idea>
+      <idea ac="AC1.1.6">Verify .env.local.example contains NEXT_PUBLIC_SUPABASE_URL</idea>
+      <idea ac="AC1.1.7">npm run dev starts on port 3000 without errors</idea>
+      <idea ac="AC1.1.8">npm run build exits with code 0</idea>
+    </ideas>
+  </tests>
+</story-context>

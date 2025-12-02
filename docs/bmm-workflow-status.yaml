@@ -60,7 +60,7 @@ workflow_status:
         name: "Product Requirements Document"
         agent: "pm"
         command: "/bmad:bmm:workflows:prd"
-        status: "required"
+        status: "docs/prd.md"
         output: "Product Requirements Document with FRs and NFRs"
 
       - id: "validate-prd"
@@ -73,7 +73,7 @@ workflow_status:
         name: "UX Design"
         agent: "ux-designer"
         command: "/bmad:bmm:workflows:create-ux-design"
-        status: "conditional"
+        status: "docs/ux-design-specification.md"
         condition: "if_has_ui"
         note: "Determined after PRD"
 
@@ -85,14 +85,14 @@ workflow_status:
         name: "Architecture"
         agent: "architect"
         command: "/bmad:bmm:workflows:architecture"
-        status: "required"
+        status: "docs/architecture.md"
         output: "System architecture document"
 
       - id: "create-epics-and-stories"
         name: "Epics & Stories"
         agent: "pm"
         command: "/bmad:bmm:workflows:create-epics-and-stories"
-        status: "required"
+        status: "docs/epics.md"
         note: "Break down PRD into implementable epics and stories"
 
       - id: "test-design"
@@ -112,7 +112,7 @@ workflow_status:
         name: "Implementation Readiness"
         agent: "architect"
         command: "/bmad:bmm:workflows:implementation-readiness"
-        status: "required"
+        status: "docs/implementation-readiness-report-2025-12-01.md"
         note: "Gate check before implementation"
 
   # Phase 3: Implementation
@@ -123,5 +123,5 @@ workflow_status:
         name: "Sprint Planning"
         agent: "sm"
         command: "/bmad:bmm:workflows:sprint-planning"
-        status: "required"
+        status: "docs/sprint-artifacts/sprint-status.yaml"
         note: "Creates sprint plan - subsequent work tracked in sprint-status.yaml"

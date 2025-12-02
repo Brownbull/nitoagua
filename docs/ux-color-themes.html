@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nitoagua - Color Theme Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            padding: 24px;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .theme-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .theme-header {
+            padding: 20px;
+            color: white;
+        }
+
+        .theme-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .theme-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .theme-personality {
+            padding: 16px 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .theme-personality h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .theme-personality p {
+            font-size: 14px;
+            color: #444;
+        }
+
+        .color-palette {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .color-swatch {
+            text-align: center;
+        }
+
+        .color-swatch .swatch {
+            width: 100%;
+            height: 48px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .color-swatch .label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .color-swatch .hex {
+            font-size: 11px;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .semantic-colors {
+            padding: 0 20px 20px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .semantic-chip {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            color: white;
+        }
+
+        .components-preview {
+            padding: 20px;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+        }
+
+        .components-preview h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid;
+        }
+
+        .input-preview {
+            margin-top: 16px;
+        }
+
+        .input-preview input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .input-preview input:focus {
+            outline: none;
+        }
+
+        .card-preview {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            background: white;
+            border: 1px solid #e0e0e0;
+        }
+
+        .card-preview h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-preview p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .best-for {
+            padding: 16px 20px;
+            background: #f0f7ff;
+            font-size: 13px;
+        }
+
+        .best-for strong {
+            color: #0066cc;
+        }
+
+        /* Theme 1: Agua Pura - Trust Blue */
+        .theme-1 .theme-header { background: linear-gradient(135deg, #0077B6 0%, #00A8E8 100%); }
+        .theme-1 .btn-primary { background: #0077B6; color: white; }
+        .theme-1 .btn-primary:hover { background: #006699; }
+        .theme-1 .btn-secondary { border-color: #0077B6; color: #0077B6; }
+        .theme-1 .input-preview input:focus { border-color: #0077B6; }
+
+        /* Theme 2: Campo Verde - Nature */
+        .theme-2 .theme-header { background: linear-gradient(135deg, #2D6A4F 0%, #40916C 100%); }
+        .theme-2 .btn-primary { background: #2D6A4F; color: white; }
+        .theme-2 .btn-primary:hover { background: #1B4332; }
+        .theme-2 .btn-secondary { border-color: #2D6A4F; color: #2D6A4F; }
+        .theme-2 .input-preview input:focus { border-color: #40916C; }
+
+        /* Theme 3: Sol Chileno - Warm & Approachable */
+        .theme-3 .theme-header { background: linear-gradient(135deg, #E07A5F 0%, #F2994A 100%); }
+        .theme-3 .btn-primary { background: #E07A5F; color: white; }
+        .theme-3 .btn-primary:hover { background: #C86B50; }
+        .theme-3 .btn-secondary { border-color: #E07A5F; color: #E07A5F; }
+        .theme-3 .input-preview input:focus { border-color: #E07A5F; }
+
+        /* Theme 4: Cielo Austral - Sky & Clarity */
+        .theme-4 .theme-header { background: linear-gradient(135deg, #4A90D9 0%, #74B9FF 100%); }
+        .theme-4 .btn-primary { background: #4A90D9; color: white; }
+        .theme-4 .btn-primary:hover { background: #3A7BC8; }
+        .theme-4 .btn-secondary { border-color: #4A90D9; color: #4A90D9; }
+        .theme-4 .input-preview input:focus { border-color: #4A90D9; }
+
+        .comparison-section {
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .comparison-section h2 {
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .comparison-card {
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+
+        .comparison-card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .comparison-card p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .recommendation {
+            background: linear-gradient(135deg, #0077B6 0%, #00A8E8 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin: 24px;
+            max-width: 1552px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .recommendation h2 {
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .recommendation p {
+            opacity: 0.95;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 768px) {
+            .themes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .color-palette {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nitoagua - Explorador de Temas de Color</h1>
+        <p>Cuatro direcciones de tema basadas en la personalidad del proyecto: confiable, local, simple, accesible</p>
+    </div>
+
+    <div class="recommendation">
+        <h2>Recomendacion del Disenador</h2>
+        <p><strong>Tema 1: Agua Pura</strong> es la eleccion recomendada para nitoagua. El azul comunica confianza y profesionalismo, evocando directamente el agua. El alto contraste asegura legibilidad en condiciones de luz exterior (usuarios rurales mirando sus telefonos bajo el sol). La paleta es limpia y simple, perfecta para usuarios que no son expertos en tecnologia, mientras mantiene suficiente sofisticacion para el dashboard del proveedor.</p>
+    </div>
+
+    <div class="themes-grid">
+        <!-- Theme 1: Agua Pura -->
+        <div class="theme-card theme-1">
+            <div class="theme-header">
+                <h2>1. Agua Pura</h2>
+                <p>Confiable, Profesional, Claro</p>
+            </div>
+
+            <div class="theme-personality">
+                <h3>Personalidad</h3>
+                <p>Azules limpios que evocan agua fresca y confianza. Alto contraste para facil lectura bajo luz solar. Se siente como un servicio local confiable.</p>
+            </div>
+
+            <div class="color-palette">
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #0077B6;"></div>
+                    <div class="label">Primario</div>
+                    <div class="hex">#0077B6</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #00A8E8;"></div>
+                    <div class="label">Secundario</div>
+                    <div class="hex">#00A8E8</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #CAF0F8;"></div>
+                    <div class="label">Claro</div>
+                    <div class="hex">#CAF0F8</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #03045E;"></div>
+                    <div class="label">Oscuro</div>
+                    <div class="hex">#03045E</div>
+                </div>
+            </div>
+
+            <div class="semantic-colors">
+                <span class="semantic-chip" style="background: #10B981;">Exito</span>
+                <span class="semantic-chip" style="background: #F59E0B;">Alerta</span>
+                <span class="semantic-chip" style="background: #EF4444;">Error</span>
+                <span class="semantic-chip" style="background: #6B7280;">Info</span>
+            </div>
+
+            <div class="components-preview">
+                <h3>Componentes</h3>
+                <button class="btn btn-primary">Solicitar Agua</button>
+                <button class="btn btn-secondary">Cancelar</button>
+
+                <div class="input-preview">
+                    <input type="text" placeholder="Tu direccion...">
+                </div>
+
+                <div class="card-preview">
+                    <h4>Solicitud #1234</h4>
+                    <p>1000L - Pendiente de confirmacion</p>
+                </div>
+            </div>
+
+            <div class="best-for">
+                <strong>Ideal para:</strong> Aplicaciones de servicios esenciales donde la confianza y claridad son primordiales. Usuarios de todas las edades y niveles tecnicos.
+            </div>
+        </div>
+
+        <!-- Theme 2: Campo Verde -->
+        <div class="theme-card theme-2">
+            <div class="theme-header">
+                <h2>2. Campo Verde</h2>
+                <p>Natural, Sostenible, Arraigado</p>
+            </div>
+
+            <div class="theme-personality">
+                <h3>Personalidad</h3>
+                <p>Verdes terrosos que conectan con el paisaje rural chileno. Se siente organico y sostenible. Evoca crecimiento y recursos naturales.</p>
+            </div>
+
+            <div class="color-palette">
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #2D6A4F;"></div>
+                    <div class="label">Primario</div>
+                    <div class="hex">#2D6A4F</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #40916C;"></div>
+                    <div class="label">Secundario</div>
+                    <div class="hex">#40916C</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #D8F3DC;"></div>
+                    <div class="label">Claro</div>
+                    <div class="hex">#D8F3DC</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #1B4332;"></div>
+                    <div class="label">Oscuro</div>
+                    <div class="hex">#1B4332</div>
+                </div>
+            </div>
+
+            <div class="semantic-colors">
+                <span class="semantic-chip" style="background: #0077B6;">Exito</span>
+                <span class="semantic-chip" style="background: #F59E0B;">Alerta</span>
+                <span class="semantic-chip" style="background: #EF4444;">Error</span>
+                <span class="semantic-chip" style="background: #6B7280;">Info</span>
+            </div>
+
+            <div class="components-preview">
+                <h3>Componentes</h3>
+                <button class="btn btn-primary">Solicitar Agua</button>
+                <button class="btn btn-secondary">Cancelar</button>
+
+                <div class="input-preview">
+                    <input type="text" placeholder="Tu direccion...">
+                </div>
+
+                <div class="card-preview">
+                    <h4>Solicitud #1234</h4>
+                    <p>1000L - Pendiente de confirmacion</p>
+                </div>
+            </div>
+
+            <div class="best-for">
+                <strong>Ideal para:</strong> Marcas con enfoque en sostenibilidad o conexion rural. Puede sentirse menos "agua" y mas "naturaleza" en general.
+            </div>
+        </div>
+
+        <!-- Theme 3: Sol Chileno -->
+        <div class="theme-card theme-3">
+            <div class="theme-header">
+                <h2>3. Sol Chileno</h2>
+                <p>Calido, Amigable, Energetico</p>
+            </div>
+
+            <div class="theme-personality">
+                <h3>Personalidad</h3>
+                <p>Naranjas y terracota inspirados en atardeceres chilenos. Calido y acogedor. Se siente como un vecino amigable, no una corporacion.</p>
+            </div>
+
+            <div class="color-palette">
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #E07A5F;"></div>
+                    <div class="label">Primario</div>
+                    <div class="hex">#E07A5F</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #F2994A;"></div>
+                    <div class="label">Secundario</div>
+                    <div class="hex">#F2994A</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #FFEEDD;"></div>
+                    <div class="label">Claro</div>
+                    <div class="hex">#FFEEDD</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #8B4513;"></div>
+                    <div class="label">Oscuro</div>
+                    <div class="hex">#8B4513</div>
+                </div>
+            </div>
+
+            <div class="semantic-colors">
+                <span class="semantic-chip" style="background: #10B981;">Exito</span>
+                <span class="semantic-chip" style="background: #3B82F6;">Info</span>
+                <span class="semantic-chip" style="background: #EF4444;">Error</span>
+                <span class="semantic-chip" style="background: #6B7280;">Neutral</span>
+            </div>
+
+            <div class="components-preview">
+                <h3>Componentes</h3>
+                <button class="btn btn-primary">Solicitar Agua</button>
+                <button class="btn btn-secondary">Cancelar</button>
+
+                <div class="input-preview">
+                    <input type="text" placeholder="Tu direccion...">
+                </div>
+
+                <div class="card-preview">
+                    <h4>Solicitud #1234</h4>
+                    <p>1000L - Pendiente de confirmacion</p>
+                </div>
+            </div>
+
+            <div class="best-for">
+                <strong>Ideal para:</strong> Apps que quieren sentirse amigables y locales. Riesgo: El naranja puede no evocar "agua" inmediatamente.
+            </div>
+        </div>
+
+        <!-- Theme 4: Cielo Austral -->
+        <div class="theme-card theme-4">
+            <div class="theme-header">
+                <h2>4. Cielo Austral</h2>
+                <p>Ligero, Abierto, Fresco</p>
+            </div>
+
+            <div class="theme-personality">
+                <h3>Personalidad</h3>
+                <p>Azules cielo mas claros y suaves. Se siente aireado y abierto. Menos intenso que Agua Pura, mas moderno y ligero.</p>
+            </div>
+
+            <div class="color-palette">
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #4A90D9;"></div>
+                    <div class="label">Primario</div>
+                    <div class="hex">#4A90D9</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #74B9FF;"></div>
+                    <div class="label">Secundario</div>
+                    <div class="hex">#74B9FF</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #E8F4FD;"></div>
+                    <div class="label">Claro</div>
+                    <div class="hex">#E8F4FD</div>
+                </div>
+                <div class="color-swatch">
+                    <div class="swatch" style="background: #1E3A5F;"></div>
+                    <div class="label">Oscuro</div>
+                    <div class="hex">#1E3A5F</div>
+                </div>
+            </div>
+
+            <div class="semantic-colors">
+                <span class="semantic-chip" style="background: #10B981;">Exito</span>
+                <span class="semantic-chip" style="background: #F59E0B;">Alerta</span>
+                <span class="semantic-chip" style="background: #EF4444;">Error</span>
+                <span class="semantic-chip" style="background: #6B7280;">Info</span>
+            </div>
+
+            <div class="components-preview">
+                <h3>Componentes</h3>
+                <button class="btn btn-primary">Solicitar Agua</button>
+                <button class="btn btn-secondary">Cancelar</button>
+
+                <div class="input-preview">
+                    <input type="text" placeholder="Tu direccion...">
+                </div>
+
+                <div class="card-preview">
+                    <h4>Solicitud #1234</h4>
+                    <p>1000L - Pendiente de confirmacion</p>
+                </div>
+            </div>
+
+            <div class="best-for">
+                <strong>Ideal para:</strong> Apps modernas que quieren sentirse frescas y contemporaneas. Puede tener menos contraste para usuarios mayores.
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison-section">
+        <h2>Comparacion Rapida</h2>
+        <div class="comparison-grid">
+            <div class="comparison-card" style="background: linear-gradient(135deg, #0077B6 0%, #00A8E8 100%);">
+                <h3>Agua Pura</h3>
+                <p>Confianza + Claridad</p>
+            </div>
+            <div class="comparison-card" style="background: linear-gradient(135deg, #2D6A4F 0%, #40916C 100%);">
+                <h3>Campo Verde</h3>
+                <p>Natural + Sostenible</p>
+            </div>
+            <div class="comparison-card" style="background: linear-gradient(135deg, #E07A5F 0%, #F2994A 100%);">
+                <h3>Sol Chileno</h3>
+                <p>Calido + Amigable</p>
+            </div>
+            <div class="comparison-card" style="background: linear-gradient(135deg, #4A90D9 0%, #74B9FF 100%);">
+                <h3>Cielo Austral</h3>
+                <p>Fresco + Moderno</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="padding: 24px; max-width: 1552px; margin: 0 auto;">
+        <h2 style="margin-bottom: 16px;">Colores Semanticos (Todos los Temas)</h2>
+        <p style="color: #666; margin-bottom: 16px;">Estos colores de estado son consistentes en todos los temas para familiaridad del usuario:</p>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 24px; height: 24px; border-radius: 4px; background: #10B981;"></div>
+                <span><strong>Exito:</strong> #10B981 - Entrega completada, solicitud aceptada</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 24px; height: 24px; border-radius: 4px; background: #F59E0B;"></div>
+                <span><strong>Alerta:</strong> #F59E0B - Solicitud pendiente, atencion necesaria</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 24px; height: 24px; border-radius: 4px; background: #EF4444;"></div>
+                <span><strong>Error:</strong> #EF4444 - Problemas, rechazada, campos requeridos</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 24px; height: 24px; border-radius: 4px; background: #6B7280;"></div>
+                <span><strong>Neutral:</strong> #6B7280 - Informacion, texto secundario</span>
+            </div>
+        </div>
+    </div>
+
+    <footer style="padding: 24px; text-align: center; color: #888; font-size: 13px; border-top: 1px solid #eee; margin-top: 24px;">
+        <p>nitoagua UX Design - Explorador de Temas de Color</p>
+        <p>Generado por BMad Method - Create UX Design Workflow</p>
+    </footer>
+</body>
+</html>

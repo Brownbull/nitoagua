@@ -1,0 +1,513 @@
+# Epic Technical Specification: Foundation & Infrastructure
+
+Date: 2025-12-01
+Author: Gabe
+Epic ID: 1
+Status: Draft
+
+---
+
+## Overview
+
+Epic 1 establishes the complete technical foundation for nitoagua - a water delivery coordination PWA for rural Chile. This epic creates the greenfield project structure, database schema, authentication system, PWA configuration, and deployment pipeline that enables all subsequent feature development.
+
+This is a prerequisite epic - while consumers and suppliers won't directly interact with these components, nothing else in the system works without this foundation. The epic implements the core technical decisions from the Architecture document: Next.js 15 with App Router, Supabase (PostgreSQL + Auth), shadcn/ui, and Vercel deployment.
+
+## Objectives and Scope
+
+### In Scope
+
+- Next.js 15 project initialization with TypeScript, Tailwind CSS, ESLint
+- shadcn/ui setup with "Agua Pura" theme (Primary: #0077B6, Secondary: #00A8E8)
+- Supabase database schema: `profiles` and `water_requests` tables
+- Row Level Security (RLS) policies for data isolation
+- Supabase Authentication integration with SSR support
+- PWA manifest, icons, and basic service worker
+- Vercel deployment with automatic builds and preview deployments
+- Environment variable configuration
+
+### Out of Scope
+
+- Consumer or supplier UI components (Epic 2, 3)
+- Business logic for request handling
+- Email notification setup (Epic 5)
+- Google Maps integration (Epic 3)
+- Real-time subscriptions (future enhancement)
+
+## System Architecture Alignment
+
+This epic implements the foundational layer of the architecture:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Epic 1: Foundation Layer                      │
+├─────────────────────────────────────────────────────────────────┤
+│  Next.js 15 App Router │ Supabase (PostgreSQL) │ Vercel         │
+│  - src/ structure      │ - profiles table       │ - Auto deploy  │
+│  - @/* alias           │ - water_requests table │ - HTTPS        │
+│  - shadcn/ui           │ - RLS policies         │ - Preview PRs  │
+│  - PWA manifest        │ - Auth integration     │ - Edge CDN     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Architecture Decisions Applied:**
+- ADR-001: Supabase over Firebase/Custom Backend
+- ADR-002: Next.js App Router over Pages Router
+- ADR-003: No Separate ORM (Supabase client directly)
+
+## Detailed Design
+
+### Services and Modules
+
+| Module | Responsibility | Files | Dependencies |
+|--------|---------------|-------|--------------|
+| Project Core | Next.js app structure, routing | `src/app/`, `next.config.ts` | next@15.1.x |
+| UI Foundation | shadcn/ui components, theme | `src/components/ui/`, `tailwind.config.ts` | shadcn/ui, tailwindcss |
+| Database Layer | Supabase client, types | `src/lib/supabase/`, `supabase/` | @supabase/supabase-js, @supabase/ssr |
+| Auth Layer | Authentication, session mgmt | `src/lib/supabase/`, `src/middleware.ts` | @supabase/ssr |
+| PWA Layer | Manifest, service worker | `src/app/manifest.ts`, `public/sw.js` | None |
+| Validation | Form schemas | `src/lib/validations/` | zod |
+| Utilities | Formatting, constants | `src/lib/utils/` | date-fns |
+
+### Data Models and Contracts
+
+#### profiles Table
+
+```sql
+CREATE TABLE profiles (
+  -- Identity
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('consumer', 'supplier')),
+
+  -- Common fields
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+
+  -- Consumer fields
+  address TEXT,
+  special_instructions TEXT,
+
+  -- Supplier fields
+  service_area TEXT,
+  price_100l INTEGER,
+  price_1000l INTEGER,
+  price_5000l INTEGER,
+  price_10000l INTEGER,
+  is_available BOOLEAN DEFAULT true,
+
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+#### water_requests Table
+
+```sql
+CREATE TABLE water_requests (
+  -- Identity
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Consumer reference (NULL for guests)
+  consumer_id UUID REFERENCES profiles(id),
+
+  -- Guest info (when consumer_id is NULL)
+  guest_name TEXT,
+  guest_phone TEXT NOT NULL,
+  guest_email TEXT,
+  tracking_token TEXT UNIQUE DEFAULT gen_random_uuid()::text,
+
+  -- Request details
+  address TEXT NOT NULL,
+  special_instructions TEXT NOT NULL,
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  amount INTEGER NOT NULL CHECK (amount IN (100, 1000, 5000, 10000)),
+  is_urgent BOOLEAN DEFAULT false,
+
+  -- Status workflow
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'accepted', 'delivered', 'cancelled')),
+
+  -- Supplier assignment
+  supplier_id UUID REFERENCES profiles(id),
+  delivery_window TEXT,
+  decline_reason TEXT,
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  accepted_at TIMESTAMPTZ,
+  delivered_at TIMESTAMPTZ,
+  cancelled_at TIMESTAMPTZ
+);
+```
+
+#### TypeScript Types
+
+```typescript
+// src/types/database.ts (generated by Supabase CLI)
+export type Profile = {
+  id: string;
+  role: 'consumer' | 'supplier';
+  name: string;
+  phone: string;
+  address: string | null;
+  special_instructions: string | null;
+  service_area: string | null;
+  price_100l: number | null;
+  price_1000l: number | null;
+  price_5000l: number | null;
+  price_10000l: number | null;
+  is_available: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WaterRequest = {
+  id: string;
+  consumer_id: string | null;
+  guest_name: string | null;
+  guest_phone: string;
+  guest_email: string | null;
+  tracking_token: string;
+  address: string;
+  special_instructions: string;
+  latitude: number | null;
+  longitude: number | null;
+  amount: 100 | 1000 | 5000 | 10000;
+  is_urgent: boolean;
+  status: 'pending' | 'accepted' | 'delivered' | 'cancelled';
+  supplier_id: string | null;
+  delivery_window: string | null;
+  decline_reason: string | null;
+  created_at: string;
+  accepted_at: string | null;
+  delivered_at: string | null;
+  cancelled_at: string | null;
+};
+```
+
+### APIs and Interfaces
+
+Epic 1 does not implement API endpoints (those come in Epic 2+), but establishes the patterns:
+
+#### API Response Contract
+
+```typescript
+// Success
+{ data: T, error: null }
+
+// Error
+{
+  data: null,
+  error: {
+    message: string,
+    code: 'VALIDATION_ERROR' | 'NOT_FOUND' | 'UNAUTHORIZED' | 'INTERNAL_ERROR'
+  }
+}
+```
+
+#### Supabase Client Interfaces
+
+```typescript
+// src/lib/supabase/client.ts - Browser client
+export function createClient(): SupabaseClient
+
+// src/lib/supabase/server.ts - Server client (async)
+export async function createClient(): Promise<SupabaseClient>
+
+// src/lib/supabase/middleware.ts - Middleware client
+export function updateSession(request: NextRequest): Promise<NextResponse>
+```
+
+### Workflows and Sequencing
+
+#### Story Dependencies
+
+```
+Story 1.1: Project Initialization
+    │
+    ├──► Story 1.2: Supabase Database Setup
+    │         │
+    │         └──► Story 1.3: Supabase Auth Integration
+    │
+    ├──► Story 1.4: PWA Configuration
+    │
+    └──► Story 1.5: Deployment Pipeline
+```
+
+#### Project Initialization Sequence
+
+1. Run `npx create-next-app@latest nitoagua` with flags
+2. Initialize shadcn/ui: `npx shadcn@latest init`
+3. Add shadcn components: `npx shadcn@latest add button card input...`
+4. Install core dependencies: `npm install @supabase/supabase-js @supabase/ssr zod date-fns`
+5. Configure Tailwind with Agua Pura theme colors
+6. Create `.env.local.example` with all required variables
+7. Verify: `npm run dev` and `npm run build` succeed
+
+## Non-Functional Requirements
+
+### Performance
+
+| Metric | Target | Implementation |
+|--------|--------|----------------|
+| Initial page load | < 3s on 3G (NFR1) | Server components, code splitting |
+| Time to Interactive | < 5s on 3G | Progressive hydration |
+| Lighthouse Performance | > 80 | Image optimization, caching |
+| Build time | < 2 minutes | Turbopack for dev |
+
+**Strategies:**
+- Use Next.js Server Components by default
+- Implement route-based code splitting
+- Configure static asset caching via service worker
+- Use system fonts (no web font loading)
+
+### Security
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Authentication | Supabase Auth with JWT (bcrypt passwords) |
+| Session Management | Cookie-based via @supabase/ssr |
+| Data Isolation | Row Level Security policies |
+| HTTPS | Enforced by Vercel |
+| CSRF | Next.js built-in protection |
+| Input Validation | Zod schemas on all inputs |
+| SQL Injection | Parameterized queries via Supabase |
+
+**RLS Policies:**
+```sql
+-- Users can only read their own profile
+CREATE POLICY "Users can read own profile" ON profiles
+  FOR SELECT USING (auth.uid() = id);
+
+-- Users can only update their own profile
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- Anyone can create requests (guests)
+CREATE POLICY "Anyone can create requests" ON water_requests
+  FOR INSERT WITH CHECK (true);
+
+-- Suppliers can read pending requests
+CREATE POLICY "Suppliers can read pending requests" ON water_requests
+  FOR SELECT USING (
+    status = 'pending'
+    OR supplier_id = auth.uid()
+    OR consumer_id = auth.uid()
+  );
+```
+
+### Reliability/Availability
+
+| Requirement | Target | Provider |
+|-------------|--------|----------|
+| Uptime | 99.9% | Vercel + Supabase SLAs |
+| Database backups | Daily | Supabase automatic |
+| Failover | Automatic | Vercel edge network |
+| Error recovery | Graceful degradation | Try/catch + user feedback |
+
+**Degradation Strategy:**
+- Offline: Show cached PWA shell, queue submissions
+- Database unavailable: Show error page with retry
+- Auth service down: Allow guest flows, disable login
+
+### Observability
+
+| Signal | Implementation |
+|--------|----------------|
+| Application logs | Console logging (Vercel captures) |
+| Error tracking | Console.error with context |
+| Build metrics | Vercel dashboard |
+| Database metrics | Supabase dashboard |
+
+**Logging Format:**
+```typescript
+console.log("[REQUEST]", { action: "create", userId, requestId });
+console.error("[ERROR]", { context: "createRequest", error: error.message });
+```
+
+## Dependencies and Integrations
+
+### Core Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| next | 15.1.x | Framework |
+| react | 19.x | UI library |
+| typescript | 5.x | Type safety |
+| tailwindcss | 3.4.x | Styling |
+| @supabase/supabase-js | 2.x | Database client |
+| @supabase/ssr | 0.x | SSR auth support |
+| zod | 3.x | Schema validation |
+| date-fns | 3.x | Date formatting |
+
+### shadcn/ui Components
+
+```bash
+npx shadcn@latest add button card input textarea select dialog toast badge tabs form
+```
+
+### External Services
+
+| Service | Purpose | Account Required |
+|---------|---------|------------------|
+| Supabase | Database + Auth | Yes (free tier) |
+| Vercel | Hosting | Yes (free tier) |
+| GitHub | Repository | Yes |
+
+### Environment Variables
+
+```bash
+# .env.local.example
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...  # Server-side only
+```
+
+## Acceptance Criteria (Authoritative)
+
+### Story 1.1: Project Initialization
+
+1. **AC1.1.1**: Next.js 15.1 project exists with App Router, TypeScript, Tailwind, ESLint
+2. **AC1.1.2**: `src/` directory structure with `@/*` import alias configured
+3. **AC1.1.3**: shadcn/ui initialized with Agua Pura theme (Primary: #0077B6)
+4. **AC1.1.4**: Core dependencies installed: @supabase/supabase-js, @supabase/ssr, zod, date-fns
+5. **AC1.1.5**: shadcn components available: button, card, input, textarea, select, dialog, toast, badge, tabs, form
+6. **AC1.1.6**: `.env.local.example` documents all required environment variables
+7. **AC1.1.7**: `npm run dev` starts without errors
+8. **AC1.1.8**: `npm run build` completes successfully
+
+### Story 1.2: Supabase Database Setup
+
+1. **AC1.2.1**: `profiles` table exists with all specified columns and constraints
+2. **AC1.2.2**: `water_requests` table exists with all specified columns and constraints
+3. **AC1.2.3**: Row Level Security enabled on both tables
+4. **AC1.2.4**: RLS policies implement data isolation per architecture spec
+5. **AC1.2.5**: Indexes exist on: status, supplier_id, consumer_id, tracking_token
+6. **AC1.2.6**: TypeScript types generated from schema
+7. **AC1.2.7**: Migration file exists at `supabase/migrations/001_initial_schema.sql`
+
+### Story 1.3: Supabase Auth Integration
+
+1. **AC1.3.1**: Browser client at `src/lib/supabase/client.ts` functions correctly
+2. **AC1.3.2**: Server client at `src/lib/supabase/server.ts` functions correctly
+3. **AC1.3.3**: Middleware at `src/middleware.ts` manages session cookies
+4. **AC1.3.4**: Session refresh and expiration work correctly
+5. **AC1.3.5**: Auth state accessible in both server and client components
+6. **AC1.3.6**: Rate limiting configured (5 attempts/hour/IP via Supabase)
+
+### Story 1.4: PWA Configuration
+
+1. **AC1.4.1**: Web manifest at `src/app/manifest.ts` with correct metadata
+2. **AC1.4.2**: App name "nitoagua", theme color #0077B6
+3. **AC1.4.3**: Icons exist: 192x192 and 512x512 PNG
+4. **AC1.4.4**: Service worker caches static assets
+5. **AC1.4.5**: App installable to home screen
+6. **AC1.4.6**: App opens in standalone mode (no browser chrome)
+7. **AC1.4.7**: App shell loads in < 3 seconds on 3G
+
+### Story 1.5: Deployment Pipeline
+
+1. **AC1.5.1**: Repository connected to Vercel
+2. **AC1.5.2**: Push to main triggers automatic build
+3. **AC1.5.3**: Build includes TypeScript compilation and ESLint
+4. **AC1.5.4**: Environment variables configured in Vercel
+5. **AC1.5.5**: Preview deployments created for pull requests
+6. **AC1.5.6**: Production URL accessible with HTTPS
+
+## Traceability Mapping
+
+| AC | Spec Section | Component/File | Test Approach |
+|----|--------------|----------------|---------------|
+| AC1.1.1 | Project Core | `package.json`, `next.config.ts` | Build verification |
+| AC1.1.2 | Project Core | `tsconfig.json` | Import alias test |
+| AC1.1.3 | UI Foundation | `tailwind.config.ts`, `globals.css` | Visual inspection |
+| AC1.1.4 | Project Core | `package.json` | Dependency check |
+| AC1.1.5 | UI Foundation | `src/components/ui/` | Component render test |
+| AC1.1.6 | Project Core | `.env.local.example` | File existence |
+| AC1.1.7 | Project Core | N/A | `npm run dev` |
+| AC1.1.8 | Project Core | N/A | `npm run build` |
+| AC1.2.1 | Database Layer | `supabase/migrations/` | Schema verification |
+| AC1.2.2 | Database Layer | `supabase/migrations/` | Schema verification |
+| AC1.2.3 | Security | `supabase/migrations/` | RLS enabled check |
+| AC1.2.4 | Security | `supabase/migrations/` | Policy test queries |
+| AC1.2.5 | Database Layer | `supabase/migrations/` | Index verification |
+| AC1.2.6 | Database Layer | `src/types/database.ts` | Type compilation |
+| AC1.2.7 | Database Layer | `supabase/migrations/` | File existence |
+| AC1.3.1 | Auth Layer | `src/lib/supabase/client.ts` | Client instantiation |
+| AC1.3.2 | Auth Layer | `src/lib/supabase/server.ts` | Server query test |
+| AC1.3.3 | Auth Layer | `src/middleware.ts` | Session cookie check |
+| AC1.3.4 | Auth Layer | N/A | Token refresh test |
+| AC1.3.5 | Auth Layer | N/A | Auth hook test |
+| AC1.3.6 | Security | Supabase dashboard | Rate limit config |
+| AC1.4.1 | PWA Layer | `src/app/manifest.ts` | Manifest validation |
+| AC1.4.2 | PWA Layer | `src/app/manifest.ts` | Manifest inspection |
+| AC1.4.3 | PWA Layer | `public/icons/` | File existence |
+| AC1.4.4 | PWA Layer | `public/sw.js` | Cache verification |
+| AC1.4.5 | PWA Layer | N/A | Mobile install test |
+| AC1.4.6 | PWA Layer | N/A | Display mode check |
+| AC1.4.7 | Performance | N/A | Lighthouse/3G test |
+| AC1.5.1 | Deployment | Vercel dashboard | Integration check |
+| AC1.5.2 | Deployment | N/A | Push trigger test |
+| AC1.5.3 | Deployment | N/A | Build log review |
+| AC1.5.4 | Deployment | Vercel dashboard | Env var check |
+| AC1.5.5 | Deployment | N/A | PR preview test |
+| AC1.5.6 | Deployment | N/A | URL accessibility |
+
+## Risks, Assumptions, Open Questions
+
+### Risks
+
+| ID | Risk | Likelihood | Impact | Mitigation |
+|----|------|------------|--------|------------|
+| R1 | Supabase free tier limits | Low | Medium | Monitor usage, upgrade if needed |
+| R2 | Next.js 15 breaking changes | Low | High | Pin versions, follow upgrade guide |
+| R3 | PWA caching issues | Medium | Low | Test thoroughly, simple cache strategy |
+| R4 | RLS policy misconfiguration | Medium | High | Thorough policy testing before deploy |
+
+### Assumptions
+
+| ID | Assumption |
+|----|------------|
+| A1 | Developer has Node.js 20.x LTS installed |
+| A2 | Supabase project already created with credentials |
+| A3 | GitHub repository exists and connected |
+| A4 | Vercel account exists with team access |
+
+### Open Questions
+
+| ID | Question | Owner | Status |
+|----|----------|-------|--------|
+| Q1 | Should we use Supabase local for development? | Dev | Optional |
+| Q2 | Do we need seed data for development? | Dev | Yes, Story 1.2 |
+
+## Test Strategy Summary
+
+### Test Levels
+
+| Level | Scope | Tools |
+|-------|-------|-------|
+| Unit | Utility functions, validation schemas | Vitest |
+| Integration | Supabase client, auth flow | Vitest + Supabase |
+| E2E | PWA install, build verification | Manual + Lighthouse |
+
+### Coverage Requirements
+
+- **Build verification**: Must pass `npm run build` and `npm run lint`
+- **Type safety**: Zero TypeScript errors in strict mode
+- **Database**: Migration runs without errors
+- **Auth**: Session management works across page reloads
+- **PWA**: Lighthouse PWA score > 80
+
+### Edge Cases
+
+1. Missing environment variables → Clear error message
+2. Supabase connection failure → Graceful error handling
+3. Invalid migration → Rollback capability
+4. Auth token expiration → Automatic refresh
+
+---
+
+_Generated by BMad Method - Epic Tech Context Workflow_
+_Date: 2025-12-01_
