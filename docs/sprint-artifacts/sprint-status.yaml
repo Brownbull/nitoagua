@@ -40,10 +40,10 @@ development_status:
   # Epic 1: Foundation & Infrastructure
   epic-1: contexted
   1-1-project-initialization: done
-  1-2-supabase-database-setup: ready-for-dev
-  1-3-supabase-authentication-integration: ready-for-dev
-  1-4-pwa-configuration: backlog
-  1-5-deployment-pipeline: backlog
+  1-2-supabase-database-setup: done
+  1-3-supabase-authentication-integration: done
+  1-4-pwa-configuration: done
+  1-5-deployment-pipeline: in-progress
   epic-1-retrospective: optional
 
   # Epic 2: Consumer Water Request

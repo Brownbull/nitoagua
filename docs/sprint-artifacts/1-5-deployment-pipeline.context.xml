@@ -1,0 +1,274 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>5</storyId>
+    <title>Deployment Pipeline</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-02</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-5-deployment-pipeline.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>automatic deployment to Vercel on git push</iWant>
+    <soThat>changes are deployed to production automatically</soThat>
+    <tasks>
+      <task id="1" ac="1,5">
+        <title>Connect Repository to Vercel</title>
+        <subtasks>
+          <subtask>Log in to Vercel dashboard (create account if needed)</subtask>
+          <subtask>Import project from GitHub repository</subtask>
+          <subtask>Select the nitoagua repository</subtask>
+          <subtask>Configure framework preset as Next.js (should auto-detect)</subtask>
+          <subtask>Verify GitHub integration shows repository connected</subtask>
+          <subtask>Test: Vercel dashboard shows project linked to repository</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="4">
+        <title>Configure Environment Variables</title>
+        <subtasks>
+          <subtask>Navigate to Project Settings > Environment Variables in Vercel</subtask>
+          <subtask>Add NEXT_PUBLIC_SUPABASE_URL (Production + Preview + Development)</subtask>
+          <subtask>Add NEXT_PUBLIC_SUPABASE_ANON_KEY (Production + Preview + Development)</subtask>
+          <subtask>Add SUPABASE_SERVICE_ROLE_KEY (Production only - server-side)</subtask>
+          <subtask>Verify variables are marked as encrypted where appropriate</subtask>
+          <subtask>Test: Environment variables visible in dashboard (values hidden)</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="2,3,6">
+        <title>Trigger Initial Production Deployment</title>
+        <subtasks>
+          <subtask>Push any commit to main branch (or trigger manual deploy)</subtask>
+          <subtask>Monitor build logs in Vercel dashboard</subtask>
+          <subtask>Verify TypeScript compilation completes without errors</subtask>
+          <subtask>Verify ESLint checks pass</subtask>
+          <subtask>Wait for deployment to complete</subtask>
+          <subtask>Test: Build log shows successful completion</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="6">
+        <title>Verify Production URL</title>
+        <subtasks>
+          <subtask>Navigate to the production URL provided by Vercel</subtask>
+          <subtask>Verify HTTPS certificate is valid (lock icon in browser)</subtask>
+          <subtask>Verify application loads correctly</subtask>
+          <subtask>Test health by navigating to key routes</subtask>
+          <subtask>Document the production URL for team reference</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="5">
+        <title>Test Preview Deployments</title>
+        <subtasks>
+          <subtask>Create a test branch from main</subtask>
+          <subtask>Make a minor change (e.g., comment or whitespace)</subtask>
+          <subtask>Open a pull request to main</subtask>
+          <subtask>Verify Vercel creates a preview deployment</subtask>
+          <subtask>Navigate to preview URL and verify it works</subtask>
+          <subtask>Close the test PR (merge or close without merging)</subtask>
+          <subtask>Test: Preview URL is accessible with HTTPS</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="3" optional="true">
+        <title>Configure Build Settings (Optional Optimization)</title>
+        <subtasks>
+          <subtask>Review Build and Development Settings in Vercel</subtask>
+          <subtask>Ensure build command is npm run build</subtask>
+          <subtask>Ensure output directory is .next</subtask>
+          <subtask>Ensure install command uses npm install</subtask>
+          <subtask>Test: Verify settings match expected configuration</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="1-6">
+        <title>Documentation and Verification</title>
+        <subtasks>
+          <subtask>Document production URL in project README or docs</subtask>
+          <subtask>Verify all acceptance criteria are met</subtask>
+          <subtask>Take screenshots of Vercel dashboard for reference</subtask>
+          <subtask>Test: Full end-to-end deployment flow works</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1.5.1">Repository connected to Vercel (GitHub integration enabled)</criterion>
+    <criterion id="AC1.5.2">Push to main branch triggers automatic build and deployment</criterion>
+    <criterion id="AC1.5.3">Build includes TypeScript compilation and ESLint checks (both must pass)</criterion>
+    <criterion id="AC1.5.4">Environment variables configured in Vercel dashboard (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY)</criterion>
+    <criterion id="AC1.5.5">Preview deployments created automatically for pull requests</criterion>
+    <criterion id="AC1.5.6">Production URL accessible with HTTPS (automatic via Vercel)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Deployment Architecture</section>
+        <snippet>Vercel configuration with Edge Network, Serverless Functions, Static Assets, SSL/TLS, and DDoS Protection. Supabase connects from São Paulo region (sa-east).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Environment Setup</section>
+        <snippet>Three environments: Development (local), Preview (PR previews using dev Supabase), Production (live app with production Supabase).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Environment Variables</section>
+        <snippet>Required: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (server-side only), RESEND_API_KEY, NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Story 1.5 Acceptance Criteria</section>
+        <snippet>AC1.5.1-6: Repository connected to Vercel, auto-build on main push, TypeScript/ESLint in build, env vars configured, preview deployments for PRs, production HTTPS URL.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 1.5: Deployment Pipeline</section>
+        <snippet>Connect GitHub repo to Vercel, configure environment variables, use Vercel's automatic HTTPS and CDN. Prerequisites: Story 1.1.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>package.json</path>
+        <kind>config</kind>
+        <symbol>scripts</symbol>
+        <reason>Build and lint scripts that Vercel will execute: "build": "next build", "lint": "eslint"</reason>
+      </file>
+      <file>
+        <path>next.config.ts</path>
+        <kind>config</kind>
+        <symbol>nextConfig</symbol>
+        <reason>Next.js configuration - currently empty but Vercel auto-detects Next.js framework</reason>
+      </file>
+      <file>
+        <path>src/app/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>RootLayout</symbol>
+        <reason>Root layout with PWA metadata, theme color #0077B6, ServiceWorkerRegistration</reason>
+      </file>
+      <file>
+        <path>src/app/manifest.ts</path>
+        <kind>pwa</kind>
+        <symbol>manifest()</symbol>
+        <reason>PWA manifest for standalone app - will be deployed to production</reason>
+      </file>
+      <file>
+        <path>public/sw.js</path>
+        <kind>pwa</kind>
+        <symbol>Service Worker</symbol>
+        <reason>Service worker with cache-first strategy - must be deployed correctly</reason>
+      </file>
+      <file>
+        <path>src/middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>middleware()</symbol>
+        <reason>Auth middleware using Supabase - requires env vars to be set</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/client.ts</path>
+        <kind>service</kind>
+        <symbol>createBrowserClient</symbol>
+        <reason>Browser Supabase client - uses NEXT_PUBLIC_SUPABASE_URL and ANON_KEY</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>service</kind>
+        <symbol>createServerClient</symbol>
+        <reason>Server Supabase client - uses all Supabase env vars</reason>
+      </file>
+      <file>
+        <path>.env.local.example</path>
+        <kind>config</kind>
+        <symbol>environment variables</symbol>
+        <reason>Template for required env vars: SUPABASE_URL, ANON_KEY, SERVICE_ROLE_KEY</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node ecosystem="node">
+        <framework name="next" version="16.0.6">Next.js App Router framework - Vercel auto-detects and optimizes</framework>
+        <framework name="react" version="19.2.0">React 19 with Server Components</framework>
+        <framework name="typescript" version="^5">TypeScript strict mode - build compilation required</framework>
+        <package name="@supabase/supabase-js" version="^2.86.0">Supabase client - requires env vars</package>
+        <package name="@supabase/ssr" version="^0.8.0">Supabase SSR support for Next.js</package>
+        <package name="tailwindcss" version="^4">CSS framework - builds with Next.js</package>
+        <package name="eslint" version="^9">Linting - must pass for deployment</package>
+        <package name="eslint-config-next" version="16.0.6">Next.js ESLint config</package>
+      </node>
+      <services>
+        <service name="Vercel" purpose="Hosting, deployment, edge network, SSL/TLS, CDN" />
+        <service name="Supabase" purpose="PostgreSQL database, authentication (requires env vars)" />
+        <service name="GitHub" purpose="Repository hosting, CI/CD trigger via webhooks" />
+      </services>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="deployment">
+      <description>SUPABASE_SERVICE_ROLE_KEY must be Production environment only in Vercel - not Preview - to prevent exposure</description>
+      <source>docs/sprint-artifacts/1-5-deployment-pipeline.md#Dev-Notes</source>
+    </constraint>
+    <constraint type="deployment">
+      <description>No vercel.json needed for MVP - use Vercel's default Next.js configuration</description>
+      <source>docs/sprint-artifacts/1-5-deployment-pipeline.md#Dev-Notes</source>
+    </constraint>
+    <constraint type="deployment">
+      <description>No custom domain required for MVP - Vercel's default domain is sufficient</description>
+      <source>docs/sprint-artifacts/1-5-deployment-pipeline.md#Dev-Notes</source>
+    </constraint>
+    <constraint type="build">
+      <description>Build must pass TypeScript compilation and ESLint checks (both required)</description>
+      <source>docs/sprint-artifacts/tech-spec-epic-1.md#AC1.5.3</source>
+    </constraint>
+    <constraint type="nfr">
+      <description>NFR14: Target 99% uptime during business hours - Vercel provides high availability</description>
+      <source>docs/sprint-artifacts/1-5-deployment-pipeline.md#NFR-Compliance</source>
+    </constraint>
+    <constraint type="nfr">
+      <description>NFR1: Less than 3s initial load - Vercel Edge Network and CDN help achieve this</description>
+      <source>docs/sprint-artifacts/1-5-deployment-pipeline.md#NFR-Compliance</source>
+    </constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Vercel GitHub Integration</name>
+      <kind>external-service</kind>
+      <signature>GitHub OAuth → Vercel project import → auto-deploy on push</signature>
+      <path>vercel.com dashboard</path>
+    </interface>
+    <interface>
+      <name>Vercel Environment Variables</name>
+      <kind>configuration</kind>
+      <signature>Project Settings → Environment Variables → NEXT_PUBLIC_*, server-only keys</signature>
+      <path>vercel.com dashboard</path>
+    </interface>
+    <interface>
+      <name>Vercel Build System</name>
+      <kind>external-service</kind>
+      <signature>npm install → npm run build → deploy .next output</signature>
+      <path>vercel.com build logs</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>This story is primarily manual verification (dashboard configuration). Per tech spec, testing focuses on: 1) Build verification - npm run build must pass on Vercel, 2) URL accessibility - production URL loads without errors, 3) HTTPS verification - valid SSL certificate, 4) Preview verification - PR creates working preview deployment. Existing E2E tests use Playwright with Chromium/Firefox/Webkit projects.</standards>
+    <locations>
+      <location>tests/e2e/ - E2E tests using Playwright</location>
+      <location>Vercel dashboard - Build logs, deployment status</location>
+      <location>Browser DevTools - HTTPS certificate validation</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1.5.1">Verify Vercel dashboard shows GitHub repository connected and deployment triggers configured</idea>
+      <idea ac="AC1.5.2">Push a commit and confirm build starts automatically within 30 seconds in Vercel dashboard</idea>
+      <idea ac="AC1.5.3">Review build logs to confirm TypeScript compilation and ESLint steps complete without errors</idea>
+      <idea ac="AC1.5.4">Verify environment variables in Vercel Settings: check NEXT_PUBLIC_* and server-only keys exist</idea>
+      <idea ac="AC1.5.5">Create test PR, verify preview deployment URL is generated, access it with HTTPS</idea>
+      <idea ac="AC1.5.6">Access production URL, verify HTTPS lock icon, check browser DevTools for valid certificate</idea>
+      <idea ac="AC1.5.6">Run existing PWA tests against production URL to verify deployed assets work correctly</idea>
+    </ideas>
+  </tests>
+</story-context>

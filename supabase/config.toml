@@ -1,0 +1,55 @@
+# NitoAgua Supabase Local Development Configuration
+# Ports offset by +5 to avoid conflicts with other local services
+
+[api]
+enabled = true
+port = 54326  # Default: 54321, offset +5
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54327  # Default: 54322, offset +5
+shadow_port = 54328  # Default: 54323, offset +5
+major_version = 15
+
+[studio]
+enabled = true
+port = 54330  # Studio UI
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = 54331  # Email testing inbox
+smtp_port = 54332
+pop3_port = 54333
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "http://localhost:3005"
+additional_redirect_urls = ["http://localhost:3005"]
+jwt_expiry = 86400  # 24 hours (optimized for rural users)
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = false
+enable_confirmations = false  # Disable for local dev (no email verification)
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+
+# Disable external auth providers for now
+[auth.external.apple]
+enabled = false
+
+[auth.external.google]
+enabled = false
+
+[analytics]
+enabled = false

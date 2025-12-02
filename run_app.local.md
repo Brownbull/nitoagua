@@ -2,7 +2,7 @@
 
 **Port:** 3005
 
-## Start App
+## Quick Start
 
 ```bash
 npm run dev
@@ -18,6 +18,37 @@ cp .env.local.example .env.local
 # Edit .env.local with your Supabase credentials
 ```
 
+## Local Supabase (Docker)
+
+Requires Docker running.
+
+```bash
+# Start local Supabase
+npx supabase start
+
+# Stop local Supabase
+npx supabase stop
+
+# Reset database (re-apply migrations)
+npx supabase db reset
+
+# Check status
+npx supabase status
+```
+
+### Local Services (ports offset +5)
+
+| Service | URL |
+|---------|-----|
+| Studio | http://127.0.0.1:54330 |
+| API | http://127.0.0.1:54326 |
+| Database | postgresql://postgres:postgres@127.0.0.1:54327/postgres |
+| Mailpit | http://127.0.0.1:54331 |
+
+### Switch to Local Dev
+
+Copy `.env.local.development` to `.env.local` to use local Supabase.
+
 ## Build
 
 ```bash
@@ -30,7 +61,3 @@ npm run start
 ```bash
 npm run lint
 ```
-
-## Clean Up
-
-TBD

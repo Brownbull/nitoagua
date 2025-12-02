@@ -1,9 +1,25 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 
 export const metadata: Metadata = {
   title: "nitoagua",
   description: "Coordina tu entrega de agua",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "nitoagua",
+  },
+  icons: {
+    apple: "/icons/icon-192.png",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#0077B6",
 };
 
 export default function RootLayout({
@@ -14,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="antialiased">
+        <ServiceWorkerRegistration />
         {children}
       </body>
     </html>

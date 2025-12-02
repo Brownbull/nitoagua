@@ -15,6 +15,7 @@ out/
 .env
 .env.local
 .env.*.local
+.env.local.*
 *.local
 
 # IDE
@@ -53,3 +54,8 @@ playwright/.cache/
 tmp/
 temp/
 *.tmp
+
+# Supabase
+.supabase/
+supabase/.temp/
+supabase/.branches/

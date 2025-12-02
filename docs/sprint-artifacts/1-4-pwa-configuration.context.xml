@@ -1,0 +1,250 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>4</storyId>
+    <title>PWA Configuration</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-02</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-4-pwa-configuration.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>consumer</asA>
+    <iWant>to install nitoagua on my phone's home screen</iWant>
+    <soThat>I can access it like a native app without the app store</soThat>
+    <tasks>
+      <task id="1" acs="1,2">
+        <title>Create PWA Manifest</title>
+        <subtasks>
+          <subtask>Create src/app/manifest.ts using Next.js metadata API</subtask>
+          <subtask>Configure metadata: name, short_name, description, start_url, display, background_color, theme_color</subtask>
+          <subtask>Add icons array referencing /icons/icon-192.png and /icons/icon-512.png</subtask>
+          <subtask>Test: Verify manifest accessible at /manifest.webmanifest</subtask>
+        </subtasks>
+      </task>
+      <task id="2" acs="3">
+        <title>Create PWA Icons</title>
+        <subtasks>
+          <subtask>Create public/icons/ directory</subtask>
+          <subtask>Create icon-192.png (192x192 pixels) - water-themed icon with nitoagua branding</subtask>
+          <subtask>Create icon-512.png (512x512 pixels) - same design at higher resolution</subtask>
+          <subtask>Ensure icons use Ocean Blue (#0077B6) as primary color</subtask>
+        </subtasks>
+      </task>
+      <task id="3" acs="4,7">
+        <title>Create Service Worker</title>
+        <subtasks>
+          <subtask>Create public/sw.js with cache-first strategy for static assets</subtask>
+          <subtask>Implement install event to pre-cache core app shell files</subtask>
+          <subtask>Implement fetch event with cache-first for static assets, network-first for API</subtask>
+          <subtask>Set cache name with version: nitoagua-v1</subtask>
+        </subtasks>
+      </task>
+      <task id="4" acs="4,5">
+        <title>Register Service Worker</title>
+        <subtasks>
+          <subtask>Create service worker registration in root layout or dedicated component</subtask>
+          <subtask>Register service worker only in production or when supported</subtask>
+          <subtask>Handle registration errors gracefully</subtask>
+        </subtasks>
+      </task>
+      <task id="5" acs="1,5">
+        <title>Configure Metadata in Root Layout</title>
+        <subtasks>
+          <subtask>Update src/app/layout.tsx with PWA-related metadata</subtask>
+          <subtask>Add viewport meta tag for mobile optimization</subtask>
+          <subtask>Add theme-color meta tag for browser UI</subtask>
+          <subtask>Add apple-touch-icon link for iOS</subtask>
+          <subtask>Link to manifest file</subtask>
+        </subtasks>
+      </task>
+      <task id="6" acs="5,6">
+        <title>Verify PWA Installability</title>
+        <subtasks>
+          <subtask>Run Lighthouse PWA audit</subtask>
+          <subtask>Verify all installability criteria met</subtask>
+          <subtask>Test on mobile device: Add to Home Screen option appears</subtask>
+          <subtask>Test: App launches in standalone mode after installation</subtask>
+        </subtasks>
+      </task>
+      <task id="7" acs="7">
+        <title>Performance Optimization</title>
+        <subtasks>
+          <subtask>Run Lighthouse performance audit</subtask>
+          <subtask>Verify app shell loads less than 3s on simulated 3G</subtask>
+          <subtask>Document performance baseline metrics</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="AC1.4.1">Web manifest exists at src/app/manifest.ts with correct PWA metadata (name, short_name, description, start_url, display, background_color, theme_color, icons)</ac>
+    <ac id="AC1.4.2">App name is "nitoagua", theme color is #0077B6 (Ocean Blue)</ac>
+    <ac id="AC1.4.3">PWA icons exist at public/icons/: icon-192.png (192x192) and icon-512.png (512x512)</ac>
+    <ac id="AC1.4.4">Service worker at public/sw.js caches static assets using cache-first strategy</ac>
+    <ac id="AC1.4.5">App is installable to home screen (passes PWA installability criteria)</ac>
+    <ac id="AC1.4.6">App opens in standalone mode without browser chrome when launched from home screen</ac>
+    <ac id="AC1.4.7">App shell loads in less than 3 seconds on 3G connection (Lighthouse performance target)</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>PWA Configuration</section>
+        <snippet>PWA manifest at src/app/manifest.ts with name "nitoagua", theme_color #0077B6, icons at /icons/icon-192.png and /icons/icon-512.png. Service worker for basic caching.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>Caching Strategy</section>
+        <snippet>Static pages use revalidate 3600 (1 hour). Dynamic pages use force-dynamic. API routes can use edge runtime for low latency.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation and Infrastructure</title>
+        <section>Story 1.4 PWA Configuration</section>
+        <snippet>AC1.4.1-AC1.4.7 define manifest at src/app/manifest.ts, icons 192x192 and 512x512, service worker caching static assets, installable, standalone mode, less than 3s load on 3G.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Platform and PWA</section>
+        <snippet>FR38: PWA accessible on modern browsers. FR39: Installable to home screen. NFR1: Initial page load under 3 seconds on 3G connection.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Color System - Agua Pura Theme</section>
+        <snippet>Primary: Ocean Blue #0077B6. Secondary: Sky Blue #00A8E8. Background: #ffffff. Used for trust and water association.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 1.4 PWA Configuration</section>
+        <snippet>Create src/app/manifest.ts with PWA config, public/sw.js for caching, public/icons/ with 192x192 and 512x512 PNGs. Register service worker in root layout.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/app/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>RootLayout</symbol>
+        <lines>1-22</lines>
+        <reason>Root layout where PWA metadata, theme-color meta tag, apple-touch-icon, and manifest link must be added. Service worker registration component should be included here.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/globals.css</path>
+        <kind>styles</kind>
+        <symbol>CSS variables</symbol>
+        <lines>47-103</lines>
+        <reason>Contains Agua Pura theme color definitions. Primary color oklch(0.52 0.14 230) corresponds to #0077B6 Ocean Blue - use for theme_color in manifest.</reason>
+      </artifact>
+      <artifact>
+        <path>src/middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>middleware, config</symbol>
+        <lines>1-20</lines>
+        <reason>Existing middleware that handles session management. The matcher config already excludes static files and images - service worker requests should also be handled correctly.</reason>
+      </artifact>
+      <artifact>
+        <path>next.config.ts</path>
+        <kind>config</kind>
+        <symbol>nextConfig</symbol>
+        <lines>1-8</lines>
+        <reason>Next.js configuration file. May need PWA-related configuration if using next-pwa package, but basic PWA can work without modifications.</reason>
+      </artifact>
+      <artifact>
+        <path>public/</path>
+        <kind>directory</kind>
+        <symbol>static assets</symbol>
+        <lines>N/A</lines>
+        <reason>Public directory where PWA icons (public/icons/) and service worker (public/sw.js) must be placed. Currently contains only default Next.js SVGs.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>next</package>
+        <version>16.0.6</version>
+        <note>Next.js 15+ with App Router. Supports metadata API for manifest.ts export. No additional PWA package needed for basic implementation.</note>
+      </node>
+      <node>
+        <package>react</package>
+        <version>19.2.0</version>
+        <note>React 19 for client components. Service worker registration uses useEffect.</note>
+      </node>
+      <node>
+        <package>typescript</package>
+        <version>^5</version>
+        <note>TypeScript for type-safe manifest configuration.</note>
+      </node>
+      <node>
+        <package>tailwindcss</package>
+        <version>^4</version>
+        <note>Tailwind v4 for styling. Theme colors defined in globals.css.</note>
+      </node>
+      <node>
+        <package>@playwright/test</package>
+        <version>^1.57.0</version>
+        <note>E2E testing framework for PWA functionality verification.</note>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Use Next.js metadata API (manifest.ts) instead of static manifest.json for type safety and dynamic values.</constraint>
+    <constraint type="pattern">Service worker must use cache-first for static assets, network-first for API routes (/api/*).</constraint>
+    <constraint type="pattern">Cache name must include version (nitoagua-v1) for cache busting on updates.</constraint>
+    <constraint type="performance">Initial page load must be under 3 seconds on 3G connection per NFR1.</constraint>
+    <constraint type="performance">Use system fonts only - no web font loading to improve performance.</constraint>
+    <constraint type="style">Theme color must be exactly #0077B6 (Ocean Blue) per UX spec and architecture.</constraint>
+    <constraint type="compatibility">Icons must be PNG format, sizes 192x192 and 512x512 for Android/Chrome compatibility.</constraint>
+    <constraint type="middleware">Ensure service worker requests do not conflict with existing Supabase auth middleware.</constraint>
+    <constraint type="layer">Service worker is a separate file in public/, not a Next.js API route.</constraint>
+    <constraint type="testing">Lighthouse PWA audit must pass all installability criteria.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>MetadataRoute.Manifest</name>
+      <kind>TypeScript interface</kind>
+      <signature>export default function manifest(): MetadataRoute.Manifest</signature>
+      <path>src/app/manifest.ts (to be created)</path>
+    </interface>
+    <interface>
+      <name>ServiceWorkerGlobalScope</name>
+      <kind>Web API</kind>
+      <signature>self.addEventListener('install'|'fetch'|'activate', handler)</signature>
+      <path>public/sw.js (to be created)</path>
+    </interface>
+    <interface>
+      <name>navigator.serviceWorker</name>
+      <kind>Web API</kind>
+      <signature>navigator.serviceWorker.register('/sw.js')</signature>
+      <path>Service worker registration in layout or component</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <paragraph>Testing uses Playwright for E2E tests. Build verification via npm run build and npm run lint. PWA functionality verified through Lighthouse PWA audit. Manual mobile testing for Add to Home Screen and standalone mode. Performance testing using Lighthouse with 3G throttling simulation.</paragraph>
+    </standards>
+    <locations>
+      <location>tests/e2e/*.spec.ts</location>
+      <location>Lighthouse audit in Chrome DevTools</location>
+      <location>Chrome DevTools Application panel for Service Worker</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1.4.1">E2E test: Navigate to /manifest.webmanifest and verify JSON contains required fields (name, short_name, icons, display, theme_color)</idea>
+      <idea ac="AC1.4.2">E2E test: Verify manifest name equals "nitoagua" and theme_color equals "#0077B6"</idea>
+      <idea ac="AC1.4.3">E2E test: Verify /icons/icon-192.png and /icons/icon-512.png return 200 status</idea>
+      <idea ac="AC1.4.4">Manual test: In Chrome DevTools Application tab, verify Service Worker is registered and caches are populated</idea>
+      <idea ac="AC1.4.5">Manual test: On Android Chrome, verify "Add to Home Screen" prompt appears or is available in menu</idea>
+      <idea ac="AC1.4.6">Manual test: Launch installed app from home screen and verify no browser URL bar is visible</idea>
+      <idea ac="AC1.4.7">Lighthouse test: Run performance audit with 3G throttling, verify First Contentful Paint under 3 seconds</idea>
+    </ideas>
+  </tests>
+</story-context>
