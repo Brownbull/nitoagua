@@ -1,0 +1,323 @@
+<story-context id="1-2-supabase-database-setup" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>Supabase Database Setup</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-02</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-2-supabase-database-setup.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>the Supabase database schema created with all required tables</iWant>
+    <soThat>the application can persist user and request data</soThat>
+    <tasks>
+      <task id="1" ac="7">
+        <title>Create Supabase Project</title>
+        <subtasks>
+          <subtask>Create Supabase project via dashboard or CLI</subtask>
+          <subtask>Obtain project URL and anon key</subtask>
+          <subtask>Update .env.local with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY</subtask>
+          <subtask>Update .env.local with SUPABASE_SERVICE_ROLE_KEY (server-side)</subtask>
+          <subtask>Test connection works with simple query</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="1,3">
+        <title>Create profiles Table</title>
+        <subtasks>
+          <subtask>Create migration file supabase/migrations/001_initial_schema.sql</subtask>
+          <subtask>Add profiles table with all required columns</subtask>
+          <subtask>Enable RLS: ALTER TABLE profiles ENABLE ROW LEVEL SECURITY</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="2,3">
+        <title>Create water_requests Table</title>
+        <subtasks>
+          <subtask>Add water_requests table to migration with all required columns</subtask>
+          <subtask>Enable RLS: ALTER TABLE water_requests ENABLE ROW LEVEL SECURITY</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="4">
+        <title>Create RLS Policies</title>
+        <subtasks>
+          <subtask>Policy: Users can read own profile</subtask>
+          <subtask>Policy: Users can update own profile</subtask>
+          <subtask>Policy: Suppliers can read pending requests</subtask>
+          <subtask>Policy: Anyone can create requests</subtask>
+          <subtask>Policy: Consumers can cancel own pending requests</subtask>
+          <subtask>Policy: Suppliers can update assigned requests</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="5">
+        <title>Create Database Indexes</title>
+        <subtasks>
+          <subtask>Create index on water_requests(status)</subtask>
+          <subtask>Create index on water_requests(supplier_id)</subtask>
+          <subtask>Create index on water_requests(consumer_id)</subtask>
+          <subtask>Create index on water_requests(tracking_token)</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="6,7">
+        <title>Run Migration and Generate Types</title>
+        <subtasks>
+          <subtask>Run migration against Supabase project</subtask>
+          <subtask>Verify tables created in Supabase dashboard</subtask>
+          <subtask>Generate TypeScript types: npx supabase gen types typescript</subtask>
+          <subtask>Verify types compile without errors</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="1,2,3,4,5">
+        <title>Verify Schema</title>
+        <subtasks>
+          <subtask>Test: Insert a profile record via Supabase dashboard</subtask>
+          <subtask>Test: Insert a water_request record via Supabase dashboard</subtask>
+          <subtask>Test: Verify RLS policies prevent unauthorized access</subtask>
+          <subtask>Test: Verify indexes exist via SQL query</subtask>
+          <subtask>Run npm run build to verify types work</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="AC1.2.1">profiles table exists with all specified columns: id (UUID, FK to auth.users), role (consumer/supplier), name, phone, address, special_instructions, service_area, price tiers (price_100l, price_1000l, price_5000l, price_10000l), is_available, timestamps (created_at, updated_at)</ac>
+    <ac id="AC1.2.2">water_requests table exists with all specified columns: id (UUID), consumer_id, guest fields (guest_name, guest_phone, guest_email), tracking_token, address, special_instructions, coordinates (latitude, longitude), amount, is_urgent, status, supplier_id, delivery_window, decline_reason, timestamps (created_at, accepted_at, delivered_at, cancelled_at)</ac>
+    <ac id="AC1.2.3">Row Level Security (RLS) is enabled on both tables</ac>
+    <ac id="AC1.2.4">RLS policies implement data isolation per Architecture spec: users can read/update own profile, suppliers can read pending requests, anyone can create requests, consumers can cancel own pending requests, suppliers can update assigned requests</ac>
+    <ac id="AC1.2.5">Indexes exist on: status, supplier_id, consumer_id, tracking_token columns</ac>
+    <ac id="AC1.2.6">TypeScript types are generated from the database schema</ac>
+    <ac id="AC1.2.7">Migration file exists at supabase/migrations/001_initial_schema.sql</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>Database Schema</section>
+        <snippet>Complete SQL schema for profiles and water_requests tables with RLS policies. Uses Supabase PostgreSQL with Row Level Security for data isolation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>ADR-001: Supabase over Firebase/Custom Backend</section>
+        <snippet>Decision to use Supabase as BaaS. PostgreSQL is more familiar, RLS simplifies authorization, free tier sufficient for MVP.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>ADR-003: No Separate ORM</section>
+        <snippet>Use Supabase client directly for MVP. Type-safe with generated types, simpler deployment.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Data Models and Contracts</section>
+        <snippet>Detailed SQL DDL for profiles and water_requests tables with TypeScript type definitions. Includes RLS policies and index specifications.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic 1 Technical Specification</title>
+        <section>Non-Functional Requirements - Security</section>
+        <snippet>RLS policies for data isolation: users read own profile, suppliers read pending requests, anyone creates requests.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 1.2: Supabase Database Setup</section>
+        <snippet>Migration file location: supabase/migrations/001_initial_schema.sql. Use gen_random_uuid() for UUIDs, status enum via CHECK constraint.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/1-1-project-initialization.md</path>
+        <title>Story 1.1 (Previous Story)</title>
+        <section>Dev Agent Record</section>
+        <snippet>Project foundation complete. Using Next.js 16 (latest), Tailwind v4 with OKLCH colors, React 19. Supabase dependencies installed.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>.env.local.example</path>
+        <kind>config</kind>
+        <symbol>Supabase environment variables</symbol>
+        <lines>1-10</lines>
+        <reason>Contains placeholders for NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY that must be populated with real values in this story</reason>
+      </file>
+      <file>
+        <path>package.json</path>
+        <kind>manifest</kind>
+        <symbol>@supabase/supabase-js, @supabase/ssr</symbol>
+        <lines>18-19</lines>
+        <reason>Supabase dependencies already installed: @supabase/ssr ^0.8.0, @supabase/supabase-js ^2.86.0</reason>
+      </file>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="@supabase/supabase-js" version="^2.86.0">Database client for Supabase PostgreSQL</package>
+        <package name="@supabase/ssr" version="^0.8.0">SSR auth support for Next.js</package>
+        <package name="next" version="16.0.6">Next.js framework</package>
+        <package name="typescript" version="^5">TypeScript for type generation</package>
+        <package name="zod" version="^4.1.13">Schema validation (will use generated types)</package>
+      </ecosystem>
+      <note>Supabase CLI (npx supabase) will be used for migrations and type generation - installed via npx, not package.json</note>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="docs/architecture.md">Use gen_random_uuid() for UUID generation (PostgreSQL native)</constraint>
+    <constraint source="docs/architecture.md">Status enum as CHECK constraint rather than separate enum type</constraint>
+    <constraint source="docs/architecture.md">Amount constraint: CHECK (amount IN (100, 1000, 5000, 10000))</constraint>
+    <constraint source="docs/architecture.md">tracking_token uses UUID cast to text for guest tracking URLs</constraint>
+    <constraint source="docs/architecture.md">Foreign keys cascade on delete from auth.users to profiles</constraint>
+    <constraint source="docs/architecture.md">Row Level Security must be enabled on all tables</constraint>
+    <constraint source="docs/sprint-artifacts/tech-spec-epic-1.md">TypeScript types must be generated via: npx supabase gen types typescript</constraint>
+    <constraint source="docs/sprint-artifacts/tech-spec-epic-1.md">Migration file must be at: supabase/migrations/001_initial_schema.sql</constraint>
+    <constraint source="docs/sprint-artifacts/tech-spec-epic-1.md">Zero TypeScript errors in strict mode after type generation</constraint>
+    <constraint source="docs/sprint-artifacts/1-1-project-initialization.md">Project uses Next.js 16, Tailwind v4, React 19 - cutting edge versions</constraint>
+    <constraint source="docs/sprint-artifacts/1-1-project-initialization.md">Must maintain passing build: npm run build must succeed after changes</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>profiles table</name>
+      <kind>PostgreSQL table</kind>
+      <signature>
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('consumer', 'supplier')),
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  address TEXT,
+  special_instructions TEXT,
+  service_area TEXT,
+  price_100l INTEGER,
+  price_1000l INTEGER,
+  price_5000l INTEGER,
+  price_10000l INTEGER,
+  is_available BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+      </signature>
+      <path>supabase/migrations/001_initial_schema.sql</path>
+    </interface>
+    <interface>
+      <name>water_requests table</name>
+      <kind>PostgreSQL table</kind>
+      <signature>
+CREATE TABLE water_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  consumer_id UUID REFERENCES profiles(id),
+  guest_name TEXT,
+  guest_phone TEXT NOT NULL,
+  guest_email TEXT,
+  tracking_token TEXT UNIQUE DEFAULT gen_random_uuid()::text,
+  address TEXT NOT NULL,
+  special_instructions TEXT NOT NULL,
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  amount INTEGER NOT NULL CHECK (amount IN (100, 1000, 5000, 10000)),
+  is_urgent BOOLEAN DEFAULT false,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'delivered', 'cancelled')),
+  supplier_id UUID REFERENCES profiles(id),
+  delivery_window TEXT,
+  decline_reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  accepted_at TIMESTAMPTZ,
+  delivered_at TIMESTAMPTZ,
+  cancelled_at TIMESTAMPTZ
+);
+      </signature>
+      <path>supabase/migrations/001_initial_schema.sql</path>
+    </interface>
+    <interface>
+      <name>RLS Policy - Users can read own profile</name>
+      <kind>PostgreSQL RLS policy</kind>
+      <signature>CREATE POLICY "Users can read own profile" ON profiles FOR SELECT USING (auth.uid() = id);</signature>
+      <path>supabase/migrations/001_initial_schema.sql</path>
+    </interface>
+    <interface>
+      <name>RLS Policy - Users can update own profile</name>
+      <kind>PostgreSQL RLS policy</kind>
+      <signature>CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);</signature>
+      <path>supabase/migrations/001_initial_schema.sql</path>
+    </interface>
+    <interface>
+      <name>RLS Policy - Suppliers can read pending requests</name>
+      <kind>PostgreSQL RLS policy</kind>
+      <signature>CREATE POLICY "Suppliers can read pending requests" ON water_requests FOR SELECT USING (status = 'pending' OR supplier_id = auth.uid() OR consumer_id = auth.uid());</signature>
+      <path>supabase/migrations/001_initial_schema.sql</path>
+    </interface>
+    <interface>
+      <name>RLS Policy - Anyone can create requests</name>
+      <kind>PostgreSQL RLS policy</kind>
+      <signature>CREATE POLICY "Anyone can create requests" ON water_requests FOR INSERT WITH CHECK (true);</signature>
+      <path>supabase/migrations/001_initial_schema.sql</path>
+    </interface>
+    <interface>
+      <name>Generated TypeScript Types</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+export type Profile = {
+  id: string;
+  role: 'consumer' | 'supplier';
+  name: string;
+  phone: string;
+  address: string | null;
+  special_instructions: string | null;
+  service_area: string | null;
+  price_100l: number | null;
+  price_1000l: number | null;
+  price_5000l: number | null;
+  price_10000l: number | null;
+  is_available: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WaterRequest = {
+  id: string;
+  consumer_id: string | null;
+  guest_name: string | null;
+  guest_phone: string;
+  guest_email: string | null;
+  tracking_token: string;
+  address: string;
+  special_instructions: string;
+  latitude: number | null;
+  longitude: number | null;
+  amount: 100 | 1000 | 5000 | 10000;
+  is_urgent: boolean;
+  status: 'pending' | 'accepted' | 'delivered' | 'cancelled';
+  supplier_id: string | null;
+  delivery_window: string | null;
+  decline_reason: string | null;
+  created_at: string;
+  accepted_at: string | null;
+  delivered_at: string | null;
+  cancelled_at: string | null;
+};
+      </signature>
+      <path>src/types/database.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Per Architecture, testing at this stage focuses on schema verification (tables exist with correct columns), RLS policy testing (correct access patterns), and type generation verification (TypeScript compiles). Use Supabase dashboard for manual verification and npm run build to verify type integration.</standards>
+    <locations>
+      <location>supabase/migrations/*.sql (migration files)</location>
+      <location>src/types/database.ts (generated types - verify compilation)</location>
+      <location>Supabase Dashboard (manual verification of tables, policies, indexes)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1.2.1">Verify profiles table columns via Supabase Table Editor - check all columns exist with correct types</idea>
+      <idea ac="AC1.2.2">Verify water_requests table columns via Supabase Table Editor - check all columns exist with correct types</idea>
+      <idea ac="AC1.2.3">Check RLS enabled: SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public'</idea>
+      <idea ac="AC1.2.4">Test RLS: Try inserting/selecting with different auth contexts, verify policies block unauthorized access</idea>
+      <idea ac="AC1.2.5">Verify indexes: SELECT indexname FROM pg_indexes WHERE tablename IN ('profiles', 'water_requests')</idea>
+      <idea ac="AC1.2.6">Run npm run build after type generation - should compile with zero errors</idea>
+      <idea ac="AC1.2.7">Verify file exists at supabase/migrations/001_initial_schema.sql</idea>
+    </ideas>
+  </tests>
+</story-context>

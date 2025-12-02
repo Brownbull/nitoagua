@@ -1,0 +1,203 @@
+<story-context id="bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>3</storyId>
+    <title>Supabase Authentication Integration</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-02</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-3-supabase-authentication-integration.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>Supabase Auth configured for the application</iWant>
+    <soThat>users can register and log in securely</soThat>
+    <tasks>
+      <task id="1" name="Create Supabase Browser Client" ac="1">
+        <subtask>Create src/lib/supabase/client.ts</subtask>
+        <subtask>Import createBrowserClient from @supabase/ssr</subtask>
+        <subtask>Export createClient() function returning browser Supabase client</subtask>
+        <subtask>Use NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY env vars</subtask>
+        <subtask>Test: Import and call in a client component, verify connection</subtask>
+      </task>
+      <task id="2" name="Create Supabase Server Client" ac="2">
+        <subtask>Create src/lib/supabase/server.ts</subtask>
+        <subtask>Import createServerClient from @supabase/ssr</subtask>
+        <subtask>Import cookies from next/headers</subtask>
+        <subtask>Export async createClient() function returning server Supabase client</subtask>
+        <subtask>Configure cookie handling with getAll, setAll operations</subtask>
+        <subtask>Test: Use in a Server Component to query data</subtask>
+      </task>
+      <task id="3" name="Create Auth Middleware" ac="3,4">
+        <subtask>Create src/lib/supabase/middleware.ts with updateSession() function</subtask>
+        <subtask>Import createServerClient from @supabase/ssr</subtask>
+        <subtask>Implement cookie management for request/response cycle</subtask>
+        <subtask>Create src/middleware.ts that exports middleware using updateSession()</subtask>
+        <subtask>Configure matcher to run on all routes except static assets</subtask>
+        <subtask>Test: Session cookies are set/refreshed on page navigation</subtask>
+      </task>
+      <task id="4" name="Create Auth Helper Utilities" ac="5">
+        <subtask>Create src/lib/supabase/auth.ts with helper functions: getUser(), getSession()</subtask>
+        <subtask>Create src/hooks/use-auth.ts hook for client-side auth state</subtask>
+        <subtask>Test: Auth state accessible in both server and client components</subtask>
+      </task>
+      <task id="5" name="Create Auth Types" ac="1,2,5">
+        <subtask>Create src/lib/supabase/types.ts with Supabase client type exports</subtask>
+        <subtask>Export Database types from generated src/types/database.ts (when available)</subtask>
+        <subtask>Ensure proper TypeScript typing for all auth functions</subtask>
+      </task>
+      <task id="6" name="Configure Supabase Auth Settings" ac="6">
+        <subtask>In Supabase dashboard: Enable email/password authentication</subtask>
+        <subtask>In Supabase dashboard: Configure rate limiting (5 attempts/hour/IP)</subtask>
+        <subtask>Set JWT expiration: 3600 seconds (1 hour) for access token</subtask>
+        <subtask>Set refresh token expiration: 604800 seconds (7 days)</subtask>
+        <subtask>Document auth configuration in src/lib/supabase/README.md</subtask>
+      </task>
+      <task id="7" name="Verify Auth Integration" ac="1,2,3,4,5">
+        <subtask>Run npm run build - verify no TypeScript errors</subtask>
+        <subtask>Run npm run dev - verify middleware runs without errors</subtask>
+        <subtask>Test: Create test page that displays auth state</subtask>
+        <subtask>Test: Verify session cookies appear in browser dev tools</subtask>
+        <subtask>Test: Verify middleware refreshes session on navigation</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1.3.1">Browser client at src/lib/supabase/client.ts functions correctly and can be imported by client components</criterion>
+    <criterion id="AC1.3.2">Server client at src/lib/supabase/server.ts functions correctly for use in Server Components and API routes</criterion>
+    <criterion id="AC1.3.3">Middleware at src/middleware.ts manages session cookies and refreshes auth state on each request</criterion>
+    <criterion id="AC1.3.4">Session refresh and expiration work correctly (JWT auto-refresh before expiration)</criterion>
+    <criterion id="AC1.3.5">Auth state is accessible in both server and client components via helper utilities</criterion>
+    <criterion id="AC1.3.6">Rate limiting is configured (5 attempts/hour/IP via Supabase dashboard)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Authentication">
+        ADR-001: Supabase over Firebase/Custom Backend. Uses @supabase/ssr for Next.js App Router SSR support. Cookie-based sessions for security. JWT expiration settings defined.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Security Architecture">
+        Authentication flow: Email/password via Supabase Auth. Session management via cookies. Rate limiting via Supabase dashboard. CSRF protection built into Next.js.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Project Structure">
+        Defines src/lib/supabase/ directory structure with client.ts, server.ts, middleware.ts, and types.ts files. Middleware at src/middleware.ts.
+      </doc>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-1.md" title="Epic 1 Technical Specification" section="Story 1.3 Acceptance Criteria">
+        Detailed acceptance criteria for auth integration including browser client, server client, middleware, session handling, and rate limiting requirements.
+      </doc>
+      <doc path="docs/sprint-artifacts/tech-spec-epic-1.md" title="Epic 1 Technical Specification" section="APIs and Interfaces">
+        Supabase client interfaces: createClient() for browser, async createClient() for server, updateSession() for middleware.
+      </doc>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="Non-Functional Requirements">
+        NFR5-NFR9: HTTPS encryption, password hashing (bcrypt), session token expiration, rate limiting on auth endpoints, input validation.
+      </doc>
+      <doc path="docs/epics.md" title="Epics Breakdown" section="Story 1.3">
+        Prerequisites: Story 1.2 (Database Setup). Technical notes: Use @supabase/ssr for cookie-based auth. JWT settings: 7 days access, 30 days refresh.
+      </doc>
+    </docs>
+    <code>
+      <file path="src/lib/utils.ts" kind="utility" symbol="cn" reason="Existing utility function for classname merging - pattern to follow for new utilities">
+        <lines>1-7</lines>
+      </file>
+      <file path="src/app/layout.tsx" kind="layout" symbol="RootLayout" reason="Root layout where auth providers may need to be added; currently uses lang='es'">
+        <lines>1-22</lines>
+      </file>
+      <file path="src/components/ui/form.tsx" kind="component" symbol="Form" reason="Form components using react-hook-form - auth forms will use similar patterns">
+        <lines>all</lines>
+      </file>
+      <file path="src/components/ui/input.tsx" kind="component" symbol="Input" reason="Input component for auth form fields">
+        <lines>all</lines>
+      </file>
+      <file path="src/components/ui/button.tsx" kind="component" symbol="Button" reason="Button component for auth form submission">
+        <lines>all</lines>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package name="@supabase/ssr" version="^0.8.0">SSR auth support for Next.js App Router - provides createBrowserClient, createServerClient</package>
+        <package name="@supabase/supabase-js" version="^2.86.0">Core Supabase client library</package>
+        <package name="next" version="16.0.6">Next.js framework with App Router</package>
+        <package name="react" version="19.2.0">React 19 with modern hooks</package>
+        <package name="react-hook-form" version="^7.67.0">Form handling for auth forms</package>
+        <package name="zod" version="^4.1.13">Schema validation for auth inputs</package>
+        <package name="typescript" version="^5" dev="true">TypeScript for type safety</package>
+      </node>
+      <environment>
+        <var name="NEXT_PUBLIC_SUPABASE_URL" required="true">Supabase project URL (public)</var>
+        <var name="NEXT_PUBLIC_SUPABASE_ANON_KEY" required="true">Supabase anonymous key (public)</var>
+        <var name="SUPABASE_SERVICE_ROLE_KEY" required="false">Service role key for admin operations (server-only)</var>
+      </environment>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">Use @supabase/ssr package (not @supabase/auth-helpers) for Next.js App Router compatibility</constraint>
+    <constraint type="architecture">Cookie-based sessions only - no localStorage for auth tokens</constraint>
+    <constraint type="architecture">Server-side session management for security - middleware refreshes on every request</constraint>
+    <constraint type="security">Rate limiting: 5 auth attempts per hour per IP (configured in Supabase dashboard)</constraint>
+    <constraint type="security">JWT access token: 3600s (1 hour) expiration</constraint>
+    <constraint type="security">Refresh token: 604800s (7 days) expiration</constraint>
+    <constraint type="naming">Files: kebab-case (client.ts, server.ts)</constraint>
+    <constraint type="naming">Functions: camelCase (createClient, updateSession, getUser)</constraint>
+    <constraint type="naming">Use @/* import alias for all internal imports</constraint>
+    <constraint type="pattern">Async cookies() call in server.ts (Next.js 15+ requirement)</constraint>
+    <constraint type="pattern">Middleware matcher excludes static assets: /((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)</constraint>
+    <constraint type="dependency">Story depends on Story 1.2 completion for profiles table FK to auth.users</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="createClient (Browser)" kind="function" path="src/lib/supabase/client.ts">
+      <signature>export function createClient(): SupabaseClient</signature>
+      <description>Creates browser-side Supabase client for client components. Uses createBrowserClient from @supabase/ssr.</description>
+    </interface>
+    <interface name="createClient (Server)" kind="async function" path="src/lib/supabase/server.ts">
+      <signature>export async function createClient(): Promise&lt;SupabaseClient&gt;</signature>
+      <description>Creates server-side Supabase client for Server Components and API routes. Uses cookies() from next/headers.</description>
+    </interface>
+    <interface name="updateSession" kind="async function" path="src/lib/supabase/middleware.ts">
+      <signature>export async function updateSession(request: NextRequest): Promise&lt;NextResponse&gt;</signature>
+      <description>Middleware function that refreshes auth session cookies on each request.</description>
+    </interface>
+    <interface name="getUser" kind="async function" path="src/lib/supabase/auth.ts">
+      <signature>export async function getUser(): Promise&lt;User | null&gt;</signature>
+      <description>Server-side helper to get current authenticated user.</description>
+    </interface>
+    <interface name="getSession" kind="async function" path="src/lib/supabase/auth.ts">
+      <signature>export async function getSession(): Promise&lt;Session | null&gt;</signature>
+      <description>Server-side helper to get current session.</description>
+    </interface>
+    <interface name="useAuth" kind="hook" path="src/hooks/use-auth.ts">
+      <signature>export function useAuth(): { user: User | null; loading: boolean; error: Error | null }</signature>
+      <description>Client-side hook for accessing auth state in client components.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing follows the Architecture test strategy: Unit tests with Vitest for utility functions and validation schemas, Integration tests for Supabase client and auth flow, E2E verification for PWA and build. For this auth story, focus on client instantiation, session cookie management, middleware execution, and auth state accessibility. Playwright is configured for E2E tests.
+    </standards>
+    <locations>
+      <location>tests/</location>
+      <location>src/**/*.test.ts</location>
+      <location>playwright.config.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1.3.1">Test browser client can be imported and instantiated in a client component without errors</idea>
+      <idea ac="AC1.3.1">Test browser client can make a simple query (e.g., check connection)</idea>
+      <idea ac="AC1.3.2">Test server client can be used in Server Component to query data</idea>
+      <idea ac="AC1.3.2">Test server client properly reads cookies from request</idea>
+      <idea ac="AC1.3.3">Test middleware sets session cookies on initial page load</idea>
+      <idea ac="AC1.3.3">Test middleware refreshes session on navigation</idea>
+      <idea ac="AC1.3.4">Test session persists across page reloads</idea>
+      <idea ac="AC1.3.4">Test expired sessions are properly refreshed</idea>
+      <idea ac="AC1.3.5">Test getUser() returns user when authenticated</idea>
+      <idea ac="AC1.3.5">Test getUser() returns null when not authenticated</idea>
+      <idea ac="AC1.3.5">Test useAuth hook provides auth state in client components</idea>
+      <idea ac="AC1.3.6">Verify rate limiting config in Supabase dashboard (manual)</idea>
+      <idea ac="all">npm run build passes with no TypeScript errors</idea>
+      <idea ac="all">npm run lint passes with no ESLint errors</idea>
+    </ideas>
+  </tests>
+</story-context>
