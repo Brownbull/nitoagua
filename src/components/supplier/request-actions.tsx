@@ -44,27 +44,30 @@ export function RequestActions({ status }: RequestActionsProps) {
   return (
     <Card data-testid="request-actions-card">
       <CardContent className="pt-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            size="lg"
-            className="flex-1 bg-green-600 hover:bg-green-700"
-            onClick={handleAccept}
-            disabled={isLoading}
-            data-testid="accept-button"
-          >
-            <Check className="w-5 h-5 mr-2" />
-            Aceptar
-          </Button>
+        {/* Side-by-side layout: Rechazar 40% left, Aceptar 60% right (right-handed friendly) */}
+        <div className="flex gap-3">
+          {/* Rechazar on left - 40% width */}
           <Button
             size="lg"
             variant="outline"
-            className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+            className="w-[40%] border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 h-14"
             onClick={handleDecline}
             disabled={isLoading}
             data-testid="decline-button"
           >
             <X className="w-5 h-5 mr-2" />
             Rechazar
+          </Button>
+          {/* Aceptar on right - 60% width (primary action, closer to right thumb) */}
+          <Button
+            size="lg"
+            className="w-[60%] bg-green-600 hover:bg-green-700 h-14"
+            onClick={handleAccept}
+            disabled={isLoading}
+            data-testid="accept-button"
+          >
+            <Check className="w-5 h-5 mr-2" />
+            Aceptar
           </Button>
         </div>
       </CardContent>

@@ -119,26 +119,29 @@ export function RequestCard({
             </div>
           </div>
 
-          {/* Actions section */}
-          <div className="flex gap-2 sm:flex-col sm:items-end">
+          {/* Actions section - Full width on mobile, right-aligned on desktop */}
+          <div className="flex gap-2 w-full sm:w-auto sm:flex-row sm:items-center">
+            {/* Ver Detalles on left */}
+            <Button
+              size="lg"
+              variant="outline"
+              asChild
+              className="flex-1 sm:flex-none"
+              data-testid="view-details-button"
+            >
+              <Link href={`/requests/${request.id}${currentTab ? `?from=${currentTab}` : ""}`}>Ver Detalles</Link>
+            </Button>
+            {/* Aceptar on right (closer to right-handed thumb zone) */}
             {showAcceptButton && (
               <Button
-                size="sm"
+                size="lg"
                 onClick={() => onAccept?.(request.id)}
-                className="bg-green-600 hover:bg-green-700"
+                className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
                 data-testid="accept-button"
               >
                 Aceptar
               </Button>
             )}
-            <Button
-              size="sm"
-              variant="outline"
-              asChild
-              data-testid="view-details-button"
-            >
-              <Link href={`/requests/${request.id}${currentTab ? `?from=${currentTab}` : ""}`}>Ver Detalles</Link>
-            </Button>
           </div>
         </div>
       </CardContent>
