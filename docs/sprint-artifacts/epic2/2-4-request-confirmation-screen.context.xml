@@ -1,0 +1,193 @@
+<story-context id="2-4-request-confirmation-screen" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>4</storyId>
+    <title>Request Confirmation Screen</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic2/2-4-request-confirmation-screen.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>consumer</asA>
+    <iWant>to see confirmation that my request was received</iWant>
+    <soThat>I know my request is in the system</soThat>
+    <tasks>
+      <task n="1" ac="1,2,3,4,5,6,7,8">Create Confirmation Page Component - Replace placeholder at src/app/(consumer)/request/[id]/confirmation/page.tsx with full implementation</task>
+      <task n="2" ac="1,2,3,4,5">Create Confirmation Content Component - Create src/components/consumer/request-confirmation.tsx for reusable confirmation UI</task>
+      <task n="3" ac="6,7">Implement Navigation Buttons - Add "Ver Estado" (primary) and "Nueva Solicitud" (secondary) buttons with correct navigation</task>
+      <task n="4" ac="8">Implement Guest Email Message - Display tracking URL message for guest consumers</task>
+      <task n="5" ac="5">Fetch Supplier Info - Query profiles table for single supplier phone number (MVP)</task>
+      <task n="6" ac="3,6,8">Handle Request Data Passing - Read from sessionStorage or fallback to API fetch</task>
+      <task n="7" ac="1,2">Styling and Layout - Center content, mobile-responsive, match UX spec</task>
+      <task n="8" ac="1-8">E2E Testing - Create tests/e2e/consumer-request-confirmation.spec.ts</task>
+      <task n="9" ac="all">Build Verification - npm run build, npm run lint, Playwright tests pass</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="AC2-4-1">Confirmation displays success icon (green checkmark in circle, using lucide-react CheckCircle2)</ac>
+    <ac id="AC2-4-2">Shows "¡Solicitud Enviada!" heading (24px, bold, centered)</ac>
+    <ac id="AC2-4-3">Displays request ID/number formatted as "Solicitud #[short-id]" (first 8 chars of UUID)</ac>
+    <ac id="AC2-4-4">Shows message: "El aguatero te contactará pronto"</ac>
+    <ac id="AC2-4-5">Displays supplier phone number in clickable format (tel: link)</ac>
+    <ac id="AC2-4-6">"Ver Estado" button (primary) navigates to /track/[trackingToken] for guests or /request/[id] for authenticated users</ac>
+    <ac id="AC2-4-7">"Nueva Solicitud" button (secondary) returns to /request form</ac>
+    <ac id="AC2-4-8">Guest consumers see: "Te enviamos un email con el enlace para seguir tu solicitud" with tracking URL displayed</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="nitoagua PRD" section="Functional Requirements">
+        FR6: Guest consumers receive unique tracking link via email.
+        FR7: Consumers can create water request specifying required information.
+        FR14: Consumers can view current status of their request.
+        FR36: Supplier contact information visible to consumers after request accepted.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Project Structure">
+        Consumer pages in (consumer) route group. Custom components in src/components/consumer/.
+        API response format: { data, error } structure.
+        Database queries use Supabase server client via createClient().
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Database Schema">
+        profiles table contains supplier info with phone field.
+        water_requests table has tracking_token for guest access.
+        Query pattern: await supabase.from('profiles').select('phone').eq('role', 'supplier').limit(1).single()
+      </doc>
+      <doc path="docs/sprint-artifacts/epic2/tech-spec-epic-2.md" title="Epic 2 Tech Spec" section="Story 2-4 Acceptance Criteria">
+        AC2-4-1 through AC2-4-8 defined for confirmation screen.
+        FRs addressed: FR7, FR6, FR36, FR14.
+        Success color: #10B981 (Emerald/Green).
+      </doc>
+      <doc path="docs/sprint-artifacts/epic2/tech-spec-epic-2.md" title="Epic 2 Tech Spec" section="NPM Dependencies">
+        lucide-react for icons (CheckCircle2, Eye, Plus).
+        date-fns for date formatting.
+        sonner for toast notifications.
+      </doc>
+      <doc path="docs/ux-design-specification.md" title="UX Design Spec" section="Color System">
+        Success color: #10B981 (Emerald/Green).
+        Primary: #0077B6, Secondary: #00A8E8.
+        Phone numbers always visible for human fallback.
+      </doc>
+    </docs>
+
+    <code>
+      <file path="src/lib/supabase/server.ts" kind="service" symbol="createClient" reason="Required for server-side supplier phone lookup">
+        Export: createClient() - async function returning typed Supabase client.
+        Usage: const supabase = await createClient(); const { data } = await supabase.from('profiles')...
+      </file>
+      <file path="src/components/ui/card.tsx" kind="component" symbol="Card, CardContent, CardHeader, CardTitle" reason="Use for confirmation content container">
+        shadcn/ui Card component with slots: Card, CardHeader, CardTitle, CardContent.
+        Styling: rounded-xl border shadow-sm.
+      </file>
+      <file path="src/components/ui/button.tsx" kind="component" symbol="Button" reason="Use for navigation buttons (Ver Estado, Nueva Solicitud)">
+        Variants: default (primary), secondary, outline.
+        Sizes: default, sm, lg.
+        asChild prop for Link composition.
+      </file>
+      <file path="src/components/consumer/big-action-button.tsx" kind="component" symbol="BigActionButton" reason="Reference for established styling patterns">
+        Pattern: Tailwind CSS styling, lucide-react icons, Spanish text.
+        Loading state with pulse animation.
+      </file>
+      <file path="src/components/layout/consumer-nav.tsx" kind="component" symbol="ConsumerNav" reason="Bottom navigation already exists in consumer layout">
+        Consumer layout with 3 nav items: Inicio, Historial, Perfil.
+        Located in (consumer)/layout.tsx.
+      </file>
+      <file path="src/lib/validations/request.ts" kind="validation" symbol="requestSchema, AMOUNT_OPTIONS" reason="Reference for request data structure">
+        Amount options: 100L, 1000L, 5000L, 10000L with prices.
+        formatPrice() utility for CLP formatting.
+      </file>
+      <file path="src/app/(consumer)/request/page.tsx" kind="page" symbol="RequestPage" reason="Consumer request form page - navigation target for 'Nueva Solicitud'">
+        Existing request form page at /request route.
+      </file>
+    </code>
+
+    <dependencies>
+      <npm>
+        <package name="next" version="16.0.6">App Router, SSR, API routes</package>
+        <package name="react" version="19.2.0">Component rendering</package>
+        <package name="@supabase/supabase-js" version="^2.86.0">Database client for supplier lookup</package>
+        <package name="@supabase/ssr" version="^0.8.0">SSR auth, server client</package>
+        <package name="lucide-react" version="^0.555.0">Icons: CheckCircle2, Eye, Plus</package>
+        <package name="sonner" version="^2.0.7">Toast notifications</package>
+        <package name="class-variance-authority" version="^0.7.1">Button variants</package>
+        <package name="tailwind-merge" version="^3.4.0">Class utilities via cn()</package>
+      </npm>
+      <shadcn>
+        <component name="Card">Container for confirmation content</component>
+        <component name="Button">Navigation buttons with variants</component>
+      </shadcn>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md" type="pattern">All consumer pages must be in (consumer) route group</constraint>
+    <constraint source="architecture.md" type="pattern">Custom components in src/components/consumer/</constraint>
+    <constraint source="architecture.md" type="pattern">Use Supabase server client (createClient from @/lib/supabase/server) for data fetching</constraint>
+    <constraint source="architecture.md" type="pattern">API response format: { data, error } structure</constraint>
+    <constraint source="prd.md" type="ux">All text in Spanish (Chilean)</constraint>
+    <constraint source="prd.md" type="accessibility">Minimum touch targets 44x44px (NFR10)</constraint>
+    <constraint source="prd.md" type="performance">Page load under 3 seconds on 3G (NFR1)</constraint>
+    <constraint source="tech-spec-epic-2.md" type="security">Tracking token is UUID, not guessable</constraint>
+    <constraint source="story" type="dependency">Story 2-3 creates placeholder at src/app/(consumer)/request/[id]/confirmation/page.tsx</constraint>
+    <constraint source="story" type="dependency">Story 2-3 stores request response in sessionStorage key 'nitoagua_last_request'</constraint>
+    <constraint source="story" type="data">SessionStorage data: { id, trackingToken, status, createdAt }</constraint>
+    <constraint source="architecture.md" type="mvp">Single supplier for MVP - query profiles where role='supplier' LIMIT 1</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="RequestConfirmationProps" kind="component-props" path="src/components/consumer/request-confirmation.tsx">
+      interface RequestConfirmationProps {
+        requestId: string;           // UUID from API response
+        trackingToken: string;       // UUID for guest tracking
+        supplierPhone: string;       // Phone number from supplier profile
+        isGuest: boolean;            // True if guest (no consumer_id)
+        requestShortId?: string;     // Optional: first 8 chars of requestId
+      }
+    </interface>
+    <interface name="StoredRequestResponse" kind="data-contract" path="sessionStorage">
+      // Key: 'nitoagua_last_request'
+      interface StoredRequestResponse {
+        id: string;
+        trackingToken: string;
+        status: 'pending';
+        createdAt: string;
+      }
+    </interface>
+    <interface name="getSupplierPhone" kind="function" path="src/lib/supabase/supplier.ts">
+      export async function getSupplierPhone(): Promise&lt;string | null&gt;
+      // Query profiles table for single supplier phone (MVP)
+    </interface>
+    <interface name="Confirmation Page Route" kind="route" path="src/app/(consumer)/request/[id]/confirmation/page.tsx">
+      // Dynamic route param: [id] = request UUID
+      // SSR page component, fetches supplier phone server-side
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      E2E testing with Playwright. Tests in tests/e2e/ directory.
+      Test naming: [feature].spec.ts (e.g., consumer-request-confirmation.spec.ts).
+      Existing patterns from consumer-home.spec.ts and consumer-request-form.spec.ts.
+      Mock sessionStorage for confirmation page tests.
+      Use page.goto(), page.getByRole(), expect() assertions.
+    </standards>
+    <locations>
+      <location>tests/e2e/consumer-request-confirmation.spec.ts</location>
+      <location>tests/e2e/*.spec.ts (existing pattern)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC2-4-1">Test: Confirmation page displays success icon (CheckCircle2 visible)</idea>
+      <idea ac="AC2-4-2">Test: "¡Solicitud Enviada!" heading is visible and centered</idea>
+      <idea ac="AC2-4-3">Test: Request ID is displayed in format "Solicitud #XXXXXXXX"</idea>
+      <idea ac="AC2-4-4">Test: Message "El aguatero te contactará pronto" is visible</idea>
+      <idea ac="AC2-4-5">Test: Supplier phone is displayed and clickable (tel: href)</idea>
+      <idea ac="AC2-4-6">Test: "Ver Estado" button navigates to tracking page</idea>
+      <idea ac="AC2-4-7">Test: "Nueva Solicitud" button navigates to /request</idea>
+      <idea ac="AC2-4-8">Test: Guest tracking message with URL is visible for guest users</idea>
+      <idea ac="all">Test: Build passes with npm run build</idea>
+      <idea ac="all">Test: Lint passes with npm run lint</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,258 @@
+<story-context id="bmm/story-context" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>6</storyId>
+    <title>Request Status Page (Consumer View)</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic2/2-6-request-status-page-consumer-view.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>consumer</asA>
+    <iWant>to view the detailed status of my request</iWant>
+    <soThat>I can see all information about my pending delivery</soThat>
+    <tasks>
+      <task id="1" ac="1">Create Request Status Page Route at src/app/(consumer)/request/[id]/page.tsx</task>
+      <task id="2" ac="2">Integrate StatusBadge component from src/components/shared/status-badge.tsx</task>
+      <task id="3" ac="3">Integrate StatusTracker timeline from src/components/consumer/status-tracker.tsx</task>
+      <task id="4" ac="4">Display Request Details Card with date, amount, address, special instructions</task>
+      <task id="5" ac="5">Conditional content for Pending status</task>
+      <task id="6" ac="6">Conditional content for Accepted status with supplier info</task>
+      <task id="7" ac="7">Conditional content for Delivered status with timestamp</task>
+      <task id="8" ac="3,6">Add auto-refresh functionality (30 second interval)</task>
+      <task id="9">Loading and error states</task>
+      <task id="10" ac="1-7">E2E testing with Playwright</task>
+      <task id="11">Build verification</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC2-6-1">Status page accessible at /request/[id] for authenticated consumers</criterion>
+    <criterion id="AC2-6-2">StatusBadge shows current state (Pendiente, Aceptada, Entregada, Cancelada) with correct colors</criterion>
+    <criterion id="AC2-6-3">Timeline visualization displays: Created -> Accepted -> Delivered progression</criterion>
+    <criterion id="AC2-6-4">Shows request details: date, amount, address, special instructions</criterion>
+    <criterion id="AC2-6-5">Pending status shows: "Esperando confirmacion del aguatero"</criterion>
+    <criterion id="AC2-6-6">Accepted status shows: "Confirmado! Tu agua viene en camino" with supplier name, phone, and delivery window</criterion>
+    <criterion id="AC2-6-7">Delivered status shows: "Entrega completada" with completion timestamp in Spanish format</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Project Structure, Authentication Flow, Database Query Pattern</section>
+        <snippet>Defines (consumer) route group, protected routes via middleware, Supabase server client patterns.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>StatusBadge, User Journey Flows, Confirmation Patterns</section>
+        <snippet>StatusBadge colors: pending=#FEF3C7/amber, accepted=#DBEAFE/blue, delivered=#D1FAE5/green. Timeline 3-step visualization.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic2/tech-spec-epic-2.md</path>
+        <title>Epic 2 Tech Spec</title>
+        <section>Story 2-6 Acceptance Criteria</section>
+        <snippet>Authoritative acceptance criteria for Story 2.6 Request Status Page implementation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics and Stories</title>
+        <section>Epic 2: Consumer Water Request, Story 2.6</section>
+        <snippet>Story 2.6: As a consumer, I want to view detailed status of my request.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR14, FR18, NFR1</section>
+        <snippet>FR14: View request status. FR18: See supplier contact info. NFR1: Page load under 3s on 3G.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- CRITICAL: Components to REUSE from Story 2-5 (already implemented) -->
+      <file>
+        <path>src/components/shared/status-badge.tsx</path>
+        <kind>component</kind>
+        <symbol>StatusBadge</symbol>
+        <lines>1-51</lines>
+        <reason>REUSE - Status badge with pending/accepted/delivered/cancelled variants. Uses cva for styling, lucide-react icons.</reason>
+      </file>
+      <file>
+        <path>src/components/consumer/status-tracker.tsx</path>
+        <kind>component</kind>
+        <symbol>StatusTracker</symbol>
+        <lines>1-199</lines>
+        <reason>REUSE - Timeline component with mobile/desktop layouts. Takes currentStatus, createdAt, acceptedAt, deliveredAt, formatDate props.</reason>
+      </file>
+      <file>
+        <path>src/components/consumer/tracking-refresh.tsx</path>
+        <kind>component</kind>
+        <symbol>TrackingRefresh</symbol>
+        <reason>REUSE - Client component for 30-second auto-refresh using router.refresh(). Pauses when page hidden.</reason>
+      </file>
+      <file>
+        <path>src/lib/utils/format.ts</path>
+        <kind>utility</kind>
+        <symbol>formatDateSpanish, formatShortDate, formatPhone</symbol>
+        <lines>1-69</lines>
+        <reason>REUSE - Date formatting in Spanish, phone formatting for Chilean numbers. Uses date-fns with es locale.</reason>
+      </file>
+      <!-- Reference implementation for similar page -->
+      <file>
+        <path>src/app/track/[token]/page.tsx</path>
+        <kind>page</kind>
+        <symbol>TrackingPage, TrackingContent, TrackingErrorPage</symbol>
+        <lines>1-256</lines>
+        <reason>REFERENCE - Guest tracking page implementation. Similar structure to consumer request page. Key difference: uses tracking_token instead of id, no auth required. Pattern to follow for request status page.</reason>
+      </file>
+      <!-- Supabase and auth infrastructure -->
+      <file>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>service</kind>
+        <symbol>createClient</symbol>
+        <lines>1-30</lines>
+        <reason>Server-side Supabase client for Server Components. Returns typed client with Database type.</reason>
+      </file>
+      <file>
+        <path>src/middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>middleware, updateSession</symbol>
+        <reason>Auth middleware for session handling. Refreshes auth tokens, handles protected routes.</reason>
+      </file>
+      <!-- Consumer layout -->
+      <file>
+        <path>src/app/(consumer)/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>ConsumerLayout</symbol>
+        <lines>1-21</lines>
+        <reason>Consumer route group layout with bottom navigation. New page will inherit this layout.</reason>
+      </file>
+      <!-- UI components -->
+      <file>
+        <path>src/components/ui/card.tsx</path>
+        <kind>component</kind>
+        <symbol>Card, CardHeader, CardTitle, CardContent</symbol>
+        <reason>shadcn/ui Card component for request details display.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/button.tsx</path>
+        <kind>component</kind>
+        <symbol>Button</symbol>
+        <reason>shadcn/ui Button for navigation and cancel action.</reason>
+      </file>
+      <!-- Database types -->
+      <file>
+        <path>src/types/database.ts</path>
+        <kind>types</kind>
+        <symbol>Database, Tables</symbol>
+        <lines>1-318</lines>
+        <reason>Generated Supabase types. water_requests table has: id, status, amount, address, special_instructions, is_urgent, created_at, accepted_at, delivered_at, delivery_window, supplier_id, consumer_id. profiles table has: id, name, phone.</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <ecosystem name="node">
+        <package name="next" version="16.0.6">React framework with App Router</package>
+        <package name="react" version="19.2.0">React library</package>
+        <package name="@supabase/ssr" version="^0.8.0">Supabase SSR integration</package>
+        <package name="@supabase/supabase-js" version="^2.86.0">Supabase client</package>
+        <package name="date-fns" version="^4.1.0">Date formatting with Spanish locale</package>
+        <package name="lucide-react" version="^0.555.0">Icons (Clock, CheckCircle, Package, Phone, etc.)</package>
+        <package name="class-variance-authority" version="^0.7.1">Component variants for StatusBadge</package>
+        <package name="tailwind-merge" version="^3.4.0">Tailwind class merging</package>
+        <package name="sonner" version="^2.0.7">Toast notifications</package>
+        <package name="@playwright/test" version="^1.57.0" dev="true">E2E testing</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <interfaces>
+    <interface>
+      <name>StatusBadge</name>
+      <kind>React Component</kind>
+      <signature>StatusBadge({ status: RequestStatus, className?: string }): JSX.Element</signature>
+      <path>src/components/shared/status-badge.tsx</path>
+    </interface>
+    <interface>
+      <name>StatusTracker</name>
+      <kind>React Component</kind>
+      <signature>StatusTracker({ currentStatus: RequestStatus, createdAt: string, acceptedAt?: string | null, deliveredAt?: string | null, formatDate: (date: string) => string }): JSX.Element</signature>
+      <path>src/components/consumer/status-tracker.tsx</path>
+    </interface>
+    <interface>
+      <name>TrackingRefresh</name>
+      <kind>React Client Component</kind>
+      <signature>TrackingRefresh(): null</signature>
+      <path>src/components/consumer/tracking-refresh.tsx</path>
+    </interface>
+    <interface>
+      <name>formatDateSpanish</name>
+      <kind>Function</kind>
+      <signature>formatDateSpanish(date: string | Date): string</signature>
+      <path>src/lib/utils/format.ts</path>
+    </interface>
+    <interface>
+      <name>formatPhone</name>
+      <kind>Function</kind>
+      <signature>formatPhone(phone: string): string</signature>
+      <path>src/lib/utils/format.ts</path>
+    </interface>
+    <interface>
+      <name>createClient</name>
+      <kind>Async Function</kind>
+      <signature>createClient(): Promise&lt;SupabaseClient&lt;Database&gt;&gt;</signature>
+      <path>src/lib/supabase/server.ts</path>
+    </interface>
+    <interface>
+      <name>Supabase water_requests Query</name>
+      <kind>Database Query</kind>
+      <signature>supabase.from("water_requests").select("id, status, amount, address, special_instructions, is_urgent, created_at, accepted_at, delivered_at, delivery_window, supplier_id, profiles!water_requests_supplier_id_fkey(name, phone)").eq("id", id).eq("consumer_id", user.id).single()</signature>
+      <path>src/app/(consumer)/request/[id]/page.tsx</path>
+    </interface>
+  </interfaces>
+
+  <constraints>
+    <constraint type="authentication">Route requires authentication. Use supabase.auth.getUser() to get current user, redirect to /login if not authenticated.</constraint>
+    <constraint type="authorization">User can only view their own requests. Query must include .eq("consumer_id", user.id) filter.</constraint>
+    <constraint type="pattern">Use Server Components for initial data fetch. Only use client components for interactivity (auto-refresh).</constraint>
+    <constraint type="reuse">MUST reuse StatusBadge, StatusTracker, TrackingRefresh components and format utilities from Story 2-5. DO NOT recreate.</constraint>
+    <constraint type="layout">Page inherits ConsumerLayout with bottom navigation. Content area has pb-16 for nav clearance.</constraint>
+    <constraint type="language">All UI text in Chilean Spanish. Use existing Spanish labels from StatusBadge/StatusTracker.</constraint>
+    <constraint type="security">Full address visible (no masking) since user owns the request. Supplier phone visible when status=accepted.</constraint>
+    <constraint type="performance">Single database query with JOIN for supplier info. LCP target under 2.5s.</constraint>
+    <constraint type="styling">Use Tailwind CSS. Follow existing patterns from track/[token]/page.tsx for consistency.</constraint>
+  </constraints>
+
+  <tests>
+    <standards>
+      Playwright for E2E testing. Tests located in tests/e2e/ directory. Pattern: describe test suites for each page/feature. Use fixtures for authenticated user sessions. Mock Supabase responses where needed for different status states. Current test count: 59 passing tests.
+    </standards>
+    <locations>
+      <location>tests/e2e/*.spec.ts</location>
+      <location>tests/e2e/consumer-request-status.spec.ts (to create)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC2-6-1">Test authenticated user can access /request/[id] for their own request</idea>
+      <idea ac="AC2-6-1">Test unauthenticated user redirected to login</idea>
+      <idea ac="AC2-6-1">Test user cannot access another user's request (403 or not found)</idea>
+      <idea ac="AC2-6-2">Test StatusBadge displays correct color for pending status</idea>
+      <idea ac="AC2-6-2">Test StatusBadge displays correct color for accepted status</idea>
+      <idea ac="AC2-6-2">Test StatusBadge displays correct color for delivered status</idea>
+      <idea ac="AC2-6-3">Test timeline shows correct step highlighted for each status</idea>
+      <idea ac="AC2-6-3">Test timeline shows timestamps for completed steps</idea>
+      <idea ac="AC2-6-4">Test request details display: date, amount, address</idea>
+      <idea ac="AC2-6-4">Test special instructions display when present</idea>
+      <idea ac="AC2-6-5">Test pending status shows "Esperando confirmacion del aguatero"</idea>
+      <idea ac="AC2-6-5">Test cancel button visible for pending requests</idea>
+      <idea ac="AC2-6-6">Test accepted status shows supplier name and phone</idea>
+      <idea ac="AC2-6-6">Test phone number is clickable tel: link</idea>
+      <idea ac="AC2-6-6">Test delivery window displays when provided</idea>
+      <idea ac="AC2-6-7">Test delivered status shows completion timestamp in Spanish format</idea>
+      <idea ac="AC2-6-7">Test "Entrega completada" message displays</idea>
+    </ideas>
+  </tests>
+</story-context>

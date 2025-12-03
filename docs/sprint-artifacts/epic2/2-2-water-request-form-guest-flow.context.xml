@@ -1,0 +1,320 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2-2</storyId>
+    <title>Water Request Form (Guest Flow)</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic2/2-2-water-request-form-guest-flow.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>consumer (guest)</asA>
+    <iWant>to submit a water request without creating an account</iWant>
+    <soThat>I can get water delivered with minimal friction</soThat>
+    <tasks>
+      <task id="1" title="Create Request Validation Schema">
+        <file>src/lib/validations/request.ts</file>
+        <description>Define Zod schema with Chilean phone regex /^\+56[0-9]{9}$/, email validation, and Spanish error messages</description>
+        <acceptanceCriteria>AC2-2-2, AC2-2-3, AC2-2-7, AC2-2-8</acceptanceCriteria>
+      </task>
+      <task id="2" title="Create AmountSelector Component">
+        <file>src/components/consumer/amount-selector.tsx</file>
+        <description>2x2 grid with 4 options (100L, 1000L, 5000L, 10000L), prices in CLP, radio-button selection behavior, 44x44px touch targets</description>
+        <acceptanceCriteria>AC2-2-4</acceptanceCriteria>
+        <defaultPrices>100L=$5,000 | 1000L=$15,000 | 5000L=$45,000 | 10000L=$80,000</defaultPrices>
+      </task>
+      <task id="3" title="Create Phone Input with Validation">
+        <file>src/components/shared/phone-input.tsx (optional, can use Input directly)</file>
+        <description>Placeholder +56912345678, validation hint below field, red error color #EF4444, asterisk for required</description>
+        <acceptanceCriteria>AC2-2-2, AC2-2-7, AC2-2-8</acceptanceCriteria>
+      </task>
+      <task id="4" title="Create RequestForm Component">
+        <file>src/components/consumer/request-form.tsx</file>
+        <description>Integrate React Hook Form + Zod resolver. Fields: Name, Phone, Email, Address, Special Instructions, AmountSelector, Urgency toggle (Normal/Urgente), Geolocation button</description>
+        <acceptanceCriteria>AC2-2-1 through AC2-2-8</acceptanceCriteria>
+      </task>
+      <task id="5" title="Implement Geolocation Capture">
+        <description>Browser geolocation API on "Usar mi ubicación" button click. Store lat/lng in form state. Toast for success/error. Optional field.</description>
+        <acceptanceCriteria>AC2-2-6</acceptanceCriteria>
+      </task>
+      <task id="6" title="Create Request Page">
+        <file>src/app/(consumer)/request/page.tsx</file>
+        <description>Replace placeholder with RequestForm. Title "Solicitar Agua", back navigation to home</description>
+        <acceptanceCriteria>AC2-2-1</acceptanceCriteria>
+      </task>
+      <task id="7" title="E2E Testing">
+        <file>tests/e2e/consumer-request-form.spec.ts</file>
+        <description>Test all fields present, phone/email validation, AmountSelector grid, urgency toggle, asterisks, red error display</description>
+        <acceptanceCriteria>AC2-2-1 through AC2-2-8</acceptanceCriteria>
+      </task>
+      <task id="8" title="Build Verification">
+        <description>npm run build (no TS errors), npm run lint (ESLint passes), Playwright tests pass, manual browser verification</description>
+        <acceptanceCriteria>All</acceptanceCriteria>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC2-2-1">Form includes required fields: Name, Phone, Email, Address, Special Instructions, Amount</criterion>
+    <criterion id="AC2-2-2">Phone validates Chilean format (+56XXXXXXXXX) with validation hint showing "Formato: +56912345678"</criterion>
+    <criterion id="AC2-2-3">Email validates proper email format with error "Email inválido"</criterion>
+    <criterion id="AC2-2-4">AmountSelector displays 4 options (100L, 1000L, 5000L, 10000L) in 2x2 grid with prices</criterion>
+    <criterion id="AC2-2-5">Urgency toggle available (Normal/Urgente) defaulting to Normal</criterion>
+    <criterion id="AC2-2-6">"Usar mi ubicación" button available for optional geolocation capture</criterion>
+    <criterion id="AC2-2-7">Validation errors display below fields in red (#EF4444)</criterion>
+    <criterion id="AC2-2-8">Required fields marked with asterisk (*)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" relevance="high">
+        <notes>FR7-FR13 define water request submission requirements. FR8 specifies required fields. FR10 defines amount tiers. FR11 defines urgency. NFR2 requires submission under 5s on 3G. NFR9 requires input validation.</notes>
+      </doc>
+      <doc path="docs/architecture.md" relevance="high">
+        <notes>Defines project structure (components/consumer/, lib/validations/), Form Validation Pattern (React Hook Form + Zod), API response format {data, error}</notes>
+      </doc>
+      <doc path="docs/ux-design-specification.md" relevance="high">
+        <notes>Form patterns: labels above inputs, asterisk for required, errors below fields. Error color #EF4444. Touch targets 44x44px. Spanish (Chilean) for all text. AmountSelector 2x2 grid specification.</notes>
+      </doc>
+      <doc path="docs/sprint-artifacts/epic2/tech-spec-epic-2.md" relevance="high">
+        <notes>Full validation schema, component specifications, test data, Chilean phone regex, security considerations (max 500 chars for instructions)</notes>
+      </doc>
+      <doc path="docs/epics.md" relevance="medium">
+        <notes>Epic 2 overview and story sequence. Story 2-2 depends on 2-1 consumer route structure.</notes>
+      </doc>
+    </docs>
+    <code>
+      <existing>
+        <file path="src/app/(consumer)/request/page.tsx" purpose="Placeholder to be replaced with actual form" lines="12">
+          Currently displays placeholder message. This story replaces it with RequestForm component.
+        </file>
+        <file path="src/app/(consumer)/layout.tsx" purpose="Consumer layout with navigation" lines="20">
+          Provides consumer route group layout with ConsumerNav. Form page inherits this structure.
+        </file>
+        <file path="src/components/consumer/big-action-button.tsx" purpose="Reference for consumer component patterns" lines="48">
+          Shows component pattern: use client directive, interface props, cn() utility, Tailwind styling, data-testid for testing.
+        </file>
+        <file path="src/components/layout/consumer-nav.tsx" purpose="Bottom navigation component" lines="49">
+          Shows navigation pattern with 44x44px touch targets, active state styling, lucide-react icons.
+        </file>
+        <file path="src/components/ui/form.tsx" purpose="shadcn/ui form components" lines="167">
+          Provides Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage. Uses React Hook Form integration. FormMessage displays errors in destructive color.
+        </file>
+        <file path="src/components/ui/input.tsx" purpose="shadcn/ui input component" lines="21">
+          Base input component with aria-invalid styling for errors. Use for Name, Phone, Email, Address fields.
+        </file>
+        <file path="src/components/ui/textarea.tsx" purpose="shadcn/ui textarea component" lines="18">
+          Base textarea for Special Instructions field.
+        </file>
+        <file path="src/components/ui/button.tsx" purpose="shadcn/ui button component">
+          Use for form submit button and geolocation button.
+        </file>
+        <file path="src/components/ui/sonner.tsx" purpose="Toast notifications">
+          Use for geolocation success/error feedback.
+        </file>
+        <file path="src/lib/supabase/client.ts" purpose="Browser Supabase client" lines="9">
+          createClient() function for database operations. Will be used in Story 2-3 for submission.
+        </file>
+        <file path="src/types/database.ts" purpose="Supabase generated types" lines="317">
+          water_requests table: address, amount (number), guest_name, guest_phone, guest_email, special_instructions, is_urgent, latitude, longitude, status, tracking_token
+        </file>
+      </existing>
+      <toCreate>
+        <file path="src/lib/validations/request.ts" purpose="Zod validation schema">
+          Export requestSchema and RequestInput type. Chilean phone regex, email validation, all Spanish error messages.
+        </file>
+        <file path="src/components/consumer/request-form.tsx" purpose="Main form component">
+          Client component with React Hook Form + Zod. Props: onSubmit, initialData?, loading?
+        </file>
+        <file path="src/components/consumer/amount-selector.tsx" purpose="Water amount selection grid">
+          2x2 grid, 4 options with prices, radio-button behavior. Props: value, onChange, prices?
+        </file>
+        <file path="tests/e2e/consumer-request-form.spec.ts" purpose="E2E tests for form">
+          Playwright tests for all acceptance criteria.
+        </file>
+      </toCreate>
+      <directories>
+        <existing>src/app/(consumer)/</existing>
+        <existing>src/app/(consumer)/request/</existing>
+        <existing>src/components/consumer/</existing>
+        <existing>src/components/ui/</existing>
+        <existing>src/components/layout/</existing>
+        <existing>src/lib/supabase/</existing>
+        <existing>tests/e2e/</existing>
+        <toCreate>src/lib/validations/</toCreate>
+        <toCreate>src/components/shared/ (optional)</toCreate>
+      </directories>
+    </code>
+    <dependencies>
+      <production>
+        <dep name="react" version="19.2.0" />
+        <dep name="react-dom" version="19.2.0" />
+        <dep name="next" version="16.0.6" />
+        <dep name="react-hook-form" version="^7.67.0" purpose="Form state management" />
+        <dep name="@hookform/resolvers" version="^5.2.2" purpose="Zod resolver for React Hook Form" />
+        <dep name="zod" version="^4.1.13" purpose="Schema validation" />
+        <dep name="@supabase/ssr" version="^0.8.0" purpose="Supabase client (for future submission)" />
+        <dep name="@supabase/supabase-js" version="^2.86.0" />
+        <dep name="lucide-react" version="^0.555.0" purpose="Icons" />
+        <dep name="sonner" version="^2.0.7" purpose="Toast notifications" />
+        <dep name="tailwind-merge" version="^3.4.0" />
+        <dep name="clsx" version="^2.1.1" />
+        <dep name="class-variance-authority" version="^0.7.1" />
+      </production>
+      <development>
+        <dep name="@playwright/test" version="^1.57.0" purpose="E2E testing" />
+        <dep name="typescript" version="^5" />
+        <dep name="eslint" version="^9" />
+        <dep name="@faker-js/faker" version="^10.1.0" purpose="Test data generation" />
+        <dep name="tailwindcss" version="^4" />
+      </development>
+      <shadcnComponents>
+        <component name="form" installed="true" />
+        <component name="input" installed="true" />
+        <component name="textarea" installed="true" />
+        <component name="button" installed="true" />
+        <component name="label" installed="true" />
+        <component name="sonner" installed="true" />
+        <component name="switch" installed="false" note="May need for urgency toggle, or use custom radio buttons" />
+      </shadcnComponents>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="validation" source="tech-spec">
+      Chilean phone regex: /^\+56[0-9]{9}$/
+      Special instructions max 500 characters
+      Phone sanitization required for security
+    </constraint>
+    <constraint type="ux" source="ux-design-specification">
+      Touch targets minimum 44x44px
+      Error color #EF4444 (destructive)
+      Labels above inputs, asterisk for required, errors below fields
+      All text in Spanish (Chilean)
+    </constraint>
+    <constraint type="performance" source="prd NFR2">
+      Request submission under 5 seconds on 3G
+      Form interactive immediately (FID under 100ms)
+    </constraint>
+    <constraint type="accessibility" source="prd NFR10-13">
+      WCAG AA color contrast
+      Focus visible states
+      Aria-invalid on error fields
+    </constraint>
+    <constraint type="security" source="prd NFR9 + tech-spec">
+      All inputs validated via Zod before submission
+      No PII logged in console
+      Address/instructions sanitized, max length limits
+    </constraint>
+    <constraint type="database" source="database.ts">
+      water_requests.amount is number type (not string enum)
+      guest_phone is required, guest_email/guest_name are nullable
+      tracking_token for guest access to status
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="RequestInput" type="zod-inferred">
+      <schema><![CDATA[
+z.object({
+  name: z.string().min(2, "El nombre es requerido"),
+  phone: z.string().regex(/^\+56[0-9]{9}$/, "Formato: +56912345678"),
+  email: z.string().email("Email inválido"),
+  address: z.string().min(5, "La dirección es requerida"),
+  specialInstructions: z.string().min(1, "Las instrucciones son requeridas"),
+  amount: z.enum(["100", "1000", "5000", "10000"]),
+  isUrgent: z.boolean().default(false),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+})
+      ]]></schema>
+    </interface>
+    <interface name="RequestFormProps" type="component-props">
+      <property name="onSubmit" type="(data: RequestInput) => Promise<void>" />
+      <property name="initialData" type="Partial<RequestInput>" optional="true" />
+      <property name="loading" type="boolean" optional="true" />
+    </interface>
+    <interface name="AmountSelectorProps" type="component-props">
+      <property name="value" type="string" />
+      <property name="onChange" type="(value: string) => void" />
+      <property name="prices" type="Record<'100'|'1000'|'5000'|'10000', number>" optional="true" />
+    </interface>
+    <interface name="water_requests" type="supabase-table">
+      <note>See src/types/database.ts lines 94-176 for full Insert/Update/Row types</note>
+      <keyFields>
+        <field name="guest_phone" type="string" required="true" />
+        <field name="address" type="string" required="true" />
+        <field name="special_instructions" type="string" required="true" />
+        <field name="amount" type="number" required="true" note="Store as number: 100, 1000, 5000, 10000" />
+        <field name="is_urgent" type="boolean" default="false" />
+        <field name="guest_name" type="string | null" />
+        <field name="guest_email" type="string | null" />
+        <field name="latitude" type="number | null" />
+        <field name="longitude" type="number | null" />
+        <field name="status" type="string" default="pending" />
+        <field name="tracking_token" type="string | null" note="UUID for guest tracking" />
+      </keyFields>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <standard source="existing-tests">
+        Playwright E2E tests in tests/e2e/ directory
+        Test files named *.spec.ts
+        Use test.describe() for grouping
+        Reference acceptance criteria in test names (e.g., "AC1.4.1 - manifest exists")
+        Use data-testid attributes for reliable element selection
+        Assertions use expect() from @playwright/test
+      </standard>
+      <standard source="project-scripts">
+        npm run test:e2e - Run all Playwright tests
+        npm run test:e2e:ui - Run with UI mode
+        npm run test:e2e:headed - Run in headed browser
+        npm run build - TypeScript compilation check
+        npm run lint - ESLint validation
+      </standard>
+    </standards>
+    <locations>
+      <location path="tests/e2e/consumer-request-form.spec.ts" purpose="New E2E tests for this story" />
+      <location path="tests/e2e/pwa.spec.ts" purpose="Reference for test patterns" />
+    </locations>
+    <ideas>
+      <idea ac="AC2-2-1">Test all required fields present: Name, Phone, Email, Address, Special Instructions, Amount selector</idea>
+      <idea ac="AC2-2-2">Test phone validation - invalid formats show error, valid +56912345678 passes</idea>
+      <idea ac="AC2-2-2">Test validation hint "Formato: +56912345678" is visible</idea>
+      <idea ac="AC2-2-3">Test email validation - invalid email shows "Email inválido" error</idea>
+      <idea ac="AC2-2-4">Test AmountSelector displays 4 options in 2x2 grid layout</idea>
+      <idea ac="AC2-2-4">Test AmountSelector shows prices for each option</idea>
+      <idea ac="AC2-2-4">Test AmountSelector single selection behavior (clicking one deselects others)</idea>
+      <idea ac="AC2-2-5">Test urgency toggle exists with Normal/Urgente options</idea>
+      <idea ac="AC2-2-5">Test urgency defaults to Normal</idea>
+      <idea ac="AC2-2-6">Test "Usar mi ubicación" button is present</idea>
+      <idea ac="AC2-2-7">Test validation errors display below fields (not inline or tooltip)</idea>
+      <idea ac="AC2-2-7">Test error messages have red color (#EF4444 or class text-destructive)</idea>
+      <idea ac="AC2-2-8">Test required fields have asterisk (*) in label</idea>
+      <idea ac="general">Test form prevents submission when required fields are empty</idea>
+      <idea ac="general">Test form can be filled completely and submit button is enabled</idea>
+      <testData><![CDATA[
+const validRequest = {
+  name: "María González",
+  phone: "+56912345678",
+  email: "maria@test.cl",
+  address: "Camino Los Robles 123, Villarrica",
+  specialInstructions: "Después del puente, casa azul con portón verde",
+  amount: "1000",
+  isUrgent: false
+};
+
+const invalidPhones = [
+  "12345678",        // Missing country code
+  "+56123456789",    // 10 digits instead of 9
+  "+1234567890",     // Wrong country code
+  "phone number"     // Non-numeric
+];
+      ]]></testData>
+    </ideas>
+  </tests>
+</story-context>

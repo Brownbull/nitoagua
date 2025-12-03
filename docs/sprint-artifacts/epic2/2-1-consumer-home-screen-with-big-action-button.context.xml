@@ -1,0 +1,259 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>1</storyId>
+    <title>Consumer Home Screen with Big Action Button</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic2/2-1-consumer-home-screen-with-big-action-button.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>consumer (Dona Maria)</asA>
+    <iWant>to see one big obvious button to request water</iWant>
+    <soThat>I know exactly what to do when I open the app</soThat>
+    <tasks>
+      <task id="1" acs="5">
+        <title>Create Consumer Route Group Layout</title>
+        <subtasks>
+          <subtask>Create src/app/(consumer)/layout.tsx with ConsumerNav component slot</subtask>
+          <subtask>Set up consumer-specific metadata (Spanish titles)</subtask>
+          <subtask>Ensure layout wraps all consumer pages</subtask>
+        </subtasks>
+      </task>
+      <task id="2" acs="5,6,7">
+        <title>Create ConsumerNav Component</title>
+        <subtasks>
+          <subtask>Create src/components/layout/consumer-nav.tsx</subtask>
+          <subtask>Add 3 navigation items: Inicio (Home icon), Historial (History icon), Perfil (Profile icon)</subtask>
+          <subtask>Use lucide-react icons for consistency</subtask>
+          <subtask>Implement active state styling (primary color fill)</subtask>
+          <subtask>Ensure 44x44px minimum touch targets</subtask>
+          <subtask>Position as fixed bottom navigation bar</subtask>
+        </subtasks>
+      </task>
+      <task id="3" acs="1,2,3,7">
+        <title>Create BigActionButton Component</title>
+        <subtasks>
+          <subtask>Create src/components/consumer/big-action-button.tsx</subtask>
+          <subtask>Implement 200x200px circular button container</subtask>
+          <subtask>Add water drop icon (lucide-react Droplet, 48x48px)</subtask>
+          <subtask>Add "Solicitar Agua" label text</subtask>
+          <subtask>Apply blue gradient: bg-gradient-to-br from-[#0077B6] to-[#00A8E8]</subtask>
+          <subtask>Add subtle shadow: shadow-lg</subtask>
+          <subtask>Implement hover state: hover:scale-105 transition-transform</subtask>
+          <subtask>Implement active state: active:scale-98</subtask>
+          <subtask>Implement loading state with pulse animation</subtask>
+          <subtask>Accept props: onClick, loading, disabled</subtask>
+        </subtasks>
+      </task>
+      <task id="4" acs="1,4,6">
+        <title>Create Consumer Home Page</title>
+        <subtasks>
+          <subtask>Create src/app/(consumer)/page.tsx as Server Component</subtask>
+          <subtask>Center BigActionButton vertically and horizontally</subtask>
+          <subtask>Add page title/welcome text in Spanish</subtask>
+          <subtask>Implement onClick handler to navigate to /request</subtask>
+          <subtask>Use Next.js useRouter for navigation</subtask>
+        </subtasks>
+      </task>
+      <task id="5" acs="4">
+        <title>Create Request Page Placeholder</title>
+        <subtasks>
+          <subtask>Create src/app/(consumer)/request/page.tsx as placeholder</subtask>
+          <subtask>Add "Formulario de Solicitud" heading (for navigation testing)</subtask>
+        </subtasks>
+      </task>
+      <task id="6" acs="1-7">
+        <title>E2E Testing</title>
+        <subtasks>
+          <subtask>Create tests/e2e/consumer-home.spec.ts</subtask>
+          <subtask>Test: Big action button is visible and has correct dimensions</subtask>
+          <subtask>Test: Button click navigates to /request</subtask>
+          <subtask>Test: Bottom navigation renders with 3 items</subtask>
+          <subtask>Test: All visible text is in Spanish</subtask>
+        </subtasks>
+      </task>
+      <task id="7" acs="all">
+        <title>Build Verification</title>
+        <subtasks>
+          <subtask>Run npm run build - verify no TypeScript errors</subtask>
+          <subtask>Run npm run lint - verify ESLint passes</subtask>
+          <subtask>Run Playwright tests - verify E2E tests pass</subtask>
+          <subtask>Manual verification in browser (dev server)</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="AC2-1-1">Consumer home page displays a 200x200px circular "Solicitar Agua" button with water drop icon</ac>
+    <ac id="AC2-1-2">Button has blue gradient (primary #0077B6 to secondary #00A8E8) with subtle shadow</ac>
+    <ac id="AC2-1-3">Button responds to hover (scale 1.05), active (scale 0.98), and loading (pulse) states</ac>
+    <ac id="AC2-1-4">Tapping button navigates to /request page</ac>
+    <ac id="AC2-1-5">Bottom navigation displays 3 items: Home, History, Profile with icons and labels</ac>
+    <ac id="AC2-1-6">All text is in Spanish (Chilean)</ac>
+    <ac id="AC2-1-7">Touch targets are minimum 44x44px for accessibility</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>Project Structure</section>
+        <snippet>Consumer pages use (consumer) route group. Custom components in src/components/consumer/. Layout components in src/components/layout/.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>nitoagua UX Design Specification</title>
+        <section>BigActionButton Component</section>
+        <snippet>200x200px circular button with water drop icon. Gradient from primary #0077B6 to secondary #00A8E8. States: default, hover (scale 1.05), active (scale 0.98), loading (pulse).</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>nitoagua UX Design Specification</title>
+        <section>Navigation Patterns</section>
+        <snippet>Consumer (Mobile): Bottom navigation bar with 3 items. Icons + labels always visible. Active state: Filled icon, primary color.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>nitoagua UX Design Specification</title>
+        <section>Color System</section>
+        <snippet>Agua Pura theme: Primary Ocean Blue #0077B6, Secondary Sky Blue #00A8E8. High contrast for outdoor visibility.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>nitoagua UX Design Specification</title>
+        <section>Accessibility Strategy</section>
+        <snippet>Touch targets minimum 44x44px (WCAG requirement). Color contrast 4.5:1 minimum. Focus indicators with 2px blue outline.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>nitoagua PRD</title>
+        <section>Consumer Experience</section>
+        <snippet>Ultra-simple, zero-friction, one-thumb operation in 30 seconds. Biggest, most obvious button on the screen. One tap to start request flow.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic2/tech-spec-epic-2.md</path>
+        <title>Epic 2 Tech Spec</title>
+        <section>Story 2-1 Consumer Home Screen</section>
+        <snippet>First story in Epic 2. Establishes consumer route group and BigActionButton pattern. lucide-react for icons.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic1/1-5-deployment-pipeline.md</path>
+        <title>Story 1-5 Deployment Pipeline</title>
+        <section>Dev Agent Record</section>
+        <snippet>Production URL: https://nitoagua.vercel.app. Branching: develop → staging → main. Build passes with Next.js 16.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/app/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>RootLayout</symbol>
+        <lines>25-38</lines>
+        <reason>Root layout wraps all pages. Consumer layout will be nested inside. Sets lang="es" and theme-color #0077B6.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/button.tsx</path>
+        <kind>component</kind>
+        <symbol>Button, buttonVariants</symbol>
+        <lines>1-61</lines>
+        <reason>shadcn/ui button component. Reference for styling patterns and CVA usage. BigActionButton is custom but can use cn() utility.</reason>
+      </file>
+      <file>
+        <path>src/lib/utils.ts</path>
+        <kind>utility</kind>
+        <symbol>cn</symbol>
+        <lines>1-6</lines>
+        <reason>Class name utility combining clsx and tailwind-merge. Use for all component className construction.</reason>
+      </file>
+      <file>
+        <path>tests/e2e/pwa.spec.ts</path>
+        <kind>test</kind>
+        <symbol>PWA Configuration tests</symbol>
+        <lines>1-119</lines>
+        <reason>Reference for E2E test patterns. Shows page.goto(), locator(), getAttribute(), expect() usage with Playwright.</reason>
+      </file>
+      <file>
+        <path>playwright.config.ts</path>
+        <kind>config</kind>
+        <symbol>defineConfig</symbol>
+        <lines>1-44</lines>
+        <reason>Playwright config. Tests in ./tests/e2e, baseURL localhost:3005, webServer auto-starts npm run dev.</reason>
+      </file>
+      <file>
+        <path>src/app/page.tsx</path>
+        <kind>page</kind>
+        <symbol>Home</symbol>
+        <reason>Current root page. Will be replaced/redirected to consumer home when (consumer) route group is created.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <npm>
+        <package name="next" version="16.0.6">App Router framework</package>
+        <package name="react" version="19.2.0">React library</package>
+        <package name="lucide-react" version="^0.555.0">Icon library - use Droplet, Home, Clock, User icons</package>
+        <package name="tailwind-merge" version="^3.4.0">Tailwind class merging</package>
+        <package name="clsx" version="^2.1.1">Conditional class names</package>
+        <package name="class-variance-authority" version="^0.7.1">Component variants (CVA)</package>
+        <package name="@playwright/test" version="^1.57.0" dev="true">E2E testing framework</package>
+      </npm>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Use Tailwind CSS for all styling - no custom CSS files</constraint>
+    <constraint type="pattern">Server Components by default, Client Components only where needed (onClick handlers require "use client")</constraint>
+    <constraint type="pattern">Spanish (Chilean) for all user-facing text</constraint>
+    <constraint type="pattern">Use cn() utility from src/lib/utils.ts for className construction</constraint>
+    <constraint type="pattern">Follow existing file naming: kebab-case for files, PascalCase for components</constraint>
+    <constraint type="nfr">Initial page load under 3 seconds on 3G (NFR1)</constraint>
+    <constraint type="nfr">Minimum touch target size 44x44px (NFR10, WCAG)</constraint>
+    <constraint type="architecture">Consumer pages use (consumer) route group per architecture.md</constraint>
+    <constraint type="architecture">Custom components in src/components/consumer/, layout in src/components/layout/</constraint>
+    <constraint type="testing">E2E tests in tests/e2e/ using Playwright patterns from pwa.spec.ts</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>BigActionButtonProps</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface BigActionButtonProps { onClick?: () => void; loading?: boolean; disabled?: boolean; }</signature>
+      <path>src/components/consumer/big-action-button.tsx</path>
+    </interface>
+    <interface>
+      <name>ConsumerNav items</name>
+      <kind>Navigation config</kind>
+      <signature>const navItems = [{ href: '/', label: 'Inicio', icon: Home }, { href: '/history', label: 'Historial', icon: Clock }, { href: '/profile', label: 'Perfil', icon: User }]</signature>
+      <path>src/components/layout/consumer-nav.tsx</path>
+    </interface>
+    <interface>
+      <name>Next.js useRouter</name>
+      <kind>Hook</kind>
+      <signature>import { useRouter } from 'next/navigation'; const router = useRouter(); router.push('/request');</signature>
+      <path>next/navigation</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Playwright E2E tests following patterns from tests/e2e/pwa.spec.ts. Use test.describe() for grouping, test() for individual cases. Use page.goto(), page.locator(), expect() for assertions. Tests run against dev server at localhost:3005. Reference AC IDs in test names (e.g., "AC2-1-1 - button displays correctly").
+    </standards>
+    <locations>
+      <location>tests/e2e/consumer-home.spec.ts</location>
+      <location>tests/e2e/*.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="AC2-1-1">Test BigActionButton renders with data-testid, verify dimensions via boundingBox()</idea>
+      <idea ac="AC2-1-2">Visual verification of gradient - could use screenshot comparison or check CSS classes</idea>
+      <idea ac="AC2-1-3">Test hover/active states via page.hover(), verify transform styles</idea>
+      <idea ac="AC2-1-4">Test button click navigates to /request - await page.click(), expect page.url().toContain('/request')</idea>
+      <idea ac="AC2-1-5">Test bottom nav has 3 items - locator('[data-testid="consumer-nav"] a').count() === 3</idea>
+      <idea ac="AC2-1-6">Test Spanish text - locator('text=Solicitar Agua'), locator('text=Inicio')</idea>
+      <idea ac="AC2-1-7">Verify touch targets via boundingBox() width/height >= 44</idea>
+    </ideas>
+  </tests>
+</story-context>

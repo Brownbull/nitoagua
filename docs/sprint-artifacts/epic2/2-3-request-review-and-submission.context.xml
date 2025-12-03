@@ -1,0 +1,440 @@
+<story-context id="nitoagua/epic2/story-2-3" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>3</storyId>
+    <title>Request Review and Submission</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic2/2-3-request-review-and-submission.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>consumer</asA>
+    <iWant>to review my request before submitting</iWant>
+    <soThat>I can catch any mistakes before it's sent</soThat>
+    <tasks>
+      <task id="1" title="Create Request API Route" acs="4,5,6">
+        <subtask>Create src/app/api/requests/route.ts</subtask>
+        <subtask>Implement POST handler for request creation</subtask>
+        <subtask>Validate request body using Zod schema from src/lib/validations/request.ts</subtask>
+        <subtask>Use Supabase server client for database insert</subtask>
+        <subtask>Generate tracking_token UUID for guest requests</subtask>
+        <subtask>Return { data: { id, trackingToken, status: 'pending', createdAt }, error: null } on success</subtask>
+        <subtask>Return { data: null, error: { message, code } } on failure</subtask>
+        <subtask>Handle validation errors (400), database errors (500)</subtask>
+      </task>
+      <task id="2" title="Create Review Screen Component" acs="1,2,3">
+        <subtask>Create src/components/consumer/request-review.tsx</subtask>
+        <subtask>Accept props: data: RequestInput, onEdit: () => void, onSubmit: () => void, loading?: boolean</subtask>
+        <subtask>Display all request fields with Spanish labels</subtask>
+        <subtask>Use Card component for visual grouping</subtask>
+        <subtask>Add "Editar" button (secondary) and "Enviar Solicitud" button (primary)</subtask>
+        <subtask>Show loading spinner on submit button when loading=true</subtask>
+      </task>
+      <task id="3" title="Implement Form Flow with Review State" acs="1,3,4,5,6">
+        <subtask>Update src/app/(consumer)/request/page.tsx to manage form states</subtask>
+        <subtask>Implement state machine: 'form' -> 'review' -> 'submitting' -> 'submitted'</subtask>
+        <subtask>Store form data in state when transitioning to review</subtask>
+        <subtask>Preserve form data when returning from review to edit</subtask>
+        <subtask>Add "Revisar Solicitud" button to form</subtask>
+        <subtask>Use useRouter from next/navigation for navigation</subtask>
+      </task>
+      <task id="4" title="Implement Submission with Toast Feedback" acs="4,5,6">
+        <subtask>Create submission handler function</subtask>
+        <subtask>Call POST /api/requests with form data</subtask>
+        <subtask>Show loading state during API call</subtask>
+        <subtask>On success: Navigate to /request/[id]/confirmation</subtask>
+        <subtask>On error: Show toast with "Error al enviar" and "Reintentar" action</subtask>
+        <subtask>Use Sonner toast for notifications</subtask>
+      </task>
+      <task id="5" title="Implement Offline Queue" acs="7">
+        <subtask>Create src/lib/utils/offline-queue.ts</subtask>
+        <subtask>Define queue structure in localStorage: nitoagua_request_queue</subtask>
+        <subtask>Add functions: queueRequest, getQueuedRequests, removeFromQueue, processQueue</subtask>
+        <subtask>Check navigator.onLine before submission</subtask>
+        <subtask>If offline: queue request, show toast</subtask>
+        <subtask>Add online event listener to process queue</subtask>
+      </task>
+      <task id="6" title="Create Confirmation Page Placeholder" acs="5">
+        <subtask>Create src/app/(consumer)/request/[id]/confirmation/page.tsx</subtask>
+        <subtask>Add basic placeholder with success message</subtask>
+      </task>
+      <task id="7" title="Price Display Utility" acs="2">
+        <subtask>Already exists in src/lib/validations/request.ts as formatPrice()</subtask>
+        <subtask>AMOUNT_OPTIONS constant has prices: 100L=$5,000, 1000L=$15,000, 5000L=$45,000, 10000L=$80,000</subtask>
+      </task>
+      <task id="8" title="E2E Testing" acs="1-7">
+        <subtask>Create tests/e2e/consumer-request-submission.spec.ts</subtask>
+        <subtask>Test review screen displays form data</subtask>
+        <subtask>Test edit button preserves data</subtask>
+        <subtask>Test submit loading state</subtask>
+        <subtask>Test success navigation</subtask>
+        <subtask>Test error toast</subtask>
+        <subtask>Test offline queue behavior</subtask>
+      </task>
+      <task id="9" title="Build Verification" acs="all">
+        <subtask>Run npm run build</subtask>
+        <subtask>Run npm run lint</subtask>
+        <subtask>Run Playwright tests</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="2-3-1">Review screen displays all entered information formatted clearly (name, phone, email, address, special instructions, amount, urgency)</ac>
+    <ac id="2-3-2">Water amount displays with corresponding price (e.g., "1000L - $15,000")</ac>
+    <ac id="2-3-3">"Editar" button returns to form with all data preserved</ac>
+    <ac id="2-3-4">"Enviar Solicitud" button shows loading spinner during submission</ac>
+    <ac id="2-3-5">Successful submission navigates to confirmation screen at /request/[id]/confirmation</ac>
+    <ac id="2-3-6">Failed submission shows toast notification with retry option in red styling</ac>
+    <ac id="2-3-7">If connection fails, request queues locally (localStorage) and submits when online</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" relevance="high">
+        <summary>Product Requirements Document - defines FR7-FR13 for water request submission, NFR17 for offline queuing</summary>
+        <key-sections>
+          <section>FR7-FR13: Water Request Submission requirements</section>
+          <section>NFR2: Request submission within 5 seconds on 3G</section>
+          <section>NFR17: Request submission queues locally if connection drops</section>
+        </key-sections>
+      </doc>
+      <doc path="docs/architecture.md" relevance="high">
+        <summary>Technical architecture - defines API response format, database patterns, project structure</summary>
+        <key-sections>
+          <section>API Response Format: { data, error }</section>
+          <section>Database Query Pattern with Supabase server client</section>
+          <section>Project Structure for API routes in src/app/api/</section>
+        </key-sections>
+      </doc>
+      <doc path="docs/ux-design-specification.md" relevance="high">
+        <summary>UX design spec - defines review step flow, loading states, toast notifications</summary>
+        <key-sections>
+          <section>Request Flow with review step</section>
+          <section>Feedback Patterns for loading states</section>
+          <section>Toast Notifications for errors</section>
+        </key-sections>
+      </doc>
+      <doc path="docs/sprint-artifacts/epic2/tech-spec-epic-2.md" relevance="critical">
+        <summary>Epic 2 tech spec - Story 2-3 specific requirements, API contracts, test strategy</summary>
+        <key-sections>
+          <section>Story 2-3 Request Review and Submission details</section>
+          <section>POST /api/requests API contract</section>
+          <section>Offline queue implementation pattern</section>
+          <section>Test Strategy Summary</section>
+        </key-sections>
+      </doc>
+    </docs>
+
+    <code>
+      <file path="src/lib/validations/request.ts" relevance="critical">
+        <purpose>Zod validation schema for request data - reuse for API validation</purpose>
+        <exports>
+          <export name="requestSchema">Zod schema for RequestInput validation</export>
+          <export name="RequestInput">TypeScript type inferred from schema</export>
+          <export name="AMOUNT_OPTIONS">Array of amount options with value, label, price</export>
+          <export name="formatPrice">Function to format CLP prices</export>
+        </exports>
+      </file>
+      <file path="src/components/consumer/request-form.tsx" relevance="critical">
+        <purpose>Form component that collects request data - triggers onSubmit with RequestInput</purpose>
+        <props>
+          <prop name="onSubmit" type="(data: RequestInput) => Promise&lt;void&gt;">Called when form is valid</prop>
+          <prop name="initialData" type="Partial&lt;RequestInput&gt;">For pre-filling form on edit</prop>
+          <prop name="loading" type="boolean">Disables form during submission</prop>
+        </props>
+        <testids>request-form, name-input, phone-input, email-input, address-input, instructions-input, submit-button</testids>
+      </file>
+      <file path="src/app/(consumer)/request/page.tsx" relevance="critical">
+        <purpose>Current request page - needs modification to add review state machine</purpose>
+        <current-behavior>
+          <item>Uses sessionStorage to store form data temporarily</item>
+          <item>Plans to navigate to /request/review (needs to be changed to state-based)</item>
+        </current-behavior>
+        <modifications-needed>
+          <item>Add state machine: 'form' | 'review' | 'submitting' | 'submitted'</item>
+          <item>Import and use RequestReview component</item>
+          <item>Handle submission API call</item>
+        </modifications-needed>
+      </file>
+      <file path="src/components/consumer/amount-selector.tsx" relevance="medium">
+        <purpose>Amount selection component - already works with formatPrice</purpose>
+        <props>value, onChange, prices, disabled</props>
+      </file>
+      <file path="src/lib/supabase/server.ts" relevance="high">
+        <purpose>Server-side Supabase client factory - use for API route database operations</purpose>
+        <exports>
+          <export name="createClient">Async function returning typed Supabase client</export>
+        </exports>
+      </file>
+      <file path="src/types/database.ts" relevance="high">
+        <purpose>Supabase database types - water_requests table schema</purpose>
+        <tables>
+          <table name="water_requests">
+            <required-columns>address, amount, guest_phone, special_instructions, status</required-columns>
+            <optional-columns>guest_email, guest_name, consumer_id, is_urgent, latitude, longitude, tracking_token</optional-columns>
+          </table>
+        </tables>
+      </file>
+      <file path="src/components/ui/card.tsx" relevance="medium">
+        <purpose>shadcn Card component - use for review screen layout</purpose>
+      </file>
+      <file path="src/components/ui/button.tsx" relevance="medium">
+        <purpose>shadcn Button component - use primary/secondary variants</purpose>
+      </file>
+      <file path="src/components/ui/sonner.tsx" relevance="medium">
+        <purpose>Sonner toast provider - already configured in layout</purpose>
+      </file>
+    </code>
+
+    <dependencies>
+      <dependency name="next" version="16.0.6" usage="App Router, API routes, navigation">
+        <imports>
+          <import>next/navigation: useRouter</import>
+          <import>next/headers: cookies (for server client)</import>
+        </imports>
+      </dependency>
+      <dependency name="@supabase/ssr" version="^0.8.0" usage="Server-side Supabase client">
+        <imports>
+          <import>createServerClient for API routes</import>
+        </imports>
+      </dependency>
+      <dependency name="zod" version="^4.1.13" usage="Request validation on server">
+        <imports>
+          <import>requestSchema from src/lib/validations/request.ts</import>
+        </imports>
+      </dependency>
+      <dependency name="sonner" version="^2.0.7" usage="Toast notifications">
+        <imports>
+          <import>toast from 'sonner'</import>
+        </imports>
+        <patterns>
+          <pattern>toast.error("Error al enviar", { action: { label: "Reintentar", onClick: () => {} } })</pattern>
+          <pattern>toast.success("Solicitud enviada")</pattern>
+        </patterns>
+      </dependency>
+      <dependency name="lucide-react" version="^0.555.0" usage="Icons">
+        <imports>
+          <import>Loader2 for loading spinner</import>
+          <import>ArrowLeft for back button</import>
+        </imports>
+      </dependency>
+      <dependency name="react-hook-form" version="^7.67.0" usage="Already used in RequestForm">
+        <note>Not needed in review component - data already validated</note>
+      </dependency>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architecture">
+      <rule>API routes must use { data, error } response format</rule>
+      <rule>Use Supabase server client (not browser client) in API routes</rule>
+      <rule>All database operations use parameterized queries via Supabase</rule>
+    </constraint>
+    <constraint type="performance">
+      <rule>Request submission completes within 5 seconds on 3G (NFR2)</rule>
+      <rule>Show immediate feedback on button click (&lt;200ms)</rule>
+      <rule>Minimize API payload size</rule>
+    </constraint>
+    <constraint type="security">
+      <rule>Server-side validation using same Zod schema</rule>
+      <rule>No PII logged to console</rule>
+      <rule>Tracking tokens use UUID v4 (crypto.randomUUID)</rule>
+      <rule>Input validation on all user-submitted data</rule>
+    </constraint>
+    <constraint type="ux">
+      <rule>All UI text in Spanish (Chilean)</rule>
+      <rule>44x44px minimum touch targets</rule>
+      <rule>Loading states on async operations</rule>
+      <rule>Error toasts with retry action</rule>
+    </constraint>
+    <constraint type="offline">
+      <rule>Queue requests in localStorage when offline</rule>
+      <rule>Process queue automatically when online</rule>
+      <rule>Show user feedback for queued requests</rule>
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <api name="POST /api/requests" method="POST">
+      <request-body>
+        <field name="name" type="string" required="true"/>
+        <field name="phone" type="string" required="true" format="+56XXXXXXXXX"/>
+        <field name="email" type="string" required="true"/>
+        <field name="address" type="string" required="true"/>
+        <field name="specialInstructions" type="string" required="true"/>
+        <field name="amount" type="'100' | '1000' | '5000' | '10000'" required="true"/>
+        <field name="isUrgent" type="boolean" required="true"/>
+        <field name="latitude" type="number" required="false"/>
+        <field name="longitude" type="number" required="false"/>
+      </request-body>
+      <success-response status="201">
+        <field name="data.id" type="string" description="UUID of created request"/>
+        <field name="data.trackingToken" type="string" description="UUID for guest tracking"/>
+        <field name="data.status" type="'pending'" description="Initial status"/>
+        <field name="data.createdAt" type="string" description="ISO timestamp"/>
+        <field name="error" type="null"/>
+      </success-response>
+      <error-response status="400">
+        <field name="data" type="null"/>
+        <field name="error.message" type="string" description="Spanish error message"/>
+        <field name="error.code" type="'VALIDATION_ERROR'"/>
+      </error-response>
+      <error-response status="500">
+        <field name="data" type="null"/>
+        <field name="error.message" type="string"/>
+        <field name="error.code" type="'DATABASE_ERROR' | 'INTERNAL_ERROR'"/>
+      </error-response>
+    </api>
+
+    <component name="RequestReview">
+      <props>
+        <prop name="data" type="RequestInput" required="true"/>
+        <prop name="onEdit" type="() => void" required="true"/>
+        <prop name="onSubmit" type="() => void" required="true"/>
+        <prop name="loading" type="boolean" default="false"/>
+      </props>
+      <test-ids>
+        <id>review-screen</id>
+        <id>review-name</id>
+        <id>review-phone</id>
+        <id>review-email</id>
+        <id>review-address</id>
+        <id>review-instructions</id>
+        <id>review-amount</id>
+        <id>review-urgency</id>
+        <id>edit-button</id>
+        <id>submit-button</id>
+      </test-ids>
+    </component>
+
+    <database table="water_requests">
+      <insert-mapping>
+        <field from="name" to="guest_name"/>
+        <field from="phone" to="guest_phone"/>
+        <field from="email" to="guest_email"/>
+        <field from="address" to="address"/>
+        <field from="specialInstructions" to="special_instructions"/>
+        <field from="amount" to="amount" transform="parseInt"/>
+        <field from="isUrgent" to="is_urgent"/>
+        <field from="latitude" to="latitude"/>
+        <field from="longitude" to="longitude"/>
+        <field generated="tracking_token" value="crypto.randomUUID()"/>
+        <field default="status" value="pending"/>
+      </insert-mapping>
+    </database>
+
+    <offline-queue>
+      <storage-key>nitoagua_request_queue</storage-key>
+      <structure>
+        <field name="data" type="RequestInput"/>
+        <field name="queuedAt" type="string" description="ISO timestamp"/>
+      </structure>
+      <functions>
+        <function name="queueRequest" params="data: RequestInput" returns="void"/>
+        <function name="getQueuedRequests" returns="QueuedRequest[]"/>
+        <function name="removeFromQueue" params="index: number" returns="void"/>
+        <function name="processQueue" returns="Promise&lt;void&gt;"/>
+      </functions>
+    </offline-queue>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <standard>Use Playwright for E2E tests</standard>
+      <standard>Test files in tests/e2e/ directory</standard>
+      <standard>Use data-testid attributes for element selection</standard>
+      <standard>Group tests by acceptance criteria using test.describe()</standard>
+      <standard>Follow existing patterns from consumer-request-form.spec.ts</standard>
+      <standard>Run tests with: npm run test:e2e</standard>
+    </standards>
+
+    <locations>
+      <location path="tests/e2e/consumer-request-submission.spec.ts" purpose="E2E tests for this story"/>
+      <location path="tests/e2e/consumer-request-form.spec.ts" purpose="Reference for testing patterns"/>
+    </locations>
+
+    <ideas>
+      <test-case ac="1">
+        <name>Review screen displays all form data</name>
+        <steps>
+          <step>Fill form with valid data</step>
+          <step>Submit form to go to review</step>
+          <step>Verify all fields displayed correctly</step>
+        </steps>
+      </test-case>
+      <test-case ac="2">
+        <name>Water amount shows with price</name>
+        <steps>
+          <step>Select 1000L option</step>
+          <step>Go to review</step>
+          <step>Verify "1000L - $15.000" displayed</step>
+        </steps>
+      </test-case>
+      <test-case ac="3">
+        <name>Edit button preserves data</name>
+        <steps>
+          <step>Fill form and go to review</step>
+          <step>Click "Editar" button</step>
+          <step>Verify all fields still have values</step>
+        </steps>
+      </test-case>
+      <test-case ac="4">
+        <name>Submit button shows loading</name>
+        <steps>
+          <step>Go to review with valid data</step>
+          <step>Click "Enviar Solicitud"</step>
+          <step>Verify button shows spinner and is disabled</step>
+        </steps>
+      </test-case>
+      <test-case ac="5">
+        <name>Successful submission navigates</name>
+        <steps>
+          <step>Mock API success response</step>
+          <step>Submit request</step>
+          <step>Verify navigation to /request/[id]/confirmation</step>
+        </steps>
+      </test-case>
+      <test-case ac="6">
+        <name>Failed submission shows error toast</name>
+        <steps>
+          <step>Mock API error response</step>
+          <step>Submit request</step>
+          <step>Verify error toast with "Reintentar" action</step>
+        </steps>
+      </test-case>
+      <test-case ac="7">
+        <name>Offline queue works</name>
+        <steps>
+          <step>Set navigator.onLine to false (mock)</step>
+          <step>Submit request</step>
+          <step>Verify queued toast message</step>
+          <step>Set navigator.onLine to true</step>
+          <step>Verify queue processed</step>
+        </steps>
+      </test-case>
+      <test-case type="edge-case">
+        <name>Double submit prevention</name>
+        <steps>
+          <step>Click submit button</step>
+          <step>Verify button is disabled during loading</step>
+          <step>Try clicking again - should be blocked</step>
+        </steps>
+      </test-case>
+    </ideas>
+
+    <test-data>
+      <valid-request>
+        <field name="name">Maria Gonzalez</field>
+        <field name="phone">+56912345678</field>
+        <field name="email">maria@test.cl</field>
+        <field name="address">Camino Los Robles 123, Villarrica</field>
+        <field name="specialInstructions">Despues del puente, casa azul con porton verde</field>
+        <field name="amount">1000</field>
+        <field name="isUrgent">false</field>
+      </valid-request>
+    </test-data>
+  </tests>
+</story-context>

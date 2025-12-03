@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "nitoagua",
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ServiceWorkerRegistration />
         {children}
+        <Toaster />
       </body>
     </html>
   );

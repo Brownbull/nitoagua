@@ -1,0 +1,260 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2.5</storyId>
+    <title>Request Status Tracking (Guest)</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic2/2-5-request-status-tracking-guest.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>guest consumer</asA>
+    <iWant>to check my request status using the tracking link</iWant>
+    <soThat>I know when my water will arrive</soThat>
+    <tasks>
+      <task id="1" ac="2">Create StatusBadge Component</task>
+      <task id="2" ac="3">Create StatusTracker Timeline Component</task>
+      <task id="3" ac="1,4,5,6,8">Create Tracking Page</task>
+      <task id="4" ac="8">Implement Error State</task>
+      <task id="5" ac="7">Implement Auto-Refresh</task>
+      <task id="6" ac="5">Fetch Supplier Info for Accepted Requests</task>
+      <task id="7" ac="6">Date/Time Formatting Utilities</task>
+      <task id="8" ac="4">Privacy Masking for Address</task>
+      <task id="9" ac="1-8">E2E Testing</task>
+      <task id="10" ac="all">Build Verification</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="AC2-5-1">Tracking page accessible at /track/[token] without authentication</ac>
+    <ac id="AC2-5-2">StatusBadge displays correct state: Pendiente (amber #F59E0B), Aceptada (blue #0077B6), Entregada (green #10B981)</ac>
+    <ac id="AC2-5-3">Visual progress indicator shows: Pending -> Accepted -> Delivered timeline</ac>
+    <ac id="AC2-5-4">Request details show amount and partial address (privacy - show first 20 chars + "...")</ac>
+    <ac id="AC2-5-5">If accepted: Shows delivery window (if provided) and supplier phone number (clickable tel: link)</ac>
+    <ac id="AC2-5-6">If delivered: Shows "Tu agua fue entregada" message with completion timestamp formatted in Spanish (e.g., "3 de diciembre, 2025 a las 14:30")</ac>
+    <ac id="AC2-5-7">Page auto-refreshes every 30 seconds to check for status updates</ac>
+    <ac id="AC2-5-8">Invalid tokens show "Solicitud no encontrada" error page with "Volver al Inicio" button</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" relevant="FR6,FR14,FR18,FR43">
+        <excerpt section="Guest Tracking Link (FR6)">Guest consumers receive a unique link (via email) to track their request status</excerpt>
+        <excerpt section="Request Status (FR14)">Consumers can view the current status of their request (Pending, Accepted, Delivered)</excerpt>
+        <excerpt section="Supplier Contact (FR18)">Consumers can see which supplier accepted their request and their contact information</excerpt>
+        <excerpt section="Data Privacy (FR43)">Consumer personal information is only visible to suppliers who have accepted their request</excerpt>
+      </doc>
+      <doc path="docs/architecture.md" relevant="Project Structure, Security, Implementation Patterns">
+        <excerpt section="Project Structure">Track pages at src/app/track/[token]/ for guest tracking</excerpt>
+        <excerpt section="Security">Tracking token (UUID v4) provides 122 bits entropy, not guessable; RLS policies allow reading by tracking_token</excerpt>
+        <excerpt section="Implementation Patterns">Database query pattern using createClient from @/lib/supabase/server; API response format { data, error }</excerpt>
+      </doc>
+      <doc path="docs/sprint-artifacts/epic2/tech-spec-epic-2.md" relevant="Story 2-5, Data Models, Security">
+        <excerpt section="Story 2-5 ACs">Complete acceptance criteria with testable requirements</excerpt>
+        <excerpt section="Data Models">WaterRequest entity with status, tracking_token, accepted_at, delivered_at, supplier_id, delivery_window</excerpt>
+        <excerpt section="Security">Address partially masked for privacy (first 20 chars); No PII logged; UUID v4 tracking tokens</excerpt>
+        <excerpt section="Test Strategy">E2E tests with Playwright covering all status states and error cases</excerpt>
+      </doc>
+    </docs>
+    <code>
+      <file path="src/lib/supabase/server.ts" purpose="Supabase server client">
+        <pattern>createClient() returns typed Supabase client with cookie-based auth</pattern>
+        <usage>const supabase = await createClient(); const { data, error } = await supabase.from("water_requests")...</usage>
+      </file>
+      <file path="src/types/database.ts" purpose="Supabase generated types">
+        <types>
+          <type name="water_requests.Row">
+            <field name="id" type="string"/>
+            <field name="status" type="string" values="pending|accepted|delivered|cancelled"/>
+            <field name="amount" type="number"/>
+            <field name="address" type="string"/>
+            <field name="guest_name" type="string|null"/>
+            <field name="guest_phone" type="string"/>
+            <field name="tracking_token" type="string|null"/>
+            <field name="created_at" type="string|null"/>
+            <field name="accepted_at" type="string|null"/>
+            <field name="delivered_at" type="string|null"/>
+            <field name="delivery_window" type="string|null"/>
+            <field name="supplier_id" type="string|null"/>
+          </type>
+          <type name="profiles.Row">
+            <field name="id" type="string"/>
+            <field name="name" type="string"/>
+            <field name="phone" type="string"/>
+            <field name="role" type="string"/>
+          </type>
+        </types>
+        <relationships>
+          <relationship name="water_requests_supplier_id_fkey" from="water_requests.supplier_id" to="profiles.id"/>
+        </relationships>
+      </file>
+      <file path="src/app/api/requests/route.ts" purpose="Request creation API">
+        <pattern>POST handler with Zod validation, returns { data: { id, trackingToken, status, createdAt }, error: null }</pattern>
+        <reference>Tracking token generated via crypto.randomUUID()</reference>
+      </file>
+      <file path="src/components/ui/badge.tsx" purpose="Base badge component from shadcn/ui">
+        <pattern>Uses class-variance-authority (cva) for variant styling</pattern>
+        <note>StatusBadge will extend this pattern with custom status variants</note>
+      </file>
+      <file path="src/components/ui/card.tsx" purpose="Card component for visual container"/>
+      <file path="src/components/ui/button.tsx" purpose="Button component for navigation"/>
+      <file path="src/lib/validations/request.ts" purpose="Validation schemas">
+        <function name="formatPrice">Format price in Chilean pesos using Intl.NumberFormat</function>
+      </file>
+      <file path="src/lib/supabase/supplier.ts" purpose="Supplier utilities">
+        <function name="getSupplierPhone">Query profiles table for supplier phone number</function>
+        <note>Can be used as reference for supplier queries in tracking page</note>
+      </file>
+      <file path="src/app/(consumer)/layout.tsx" purpose="Consumer route group layout">
+        <note>Track page is OUTSIDE this layout - uses root layout directly for guest access</note>
+      </file>
+    </code>
+    <dependencies>
+      <dependency name="next" version="16.0.6" usage="App Router, Server Components, API routes"/>
+      <dependency name="react" version="19.2.0" usage="UI components, hooks"/>
+      <dependency name="@supabase/supabase-js" version="^2.86.0" usage="Database queries"/>
+      <dependency name="@supabase/ssr" version="^0.8.0" usage="Server-side Supabase client"/>
+      <dependency name="date-fns" version="^4.1.0" usage="Spanish date formatting">
+        <example>import { format } from 'date-fns'; import { es } from 'date-fns/locale';</example>
+      </dependency>
+      <dependency name="lucide-react" version="^0.555.0" usage="Icons (Clock, CheckCircle, Package, XCircle, AlertTriangle)"/>
+      <dependency name="class-variance-authority" version="^0.7.1" usage="StatusBadge variants"/>
+      <dependency name="clsx" version="^2.1.1" usage="Conditional class names"/>
+      <dependency name="tailwind-merge" version="^3.4.0" usage="Tailwind class deduplication"/>
+      <dependency name="@playwright/test" version="^1.57.0" usage="E2E testing"/>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="security">
+      <rule>No authentication required for /track/[token] - uses Supabase anon key</rule>
+      <rule>Address masked to first 20 characters for privacy protection</rule>
+      <rule>UUID v4 tracking tokens provide sufficient entropy (122 bits)</rule>
+      <rule>No PII should be logged in console or error tracking</rule>
+    </constraint>
+    <constraint type="performance">
+      <rule>NFR1: Page load under 3 seconds on 3G</rule>
+      <rule>LCP target less than 2.5s for tracking page</rule>
+      <rule>Use Server Components for initial data fetch - minimal client JS</rule>
+      <rule>Single database query with JOIN for supplier info (avoid N+1)</rule>
+    </constraint>
+    <constraint type="ux">
+      <rule>All UI text in Spanish (Chilean)</rule>
+      <rule>44x44px minimum touch targets (NFR10)</rule>
+      <rule>Phone numbers always visible as human fallback (clickable tel: links)</rule>
+      <rule>Date format: "3 de diciembre, 2025 a las 14:30"</rule>
+    </constraint>
+    <constraint type="architecture">
+      <rule>Track page at src/app/track/[token]/page.tsx (NOT in consumer route group)</rule>
+      <rule>StatusBadge in src/components/shared/ (shared between consumer/supplier)</rule>
+      <rule>StatusTracker in src/components/consumer/ (consumer-specific)</rule>
+      <rule>Auto-refresh client component separate from server page component</rule>
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface type="database">
+      <query name="getRequestByToken">
+        <sql>
+          SELECT
+            id, status, amount, address, created_at, accepted_at, delivered_at,
+            delivery_window, supplier_id,
+            profiles!water_requests_supplier_id_fkey (name, phone)
+          FROM water_requests
+          WHERE tracking_token = $token
+        </sql>
+        <supabase>
+          supabase.from("water_requests")
+            .select(`id, status, amount, address, created_at, accepted_at, delivered_at,
+                     delivery_window, supplier_id,
+                     profiles!water_requests_supplier_id_fkey (name, phone)`)
+            .eq("tracking_token", token)
+            .single()
+        </supabase>
+      </query>
+    </interface>
+    <interface type="component">
+      <component name="StatusBadge">
+        <props>
+          <prop name="status" type="'pending' | 'accepted' | 'delivered' | 'cancelled'" required="true"/>
+          <prop name="className" type="string" required="false"/>
+        </props>
+        <variants>
+          <variant name="pending" background="#FEF3C7" text="#92400E" icon="Clock" label="Pendiente"/>
+          <variant name="accepted" background="#DBEAFE" text="#1E40AF" icon="CheckCircle" label="Aceptada"/>
+          <variant name="delivered" background="#D1FAE5" text="#065F46" icon="Package" label="Entregada"/>
+          <variant name="cancelled" background="#F3F4F6" text="#4B5563" icon="XCircle" label="Cancelada"/>
+        </variants>
+      </component>
+      <component name="StatusTracker">
+        <props>
+          <prop name="currentStatus" type="'pending' | 'accepted' | 'delivered' | 'cancelled'" required="true"/>
+          <prop name="createdAt" type="string" required="true"/>
+          <prop name="acceptedAt" type="string | null" required="false"/>
+          <prop name="deliveredAt" type="string | null" required="false"/>
+        </props>
+        <steps>
+          <step id="1" label="Pendiente"/>
+          <step id="2" label="Aceptada"/>
+          <step id="3" label="Entregada"/>
+        </steps>
+      </component>
+      <component name="TrackingRefresh">
+        <props>None - uses router.refresh() internally</props>
+        <behavior>30-second interval, pauses when document.hidden</behavior>
+      </component>
+    </interface>
+    <interface type="utility">
+      <function name="formatDateSpanish">
+        <signature>formatDateSpanish(date: string | Date): string</signature>
+        <output>"3 de diciembre, 2025 a las 14:30"</output>
+        <implementation>Use date-fns with Spanish locale (es)</implementation>
+      </function>
+      <function name="maskAddress">
+        <signature>maskAddress(address: string): string</signature>
+        <output>First 20 characters + "..." if longer than 20</output>
+      </function>
+      <function name="formatPhone">
+        <signature>formatPhone(phone: string): string</signature>
+        <output>"+56 9 1234 5678" (with spaces for readability)</output>
+      </function>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      <standard>E2E testing with Playwright (npm run test:e2e)</standard>
+      <standard>Test file location: tests/e2e/consumer-tracking.spec.ts</standard>
+      <standard>Test all happy paths + key error cases</standard>
+      <standard>Verify build passes (npm run build) before completion</standard>
+      <standard>Verify lint passes (npm run lint) before completion</standard>
+    </standards>
+    <locations>
+      <location>tests/e2e/consumer-tracking.spec.ts - New E2E test file</location>
+      <location>tests/e2e/consumer-request-submission.spec.ts - Reference for test patterns</location>
+      <location>tests/e2e/consumer-request-confirmation.spec.ts - Reference for navigation tests</location>
+    </locations>
+    <ideas>
+      <test ac="1">Valid tracking token loads request status page</test>
+      <test ac="2">StatusBadge shows correct color for pending (amber)</test>
+      <test ac="2">StatusBadge shows correct color for accepted (blue)</test>
+      <test ac="2">StatusBadge shows correct color for delivered (green)</test>
+      <test ac="3">Timeline shows first step active when pending</test>
+      <test ac="3">Timeline shows two steps complete when accepted</test>
+      <test ac="3">Timeline shows all steps complete when delivered</test>
+      <test ac="4">Request amount displays correctly (e.g., "Cantidad: 1000L")</test>
+      <test ac="4">Long address is truncated to 20 chars + "..."</test>
+      <test ac="5">Accepted status shows supplier phone as clickable link</test>
+      <test ac="5">Accepted status shows delivery window if provided</test>
+      <test ac="6">Delivered status shows completion timestamp in Spanish</test>
+      <test ac="7">Page auto-refreshes after 30 seconds (verify network call or DOM update)</test>
+      <test ac="8">Invalid token shows "Solicitud no encontrada" error</test>
+      <test ac="8">Error page has "Volver al Inicio" button linking to /</test>
+      <edge-case>Very long address (100+ chars) displays masked correctly</edge-case>
+      <edge-case>Request with null supplier_id (pending) handles gracefully</edge-case>
+      <edge-case>Request with null delivery_window displays without error</edge-case>
+    </ideas>
+  </tests>
+</story-context>
