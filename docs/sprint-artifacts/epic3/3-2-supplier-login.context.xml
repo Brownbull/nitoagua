@@ -1,0 +1,232 @@
+<story-context id="3-2-supplier-login" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>2</storyId>
+    <title>Supplier Login</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic3/3-2-supplier-login.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>registered supplier (Don Pedro)</asA>
+    <iWant>to log in to my dashboard using my Google account</iWant>
+    <soThat>I can view and manage water requests without remembering a password</soThat>
+    <tasks>
+      <task id="1" title="Login Page Enhancement">
+        <subtask>Verify /login page exists with Google sign-in button from Story 3-1</subtask>
+        <subtask>Ensure button styling matches Google branding guidelines</subtask>
+        <subtask>Add "loading" state visual feedback during OAuth redirect</subtask>
+        <subtask>Handle edge case: user already logged in -> redirect to appropriate dashboard</subtask>
+      </task>
+      <task id="2" title="Auth Callback Role-Based Routing">
+        <subtask>Update src/app/auth/callback/route.ts to check profile role</subtask>
+        <subtask>Query profiles table for authenticated user's role</subtask>
+        <subtask>Routing logic: No profile -> /onboarding, supplier -> /dashboard, consumer -> /</subtask>
+        <subtask>Add logging for auth routing decisions</subtask>
+      </task>
+      <task id="3" title="Session Persistence">
+        <subtask>Verify Supabase SSR middleware handles session refresh</subtask>
+        <subtask>Ensure session cookies are properly set with appropriate expiration</subtask>
+        <subtask>Test: logged-in user refreshes page and remains authenticated</subtask>
+        <subtask>Test: logged-in user closes browser, reopens, still authenticated (within session TTL)</subtask>
+      </task>
+      <task id="4" title="OAuth Error Handling">
+        <subtask>Handle OAuth callback errors (user cancels, Google error, network issues)</subtask>
+        <subtask>Create error page or redirect to login with error query param</subtask>
+        <subtask>Display toast: "Error al iniciar sesion. Intenta de nuevo."</subtask>
+        <subtask>Provide "Reintentar" button to try OAuth again</subtask>
+        <subtask>Log error details for debugging (don't expose to user)</subtask>
+      </task>
+      <task id="5" title="Supplier Dashboard Access Guard">
+        <subtask>Add auth guard to src/app/(supplier)/layout.tsx</subtask>
+        <subtask>If not authenticated -> redirect to /login</subtask>
+        <subtask>If authenticated but role !== 'supplier' -> redirect to consumer home</subtask>
+        <subtask>Show loading skeleton while checking auth state</subtask>
+      </task>
+      <task id="6" title="E2E Tests">
+        <subtask>Add tests to tests/e2e/supplier-auth.spec.ts</subtask>
+        <subtask>Test: Existing supplier OAuth redirects to dashboard</subtask>
+        <subtask>Test: Session persists across page refresh</subtask>
+        <subtask>Test: Non-supplier role redirects to consumer home</subtask>
+        <subtask>Test: OAuth error displays Spanish error message</subtask>
+        <subtask>Test: Unauthenticated access to /dashboard redirects to login</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC3-2-1">Existing supplier clicks "Continuar con Google" on login page</criterion>
+    <criterion id="AC3-2-2">After Google auth, redirect directly to dashboard (no onboarding)</criterion>
+    <criterion id="AC3-2-3">Session persisted (stay logged in on page refresh)</criterion>
+    <criterion id="AC3-2-4">Role check: if profile.role !== 'supplier', redirect to consumer home</criterion>
+    <criterion id="AC3-2-5">OAuth error shows: "Error al iniciar sesion. Intenta de nuevo."</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Story 3-2: Supplier Login</section>
+        <snippet>Defines OAuth flow, session management patterns, role-based routing, and acceptance criteria for supplier login.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Authentication Flow</section>
+        <snippet>Supabase Auth with JWT in HTTP-only cookies, session managed by @supabase/ssr middleware.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/3-1-supplier-registration.md</path>
+        <title>Story 3-1: Supplier Registration</title>
+        <section>Prerequisite Story</section>
+        <snippet>Creates login page, Google OAuth button, callback handler, and onboarding flow that this story builds upon.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/app/(auth)/login/page.tsx</path>
+        <kind>page</kind>
+        <symbol>LoginPage</symbol>
+        <lines>1-58</lines>
+        <reason>Login page with Google sign-in button and role-based redirect logic for already-authenticated users.</reason>
+      </file>
+      <file>
+        <path>src/components/auth/google-sign-in.tsx</path>
+        <kind>component</kind>
+        <symbol>GoogleSignIn</symbol>
+        <lines>1-91</lines>
+        <reason>Google OAuth button component with loading state and error handling - core to login flow.</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>utility</kind>
+        <symbol>createClient</symbol>
+        <lines>1-30</lines>
+        <reason>Server-side Supabase client with SSR cookie handling for auth state.</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>updateSession</symbol>
+        <lines>1-41</lines>
+        <reason>Session refresh middleware - critical for session persistence (AC3-2-3).</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getUser, getSession</symbol>
+        <lines>1-23</lines>
+        <reason>Auth helper functions for getting user and session server-side.</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/admin.ts</path>
+        <kind>utility</kind>
+        <symbol>createAdminClient</symbol>
+        <lines>1-32</lines>
+        <reason>Admin client for server-side operations bypassing RLS - may be used for profile queries.</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/client.ts</path>
+        <kind>utility</kind>
+        <symbol>createClient</symbol>
+        <reason>Browser-side Supabase client used by GoogleSignIn component.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.86.0</version>
+        <usage>Core Supabase client for auth and database</usage>
+      </node>
+      <node>
+        <package>@supabase/ssr</package>
+        <version>^0.8.0</version>
+        <usage>Server-side auth with SSR support, session cookies</usage>
+      </node>
+      <node>
+        <package>next</package>
+        <version>16.0.6</version>
+        <usage>App Router, middleware, API routes</usage>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>^2.0.7</version>
+        <usage>Toast notifications for error messages</usage>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.555.0</version>
+        <usage>Loader2 icon for loading states</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Use createClient() from src/lib/supabase/server.ts for server-side auth operations</constraint>
+    <constraint type="pattern">Use createClient() from src/lib/supabase/client.ts for browser-side auth</constraint>
+    <constraint type="pattern">Follow API response format: { data: T, error: null } or { data: null, error: { message, code } }</constraint>
+    <constraint type="security">Never expose SERVICE_ROLE_KEY to browser - only use in server context</constraint>
+    <constraint type="layer">Auth callback handler must be at src/app/auth/callback/route.ts (not in route group)</constraint>
+    <constraint type="i18n">All user-facing messages in Spanish per UX spec</constraint>
+    <constraint type="testing">Mock OAuth flow for E2E tests - use injected session state</constraint>
+    <constraint type="coding">Use data-testid attributes for E2E test selectors</constraint>
+    <constraint type="architecture">Supplier routes under src/app/(supplier)/ route group</constraint>
+    <constraint type="architecture">Auth routes under src/app/(auth)/ route group</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Google OAuth SignIn</name>
+      <kind>client-side function</kind>
+      <signature>supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo, queryParams } })</signature>
+      <path>src/components/auth/google-sign-in.tsx</path>
+    </interface>
+    <interface>
+      <name>Profile Query</name>
+      <kind>database query</kind>
+      <signature>supabase.from('profiles').select('role').eq('id', user.id).single()</signature>
+      <path>src/app/(auth)/login/page.tsx</path>
+    </interface>
+    <interface>
+      <name>Session Check</name>
+      <kind>server-side function</kind>
+      <signature>supabase.auth.getUser(): Promise&lt;{ data: { user: User | null }, error }&gt;</signature>
+      <path>src/lib/supabase/auth.ts</path>
+    </interface>
+    <interface>
+      <name>Session Middleware</name>
+      <kind>middleware function</kind>
+      <signature>updateSession(request: NextRequest): Promise&lt;NextResponse&gt;</signature>
+      <path>src/lib/supabase/middleware.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Playwright E2E testing with mocked OAuth flow. Tests run in Chromium, Firefox, and WebKit browsers.
+      Mock API responses using page.route(). Use data-testid attributes for selectors.
+      Test files in tests/e2e/ directory. Standard timeout 60s for tests, 15s for assertions.
+      Base URL: http://localhost:3005. Dev server auto-starts via npm run dev.
+    </standards>
+    <locations>
+      <location>tests/e2e/supplier-auth.spec.ts</location>
+      <location>tests/e2e/*.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="AC3-2-1">Test login page renders with Google sign-in button visible</idea>
+      <idea ac="AC3-2-2">Mock authenticated supplier session, verify redirect to /dashboard</idea>
+      <idea ac="AC3-2-2">Mock new user (no profile), verify redirect to /onboarding</idea>
+      <idea ac="AC3-2-3">Set mock session, refresh page, verify user remains authenticated</idea>
+      <idea ac="AC3-2-3">Test session cookie persistence across navigation</idea>
+      <idea ac="AC3-2-4">Mock consumer role profile, verify redirect to / (consumer home)</idea>
+      <idea ac="AC3-2-4">Mock supplier role profile, verify redirect to /dashboard</idea>
+      <idea ac="AC3-2-5">Mock OAuth error response, verify Spanish error message displayed</idea>
+      <idea ac="AC3-2-5">Test error toast contains "Reintentar" action button</idea>
+      <idea ac="guard">Access /dashboard unauthenticated, verify redirect to /login</idea>
+      <idea ac="guard">Access /dashboard as consumer, verify redirect to /</idea>
+    </ideas>
+  </tests>
+</story-context>

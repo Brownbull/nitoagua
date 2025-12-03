@@ -1,0 +1,257 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>8</storyId>
+    <title>Epic Deployment &amp; Verification</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic3/3-8-epic-deployment-and-verification.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to deploy all Epic 3 changes through the git branching workflow and verify production</iWant>
+    <soThat>the supplier dashboard is live and working for real users</soThat>
+    <tasks>
+      <task id="1" title="Pre-deployment Checks">
+        <subtask>Run `npm run lint` - ensure no errors</subtask>
+        <subtask>Run `npm run build` - ensure build succeeds</subtask>
+        <subtask>Run `npm run test:e2e` - ensure all tests pass</subtask>
+        <subtask>Verify local development works with all Epic 3 features</subtask>
+      </task>
+      <task id="2" title="Git Commit &amp; Push to Develop">
+        <subtask>Review all changes with `git status` and `git diff`</subtask>
+        <subtask>Stage all Epic 3 changes</subtask>
+        <subtask>Create commit with descriptive message</subtask>
+        <subtask>Push to develop branch</subtask>
+        <subtask>Verify Vercel preview deployment for develop branch</subtask>
+      </task>
+      <task id="3" title="Merge to Staging">
+        <subtask>Checkout staging branch</subtask>
+        <subtask>Merge develop into staging</subtask>
+        <subtask>Push staging branch</subtask>
+        <subtask>Verify Vercel preview deployment for staging</subtask>
+        <subtask>Test staging deployment manually: Google OAuth, Supplier dashboard, Accept request flow</subtask>
+      </task>
+      <task id="4" title="Merge to Main (Production)">
+        <subtask>Checkout main branch</subtask>
+        <subtask>Merge staging into main</subtask>
+        <subtask>Push main branch</subtask>
+        <subtask>Monitor Vercel production deployment</subtask>
+      </task>
+      <task id="5" title="Production Verification">
+        <subtask>Navigate to https://nitoagua.vercel.app</subtask>
+        <subtask>Test Google OAuth login flow</subtask>
+        <subtask>Create supplier profile (onboarding)</subtask>
+        <subtask>View dashboard with pending requests</subtask>
+        <subtask>Accept a request with delivery window</subtask>
+        <subtask>Mark request as delivered</subtask>
+        <subtask>Edit supplier profile</subtask>
+        <subtask>Logout and login again</subtask>
+        <subtask>Verify consumer guest flow still works (no regression)</subtask>
+      </task>
+      <task id="6" title="E2E Test Suite Verification">
+        <subtask>Run full E2E test suite against production</subtask>
+        <subtask>Verify existing 109 tests still pass</subtask>
+        <subtask>Verify new supplier tests pass</subtask>
+        <subtask>Document any test adjustments needed</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC3-8-1">All Epic 3 changes committed to develop branch</criterion>
+    <criterion id="AC3-8-2">Develop merged to staging, preview deployment verified</criterion>
+    <criterion id="AC3-8-3">Staging merged to main, production deployment triggered</criterion>
+    <criterion id="AC3-8-4">Production deployment successful (Vercel build passes)</criterion>
+    <criterion id="AC3-8-5">Google OAuth flow works in production</criterion>
+    <criterion id="AC3-8-6">Supplier can register, login, view dashboard in production</criterion>
+    <criterion id="AC3-8-7">Supplier can accept request and mark delivered in production</criterion>
+    <criterion id="AC3-8-8">All E2E tests pass (existing + new supplier tests)</criterion>
+    <criterion id="AC3-8-9">No regression in consumer flows (guest request still works)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Platform &amp; PWA (FR38-FR42)</section>
+        <snippet>Application is accessible as PWA, installable on home screen, Spanish interface, responsive design, works on slow connections.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Deployment Architecture</section>
+        <snippet>Vercel deployment with Edge Network, Serverless Functions, and Static Assets. Supabase backend in São Paulo region. Environment setup: Development, Preview, Production.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Environment Setup</section>
+        <snippet>Development: Local dev with local or dev Supabase project. Preview: PR previews with dev project. Production: Live app with production Supabase project.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Story 3-8: Epic Deployment &amp; Verification</section>
+        <snippet>Covers git branching workflow (develop → staging → main), Vercel deployments, Google OAuth production setup, and rollback plan.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Non-Functional Requirements - Security</section>
+        <snippet>HTTPS enforced by Vercel, Google OAuth via Supabase, session management with JWT in HTTP-only cookies, rate limiting, RLS policies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Test Strategy Summary</section>
+        <snippet>E2E testing with Playwright covering OAuth, onboarding, dashboard, accept/deliver flows, and profile management. Mocked auth state for most tests, manual testing for real OAuth.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>middleware</symbol>
+        <reason>Auth middleware handling session management - critical for OAuth callback routing</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>service</kind>
+        <symbol>createServerClient</symbol>
+        <reason>Server-side Supabase client used for auth-aware queries in production</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/client.ts</path>
+        <kind>service</kind>
+        <symbol>createClient</symbol>
+        <reason>Browser Supabase client for client-side operations</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/admin.ts</path>
+        <kind>service</kind>
+        <symbol>createAdminClient</symbol>
+        <reason>Service role client for server-side operations requiring elevated privileges</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/api/requests/route.ts</path>
+        <kind>api</kind>
+        <symbol>GET, POST</symbol>
+        <reason>Request API endpoints - must continue working after deployment</reason>
+      </artifact>
+      <artifact>
+        <path>playwright.config.ts</path>
+        <kind>config</kind>
+        <symbol>defineConfig</symbol>
+        <reason>E2E test configuration - defines test directory, timeouts, browser projects, and web server settings</reason>
+      </artifact>
+      <artifact>
+        <path>tests/e2e/consumer-request-form.spec.ts</path>
+        <kind>test</kind>
+        <symbol>consumer request form tests</symbol>
+        <reason>Existing E2E tests that must continue passing (regression check)</reason>
+      </artifact>
+      <artifact>
+        <path>tests/e2e/consumer-tracking.spec.ts</path>
+        <kind>test</kind>
+        <symbol>consumer tracking tests</symbol>
+        <reason>Guest tracking tests - must verify no regression in consumer flows</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="next" version="16.0.6" />
+        <package name="react" version="19.2.0" />
+        <package name="@supabase/supabase-js" version="^2.86.0" />
+        <package name="@supabase/ssr" version="^0.8.0" />
+        <package name="@playwright/test" version="^1.57.0" />
+        <package name="zod" version="^4.1.13" />
+        <package name="react-hook-form" version="^7.67.0" />
+        <package name="date-fns" version="^4.1.0" />
+        <package name="lucide-react" version="^0.555.0" />
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="git-workflow">
+      <description>Git Branching Strategy</description>
+      <rule>develop (feature development) → staging (pre-production testing) → main (production)</rule>
+      <rule>All Epic 3 changes must flow through this pipeline</rule>
+    </constraint>
+    <constraint type="deployment">
+      <description>Vercel Deployment URLs</description>
+      <rule>main: https://nitoagua.vercel.app (production)</rule>
+      <rule>staging: https://nitoagua-staging.vercel.app (preview)</rule>
+      <rule>develop: https://nitoagua-develop.vercel.app (preview)</rule>
+    </constraint>
+    <constraint type="oauth">
+      <description>Google OAuth Production Setup</description>
+      <rule>Google Cloud Console must have production redirect URI configured</rule>
+      <rule>Supabase production project must have Google provider enabled</rule>
+      <rule>Environment variables must be set in Vercel: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY</rule>
+    </constraint>
+    <constraint type="rollback">
+      <description>Rollback Plan</description>
+      <rule>If production issues found: git revert HEAD → push to main → debug on develop → re-deploy when fixed</rule>
+    </constraint>
+    <constraint type="testing">
+      <description>E2E Test Requirements</description>
+      <rule>All existing 109 E2E tests must continue passing</rule>
+      <rule>Consumer flows must not regress</rule>
+      <rule>New supplier tests should pass if implemented</rule>
+    </constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Vercel Deployment API</name>
+      <kind>external-service</kind>
+      <signature>Automatic deployment on push to main/staging/develop branches</signature>
+      <path>Vercel Dashboard</path>
+    </interface>
+    <interface>
+      <name>Supabase Auth - Google OAuth</name>
+      <kind>external-service</kind>
+      <signature>supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })</signature>
+      <path>src/lib/supabase/auth.ts</path>
+    </interface>
+    <interface>
+      <name>Git Commands</name>
+      <kind>cli</kind>
+      <signature>git checkout, git merge, git push, git status, git diff</signature>
+      <path>CLI</path>
+    </interface>
+    <interface>
+      <name>npm Scripts</name>
+      <kind>cli</kind>
+      <signature>npm run lint, npm run build, npm run test:e2e</signature>
+      <path>package.json</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Playwright E2E testing framework with 60s test timeout, 15s assertion timeout. Tests run in chromium, firefox, and webkit browsers. Development server on port 3005. Test artifacts (traces, screenshots, videos) retained on failure. HTML and JUnit reporters configured.
+    </standards>
+    <locations>
+      <location>tests/e2e/*.spec.ts</location>
+      <location>playwright-report/</location>
+      <location>test-results/</location>
+    </locations>
+    <ideas>
+      <idea forAC="AC3-8-1">Verify git status shows no uncommitted Epic 3 changes after commit</idea>
+      <idea forAC="AC3-8-2">Manually verify staging deployment loads at preview URL</idea>
+      <idea forAC="AC3-8-3">Verify Vercel build log shows successful deployment to production</idea>
+      <idea forAC="AC3-8-4">Check Vercel dashboard for green deployment status</idea>
+      <idea forAC="AC3-8-5">Manual test: Click Google login → complete OAuth → verify redirect to dashboard/onboarding</idea>
+      <idea forAC="AC3-8-6">Manual test: Complete supplier onboarding flow, verify profile saved, dashboard accessible</idea>
+      <idea forAC="AC3-8-7">Manual test: Accept a pending request, mark as delivered, verify status updates</idea>
+      <idea forAC="AC3-8-8">Run npm run test:e2e and verify all tests pass with green output</idea>
+      <idea forAC="AC3-8-9">Submit a guest water request and verify tracking link works</idea>
+    </ideas>
+  </tests>
+</story-context>

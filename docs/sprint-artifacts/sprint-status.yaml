@@ -55,17 +55,18 @@ development_status:
   2-5-request-status-tracking-guest: done
   2-6-request-status-page-consumer-view: done
   2-7-fix-water-requests-rls-policy: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: completed
 
   # Epic 3: Supplier Dashboard & Request Management
-  epic-3: backlog
-  3-1-supplier-registration: backlog
+  epic-3: contexted
+  3-1-supplier-registration: review
   3-2-supplier-login: backlog
   3-3-supplier-request-dashboard: backlog
   3-4-supplier-request-details-view: backlog
   3-5-accept-request-with-delivery-window: backlog
   3-6-mark-request-as-delivered: backlog
   3-7-supplier-profile-management: backlog
+  3-8-epic-deployment-and-verification: ready-for-dev
   epic-3-retrospective: optional
 
   # Epic 4: User Accounts & Profiles
