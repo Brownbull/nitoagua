@@ -59,10 +59,10 @@ development_status:
 
   # Epic 3: Supplier Dashboard & Request Management
   epic-3: contexted
-  3-1-supplier-registration: review
-  3-2-supplier-login: backlog
-  3-3-supplier-request-dashboard: backlog
-  3-4-supplier-request-details-view: backlog
+  3-1-supplier-registration: done
+  3-2-supplier-login: done
+  3-3-supplier-request-dashboard: done
+  3-4-supplier-request-details-view: review
   3-5-accept-request-with-delivery-window: backlog
   3-6-mark-request-as-delivered: backlog
   3-7-supplier-profile-management: backlog

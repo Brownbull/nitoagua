@@ -57,3 +57,22 @@ npm run start
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth
 - **Deployment**: Vercel
+
+## Architecture Patterns
+
+### Supabase Client Usage
+
+This project uses two Supabase client patterns:
+
+| Client | Use Case | File |
+|--------|----------|------|
+| `createClient()` | Client-side operations, respects RLS | `src/lib/supabase/client.ts` |
+| `createServerClient()` | Server components, respects RLS | `src/lib/supabase/server.ts` |
+| `createAdminClient()` | Server-side operations that bypass RLS | `src/lib/supabase/admin.ts` |
+
+**When to use `createAdminClient()`:**
+- API routes that need to INSERT records for unauthenticated users (e.g., guest water requests)
+- Server-side SELECT operations that need to bypass RLS (e.g., guest tracking by token)
+- Any intentional server-side operation where RLS would block legitimate access
+
+**Security Note:** The `SERVICE_ROLE_KEY` used by admin client is only available server-side and never exposed to the browser.

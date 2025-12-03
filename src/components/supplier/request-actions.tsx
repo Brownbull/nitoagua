@@ -1,0 +1,73 @@
+"use client";
+
+import { useState } from "react";
+import { Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
+interface RequestActionsProps {
+  requestId: string;
+  status: string;
+}
+
+export function RequestActions({ status }: RequestActionsProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Only show action buttons for pending requests
+  if (status !== "pending") {
+    return null;
+  }
+
+  const handleAccept = async () => {
+    // Story 3-5 will implement the accept modal with delivery window
+    // For now, this is a stub that navigates to a future modal/flow
+    setIsLoading(true);
+
+    // TODO: Story 3-5 - Implement accept modal with delivery window selection
+    // For now, show an alert as placeholder
+    alert("Próximamente: Seleccionar ventana de entrega (Story 3-5)");
+
+    setIsLoading(false);
+  };
+
+  const handleDecline = async () => {
+    // Story 3-5 or future story will implement decline with optional reason
+    // For now, this is a stub
+    setIsLoading(true);
+
+    // TODO: Implement decline with optional reason
+    alert("Próximamente: Rechazar solicitud con razón opcional");
+
+    setIsLoading(false);
+  };
+
+  return (
+    <Card data-testid="request-actions-card">
+      <CardContent className="pt-6">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            size="lg"
+            className="flex-1 bg-green-600 hover:bg-green-700"
+            onClick={handleAccept}
+            disabled={isLoading}
+            data-testid="accept-button"
+          >
+            <Check className="w-5 h-5 mr-2" />
+            Aceptar
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+            onClick={handleDecline}
+            disabled={isLoading}
+            data-testid="decline-button"
+          >
+            <X className="w-5 h-5 mr-2" />
+            Rechazar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

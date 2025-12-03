@@ -4,7 +4,15 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const error = requestUrl.searchParams.get("error");
+  const errorDescription = requestUrl.searchParams.get("error_description");
   const origin = requestUrl.origin;
+
+  // Handle OAuth errors from Google (user cancels, Google error, etc.)
+  if (error) {
+    console.error("[AUTH] OAuth error from Google:", { error, errorDescription });
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error)}`);
+  }
 
   if (code) {
     const supabase = await createClient();

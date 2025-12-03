@@ -1,30 +1,111 @@
-import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Droplets, ClipboardList } from "lucide-react";
+import { Droplets } from "lucide-react";
+import { StatsHeader, DashboardTabs } from "@/components/supplier";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export const metadata: Metadata = {
+  title: "Panel de Proveedor - nitoagua",
+  description: "Gestiona tus solicitudes de agua",
+};
+
+// Stats calculation helpers
+function getStartOfToday(): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today.toISOString();
+}
+
+function getStartOfWeek(): string {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday
+  const monday = new Date(now.setDate(diff));
+  monday.setHours(0, 0, 0, 0);
+  return monday.toISOString();
+}
+
+async function fetchDashboardData(supplierId: string) {
+  const supabase = await createClient();
+
+  // Fetch all request types in parallel
+  const [
+    pendingResult,
+    acceptedResult,
+    completedResult,
+    todayDeliveriesResult,
+    weekDeliveriesResult,
+  ] = await Promise.all([
+    // Pending requests (all pending, not assigned to any supplier)
+    supabase
+      .from("water_requests")
+      .select("*")
+      .eq("status", "pending")
+      .order("is_urgent", { ascending: false })
+      .order("created_at", { ascending: true }),
+
+    // Accepted requests (assigned to this supplier)
+    supabase
+      .from("water_requests")
+      .select("*")
+      .eq("status", "accepted")
+      .eq("supplier_id", supplierId)
+      .order("is_urgent", { ascending: false })
+      .order("created_at", { ascending: true }),
+
+    // Completed requests (delivered by this supplier)
+    supabase
+      .from("water_requests")
+      .select("*")
+      .eq("status", "delivered")
+      .eq("supplier_id", supplierId)
+      .order("delivered_at", { ascending: false }),
+
+    // Today's deliveries count
+    supabase
+      .from("water_requests")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "delivered")
+      .eq("supplier_id", supplierId)
+      .gte("delivered_at", getStartOfToday()),
+
+    // Week deliveries count
+    supabase
+      .from("water_requests")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "delivered")
+      .eq("supplier_id", supplierId)
+      .gte("delivered_at", getStartOfWeek()),
+  ]);
+
+  return {
+    pendingRequests: pendingResult.data || [],
+    acceptedRequests: acceptedResult.data || [],
+    completedRequests: completedResult.data || [],
+    stats: {
+      pendingCount: pendingResult.data?.length || 0,
+      todayDeliveries: todayDeliveriesResult.count || 0,
+      weekTotal: weekDeliveriesResult.count || 0,
+    },
+  };
+}
 
 export default async function SupplierDashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Get supplier profile
+  // Get supplier profile (user and role already verified by layout)
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user.id)
+    .eq("id", user!.id)
     .single();
 
-  if (!profile) {
-    redirect("/onboarding");
-  }
-
-  if (profile.role !== "supplier") {
-    redirect("/");
-  }
+  // Fetch dashboard data
+  const dashboardData = await fetchDashboardData(user!.id);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -35,53 +116,61 @@ export default async function SupplierDashboardPage() {
             <Droplets className="w-6 h-6" />
             <span className="font-bold text-lg">nitoagua</span>
           </div>
-          <span className="text-sm">Hola, {profile.name}</span>
+          <span className="text-sm" data-testid="supplier-greeting">
+            Hola, {profile?.name}
+          </span>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-4">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Panel de Proveedor</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          Panel de Proveedor
+        </h1>
 
-        {/* Placeholder Dashboard */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="w-5 h-5" />
-              Solicitudes de Agua
-            </CardTitle>
-            <CardDescription>
-              Gestiona las solicitudes de agua de tus clientes
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-12 text-gray-500">
-              <ClipboardList className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-lg font-medium">No hay solicitudes pendientes</p>
-              <p className="text-sm mt-2">
-                Las solicitudes de agua aparecerán aquí cuando los clientes las envíen
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Stats Header */}
+        <div className="mb-6">
+          <Suspense fallback={<StatsHeaderSkeleton />}>
+            <StatsHeader
+              pendingCount={dashboardData.stats.pendingCount}
+              todayDeliveries={dashboardData.stats.todayDeliveries}
+              weekTotal={dashboardData.stats.weekTotal}
+            />
+          </Suspense>
+        </div>
 
-        {/* Profile Summary */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Tu Perfil</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p><span className="font-medium">Área de servicio:</span> {profile.service_area}</p>
-            <p><span className="font-medium">Teléfono:</span> {profile.phone}</p>
-            <p>
-              <span className="font-medium">Estado:</span>{" "}
-              <span className={profile.is_available ? "text-green-600" : "text-red-600"}>
-                {profile.is_available ? "Disponible" : "No disponible"}
-              </span>
-            </p>
-          </CardContent>
-        </Card>
+        {/* Request Tabs */}
+        <Suspense fallback={<TabsSkeleton />}>
+          <DashboardTabs
+            pendingRequests={dashboardData.pendingRequests}
+            acceptedRequests={dashboardData.acceptedRequests}
+            completedRequests={dashboardData.completedRequests}
+          />
+        </Suspense>
       </main>
+    </div>
+  );
+}
+
+function StatsHeaderSkeleton() {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {[1, 2, 3].map((i) => (
+        <Skeleton key={i} className="h-24 rounded-lg" />
+      ))}
+    </div>
+  );
+}
+
+function TabsSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-full rounded-lg" />
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-32 rounded-lg" />
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,0 +1,162 @@
+<story-context id="{bmad_folder}/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>3</storyId>
+    <title>Supplier Request Dashboard</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic3/3-3-supplier-request-dashboard.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>supplier (Don Pedro)</asA>
+    <iWant>to see all incoming water requests in one dashboard</iWant>
+    <soThat>I can plan my deliveries efficiently and never miss a request</soThat>
+    <tasks>
+      <task id="1" ac="2">Dashboard Page Structure - Create/enhance src/app/(supplier)/dashboard/page.tsx with auth check, role verification, metadata, responsive layout</task>
+      <task id="2" ac="1">Stats Header Component - Create src/components/supplier/stats-header.tsx showing Pending count, Today's deliveries, Week total with loading skeleton</task>
+      <task id="3" ac="2">Request Tabs Navigation - Use shadcn/ui Tabs for Pendientes/Aceptadas/Completadas with count badges and URL persistence</task>
+      <task id="4" ac="3,4">Request Card Component - Create src/components/supplier/request-card.tsx with customer info, amount badge, time, urgent styling</task>
+      <task id="5" ac="5,6">Request List Component - Create src/components/supplier/request-list.tsx with sorting (urgent first, oldest first), action buttons, pagination</task>
+      <task id="6" ac="1,2,3">Data Fetching Layer - Query water_requests with filters for each tab status, calculate stats using Server Components</task>
+      <task id="7" ac="7">Empty State - Display tab-specific empty messages when no requests match</task>
+      <task id="8" ac="all">E2E Tests - Create tests/e2e/supplier-dashboard.spec.ts covering all acceptance criteria</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC3-3-1">Dashboard shows stats header: Pending count, Today's deliveries, Week total</criterion>
+    <criterion id="AC3-3-2">Tab navigation: Pendientes | Aceptadas | Completadas</criterion>
+    <criterion id="AC3-3-3">Request cards show: name, address (truncated), amount badge, urgency, time</criterion>
+    <criterion id="AC3-3-4">Urgent requests have red left border</criterion>
+    <criterion id="AC3-3-5">Cards sorted by: urgency first, then oldest first</criterion>
+    <criterion id="AC3-3-6">Each card has "Aceptar" and "Ver Detalles" buttons</criterion>
+    <criterion id="AC3-3-7">Empty state: "No hay solicitudes pendientes"</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="Supplier Request Dashboard (FR24-FR28)">
+        FR24: Suppliers can view all incoming water requests in a single dashboard. FR25: Suppliers can see request details (name, phone, address, special instructions, amount, urgency, time). FR26: Sort by time, urgency, or amount. FR27: Filter by status.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Project Structure - Supplier Routes">
+        Route structure: src/app/(supplier)/dashboard/page.tsx for main dashboard. Components: src/components/supplier/request-card.tsx, request-list.tsx, stats-header.tsx. Pattern: Server Components for data fetching, shadcn/ui Tabs for navigation.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Database Query Pattern">
+        Use createClient from @/lib/supabase/server for queries. Query water_requests with status filter, order by is_urgent DESC then created_at ASC. Use count queries with head:true for stats.
+      </doc>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="RequestCard Component">
+        Anatomy: Header (request ID, time ago), Title (customer name), Location (address + instructions preview), Volume badge with color, Urgency indicator (left border), Actions (Accept, View Details). Urgent: red left border.
+      </doc>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="Supplier Dashboard Design">
+        Tab navigation (Pending, Accepted, Completed). Request cards with color-coded urgency. One-tap accept action. Statistics header showing counts.
+      </doc>
+      <doc path="docs/sprint-artifacts/epic3/tech-spec-epic-3.md" title="Epic 3 Tech Spec" section="Story 3-3 Acceptance Criteria">
+        AC3-3-1 through AC3-3-7: Stats header, tabs, card display, urgent styling, sorting, action buttons, empty state. Dashboard load target under 3 seconds.
+      </doc>
+    </docs>
+    <code>
+      <file path="src/app/(supplier)/dashboard/page.tsx" kind="page" symbol="SupplierDashboardPage" lines="1-87" reason="Existing placeholder to enhance - has auth check, profile fetch, basic header, and empty state placeholder">
+        Contains auth check (redirect /login), profile fetch, role verification (redirect /), header with branding, placeholder card. Enhance this file for dashboard implementation.
+      </file>
+      <file path="src/lib/supabase/server.ts" kind="service" symbol="createClient" lines="1-29" reason="Server-side Supabase client for data fetching">
+        Creates typed Supabase server client with cookie-based session. Use this for all server-side queries.
+      </file>
+      <file path="src/lib/supabase/types.ts" kind="types" symbol="WaterRequest, Profile" lines="1-21" reason="TypeScript types for database tables">
+        Exports WaterRequest and Profile types from database schema. Use these for type-safe queries.
+      </file>
+      <file path="src/types/database.ts" kind="types" symbol="Database" lines="93-175" reason="Generated Supabase types for water_requests table">
+        water_requests table schema: id, guest_name, guest_phone, address, amount, is_urgent, status, created_at, delivered_at, supplier_id, etc.
+      </file>
+      <file path="src/components/shared/status-badge.tsx" kind="component" symbol="StatusBadge" lines="1-51" reason="Reusable status badge component for request status display">
+        Renders colored badges for pending/accepted/delivered/cancelled with icons. Use in request cards.
+      </file>
+      <file path="src/components/ui/tabs.tsx" kind="component" symbol="Tabs, TabsList, TabsTrigger, TabsContent" reason="shadcn/ui Tabs component for tab navigation">
+        Use for Pendientes/Aceptadas/Completadas tab navigation.
+      </file>
+      <file path="src/components/ui/card.tsx" kind="component" symbol="Card, CardHeader, CardContent" reason="shadcn/ui Card for request card structure">
+        Base card component for request cards.
+      </file>
+      <file path="src/components/ui/badge.tsx" kind="component" symbol="Badge" reason="shadcn/ui Badge for amount badges">
+        Use for amount tier badges (100L, 1000L, 5000L, 10000L).
+      </file>
+      <file path="src/components/ui/button.tsx" kind="component" symbol="Button" reason="shadcn/ui Button for Aceptar and Ver Detalles actions">
+        Primary buttons for card actions.
+      </file>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="next" version="16.0.6" usage="Framework - App Router, Server Components"/>
+        <package name="react" version="19.2.0" usage="UI library"/>
+        <package name="@supabase/supabase-js" version="^2.86.0" usage="Database queries, auth"/>
+        <package name="@supabase/ssr" version="^0.8.0" usage="Server-side auth, cookies"/>
+        <package name="@radix-ui/react-tabs" version="^1.1.13" usage="Tab navigation component"/>
+        <package name="date-fns" version="^4.1.0" usage="Time formatting - formatDistanceToNow with es locale"/>
+        <package name="lucide-react" version="^0.555.0" usage="Icons (Clock, Package, CheckCircle, etc.)"/>
+        <package name="class-variance-authority" version="^0.7.1" usage="Component variant styling"/>
+        <package name="tailwind-merge" version="^3.4.0" usage="Tailwind class merging"/>
+        <package name="clsx" version="^2.1.1" usage="Conditional class names"/>
+        <package name="zod" version="^4.1.13" usage="Validation (if needed for any forms)"/>
+      </ecosystem>
+      <devDependency name="@playwright/test" version="^1.57.0" usage="E2E testing"/>
+      <devDependency name="@faker-js/faker" version="^10.1.0" usage="Test data generation"/>
+      <devDependency name="typescript" version="^5" usage="Type checking"/>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture">Use Server Components for initial data fetching (NFR3: dashboard load under 3 seconds)</constraint>
+    <constraint source="architecture">Follow established file naming: kebab-case for files, PascalCase for components</constraint>
+    <constraint source="architecture">Use @/lib/supabase/server createClient for all server-side queries</constraint>
+    <constraint source="ux-design">Minimum touch target 44x44px for all interactive elements (WCAG AA)</constraint>
+    <constraint source="ux-design">Color contrast 4.5:1 minimum for text readability</constraint>
+    <constraint source="ux-design">Responsive: mobile-first, single column mobile, multi-column desktop</constraint>
+    <constraint source="story-dev-notes">Use date-fns with es locale for "hace X horas" time formatting</constraint>
+    <constraint source="story-dev-notes">Amount badge colors: Gray (100L), Blue (1000L), Green (5000L), Purple (10000L)</constraint>
+    <constraint source="story-dev-notes">Urgent requests: red left border using border-l-4 border-red-500</constraint>
+    <constraint source="epic-tech-spec">Dashboard NFR3 target: load under 3 seconds with Server Components</constraint>
+    <constraint source="architecture">All UI text in Spanish (Chilean), no i18n framework needed</constraint>
+  </constraints>
+  <interfaces>
+    <interface name="createClient" kind="function" signature="async function createClient(): Promise&lt;TypedSupabaseClient&gt;" path="src/lib/supabase/server.ts">
+      Server-side Supabase client with cookie-based auth. Returns typed client for database queries.
+    </interface>
+    <interface name="WaterRequest" kind="type" signature="Database['public']['Tables']['water_requests']['Row']" path="src/lib/supabase/types.ts">
+      Type for water request records: id, guest_name, guest_phone, address, amount, is_urgent, status, created_at, supplier_id, etc.
+    </interface>
+    <interface name="StatusBadge" kind="component" signature="function StatusBadge({ status, className }): JSX.Element" path="src/components/shared/status-badge.tsx">
+      Renders colored status badge with icon. Props: status (pending|accepted|delivered|cancelled), className (optional).
+    </interface>
+    <interface name="Tabs" kind="component" signature="Tabs, TabsList, TabsTrigger, TabsContent" path="src/components/ui/tabs.tsx">
+      shadcn/ui Tabs components for tab navigation. TabsContent wraps tab panel content.
+    </interface>
+    <interface name="supabase.from('water_requests')" kind="query" signature="supabase.from('water_requests').select('*').eq('status', status).order('is_urgent', { ascending: false }).order('created_at', { ascending: true })">
+      Query pattern for fetching requests by status with urgency-first, oldest-first sorting.
+    </interface>
+    <interface name="count query" kind="query" signature="supabase.from('water_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending')">
+      Query pattern for counting records without fetching data. Returns count in response.
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      Playwright E2E tests. Use test.describe() for grouping, test() for individual cases. Use data-testid attributes for selectors (e.g., getByTestId). Use expect() assertions with toBeVisible, toContainText, etc. Tests run on chromium, firefox, webkit. Dev server at http://localhost:3005. Dashboard requires auth mocking for full tests - use injected session pattern. Follow existing supplier-auth.spec.ts patterns.
+    </standards>
+    <locations>
+      <location>tests/e2e/supplier-dashboard.spec.ts (new - create this file)</location>
+      <location>tests/e2e/supplier-auth.spec.ts (existing - reference for patterns)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC3-3-1">Test stats header displays three counters: Pending, Today's deliveries, Week total</idea>
+      <idea ac="AC3-3-2">Test three tabs visible: Pendientes, Aceptadas, Completadas. Test tab switching updates content.</idea>
+      <idea ac="AC3-3-3">Test request card displays: guest_name, truncated address, amount badge, urgency indicator, relative time</idea>
+      <idea ac="AC3-3-4">Test urgent request card has red left border (check for border-l-4 border-red-500 or similar class)</idea>
+      <idea ac="AC3-3-5">Test cards are sorted: urgent requests appear first, then oldest created_at first</idea>
+      <idea ac="AC3-3-6">Test each card has "Aceptar" and "Ver Detalles" buttons visible</idea>
+      <idea ac="AC3-3-7">Test empty state message "No hay solicitudes pendientes" when no pending requests</idea>
+      <idea ac="all">Test dashboard requires auth (unauthenticated redirects to /login)</idea>
+      <idea ac="all">Test responsive layout on mobile viewport (375x667)</idea>
+      <idea ac="all">Test dashboard loads under 3 seconds (NFR3 performance target)</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,373 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>4</storyId>
+    <title>Supplier Request Details View</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic3/3-4-supplier-request-details-view.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>supplier (Don Pedro)</asA>
+    <iWant>to see full details of a water request before accepting</iWant>
+    <soThat>I can review all customer information, location, and delivery requirements to make an informed decision</soThat>
+    <tasks>
+- Task 1: Request Details Page Structure (AC: 1, 7)
+  - Create `src/app/(supplier)/requests/[id]/page.tsx`
+  - Implement authentication check (redirect to /login if not authenticated)
+  - Verify supplier role (redirect to / if consumer)
+  - Add page metadata (title: "Detalles de Solicitud - nitoagua")
+  - Fetch request data by ID using server component
+  - Handle 404 case (request not found)
+  - Add "Volver" back button to return to dashboard
+
+- Task 2: Request Details Component (AC: 1, 2, 3)
+  - Create `src/components/supplier/request-details.tsx`
+  - Display customer name prominently
+  - Display phone with `tel:` link (clickable to call)
+  - Display full address (not truncated like in cards)
+  - Display special instructions in full
+  - Display amount with appropriate badge (reuse color coding from request-card)
+  - Display urgency indicator (red badge if urgent)
+  - Display relative time ("hace X horas") using date-fns
+  - For requests > 24 hours old, show full date
+
+- Task 3: Map Preview Component (AC: 4)
+  - Create `src/components/supplier/location-map.tsx`
+  - Check if request has latitude and longitude
+  - If coordinates exist: display Google Maps static image or embed
+  - If no coordinates: show "Ubicación no disponible" message with address only
+  - Use environment variable `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+  - Handle API key missing gracefully (show placeholder)
+  - Add "Abrir en Google Maps" link for full navigation
+
+- Task 4: Action Buttons (AC: 5, 6)
+  - For status='pending': Show "Aceptar" and "Rechazar" buttons
+  - "Aceptar" button triggers accept flow (Story 3-5 will implement modal)
+  - "Rechazar" button triggers decline with optional reason (stub for now)
+  - For status='accepted': Hide action buttons, show delivery window if set
+  - For status='delivered': Show completion timestamp, hide actions
+  - Use consistent button styling from design system
+
+- Task 5: Data Fetching and Error Handling (AC: 1)
+  - Query `water_requests` by ID using server Supabase client
+  - Verify supplier has access (RLS should handle, add explicit check)
+  - Handle loading state with skeleton
+  - Handle error state with user-friendly message
+  - Handle not found state with "Solicitud no encontrada" message
+
+- Task 6: E2E Tests (AC: all)
+  - Create `tests/e2e/supplier-request-details.spec.ts`
+  - Test: Details page loads with all customer information
+  - Test: Phone number is clickable (href="tel:...")
+  - Test: Map preview shown when coordinates exist
+  - Test: "Ubicación no disponible" when no coordinates
+  - Test: Action buttons visible for pending requests
+  - Test: Action buttons hidden for accepted/delivered requests
+  - Test: Back button returns to dashboard
+  - Test: 404 handling for invalid request ID
+  - Test: Authentication required (redirect to login)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+AC3-4-1: Details show full: name, phone (clickable tel: link), address, special instructions
+AC3-4-2: Amount badge and urgency indicator clearly displayed (consistent with request cards)
+AC3-4-3: Submission time shown in relative format ("hace X horas") or full date for older requests
+AC3-4-4: Map preview displayed if coordinates (latitude/longitude) are available
+AC3-4-5: Accept/Decline action buttons available for pending requests
+AC3-4-6: For accepted requests, show delivery window (if set) and hide accept/decline buttons
+AC3-4-7: Close/back navigation returns to dashboard preserving current tab
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- PRD References -->
+      <doc path="docs/prd.md" title="Product Requirements Document" section="Supplier Request Dashboard (FR24-FR28)">
+        - FR25: Suppliers can see request details: customer name, phone, address, special instructions, amount, urgency, submission time
+        - FR28: Suppliers can view customer location on a map (when geolocation provided)
+        Key design principle: Asymmetric Simplicity - suppliers get feature-rich tools
+      </doc>
+
+      <!-- Architecture References -->
+      <doc path="docs/architecture.md" title="Architecture Document" section="Route Structure">
+        Route pattern: src/app/(supplier)/requests/[id]/page.tsx for request details
+        Component structure: src/components/supplier/request-details.tsx, location-map.tsx
+        Uses Server Components for data fetching, shadcn/ui components
+      </doc>
+
+      <doc path="docs/architecture.md" title="Architecture Document" section="Database Query Pattern">
+        Server-side queries using createClient() from @/lib/supabase/server
+        RLS policies ensure suppliers only see requests they can access
+        Error handling pattern: try/catch with user-friendly messages
+      </doc>
+
+      <!-- UX Design References -->
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="Visual Foundation - Color System">
+        Amount badge colors: 100L=Gray, 1000L=Blue, 5000L=Green, 10000L=Purple
+        Urgency indicator: Red left border (#EF4444)
+        Status badges: Pending=Amber, Accepted=Blue, Delivered=Green
+      </doc>
+
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="Typography & Touch Targets">
+        Minimum touch target: 44x44px (WCAG AA compliance)
+        Clickable phone numbers: tel: links with primary color hover
+      </doc>
+
+      <!-- Epic 3 Tech Spec -->
+      <doc path="docs/sprint-artifacts/epic3/tech-spec-epic-3.md" title="Epic 3 Technical Specification" section="Story 3-4: Supplier Request Details View">
+        Google Maps integration for map preview (static image or embed)
+        Environment variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        Time formatting: "hace X horas" for recent (< 24h), full date for older
+        Graceful fallback when no coordinates: show "Ubicación no disponible"
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Existing Components to Reuse -->
+      <artifact path="src/components/supplier/request-card.tsx" kind="component" symbol="RequestCard" reason="Reuse amount badge styling (getAmountBadgeClasses), urgency indicator pattern (red left border), time formatting with date-fns">
+        Key functions to reuse:
+        - getAmountBadgeClasses(amount): Returns tailwind classes for badge colors
+        - formatAmount(amount): Converts 1000→1kL, etc.
+        - formatDistanceToNow from date-fns with Spanish locale
+      </artifact>
+
+      <artifact path="src/components/supplier/index.ts" kind="module" symbol="barrel export" reason="Central export point for supplier components - add new components here">
+        Export pattern: export { ComponentName } from "./component-file"
+      </artifact>
+
+      <artifact path="src/app/(supplier)/layout.tsx" kind="layout" symbol="SupplierLayout" reason="Auth guard already implemented - new pages automatically inherit authentication and role checks">
+        Handles: authentication check, profile verification, role check (supplier only)
+        Redirects: /login if not authenticated, /onboarding if no profile, / if not supplier
+      </artifact>
+
+      <artifact path="src/lib/utils/format.ts" kind="utility" symbol="formatPhone, formatTimeAgo, formatDateSpanish" reason="Existing utilities for phone formatting and date/time display">
+        - formatPhone(phone): Formats +56912345678 → +56 9 1234 5678
+        - formatTimeAgo(date): Returns "hace 2 horas"
+        - formatDateSpanish(date): Returns "3 de diciembre, 2025 a las 14:30"
+      </artifact>
+
+      <artifact path="src/lib/supabase/types.ts" kind="types" symbol="WaterRequest" reason="TypeScript type for water_requests table">
+        Type: WaterRequest includes id, guest_name, guest_phone, address, special_instructions, amount, is_urgent, latitude, longitude, status, created_at, etc.
+      </artifact>
+
+      <artifact path="src/lib/supabase/server.ts" kind="utility" symbol="createClient" reason="Server-side Supabase client for data fetching in Server Components">
+        Import: import { createClient } from "@/lib/supabase/server"
+        Usage: const supabase = await createClient()
+      </artifact>
+
+      <!-- Reference Components from Story 3-3 -->
+      <artifact path="src/components/supplier/dashboard-tabs.tsx" kind="component" symbol="DashboardTabs" reason="Tab structure pattern - URL query param ?tab= for state persistence">
+        Pattern: Tab state in URL, back button should preserve tab context
+      </artifact>
+
+      <artifact path="src/components/ui/skeleton.tsx" kind="component" symbol="Skeleton" reason="Loading state component for data fetching">
+        shadcn/ui skeleton component for loading indicators
+      </artifact>
+    </code>
+
+    <dependencies>
+      <node>
+        <package name="next" version="16.0.6">App Router, Server Components, dynamic routes [id]</package>
+        <package name="@supabase/supabase-js" version="^2.86.0">Database queries, RLS</package>
+        <package name="@supabase/ssr" version="^0.8.0">Server-side auth</package>
+        <package name="date-fns" version="^4.1.0">Time formatting (formatDistanceToNow, isAfter, subDays)</package>
+        <package name="lucide-react" version="^0.555.0">Icons (MapPin, Phone, Clock, ArrowLeft, etc.)</package>
+        <package name="@radix-ui/react-dialog" version="^1.1.15">Modal dialogs (if using modal approach)</package>
+      </node>
+      <external>
+        <service name="Google Maps API">Static Maps API for map preview when coordinates available</service>
+      </external>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <!-- Development Constraints from Architecture -->
+    <constraint type="routing">Route must be in (supplier) route group: src/app/(supplier)/requests/[id]/page.tsx</constraint>
+    <constraint type="authentication">Layout.tsx handles auth automatically - no need to duplicate auth checks</constraint>
+    <constraint type="data-fetching">Use Server Components for initial data fetch (not Client Components with useEffect)</constraint>
+    <constraint type="styling">Reuse existing component patterns from request-card.tsx - maintain visual consistency</constraint>
+    <constraint type="accessibility">Minimum 44x44px touch targets, clickable phone with tel: protocol</constraint>
+    <constraint type="naming">Follow kebab-case for files: request-details.tsx, location-map.tsx</constraint>
+    <constraint type="imports">Use @/ alias for all imports from src/ directory</constraint>
+
+    <!-- Dev Notes from Story -->
+    <constraint type="reuse">Import badge styling from request-card.tsx - DO NOT duplicate color logic</constraint>
+    <constraint type="reuse">Import time formatting from existing components - use date-fns with Spanish locale</constraint>
+    <constraint type="navigation">Back button MUST preserve dashboard tab state from URL query param</constraint>
+    <constraint type="maps">Google Maps API key may be missing - handle gracefully with placeholder</constraint>
+    <constraint type="testing">Auth mocking pattern from supplier-dashboard.spec.ts - inject session for E2E tests</constraint>
+  </constraints>
+
+  <interfaces>
+    <!-- WaterRequest Type -->
+    <interface name="WaterRequest" kind="TypeScript type" path="src/lib/supabase/types.ts">
+      <signature>
+        interface WaterRequest {
+          id: string;
+          guest_name: string | null;
+          guest_phone: string;
+          address: string;
+          special_instructions: string;
+          amount: 100 | 1000 | 5000 | 10000;
+          is_urgent: boolean;
+          latitude: number | null;
+          longitude: number | null;
+          status: 'pending' | 'accepted' | 'delivered' | 'cancelled';
+          created_at: string;
+          accepted_at: string | null;
+          delivered_at: string | null;
+          supplier_id: string | null;
+          delivery_window: string | null;
+        }
+      </signature>
+    </interface>
+
+    <!-- Server Supabase Query -->
+    <interface name="Request Data Fetching" kind="API query" path="src/app/(supplier)/requests/[id]/page.tsx">
+      <signature>
+        const supabase = await createClient();
+        const { data: request, error } = await supabase
+          .from('water_requests')
+          .select('*')
+          .eq('id', params.id)
+          .single();
+      </signature>
+      <note>RLS policies ensure supplier can only access requests they should see</note>
+    </interface>
+
+    <!-- Google Maps Static API -->
+    <interface name="Google Maps Static Image" kind="REST API" path="https://maps.googleapis.com/maps/api/staticmap">
+      <signature>
+        GET https://maps.googleapis.com/maps/api/staticmap
+          ?center={latitude},{longitude}
+          &amp;zoom=15
+          &amp;size=400x200
+          &amp;markers=color:red|{latitude},{longitude}
+          &amp;key={NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+      </signature>
+    </interface>
+
+    <!-- Google Maps Link -->
+    <interface name="Google Maps Navigation Link" kind="URL" path="external">
+      <signature>
+        https://www.google.com/maps?q={latitude},{longitude}
+      </signature>
+      <note>Opens Google Maps for navigation</note>
+    </interface>
+
+    <!-- Component Props -->
+    <interface name="RequestDetails Props" kind="React component props" path="src/components/supplier/request-details.tsx">
+      <signature>
+        interface RequestDetailsProps {
+          request: WaterRequest;
+        }
+      </signature>
+    </interface>
+
+    <interface name="LocationMap Props" kind="React component props" path="src/components/supplier/location-map.tsx">
+      <signature>
+        interface LocationMapProps {
+          latitude: number | null;
+          longitude: number | null;
+          address: string;
+        }
+      </signature>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing framework: Playwright E2E testing
+      Pattern: Story-based test organization (test.describe per AC group)
+      Auth handling: Mock auth state injection for supplier tests (see supplier-dashboard.spec.ts)
+      Data-testid: Use data-testid attributes for reliable selectors
+      Assertions: Verify visibility, content, and interactions
+      Error cases: Test 404, auth redirect, missing data gracefully
+    </standards>
+
+    <locations>
+      tests/e2e/supplier-request-details.spec.ts (new file)
+      tests/e2e/supplier-dashboard.spec.ts (reference for auth mocking)
+    </locations>
+
+    <ideas>
+      <!-- AC3-4-1: Full details display -->
+      <test ac="AC3-4-1" idea="Test: Details page displays customer name, phone (as tel: link), full address, special instructions">
+        Mock request with all fields populated
+        Verify each field is visible and correctly formatted
+        Check phone number has href="tel:+56..." attribute
+      </test>
+
+      <!-- AC3-4-2: Badge and urgency display -->
+      <test ac="AC3-4-2" idea="Test: Amount badge shows correct color (100L=gray, 1000L=blue, 5000L=green, 10000L=purple)">
+        Create requests with each amount tier
+        Verify badge color classes match request-card pattern
+      </test>
+      <test ac="AC3-4-2" idea="Test: Urgent requests show urgency indicator (red badge or border)">
+        Create urgent request (is_urgent=true)
+        Verify urgency indicator visible and styled red
+      </test>
+
+      <!-- AC3-4-3: Time formatting -->
+      <test ac="AC3-4-3" idea="Test: Recent requests show relative time (e.g. 'hace 2 horas')">
+        Create request with created_at 2 hours ago
+        Verify time displays in Spanish relative format
+      </test>
+      <test ac="AC3-4-3" idea="Test: Old requests (>24h) show full date">
+        Create request with created_at 2 days ago
+        Verify full date format (e.g. '1 de diciembre, 2025')
+      </test>
+
+      <!-- AC3-4-4: Map preview -->
+      <test ac="AC3-4-4" idea="Test: Map preview shown when latitude/longitude exist">
+        Create request with coordinates
+        Verify map image or embed is visible
+        Check Google Maps link is present
+      </test>
+      <test ac="AC3-4-4" idea="Test: 'Ubicación no disponible' shown when no coordinates">
+        Create request with null latitude/longitude
+        Verify placeholder message displayed
+        Verify address still shown as text
+      </test>
+
+      <!-- AC3-4-5: Action buttons for pending -->
+      <test ac="AC3-4-5" idea="Test: Pending requests show 'Aceptar' and 'Rechazar' buttons">
+        Create request with status='pending'
+        Verify both action buttons visible
+      </test>
+
+      <!-- AC3-4-6: Accepted requests show delivery window -->
+      <test ac="AC3-4-6" idea="Test: Accepted requests hide action buttons, show delivery window if set">
+        Create request with status='accepted', delivery_window='Mañana 2-4pm'
+        Verify action buttons NOT visible
+        Verify delivery window text is displayed
+      </test>
+
+      <!-- AC3-4-7: Back navigation -->
+      <test ac="AC3-4-7" idea="Test: Back button returns to dashboard preserving tab query param">
+        Navigate from dashboard?tab=pending to request details
+        Click back button
+        Verify redirect to /dashboard?tab=pending
+      </test>
+
+      <!-- Error handling -->
+      <test ac="general" idea="Test: 404 handling for invalid request ID">
+        Navigate to /requests/invalid-uuid
+        Verify 'Solicitud no encontrada' message
+      </test>
+      <test ac="general" idea="Test: Authentication required - redirect to login">
+        Clear session cookies
+        Navigate to /requests/[id]
+        Verify redirect to /login
+      </test>
+      <test ac="general" idea="Test: Role verification - consumers cannot access supplier routes">
+        Mock session with consumer profile
+        Navigate to /requests/[id]
+        Verify redirect to / (consumer home)
+      </test>
+    </ideas>
+  </tests>
+</story-context>

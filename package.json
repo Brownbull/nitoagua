@@ -12,7 +12,8 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report playwright-report",
     "cleanup:local": "npx ts-node scripts/cleanup-water-requests.ts",
-    "cleanup:remote": "npx ts-node scripts/cleanup-water-requests.ts --remote"
+    "cleanup:remote": "npx ts-node scripts/cleanup-water-requests.ts --remote",
+    "seed:local": "npx ts-node scripts/seed-test-user.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

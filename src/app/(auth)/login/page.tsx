@@ -1,7 +1,13 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { GoogleSignIn } from "@/components/auth/google-sign-in";
+import { DevLogin } from "@/components/auth/dev-login";
+import { LoginErrorHandler } from "@/components/auth/login-error-handler";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+// Show dev login when explicitly enabled via env var
+const showDevLogin = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
 
 export default async function LoginPage() {
   // Check if user is already authenticated
@@ -30,8 +36,14 @@ export default async function LoginPage() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="text-center">
+    <>
+      {/* Handle error query params from OAuth callback */}
+      <Suspense fallback={null}>
+        <LoginErrorHandler />
+      </Suspense>
+
+      <Card className="w-full">
+        <CardHeader className="text-center">
         <CardTitle className="text-xl">Iniciar sesión</CardTitle>
         <CardDescription>
           Ingresa con tu cuenta de Google para continuar
@@ -52,7 +64,10 @@ export default async function LoginPage() {
             </a>
           </p>
         </div>
+
+        {showDevLogin && <DevLogin />}
       </CardContent>
-    </Card>
+      </Card>
+    </>
   );
 }
