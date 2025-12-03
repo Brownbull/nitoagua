@@ -1,0 +1,200 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>7</storyId>
+    <title>Fix Water Requests RLS Policy</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic2/2-7-fix-water-requests-rls-policy.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to fix the RLS policy on water_requests table for anonymous inserts</iWant>
+    <soThat>guest consumers can submit water requests without authentication while maintaining security</soThat>
+    <tasks>
+      <task id="1" name="Root Cause Analysis">
+        <subtask>Review Supabase RLS documentation for anonymous insert patterns</subtask>
+        <subtask>Check if there's a difference between `public` role and `anon` role in policy context</subtask>
+        <subtask>Investigate if Supabase PostgREST requires specific policy configuration</subtask>
+        <subtask>Document the exact root cause</subtask>
+      </task>
+      <task id="2" name="Design Solution">
+        <subtask>Determine correct policy syntax for anonymous inserts</subtask>
+        <subtask>Consider alternatives: Option A (fix RLS policy), Option B (service role in API), Option C (SECURITY DEFINER function)</subtask>
+        <subtask>Choose optimal solution based on security and maintainability</subtask>
+      </task>
+      <task id="3" name="Implement Fix">
+        <subtask>Apply the chosen solution via migration</subtask>
+        <subtask>Test INSERT as anon role directly in SQL</subtask>
+        <subtask>Test INSERT via API route</subtask>
+        <subtask>Verify existing policies still work</subtask>
+      </task>
+      <task id="4" name="Re-enable RLS">
+        <subtask>Run: ALTER TABLE water_requests ENABLE ROW LEVEL SECURITY;</subtask>
+        <subtask>Verify all operations work with RLS enabled</subtask>
+      </task>
+      <task id="5" name="Comprehensive Testing">
+        <subtask>Test guest water request submission (POST /api/requests)</subtask>
+        <subtask>Test request tracking (GET with tracking token)</subtask>
+        <subtask>Test authenticated consumer viewing own requests</subtask>
+        <subtask>Run full E2E test suite</subtask>
+        <subtask>Manual testing on local environment</subtask>
+      </task>
+      <task id="6" name="Security Review">
+        <subtask>Run Supabase security advisors check</subtask>
+        <subtask>Verify no unauthorized data access is possible</subtask>
+        <subtask>Document security posture</subtask>
+      </task>
+      <task id="7" name="Migration File">
+        <subtask>Create proper migration file for the fix</subtask>
+        <subtask>Ensure migration is idempotent and safe to run</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC2-7-1">RLS is re-enabled on `water_requests` table</criterion>
+    <criterion id="AC2-7-2">Anonymous users (via anon key) can INSERT new water requests</criterion>
+    <criterion id="AC2-7-3">Authenticated users can INSERT new water requests</criterion>
+    <criterion id="AC2-7-4">Existing SELECT/UPDATE policies continue to work correctly</criterion>
+    <criterion id="AC2-7-5">All E2E tests pass with RLS enabled</criterion>
+    <criterion id="AC2-7-6">Security review confirms no data leakage risks</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Data Architecture - Database Schema</section>
+        <snippet>Defines RLS policies for water_requests table. Policy "Anyone can create requests" ON water_requests FOR INSERT WITH CHECK (true). Also defines SELECT policy for suppliers to read pending requests and UPDATE policies for consumers to cancel and suppliers to accept/complete.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Security Architecture</section>
+        <snippet>Security measures include Row Level Security policies for data isolation. Guest Consumers have no auth required for request submission. Guest Tracking uses unique token in URL (/track/[token]).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/app/api/requests/route.ts</path>
+        <kind>API Route</kind>
+        <symbol>POST /api/requests</symbol>
+        <lines>1-103</lines>
+        <reason>Main API endpoint that inserts water requests. Uses createClient() which returns anon-key authenticated Supabase client. This is where the RLS policy failure occurs.</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>Supabase Client Factory</kind>
+        <symbol>createClient()</symbol>
+        <lines>1-29</lines>
+        <reason>Creates server-side Supabase client using ANON_KEY. The client operates as 'anon' role when no user session exists, which is the case for guest requests.</reason>
+      </file>
+      <file>
+        <path>tests/e2e/consumer-request-submission.spec.ts</path>
+        <kind>E2E Test</kind>
+        <symbol>Request submission tests</symbol>
+        <reason>E2E tests that verify request submission flow. These tests should pass with RLS enabled.</reason>
+      </file>
+      <file>
+        <path>tests/e2e/consumer-request-form.spec.ts</path>
+        <kind>E2E Test</kind>
+        <symbol>Request form tests</symbol>
+        <reason>E2E tests for form validation and interaction before submission.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/ssr</package>
+        <version>^0.8.0</version>
+      </node>
+      <package>@supabase/supabase-js</package>
+      <version>^2.86.0</version>
+      <package>next</package>
+      <version>16.0.6</version>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint source="architecture.md">RLS must be enabled for production security</constraint>
+    <constraint source="architecture.md">API responses must follow { data, error } format</constraint>
+    <constraint source="architecture.md">Guest consumers must be able to create requests without authentication</constraint>
+    <constraint source="prd.md">FR7-FR13: Water request submission functional requirements</constraint>
+    <constraint source="investigation">Current workaround has RLS DISABLED - this is a security risk</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>POST /api/requests</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/requests { name, phone, email?, address, specialInstructions, amount, isUrgent?, latitude?, longitude? } => { data: { id, trackingToken, status, createdAt }, error: null }</signature>
+      <path>src/app/api/requests/route.ts</path>
+    </interface>
+    <interface>
+      <name>createClient()</name>
+      <kind>function</kind>
+      <signature>async createClient(): Promise&lt;SupabaseClient&lt;Database&gt;&gt;</signature>
+      <path>src/lib/supabase/server.ts</path>
+    </interface>
+    <interface>
+      <name>water_requests table</name>
+      <kind>Database table</kind>
+      <signature>INSERT INTO water_requests (guest_name, guest_phone, guest_email, address, special_instructions, amount, is_urgent, latitude, longitude, tracking_token, status)</signature>
+      <path>supabase/migrations/</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Playwright is used for E2E testing. Tests are located in tests/e2e/ directory. Tests should verify that the full flow works including database operations. Tests run in Chromium and Firefox browsers.
+    </standards>
+    <locations>
+      <location>tests/e2e/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC2-7-1">Verify RLS is enabled via SQL query: SELECT relrowsecurity FROM pg_class WHERE relname = 'water_requests'</idea>
+      <idea ac="AC2-7-2">Test anonymous INSERT by submitting form without auth and verifying 201 response</idea>
+      <idea ac="AC2-7-3">Test authenticated INSERT (future - requires auth setup)</idea>
+      <idea ac="AC2-7-4">Verify existing E2E tests for tracking and status still pass</idea>
+      <idea ac="AC2-7-5">Run full E2E suite: npm run test:e2e</idea>
+      <idea ac="AC2-7-6">Run Supabase security advisors via MCP: get_advisors type="security"</idea>
+    </ideas>
+  </tests>
+
+  <problemContext>
+    <currentState>
+      RLS is DISABLED on water_requests table as a temporary workaround. The app works but is insecure.
+    </currentState>
+    <errorObserved>
+      code: '42501'
+      message: 'new row violates row-level security policy for table "water_requests"'
+    </errorObserved>
+    <investigationFindings>
+      <finding>Policy "Anyone can create requests" exists with roles: {anon, authenticated} and WITH CHECK (true)</finding>
+      <finding>anon role has INSERT privilege on the table</finding>
+      <finding>Direct SQL test as anon role still failed with RLS violation</finding>
+      <finding>Disabling RLS temporarily resolved the issue</finding>
+    </investigationFindings>
+    <potentialSolutions>
+      <solution id="A" name="Fix RLS Policy">
+        Drop and recreate policy with explicit TO anon, authenticated clause. Verify role grants.
+      </solution>
+      <solution id="B" name="Use Service Role in API">
+        Create admin Supabase client with SERVICE_ROLE_KEY for inserts. Bypasses RLS entirely for server-side operations.
+      </solution>
+      <solution id="C" name="SECURITY DEFINER Function">
+        Create PostgreSQL function with SECURITY DEFINER that performs the insert. Call function instead of direct table insert.
+      </solution>
+    </potentialSolutions>
+    <recommendation>
+      Option B (Service Role in API) is recommended as it:
+      1. Follows Supabase best practices for server-side operations
+      2. Maintains RLS for client-side access
+      3. Is simpler to implement and maintain
+      4. Doesn't require debugging mysterious RLS behavior
+    </recommendation>
+  </problemContext>
+</story-context>

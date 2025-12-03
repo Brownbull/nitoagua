@@ -10,6 +10,14 @@ npm run dev
 
 Open http://localhost:3005
 
+## Quick Links
+
+| Service | URL |
+|---------|-----|
+| **App** | http://localhost:3005 |
+| **Supabase Studio** | http://127.0.0.1:54330 |
+| **Mailpit (Email)** | http://127.0.0.1:54331 |
+
 ## Setup (First Time)
 
 ```bash

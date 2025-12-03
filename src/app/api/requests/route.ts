@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requestSchema } from "@/lib/validations/request";
 
 /**
@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
     // Generate tracking token for guest requests
     const trackingToken = crypto.randomUUID();
 
-    // Create Supabase server client
-    const supabase = await createClient();
+    // Create Supabase admin client (bypasses RLS for server-side operations)
+    const supabase = createAdminClient();
 
     // Insert water request into database
     const { data: insertedRequest, error: dbError } = await supabase

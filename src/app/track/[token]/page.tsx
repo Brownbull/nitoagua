@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, type RequestStatus } from "@/components/shared/status-badge";
@@ -223,7 +223,8 @@ function TrackingContent({ request }: { request: RequestWithSupplier }) {
 
 export default async function TrackingPage({ params }: TrackingPageProps) {
   const { token } = await params;
-  const supabase = await createClient();
+  // Use admin client to bypass RLS - guest tracking via token is intentional
+  const supabase = createAdminClient();
 
   const { data: request, error } = await supabase
     .from("water_requests")
