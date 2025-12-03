@@ -12,6 +12,29 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { readFileSync, existsSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+// ESM compatibility for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env.scripts file if it exists
+const envScriptsPath = join(__dirname, "..", ".env.scripts");
+if (existsSync(envScriptsPath)) {
+  const envContent = readFileSync(envScriptsPath, "utf-8");
+  envContent.split("\n").forEach((line) => {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith("#")) {
+      const [key, ...valueParts] = trimmed.split("=");
+      const value = valueParts.join("=");
+      if (key && value && !process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  });
+}
 
 // Determine if we're targeting remote or local
 const isRemote = process.argv.includes("--remote");
@@ -37,7 +60,8 @@ async function cleanup() {
 
   if (isRemote && !config.serviceRoleKey) {
     console.error("❌ Error: REMOTE_SUPABASE_SERVICE_ROLE_KEY environment variable is required for remote cleanup");
-    console.error("   Set it in your environment or .env file");
+    console.error("   Create a .env.scripts file in the project root with:");
+    console.error("   REMOTE_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key");
     process.exit(1);
   }
 
@@ -70,8 +94,7 @@ async function cleanup() {
     console.log("\n⚠️  WARNING: You are about to delete PRODUCTION data!");
     console.log("   This action cannot be undone.\n");
 
-    // In a real script, you'd add readline confirmation here
-    // For now, require explicit --confirm flag for remote
+    // Require explicit --confirm flag for remote
     if (!process.argv.includes("--confirm")) {
       console.log("   To proceed, add --confirm flag:");
       console.log("   npm run cleanup:remote -- --confirm\n");

@@ -59,3 +59,4 @@ temp/
 .supabase/
 supabase/.temp/
 supabase/.branches/
+.env.scripts

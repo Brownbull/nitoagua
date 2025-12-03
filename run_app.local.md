@@ -69,3 +69,31 @@ npm run start
 ```bash
 npm run lint
 ```
+
+## Database Cleanup
+
+Delete all water requests from the database.
+
+```bash
+# Clean LOCAL database (no confirmation needed)
+npm run cleanup:local
+
+# Clean REMOTE/Production database (requires --confirm flag)
+npm run cleanup:remote -- --confirm
+```
+
+**Note:** For remote cleanup, you need a `.env.scripts` file in the project root with:
+
+```
+REMOTE_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+## DBeaver Connection (Local DB)
+
+| Setting | Value |
+|---------|-------|
+| Host | `127.0.0.1` |
+| Port | `54327` |
+| Database | `postgres` |
+| Username | `postgres` |
+| Password | `postgres` |
