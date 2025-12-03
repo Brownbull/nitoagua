@@ -15,9 +15,10 @@ import { test, expect } from "@playwright/test";
  */
 
 // Mock request data for sessionStorage
+// Note: These are fake test UUIDs, not real secrets
 const mockRequestData = {
-  id: "123e4567-e89b-12d3-a456-426614174000",
-  trackingToken: "550e8400-e29b-41d4-a716-446655440000",
+  id: "test-id-0000-0000-000000000001",
+  trackingToken: "test-token-0000-0000-000000000001",
   status: "pending",
   createdAt: "2025-12-03T12:00:00Z",
 };

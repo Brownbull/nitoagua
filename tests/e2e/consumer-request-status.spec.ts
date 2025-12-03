@@ -148,8 +148,9 @@ test.describe("Consumer Request Status Page (Story 2-6)", () => {
 
   test.describe("URL Handling", () => {
     test("handles UUID format IDs", async ({ page }) => {
+      // Using obviously fake test UUID to avoid false positive security alerts
       await page.goto(
-        "/request/550e8400-e29b-41d4-a716-446655440000"
+        "/request/test-uuid-0000-0000-000000000001"
       );
 
       // Should not crash - shows auth required page
