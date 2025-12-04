@@ -1,0 +1,332 @@
+<story-context id="3-7-supplier-profile-management" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>7</storyId>
+    <title>Supplier Profile Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-04</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic3/3-7-supplier-profile-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>supplier (Don Pedro)</asA>
+    <iWant>to view and update my profile information, pricing tiers, and availability status</iWant>
+    <soThat>my business information stays current and I can take breaks when needed</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <title>Profile Page Route</title>
+        <subtasks>
+          <subtask>Create src/app/(supplier)/profile/page.tsx as server component</subtask>
+          <subtask>Fetch current supplier profile from Supabase using authenticated user</subtask>
+          <subtask>Pass profile data to ProfileForm client component</subtask>
+          <subtask>Add profile link to supplier dashboard navigation/header</subtask>
+          <subtask>Style page with consistent supplier layout (similar to dashboard)</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2,3,5">
+        <title>Profile Form Component</title>
+        <subtasks>
+          <subtask>Create src/components/supplier/profile-form.tsx as client component</subtask>
+          <subtask>Form fields: Name, Phone, Service Area, Price 100L/1000L/5000L/10000L</subtask>
+          <subtask>Use React Hook Form + Zod for validation</subtask>
+          <subtask>Create/extend Zod schema in src/lib/validations/supplier-profile.ts</subtask>
+          <subtask>Display inline validation errors below each field in red (#EF4444)</subtask>
+          <subtask>Use shadcn/ui form components (Input, Select, Button)</subtask>
+          <subtask>Pre-populate form with current profile values</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="3">
+        <title>Availability Toggle</title>
+        <subtasks>
+          <subtask>Add availability toggle using shadcn/ui Switch component</subtask>
+          <subtask>Label: "Disponibilidad"</subtask>
+          <subtask>On state: "Disponible" (green indicator)</subtask>
+          <subtask>Off state: "No disponible (vacaciones)" (gray indicator)</subtask>
+          <subtask>Toggle updates local form state, saved with form submit</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="4">
+        <title>Profile Update API</title>
+        <subtasks>
+          <subtask>Create src/app/api/supplier/profile/route.ts</subtask>
+          <subtask>GET handler: Return current supplier profile</subtask>
+          <subtask>PATCH handler: Update supplier profile with validation</subtask>
+          <subtask>Validate user is authenticated and has supplier role</subtask>
+          <subtask>Update profiles table with: name, phone, service_area, price tiers, is_available</subtask>
+          <subtask>Return updated profile on success</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="4">
+        <title>Save Functionality</title>
+        <subtasks>
+          <subtask>"Guardar Cambios" button at bottom of form</subtask>
+          <subtask>Submit calls PATCH /api/supplier/profile</subtask>
+          <subtask>Show loading state on button during submission</subtask>
+          <subtask>On success: toast "Perfil actualizado", update form with returned data</subtask>
+          <subtask>On error: toast with error message, keep form editable</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="6">
+        <title>Logout Button</title>
+        <subtasks>
+          <subtask>Add logout button to profile page (or header component)</subtask>
+          <subtask>Style as secondary/outline button: "Cerrar sesión"</subtask>
+          <subtask>On click: call Supabase signOut()</subtask>
+          <subtask>On success: redirect to /login</subtask>
+          <subtask>Clear any client-side state/cache</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="all">
+        <title>E2E Tests</title>
+        <subtasks>
+          <subtask>Create tests/e2e/supplier-profile.spec.ts</subtask>
+          <subtask>Test: Profile page accessible from dashboard</subtask>
+          <subtask>Test: Form displays current profile values</subtask>
+          <subtask>Test: Can edit and save name</subtask>
+          <subtask>Test: Phone validation enforces Chilean format</subtask>
+          <subtask>Test: Price fields require positive integers</subtask>
+          <subtask>Test: Availability toggle changes state</subtask>
+          <subtask>Test: Save shows success toast</subtask>
+          <subtask>Test: Invalid data shows validation errors</subtask>
+          <subtask>Test: Logout redirects to login page</subtask>
+          <subtask>Test: Unauthenticated user redirected to login</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC3-7-1">Profile page accessible from dashboard navigation (sidebar or header link)</criterion>
+    <criterion id="AC3-7-2">Profile form displays and allows editing: name, phone, service area, 4 price tiers</criterion>
+    <criterion id="AC3-7-3">Availability toggle clearly shows current status: "Disponible" / "No disponible (vacaciones)"</criterion>
+    <criterion id="AC3-7-4">Successful save shows toast: "Perfil actualizado"</criterion>
+    <criterion id="AC3-7-5">Validation enforces: phone format (+56XXXXXXXXX), prices must be positive integers</criterion>
+    <criterion id="AC3-7-6">Logout button visible, signs out user and redirects to login page</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Story 3-7: Supplier Profile Management</section>
+        <snippet>AC3-7-1 through AC3-7-6 define profile page access, form editing, availability toggle, save toast, validation, and logout requirements.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Data Models and Contracts - Profiles Table</section>
+        <snippet>Supplier profile fields: service_area, price_100l/1000l/5000l/10000l, is_available. TypeScript types SupplierProfile and SupplierProfileInput defined.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR22, FR23</section>
+        <snippet>FR22: Suppliers can update their profile and pricing information. FR23: Suppliers can mark themselves as available or unavailable (vacation mode).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Form Validation Pattern</section>
+        <snippet>Use React Hook Form + Zod for validation. Validation schemas in src/lib/validations/. API response format: { data: T, error: null } or { data: null, error: { message, code } }.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Schema - Profiles Table</section>
+        <snippet>Profiles table includes supplier-specific fields: service_area TEXT, price_100l-10000l INTEGER, is_available BOOLEAN DEFAULT true.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>UX Pattern Decisions - Form Patterns</section>
+        <snippet>Label position above input, required indicator asterisk, validation on blur, error display below field in red, help text below input in gray.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <file>
+        <path>src/lib/validations/supplier-profile.ts</path>
+        <kind>validation</kind>
+        <symbol>supplierProfileSchema, SupplierProfileInput, SERVICE_AREAS</symbol>
+        <lines>1-45</lines>
+        <reason>Existing Zod schema for supplier profile validation - EXTEND to add isAvailable field</reason>
+      </file>
+      <file>
+        <path>src/components/supplier/onboarding-form.tsx</path>
+        <kind>component</kind>
+        <symbol>OnboardingForm</symbol>
+        <lines>1-249</lines>
+        <reason>Reference pattern for React Hook Form + Zod with supplier profile fields - REUSE pattern for ProfileForm</reason>
+      </file>
+      <file>
+        <path>src/components/supplier/delivery-modal.tsx</path>
+        <kind>component</kind>
+        <symbol>DeliveryModal</symbol>
+        <lines>1-134</lines>
+        <reason>Reference pattern for Dialog, loading states, toast usage from Story 3-5</reason>
+      </file>
+      <file>
+        <path>src/components/supplier/index.ts</path>
+        <kind>barrel</kind>
+        <symbol>exports</symbol>
+        <lines>1-10</lines>
+        <reason>Add ProfileForm export here after creating component</reason>
+      </file>
+      <file>
+        <path>src/app/(supplier)/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>SupplierLayout</symbol>
+        <lines>1-39</lines>
+        <reason>Auth checks for supplier routes - profile page inherits this protection</reason>
+      </file>
+      <file>
+        <path>src/app/api/requests/[id]/route.ts</path>
+        <kind>api</kind>
+        <symbol>PATCH, GET handlers</symbol>
+        <lines>1-349</lines>
+        <reason>Reference pattern for API routes with auth validation, error handling, response format</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>utility</kind>
+        <symbol>createClient</symbol>
+        <reason>Server-side Supabase client for profile API route</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/client.ts</path>
+        <kind>utility</kind>
+        <symbol>createClient</symbol>
+        <reason>Browser Supabase client for signOut in logout button</reason>
+      </file>
+      <file>
+        <path>tests/e2e/supplier-auth.spec.ts</path>
+        <kind>test</kind>
+        <symbol>supplier auth tests</symbol>
+        <reason>Reference E2E test patterns for auth mocking and supplier flows</reason>
+      </file>
+      <file>
+        <path>tests/e2e/supplier-dashboard.spec.ts</path>
+        <kind>test</kind>
+        <symbol>dashboard tests</symbol>
+        <reason>Reference E2E test patterns for supplier dashboard navigation</reason>
+      </file>
+    </code>
+
+    <dependencies>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.67.0</version>
+        <usage>Form state management and validation</usage>
+      </node>
+      <node>
+        <package>@hookform/resolvers</package>
+        <version>^5.2.2</version>
+        <usage>Zod resolver for react-hook-form</usage>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^4.1.13</version>
+        <usage>Schema validation for profile form</usage>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>^2.0.7</version>
+        <usage>Toast notifications for success/error feedback</usage>
+      </node>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.86.0</version>
+        <usage>Database operations and auth (signOut)</usage>
+      </node>
+      <node>
+        <package>@supabase/ssr</package>
+        <version>^0.8.0</version>
+        <usage>Server-side Supabase client for API routes</usage>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.555.0</version>
+        <usage>Icons (Loader2 for loading states, User for profile)</usage>
+      </node>
+      <node>
+        <package>@radix-ui/react-switch</package>
+        <version>not installed</version>
+        <usage>REQUIRED: Install via npx shadcn@latest add switch for availability toggle</usage>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Follow existing API response format: { data: T, error: null } on success, { data: null, error: { message, code } } on failure</constraint>
+    <constraint>All UI text must be in Spanish (Chilean)</constraint>
+    <constraint>Phone validation must enforce Chilean format: +56 followed by 9 digits</constraint>
+    <constraint>Price fields must be positive integers (no decimals, no zero/negative)</constraint>
+    <constraint>Use React Hook Form + Zod pattern consistent with onboarding-form.tsx</constraint>
+    <constraint>Primary action buttons positioned for right-handed users (per UX spec)</constraint>
+    <constraint>Form validation errors display inline below fields in red (#EF4444)</constraint>
+    <constraint>Toast notifications use Sonner: toast.success() and toast.error()</constraint>
+    <constraint>Add new components to barrel export in src/components/supplier/index.ts</constraint>
+    <constraint>Profile page must be protected by existing supplier layout auth checks</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>GET /api/supplier/profile</name>
+      <kind>REST endpoint</kind>
+      <signature>GET /api/supplier/profile → { data: SupplierProfile, error: null }</signature>
+      <path>src/app/api/supplier/profile/route.ts (TO CREATE)</path>
+    </interface>
+    <interface>
+      <name>PATCH /api/supplier/profile</name>
+      <kind>REST endpoint</kind>
+      <signature>PATCH /api/supplier/profile body: SupplierProfileInput → { data: SupplierProfile, error: null }</signature>
+      <path>src/app/api/supplier/profile/route.ts (TO CREATE)</path>
+    </interface>
+    <interface>
+      <name>SupplierProfile</name>
+      <kind>TypeScript interface</kind>
+      <signature>{ id, role, name, phone, serviceArea, price100l, price1000l, price5000l, price10000l, isAvailable, createdAt, updatedAt }</signature>
+      <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md (defined in spec)</path>
+    </interface>
+    <interface>
+      <name>SupplierProfileInput</name>
+      <kind>TypeScript type (Zod infer)</kind>
+      <signature>{ name, phone, serviceArea, price100l, price1000l, price5000l, price10000l, isAvailable? }</signature>
+      <path>src/lib/validations/supplier-profile.ts (EXTEND with isAvailable)</path>
+    </interface>
+    <interface>
+      <name>supabase.auth.signOut()</name>
+      <kind>Supabase Auth method</kind>
+      <signature>async signOut() → { error: AuthError | null }</signature>
+      <path>@supabase/supabase-js</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      E2E tests use Playwright with existing patterns from supplier-auth.spec.ts and supplier-dashboard.spec.ts.
+      Tests use data-testid attributes for element selection.
+      Auth is mocked by injecting session state for most tests.
+      Toast assertions use toBeVisible() on toast elements.
+      Form validation tests check for inline error messages below fields.
+    </standards>
+    <locations>
+      <location>tests/e2e/supplier-profile.spec.ts (TO CREATE)</location>
+      <location>tests/e2e/supplier-*.spec.ts (existing patterns)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC3-7-1">Test navigation from dashboard to profile page via link/button</idea>
+      <idea ac="AC3-7-2">Test form pre-populates with current profile values from database</idea>
+      <idea ac="AC3-7-2">Test editing name field and verifying change persists after save</idea>
+      <idea ac="AC3-7-3">Test availability toggle displays correct state text (Disponible/No disponible)</idea>
+      <idea ac="AC3-7-3">Test toggling availability and saving updates database</idea>
+      <idea ac="AC3-7-4">Test successful save shows "Perfil actualizado" toast</idea>
+      <idea ac="AC3-7-5">Test phone validation rejects invalid format, shows inline error</idea>
+      <idea ac="AC3-7-5">Test price validation rejects zero/negative values, shows inline error</idea>
+      <idea ac="AC3-7-6">Test logout button signs out and redirects to /login</idea>
+      <idea ac="AC3-7-6">Test unauthenticated access to /profile redirects to /login</idea>
+    </ideas>
+  </tests>
+</story-context>

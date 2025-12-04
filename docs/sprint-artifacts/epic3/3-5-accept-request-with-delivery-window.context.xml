@@ -1,0 +1,228 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>5</storyId>
+    <title>Accept Request with Delivery Window</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic3/3-5-accept-request-with-delivery-window.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>supplier (Don Pedro)</asA>
+    <iWant>to accept a pending water request and optionally specify a delivery window</iWant>
+    <soThat>the customer knows their water is confirmed and when to expect delivery</soThat>
+    <tasks>
+      <task id="1" title="Delivery Window Modal Component" ac="1,2">
+        <subtask>Create src/components/supplier/delivery-modal.tsx</subtask>
+        <subtask>Modal title: "¿Aceptar esta solicitud?"</subtask>
+        <subtask>Display request summary (customer name, address, amount)</subtask>
+        <subtask>Optional delivery window text input with label "Ventana de entrega (opcional)"</subtask>
+        <subtask>Placeholder text: "Ej: Mañana 2-4pm, Hoy en la tarde"</subtask>
+        <subtask>"Cancelar" button (closes modal without action)</subtask>
+        <subtask>"Confirmar" button (submits acceptance)</subtask>
+        <subtask>Use shadcn/ui Dialog component</subtask>
+        <subtask>Handle loading state (disable buttons during API call)</subtask>
+      </task>
+      <task id="2" title="Accept API Implementation" ac="3">
+        <subtask>Enhance src/app/api/requests/[id]/route.ts PATCH handler</subtask>
+        <subtask>Handle action: "accept" with optional deliveryWindow field</subtask>
+        <subtask>Validate request exists and status is 'pending'</subtask>
+        <subtask>Validate current user is a supplier (role check)</subtask>
+        <subtask>Update request: status='accepted', supplier_id=auth.uid(), accepted_at=NOW()</subtask>
+        <subtask>Save delivery_window if provided</subtask>
+        <subtask>Return updated request data with timestamps</subtask>
+        <subtask>Handle concurrent acceptance attempts (request already accepted)</subtask>
+      </task>
+      <task id="3" title="Wire Accept Button to Modal" ac="1,4,5">
+        <subtask>Update src/components/supplier/request-actions.tsx - replace alert() stub with modal trigger</subtask>
+        <subtask>Update src/components/supplier/request-card.tsx - wire "Aceptar" button to modal</subtask>
+        <subtask>On successful accept: close modal, show toast "Solicitud aceptada"</subtask>
+        <subtask>Trigger dashboard data refresh (via router.refresh() or SWR revalidate)</subtask>
+        <subtask>Request should appear in "Aceptadas" tab after refresh</subtask>
+      </task>
+      <task id="4" title="Optimistic UI Update" ac="4">
+        <subtask>Implement optimistic update for accept action</subtask>
+        <subtask>Immediately move card to "Aceptadas" tab visually</subtask>
+        <subtask>Show loading indicator on card during API call</subtask>
+        <subtask>Rollback if API fails with error toast</subtask>
+      </task>
+      <task id="5" title="Consumer Notification Stub" ac="6">
+        <subtask>Add placeholder in API route for future notification hook</subtask>
+        <subtask>Log notification trigger point: console.log('[NOTIFY] Request accepted - customer notification would send here')</subtask>
+        <subtask>Comment: "// TODO: Epic 5 - Send email notification to customer"</subtask>
+      </task>
+      <task id="6" title="E2E Tests" ac="all">
+        <subtask>Create tests/e2e/supplier-accept.spec.ts</subtask>
+        <subtask>Test: Accept button opens modal dialog</subtask>
+        <subtask>Test: Modal shows request summary</subtask>
+        <subtask>Test: Modal has optional delivery window input</subtask>
+        <subtask>Test: Cancel closes modal without changes</subtask>
+        <subtask>Test: Confirm without delivery window accepts request</subtask>
+        <subtask>Test: Confirm with delivery window saves it</subtask>
+        <subtask>Test: Status changes to 'accepted' in database</subtask>
+        <subtask>Test: Request moves to Aceptadas tab</subtask>
+        <subtask>Test: Toast "Solicitud aceptada" shown</subtask>
+        <subtask>Test: Accept from details page works</subtask>
+        <subtask>Test: Cannot accept already-accepted request (error handling)</subtask>
+        <subtask>Test: Non-supplier cannot access accept action</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC3-5-1">"Aceptar" button opens delivery window modal dialog</criterion>
+    <criterion id="AC3-5-2">Delivery window is an optional free-text field (e.g., "Mañana 2-4pm", "Hoy en la tarde")</criterion>
+    <criterion id="AC3-5-3">On confirm: status='accepted', supplier_id set, accepted_at timestamped, delivery_window saved</criterion>
+    <criterion id="AC3-5-4">Request immediately moves to "Aceptadas" tab in dashboard</criterion>
+    <criterion id="AC3-5-5">Toast notification shows: "Solicitud aceptada"</criterion>
+    <criterion id="AC3-5-6">(Stub) Consumer notification triggered for future Epic 5 integration</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Story 3-5: Accept Request with Delivery Window</section>
+        <snippet>API contract: PATCH /api/requests/[id] with { action: "accept", deliveryWindow?: string }. Response includes id, status: "accepted", acceptedAt. Flow: Click Aceptar → Modal → Confirm → API call → Status update → Tab switch → Toast.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>API Response Format, Database Query Pattern</section>
+        <snippet>All API routes return { data: T, error: null } on success or { data: null, error: { message, code } } on failure. Use server client for mutations with parameterized queries via Supabase.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR29, FR30</section>
+        <snippet>FR29: Suppliers can accept a pending request. FR30: Suppliers can optionally add a delivery window when accepting (e.g., "Tomorrow 2-4pm").</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/supplier/request-actions.tsx</path>
+        <kind>component</kind>
+        <symbol>RequestActions</symbol>
+        <lines>1-77</lines>
+        <reason>Contains alert() stub for accept action that must be replaced with modal trigger. Main file to modify for wiring accept functionality.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/supplier/request-card.tsx</path>
+        <kind>component</kind>
+        <symbol>RequestCard</symbol>
+        <lines>1-150</lines>
+        <reason>Contains "Aceptar" button with onAccept callback. Need to wire to new modal. Contains amount badge colors and time formatting utilities to reuse.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/api/requests/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>POST</symbol>
+        <lines>1-103</lines>
+        <reason>Existing API for creating requests. Need to create /api/requests/[id]/route.ts with PATCH handler for accept action following same patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/dialog.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription</symbol>
+        <lines>1-143</lines>
+        <reason>shadcn/ui Dialog component to use for delivery window modal. Exports Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/supplier/index.ts</path>
+        <kind>barrel-export</kind>
+        <symbol>exports</symbol>
+        <lines>1-9</lines>
+        <reason>Barrel exports for supplier components. Must add DeliveryModal export after creating the component.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/types.ts</path>
+        <kind>types</kind>
+        <symbol>WaterRequest, WaterRequestUpdate</symbol>
+        <lines>1-21</lines>
+        <reason>TypeScript types for water_requests table. WaterRequestUpdate type needed for PATCH operation.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <npm>
+        <package name="@radix-ui/react-dialog" version="^1.1.15">Dialog primitive for modal</package>
+        <package name="@supabase/supabase-js" version="^2.86.0">Database operations</package>
+        <package name="@supabase/ssr" version="^0.8.0">Server-side auth</package>
+        <package name="sonner" version="^2.0.7">Toast notifications</package>
+        <package name="lucide-react" version="^0.555.0">Icons (Check, X)</package>
+        <package name="react-hook-form" version="^7.67.0">Form handling (optional for modal form)</package>
+        <package name="zod" version="^4.1.13">Validation schemas</package>
+        <package name="date-fns" version="^4.1.0">Time formatting utilities</package>
+      </npm>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow API response format: { data: T, error: null } or { data: null, error: { message, code } }</constraint>
+    <constraint type="pattern">Use createServerClient for authenticated server-side operations</constraint>
+    <constraint type="pattern">Use createAdminClient only when bypassing RLS is required</constraint>
+    <constraint type="pattern">Components use data-testid attributes for E2E testing</constraint>
+    <constraint type="pattern">Spanish language for all user-facing text ("Aceptar", "Cancelar", "Confirmar")</constraint>
+    <constraint type="pattern">Toast notifications via sonner: toast({ title: "message" })</constraint>
+    <constraint type="pattern">Files use kebab-case naming (delivery-modal.tsx)</constraint>
+    <constraint type="pattern">Components use PascalCase (DeliveryModal)</constraint>
+    <constraint type="validation">Request must be pending (status='pending') to be accepted</constraint>
+    <constraint type="validation">User must be supplier role to accept requests</constraint>
+    <constraint type="validation">Handle race condition: request already accepted by another supplier</constraint>
+    <constraint type="ux">Right-handed friendly: primary actions on right side (Confirmar on right)</constraint>
+    <constraint type="ux">Modal should show request summary before confirmation</constraint>
+    <constraint type="ux">Loading state must disable buttons during API call</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Accept Request API</name>
+      <kind>REST PATCH endpoint</kind>
+      <signature>PATCH /api/requests/[id] { action: "accept", deliveryWindow?: string }</signature>
+      <path>src/app/api/requests/[id]/route.ts</path>
+    </interface>
+    <interface>
+      <name>WaterRequest Update</name>
+      <kind>Database update</kind>
+      <signature>supabase.from('water_requests').update({ status: 'accepted', supplier_id, accepted_at, delivery_window }).eq('id', requestId).eq('status', 'pending')</signature>
+      <path>src/lib/supabase/types.ts</path>
+    </interface>
+    <interface>
+      <name>DeliveryModal Props</name>
+      <kind>React component interface</kind>
+      <signature>{ request: WaterRequest, open: boolean, onOpenChange: (open: boolean) => void, onConfirm: (requestId: string, deliveryWindow?: string) => Promise&lt;void&gt; }</signature>
+      <path>src/components/supplier/delivery-modal.tsx (to create)</path>
+    </interface>
+    <interface>
+      <name>RequestActions Props</name>
+      <kind>React component interface</kind>
+      <signature>{ requestId: string, status: string, request?: WaterRequest, onAcceptSuccess?: () => void }</signature>
+      <path>src/components/supplier/request-actions.tsx</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Playwright E2E tests following existing patterns. Tests organized by acceptance criteria. Use data-testid attributes for element selection. Mock authentication state for supplier dashboard tests. Spanish language assertions for UI text. Tests in tests/e2e/ directory with .spec.ts extension.
+    </standards>
+    <locations>
+      <location>tests/e2e/supplier-accept.spec.ts (new file)</location>
+      <location>tests/e2e/supplier-dashboard.spec.ts (existing, may need updates)</location>
+      <location>tests/e2e/supplier-request-details.spec.ts (existing, may need updates)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC3-5-1">Test that clicking Aceptar button opens modal with correct title "¿Aceptar esta solicitud?"</idea>
+      <idea ac="AC3-5-2">Test that delivery window input has placeholder "Ej: Mañana 2-4pm, Hoy en la tarde"</idea>
+      <idea ac="AC3-5-3">Test database state after accept: status='accepted', supplier_id set, accepted_at not null</idea>
+      <idea ac="AC3-5-4">Test request disappears from Pendientes tab and appears in Aceptadas tab</idea>
+      <idea ac="AC3-5-5">Test toast notification "Solicitud aceptada" appears after successful accept</idea>
+      <idea ac="AC3-5-6">Test console log "[NOTIFY] Request accepted" appears (stub verification)</idea>
+      <idea ac="all">Test cancel button closes modal without API call</idea>
+      <idea ac="all">Test error handling when request already accepted (concurrent access)</idea>
+      <idea ac="all">Test loading state disables buttons during API call</idea>
+      <idea ac="all">Test accept from both dashboard card and details page</idea>
+    </ideas>
+  </tests>
+</story-context>

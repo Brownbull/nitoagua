@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { MapPin, Clock, AlertTriangle } from "lucide-react";
+import { MapPin, Clock, AlertTriangle, Truck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,9 @@ import type { WaterRequest } from "@/lib/supabase/types";
 interface RequestCardProps {
   request: WaterRequest;
   showAcceptButton?: boolean;
-  onAccept?: (requestId: string) => void;
+  showDeliverButton?: boolean;
+  onAcceptRequest?: (request: WaterRequest) => void;
+  onDeliverRequest?: (request: WaterRequest) => void;
   currentTab?: string;
 }
 
@@ -45,7 +47,9 @@ function truncateAddress(address: string, maxLength: number = 30): string {
 export function RequestCard({
   request,
   showAcceptButton = false,
-  onAccept,
+  showDeliverButton = false,
+  onAcceptRequest,
+  onDeliverRequest,
   currentTab,
 }: RequestCardProps) {
   const timeAgo = formatDistanceToNow(new Date(request.created_at!), {
@@ -135,11 +139,23 @@ export function RequestCard({
             {showAcceptButton && (
               <Button
                 size="lg"
-                onClick={() => onAccept?.(request.id)}
+                onClick={() => onAcceptRequest?.(request)}
                 className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
                 data-testid="accept-button"
               >
                 Aceptar
+              </Button>
+            )}
+            {/* Marcar Entregado on right (for accepted requests) */}
+            {showDeliverButton && (
+              <Button
+                size="lg"
+                onClick={() => onDeliverRequest?.(request)}
+                className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
+                data-testid="deliver-button"
+              >
+                <Truck className="w-4 h-4 mr-2" />
+                Marcar Entregado
               </Button>
             )}
           </div>

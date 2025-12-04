@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Droplets } from "lucide-react";
+import { Droplets, User } from "lucide-react";
 import { StatsHeader, DashboardTabs } from "@/components/supplier";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -116,9 +117,14 @@ export default async function SupplierDashboardPage() {
             <Droplets className="w-6 h-6" />
             <span className="font-bold text-lg">nitoagua</span>
           </div>
-          <span className="text-sm" data-testid="supplier-greeting">
-            Hola, {profile?.name}
-          </span>
+          <Link
+            href="/profile"
+            className="flex items-center gap-2 text-sm hover:underline"
+            data-testid="profile-link"
+          >
+            <span>Hola, {profile?.name}</span>
+            <User className="w-5 h-5" />
+          </Link>
         </div>
       </header>
 

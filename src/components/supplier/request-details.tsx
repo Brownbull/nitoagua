@@ -223,10 +223,7 @@ export function RequestDetails({ request }: RequestDetailsProps) {
       />
 
       {/* Action Buttons */}
-      <RequestActions
-        requestId={request.id}
-        status={request.status}
-      />
+      <RequestActions request={request} />
     </div>
   );
 }

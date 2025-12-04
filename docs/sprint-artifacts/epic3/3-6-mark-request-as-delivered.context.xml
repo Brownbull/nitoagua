@@ -1,0 +1,165 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>6</storyId>
+    <title>Mark Request as Delivered</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-03</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic3/3-6-mark-request-as-delivered.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>supplier (Don Pedro)</asA>
+    <iWant>to mark an accepted water request as delivered after completing the delivery</iWant>
+    <soThat>the customer is notified their water has arrived and my delivery records are updated</soThat>
+    <tasks>
+      <task id="1" acs="3,6">Add "deliver" action to API route
+        <subtask>Extend src/app/api/requests/[id]/route.ts PATCH handler to support action: "deliver"</subtask>
+        <subtask>Validate request exists and status is 'accepted'</subtask>
+        <subtask>Validate current user is the supplier who accepted the request (supplier_id = auth.uid())</subtask>
+        <subtask>Update request: status='delivered', delivered_at=NOW()</subtask>
+        <subtask>Return updated request data with timestamps</subtask>
+        <subtask>Add notification stub: console.log('[NOTIFY] Request delivered')</subtask>
+        <subtask>Handle error cases (request not found, wrong status, wrong supplier)</subtask>
+      </task>
+      <task id="2" acs="2">Create Delivery Confirmation Dialog Component
+        <subtask>Create src/components/supplier/deliver-confirm-dialog.tsx</subtask>
+        <subtask>Dialog title: "¿Confirmar entrega completada?"</subtask>
+        <subtask>Display request summary (customer name, address, amount)</subtask>
+        <subtask>Message: "Esta acción marcará la solicitud como entregada"</subtask>
+        <subtask>"Cancelar" and "Confirmar Entrega" buttons</subtask>
+        <subtask>Use shadcn/ui AlertDialog component</subtask>
+        <subtask>Handle loading state</subtask>
+      </task>
+      <task id="3" acs="1,4,5">Add "Marcar Entregado" button to Request Card
+        <subtask>Update src/components/supplier/request-card.tsx for accepted requests</subtask>
+        <subtask>Button only visible for accepted requests where current supplier owns the request</subtask>
+        <subtask>Wire button to open confirmation dialog</subtask>
+        <subtask>On success: show toast "Entrega completada"</subtask>
+        <subtask>Trigger optimistic UI update</subtask>
+      </task>
+      <task id="4" acs="1,5">Add "Marcar Entregado" to Request Actions
+        <subtask>Update src/components/supplier/request-actions.tsx</subtask>
+        <subtask>Show button for accepted requests</subtask>
+        <subtask>Wire to confirmation dialog</subtask>
+        <subtask>Handle success/error with appropriate toasts</subtask>
+      </task>
+      <task id="5" acs="4">Optimistic UI Update for Dashboard
+        <subtask>Update src/components/supplier/dashboard-tabs.tsx</subtask>
+        <subtask>Add onDeliverRequest callback</subtask>
+        <subtask>Implement optimistic update: move request from Aceptadas to Completadas</subtask>
+        <subtask>Add loading indicator and rollback on failure</subtask>
+      </task>
+      <task id="6" acs="1,4">Update Request List and Types
+        <subtask>Update src/components/supplier/request-list.tsx with onDeliverRequest prop</subtask>
+        <subtask>Ensure delivery button appears in Aceptadas tab view</subtask>
+        <subtask>Add barrel export for new dialog component</subtask>
+      </task>
+      <task id="7" acs="all">E2E Tests
+        <subtask>Create tests/e2e/supplier-deliver.spec.ts</subtask>
+        <subtask>Test button visibility on accepted requests only</subtask>
+        <subtask>Test confirmation dialog flow</subtask>
+        <subtask>Test database update and timestamp</subtask>
+        <subtask>Test tab movement and toast</subtask>
+        <subtask>Test supplier authorization</subtask>
+        <subtask>Test error handling</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC3-6-1">"Marcar Entregado" button visible on accepted requests (in Aceptadas tab and request details)</criterion>
+    <criterion id="AC3-6-2">Clicking button opens confirmation dialog: "¿Confirmar entrega completada?"</criterion>
+    <criterion id="AC3-6-3">On confirm: status='delivered', delivered_at timestamp is set</criterion>
+    <criterion id="AC3-6-4">Request immediately moves from "Aceptadas" to "Completadas" tab</criterion>
+    <criterion id="AC3-6-5">Toast notification shows: "Entrega completada"</criterion>
+    <criterion id="AC3-6-6">(Stub) Consumer notification triggered for future Epic 5 integration</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/epic3/tech-spec-epic-3.md" title="Epic 3 Technical Specification" section="Story 3-6: Mark Request as Delivered" snippet="Mark delivered: PATCH /api/requests/[id] { action: 'deliver' } - status='delivered', delivered_at timestamped. Confirmation dialog required before action."/>
+      <doc path="docs/architecture.md" title="Architecture Document" section="API Response Format" snippet="All API routes return { data: T, error: null } on success, { data: null, error: { message, code } } on error. Use parameterized queries via Supabase client."/>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Database Query Pattern" snippet="Use createClient from @/lib/supabase/server for mutations. Chain .update().eq().select().single() for atomic updates with returned data."/>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="FR31" snippet="Suppliers can mark an accepted request as delivered. This completes the delivery workflow and updates the request status."/>
+      <doc path="docs/sprint-artifacts/epic3/3-5-accept-request-with-delivery-window.md" title="Story 3-5: Accept Request (Reference)" section="Dev Agent Record" snippet="Pattern to follow: API route uses action-based PATCH, delivery-modal.tsx provides dialog pattern, optimistic UI uses Set-based tracking in dashboard-tabs.tsx"/>
+    </docs>
+    <code>
+      <file path="src/app/api/requests/[id]/route.ts" kind="api-route" symbol="PATCH" lines="17-259" reason="Extend to add 'deliver' action alongside existing 'accept' action. Follow same validation pattern."/>
+      <file path="src/components/supplier/delivery-modal.tsx" kind="component" symbol="DeliveryModal" lines="1-133" reason="Reference pattern for creating deliver-confirm-dialog.tsx using shadcn/ui AlertDialog instead of Dialog"/>
+      <file path="src/components/supplier/request-actions.tsx" kind="component" symbol="RequestActions" lines="1-117" reason="Modify to show 'Marcar Entregado' button for accepted requests in addition to accept/decline for pending"/>
+      <file path="src/components/supplier/request-card.tsx" kind="component" symbol="RequestCard" lines="1-150" reason="Add 'Marcar Entregado' button for accepted requests in the actions section"/>
+      <file path="src/components/supplier/request-list.tsx" kind="component" symbol="RequestList" lines="1-69" reason="Add onDeliverRequest callback prop to pass deliver action to cards"/>
+      <file path="src/components/supplier/dashboard-tabs.tsx" kind="component" symbol="DashboardTabs" lines="1-202" reason="Add deliver handling similar to accept: optimistic UI with Set tracking, API call, rollback on error"/>
+      <file path="src/components/supplier/index.ts" kind="barrel" symbol="exports" lines="1-10" reason="Add export for new DeliverConfirmDialog component"/>
+      <file path="tests/e2e/supplier-accept.spec.ts" kind="test" symbol="test.describe" lines="1-100" reason="Reference for E2E test patterns - static verification style with API and structure tests"/>
+    </code>
+    <dependencies>
+      <node>
+        <package name="@radix-ui/react-dialog" version="^1.1.15" usage="Base for AlertDialog confirmation pattern"/>
+        <package name="@supabase/ssr" version="^0.8.0" usage="Server-side auth client"/>
+        <package name="@supabase/supabase-js" version="^2.86.0" usage="Database operations"/>
+        <package name="sonner" version="^2.0.7" usage="Toast notifications (toast.success, toast.error)"/>
+        <package name="lucide-react" version="^0.555.0" usage="Icons (Check, Truck, Loader2)"/>
+        <package name="date-fns" version="^4.1.0" usage="Time formatting with Spanish locale"/>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="authorization">Only the supplier who accepted the request (supplier_id = auth.uid()) can mark it as delivered</constraint>
+    <constraint type="status-transition">Can only transition from 'accepted' to 'delivered' - not from 'pending' or already 'delivered'</constraint>
+    <constraint type="ui-pattern">Use AlertDialog for confirmation (more suitable than Dialog for confirmations)</constraint>
+    <constraint type="localization">All UI text must be in Spanish (Chilean): "Marcar Entregado", "Entrega completada", "¿Confirmar entrega completada?"</constraint>
+    <constraint type="accessibility">Right-handed friendly button placement: primary action on right side</constraint>
+    <constraint type="optimistic-ui">Immediately update UI on action, rollback on API failure</constraint>
+    <constraint type="notification">Add notification stub with console.log for Epic 5 integration</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="PATCH /api/requests/[id]" kind="REST endpoint">
+      <signature>PATCH /api/requests/[id] { action: "deliver" }</signature>
+      <response>{ data: { id, status: "delivered", deliveredAt }, error: null }</response>
+      <path>src/app/api/requests/[id]/route.ts</path>
+    </interface>
+    <interface name="DeliverConfirmDialog" kind="React component">
+      <signature>DeliverConfirmDialog({ request, open, onOpenChange, onConfirm, isLoading })</signature>
+      <path>src/components/supplier/deliver-confirm-dialog.tsx</path>
+    </interface>
+    <interface name="RequestCard props extension" kind="React props">
+      <signature>onDeliverRequest?: (request: WaterRequest) => void; showDeliverButton?: boolean;</signature>
+      <path>src/components/supplier/request-card.tsx</path>
+    </interface>
+    <interface name="RequestList props extension" kind="React props">
+      <signature>onDeliverRequest?: (request: WaterRequest) => void; showDeliverButton?: boolean;</signature>
+      <path>src/components/supplier/request-list.tsx</path>
+    </interface>
+    <interface name="DashboardTabs deliver handler" kind="callback">
+      <signature>handleDeliverClick(request: WaterRequest): void; handleConfirmDeliver(requestId: string): Promise&lt;void&gt;</signature>
+      <path>src/components/supplier/dashboard-tabs.tsx</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>E2E tests use Playwright with static verification pattern (asserting expected values match specs). API tests verify response format and error codes. Tests organized by acceptance criteria with clear AC references in describe blocks. Use data-testid attributes for element selection.</standards>
+    <locations>
+      <location>tests/e2e/supplier-deliver.spec.ts (new)</location>
+      <location>tests/e2e/supplier-accept.spec.ts (reference)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC3-6-1">Test "Marcar Entregado" button visible only on accepted requests, not pending or delivered</idea>
+      <idea ac="AC3-6-1">Test button not visible for requests owned by other suppliers</idea>
+      <idea ac="AC3-6-2">Test clicking button opens AlertDialog with Spanish title "¿Confirmar entrega completada?"</idea>
+      <idea ac="AC3-6-2">Test dialog shows request summary (customer name, address, amount)</idea>
+      <idea ac="AC3-6-2">Test cancel closes dialog without changes</idea>
+      <idea ac="AC3-6-3">Test API sets status='delivered' and delivered_at timestamp on confirm</idea>
+      <idea ac="AC3-6-3">Test API rejects deliver for pending requests (wrong status)</idea>
+      <idea ac="AC3-6-3">Test API rejects deliver by non-owning supplier (wrong supplier)</idea>
+      <idea ac="AC3-6-4">Test request moves from Aceptadas to Completadas tab immediately</idea>
+      <idea ac="AC3-6-5">Test toast "Entrega completada" shown on success</idea>
+      <idea ac="AC3-6-6">Test notification stub logged (console.log verification)</idea>
+      <idea ac="all">Test error handling shows appropriate Spanish error messages</idea>
+    </ideas>
+  </tests>
+</story-context>

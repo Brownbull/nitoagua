@@ -8,7 +8,9 @@ import type { WaterRequest } from "@/lib/supabase/types";
 interface RequestListProps {
   requests: WaterRequest[];
   showAcceptButton?: boolean;
-  onAccept?: (requestId: string) => void;
+  showDeliverButton?: boolean;
+  onAcceptRequest?: (request: WaterRequest) => void;
+  onDeliverRequest?: (request: WaterRequest) => void;
   pageSize?: number;
   currentTab?: string;
 }
@@ -16,7 +18,9 @@ interface RequestListProps {
 export function RequestList({
   requests,
   showAcceptButton = false,
-  onAccept,
+  showDeliverButton = false,
+  onAcceptRequest,
+  onDeliverRequest,
   pageSize = 20,
   currentTab,
 }: RequestListProps) {
@@ -48,7 +52,9 @@ export function RequestList({
           key={request.id}
           request={request}
           showAcceptButton={showAcceptButton}
-          onAccept={onAccept}
+          showDeliverButton={showDeliverButton}
+          onAcceptRequest={onAcceptRequest}
+          onDeliverRequest={onDeliverRequest}
           currentTab={currentTab}
         />
       ))}

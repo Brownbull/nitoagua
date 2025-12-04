@@ -30,15 +30,33 @@ export const supplierProfileSchema = z.object({
     .number()
     .int("El precio debe ser un número entero")
     .positive("El precio debe ser mayor a 0"),
+  isAvailable: z.boolean(),
 });
 
 export type SupplierProfileInput = z.infer<typeof supplierProfileSchema>;
+
+// Full supplier profile type (includes database fields)
+export interface SupplierProfile {
+  id: string;
+  role: "supplier";
+  name: string;
+  phone: string;
+  serviceArea: string;
+  price100l: number;
+  price1000l: number;
+  price5000l: number;
+  price10000l: number;
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Service areas for MVP (Villarrica region)
 export const SERVICE_AREAS = [
   { value: "villarrica", label: "Villarrica" },
   { value: "pucon", label: "Pucón" },
   { value: "lican-ray", label: "Lican Ray" },
+  { value: "conaripe", label: "Coñaripe" },
 ] as const;
 
 export type ServiceArea = (typeof SERVICE_AREAS)[number]["value"];

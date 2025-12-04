@@ -32,11 +32,11 @@ This story ensures all changes are properly committed, merged through the branch
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Pre-deployment Checks**
-  - [ ] Run `npm run lint` - ensure no errors
-  - [ ] Run `npm run build` - ensure build succeeds
-  - [ ] Run `npm run test:e2e` - ensure all tests pass
-  - [ ] Verify local development works with all Epic 3 features
+- [x] **Task 1: Pre-deployment Checks**
+  - [x] Run `npm run lint` - ensure no errors
+  - [x] Run `npm run build` - ensure build succeeds
+  - [x] Run `npm run test:e2e` - ensure all tests pass
+  - [x] Verify local development works with all Epic 3 features
 
 - [ ] **Task 2: Git Commit & Push to Develop**
   - [ ] Review all changes with `git status` and `git diff`

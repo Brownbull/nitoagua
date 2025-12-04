@@ -62,11 +62,11 @@ development_status:
   3-1-supplier-registration: done
   3-2-supplier-login: done
   3-3-supplier-request-dashboard: done
-  3-4-supplier-request-details-view: review
-  3-5-accept-request-with-delivery-window: backlog
-  3-6-mark-request-as-delivered: backlog
-  3-7-supplier-profile-management: backlog
-  3-8-epic-deployment-and-verification: ready-for-dev
+  3-4-supplier-request-details-view: done
+  3-5-accept-request-with-delivery-window: done
+  3-6-mark-request-as-delivered: done
+  3-7-supplier-profile-management: done
+  3-8-epic-deployment-and-verification: in-progress
   epic-3-retrospective: optional
 
   # Epic 4: User Accounts & Profiles
