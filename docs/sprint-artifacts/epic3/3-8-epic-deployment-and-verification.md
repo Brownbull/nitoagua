@@ -38,12 +38,12 @@ This story ensures all changes are properly committed, merged through the branch
   - [x] Run `npm run test:e2e` - ensure all tests pass
   - [x] Verify local development works with all Epic 3 features
 
-- [ ] **Task 2: Git Commit & Push to Develop**
-  - [ ] Review all changes with `git status` and `git diff`
-  - [ ] Stage all Epic 3 changes
-  - [ ] Create commit with descriptive message
-  - [ ] Push to develop branch
-  - [ ] Verify Vercel preview deployment for develop branch
+- [x] **Task 2: Git Commit & Push to Develop**
+  - [x] Review all changes with `git status` and `git diff`
+  - [x] Stage all Epic 3 changes
+  - [x] Create commit with descriptive message
+  - [x] Push to develop branch
+  - [x] Verify Vercel preview deployment for develop branch
 
 - [ ] **Task 3: Merge to Staging**
   - [ ] Checkout staging branch
