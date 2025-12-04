@@ -45,15 +45,15 @@ This story ensures all changes are properly committed, merged through the branch
   - [x] Push to develop branch
   - [x] Verify Vercel preview deployment for develop branch
 
-- [ ] **Task 3: Merge to Staging**
-  - [ ] Checkout staging branch
-  - [ ] Merge develop into staging
-  - [ ] Push staging branch
-  - [ ] Verify Vercel preview deployment for staging
-  - [ ] Test staging deployment manually:
-    - [ ] Google OAuth login works
-    - [ ] Supplier dashboard loads
-    - [ ] Accept request flow works
+- [x] **Task 3: Merge to Staging**
+  - [x] Checkout staging branch
+  - [x] Merge develop into staging
+  - [x] Push staging branch
+  - [x] Verify Vercel preview deployment for staging
+  - [x] Test staging deployment manually:
+    - [x] Google OAuth login works
+    - [x] Supplier dashboard loads
+    - [x] Accept request flow works
 
 - [ ] **Task 4: Merge to Main (Production)**
   - [ ] Checkout main branch
