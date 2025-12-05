@@ -15,7 +15,21 @@ const eslintConfig = defineConfig([
     // Project-specific ignores
     ".bmad/**",
     "docs/**",
+    "playwright-report/**",
   ]),
+  // Custom rules
+  {
+    rules: {
+      // Allow unused vars with underscore prefix
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

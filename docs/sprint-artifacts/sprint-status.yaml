@@ -66,16 +66,17 @@ development_status:
   3-5-accept-request-with-delivery-window: done
   3-6-mark-request-as-delivered: done
   3-7-supplier-profile-management: done
-  3-8-epic-deployment-and-verification: in-progress
-  epic-3-retrospective: optional
+  3-8-epic-deployment-and-verification: done
+  epic-3-retrospective: completed
 
   # Epic 4: User Accounts & Profiles
-  epic-4: backlog
-  4-1-consumer-registration: backlog
-  4-2-consumer-login: backlog
-  4-3-pre-filled-request-form-for-registered-users: backlog
-  4-4-consumer-request-history: backlog
-  4-5-cancel-pending-request: backlog
+  epic-4: contexted
+  4-1-consumer-registration: done  # APPROVED: Extended to include login, profile, history, pre-fill
+  4-2-consumer-login: done  # APPROVED: Implemented in 4-1 extension, reviewed with 4-1
+  4-3-pre-filled-request-form-for-registered-users: done  # APPROVED: Implemented in 4-1 extension, reviewed with 4-1
+  4-4-consumer-request-history: done  # APPROVED: Implemented in 4-1 extension, reviewed with 4-1
+  4-5-cancel-pending-request: done  # Implemented and approved via code review
+  4-6-epic-deployment-and-verification: in-progress
   epic-4-retrospective: optional
 
   # Epic 5: Notifications & Communication

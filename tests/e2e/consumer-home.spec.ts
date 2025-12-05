@@ -181,9 +181,9 @@ test.describe("Consumer Navigation", () => {
     const historyLink = nav.getByRole("link", { name: "Historial" });
     await expect(historyLink).toHaveAttribute("href", "/history");
 
-    // Verify Profile link href
+    // Verify Profile link href (renamed to /consumer-profile in Epic 4)
     const profileLink = nav.getByRole("link", { name: "Perfil" });
-    await expect(profileLink).toHaveAttribute("href", "/profile");
+    await expect(profileLink).toHaveAttribute("href", "/consumer-profile");
   });
 
   test("active navigation item is styled differently", async ({ page }) => {

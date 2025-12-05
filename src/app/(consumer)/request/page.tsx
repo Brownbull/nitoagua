@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -16,20 +16,68 @@ import {
   registerOnlineListener,
   processQueue,
 } from "@/lib/utils/offline-queue";
+import { createClient } from "@/lib/supabase/client";
 
 /**
  * Request flow states:
+ * - loading: Loading user profile data
  * - form: User is filling out the request form
  * - review: User is reviewing their request before submission
  * - submitting: Request is being submitted to the server
  * - submitted: Request has been successfully submitted
  */
-type RequestState = "form" | "review" | "submitting" | "submitted";
+type RequestState = "loading" | "form" | "review" | "submitting" | "submitted";
+
+interface UserProfile {
+  name: string;
+  phone: string;
+  address: string | null;
+  special_instructions: string | null;
+}
 
 export default function RequestPage() {
   const router = useRouter();
-  const [state, setState] = useState<RequestState>("form");
+  const [state, setState] = useState<RequestState>("loading");
   const [formData, setFormData] = useState<RequestInput | null>(null);
+  const [profileData, setProfileData] = useState<Partial<RequestInput>>({});
+
+  // Load user profile on mount
+  useEffect(() => {
+    async function loadProfile() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        // Get user email
+        const email = user.email || "";
+
+        // Get profile data
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name, phone, address, special_instructions")
+          .eq("id", user.id)
+          .single();
+
+        if (profile) {
+          const typedProfile = profile as UserProfile;
+          setProfileData({
+            name: typedProfile.name || "",
+            phone: typedProfile.phone || "",
+            email: email,
+            address: typedProfile.address || "",
+            specialInstructions: typedProfile.special_instructions || "",
+          });
+        } else {
+          // No profile but has email
+          setProfileData({ email });
+        }
+      }
+
+      setState("form");
+    }
+
+    loadProfile();
+  }, []);
 
   // Register online listener to process queued requests
   useEffect(() => {
@@ -143,6 +191,15 @@ export default function RequestPage() {
     }
   };
 
+  // Loading state
+  if (state === "loading") {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0077B6]" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col px-4 py-6">
       {/* Header with back navigation */}
@@ -176,7 +233,7 @@ export default function RequestPage() {
       {state === "form" && (
         <RequestForm
           onSubmit={handleFormSubmit}
-          initialData={formData ?? undefined}
+          initialData={formData ?? profileData}
           loading={false}
         />
       )}

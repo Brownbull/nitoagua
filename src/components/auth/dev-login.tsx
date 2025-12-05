@@ -8,6 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
+// Test accounts for local development
+const TEST_ACCOUNTS = {
+  supplier: { email: "khujta@gmail.com", password: "password.123" },
+  consumer: { email: "khujtatest@gmail.com", password: "password.123" },
+} as const;
+
 /**
  * Development-only login component for email/password authentication.
  * This is used for local testing without Google OAuth.
@@ -15,10 +21,17 @@ import { Loader2 } from "lucide-react";
  */
 export function DevLogin() {
   const router = useRouter();
-  const [email, setEmail] = useState("khujta@gmail.com");
-  const [password, setPassword] = useState("password.123");
+  const [selectedRole, setSelectedRole] = useState<"consumer" | "supplier">("consumer");
+  const [email, setEmail] = useState<string>(TEST_ACCOUNTS.consumer.email);
+  const [password, setPassword] = useState<string>(TEST_ACCOUNTS.consumer.password);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function handleRoleChange(role: "consumer" | "supplier") {
+    setSelectedRole(role);
+    setEmail(TEST_ACCOUNTS[role].email);
+    setPassword(TEST_ACCOUNTS[role].password);
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +70,12 @@ export function DevLogin() {
             router.push("/");
           }
         } else {
-          router.push("/onboarding");
+          // No profile - redirect to appropriate onboarding based on selected role
+          if (selectedRole === "supplier") {
+            router.push("/onboarding");
+          } else {
+            router.push("/consumer/onboarding");
+          }
         }
       }
     } catch {
@@ -70,11 +88,33 @@ export function DevLogin() {
     <div className="mt-6 pt-6 border-t border-gray-200">
       <div className="text-center mb-4">
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          🛠️ Dev Mode
+          Dev Mode
         </span>
         <p className="text-xs text-gray-500 mt-1">
           Email/Password login for local testing
         </p>
+      </div>
+
+      {/* Role selector buttons */}
+      <div className="flex gap-2 mb-4">
+        <Button
+          type="button"
+          variant={selectedRole === "consumer" ? "default" : "outline"}
+          className="flex-1 text-sm"
+          onClick={() => handleRoleChange("consumer")}
+          disabled={isLoading}
+        >
+          Consumer
+        </Button>
+        <Button
+          type="button"
+          variant={selectedRole === "supplier" ? "default" : "outline"}
+          className="flex-1 text-sm"
+          onClick={() => handleRoleChange("supplier")}
+          disabled={isLoading}
+        >
+          Supplier
+        </Button>
       </div>
 
       <form onSubmit={handleLogin} className="space-y-4">
@@ -85,7 +125,7 @@ export function DevLogin() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="khujta@gmail.com"
+            placeholder={TEST_ACCOUNTS[selectedRole].email}
             disabled={isLoading}
           />
         </div>
@@ -111,7 +151,7 @@ export function DevLogin() {
           {isLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : null}
-          Dev Login
+          Dev Login ({selectedRole})
         </Button>
 
         {error && (

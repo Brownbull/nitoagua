@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 interface AcceptRequestBody {
   action: "accept";
@@ -10,7 +11,12 @@ interface DeliverRequestBody {
   action: "deliver";
 }
 
-type RequestBody = AcceptRequestBody | DeliverRequestBody;
+interface CancelRequestBody {
+  action: "cancel";
+  trackingToken?: string; // For guest cancellation
+}
+
+type RequestBody = AcceptRequestBody | DeliverRequestBody | CancelRequestBody;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseClient = any;
@@ -124,8 +130,156 @@ async function handleDeliverAction(
 }
 
 /**
+ * Handle the "cancel" action - cancel a pending request (consumer or guest)
+ */
+async function handleCancelAction(
+  supabase: SupabaseClient,
+  requestId: string,
+  existingRequest: {
+    id: string;
+    status: string;
+    consumer_id: string | null;
+    tracking_token: string | null;
+  },
+  userId: string | null,
+  trackingToken?: string
+) {
+  // Validate status is 'pending'
+  if (existingRequest.status !== "pending") {
+    console.error("[API/REQUESTS/PATCH]", {
+      action: "cancel_status_check",
+      requestId,
+      currentStatus: existingRequest.status,
+    });
+
+    const errorMessage =
+      existingRequest.status === "accepted"
+        ? "Esta solicitud ya fue aceptada y no puede ser cancelada"
+        : existingRequest.status === "delivered"
+        ? "Esta solicitud ya fue entregada y no puede ser cancelada"
+        : existingRequest.status === "cancelled"
+        ? "Esta solicitud ya fue cancelada"
+        : "Esta solicitud no puede ser cancelada";
+
+    return NextResponse.json(
+      {
+        data: null,
+        error: {
+          message: errorMessage,
+          code: "INVALID_STATUS",
+        },
+      },
+      { status: 409 }
+    );
+  }
+
+  // Validate ownership - either authenticated consumer or guest with token
+  const isAuthenticatedOwner =
+    userId && existingRequest.consumer_id && existingRequest.consumer_id === userId;
+  const isGuestOwner =
+    trackingToken &&
+    existingRequest.tracking_token &&
+    existingRequest.tracking_token === trackingToken;
+
+  if (!isAuthenticatedOwner && !isGuestOwner) {
+    console.error("[API/REQUESTS/PATCH]", {
+      action: "cancel_ownership_check",
+      requestId,
+      expectedConsumerId: existingRequest.consumer_id,
+      actualUserId: userId,
+      hasTrackingToken: !!trackingToken,
+      requestHasTrackingToken: !!existingRequest.tracking_token,
+    });
+    return NextResponse.json(
+      {
+        data: null,
+        error: {
+          message: "No tienes permiso para cancelar esta solicitud",
+          code: "FORBIDDEN",
+        },
+      },
+      { status: 403 }
+    );
+  }
+
+  // Use admin client for guest cancellation (to bypass RLS)
+  // For authenticated users, the regular client with RLS is sufficient
+  const updateClient = isGuestOwner ? createAdminClient() : supabase;
+
+  // Update request: mark as cancelled
+  const now = new Date().toISOString();
+  const { data: updatedRequest, error: updateError } = await updateClient
+    .from("water_requests")
+    .update({
+      status: "cancelled",
+      cancelled_at: now,
+    })
+    .eq("id", requestId)
+    .eq("status", "pending") // Extra safety: only update if still pending
+    .select("id, status, cancelled_at")
+    .single();
+
+  if (updateError || !updatedRequest) {
+    // Check if it was a race condition (status changed)
+    const { data: recheckRequest } = await updateClient
+      .from("water_requests")
+      .select("status")
+      .eq("id", requestId)
+      .single();
+
+    if (recheckRequest?.status === "accepted") {
+      return NextResponse.json(
+        {
+          data: null,
+          error: {
+            message: "Esta solicitud ya fue aceptada y no puede ser cancelada",
+            code: "ALREADY_ACCEPTED",
+          },
+        },
+        { status: 409 }
+      );
+    }
+
+    console.error("[API/REQUESTS/PATCH]", {
+      action: "cancel_update",
+      requestId,
+      error: updateError?.message || "Update failed",
+    });
+    return NextResponse.json(
+      {
+        data: null,
+        error: {
+          message: "Error al cancelar la solicitud. Por favor intenta de nuevo.",
+          code: "UPDATE_ERROR",
+        },
+      },
+      { status: 500 }
+    );
+  }
+
+  // TODO: Epic 5 - Send notification about cancellation
+  console.log("[NOTIFY] Request cancelled - notification would send here", {
+    requestId,
+    cancelledBy: userId || "guest",
+  });
+
+  // Return success response
+  return NextResponse.json(
+    {
+      data: {
+        id: updatedRequest.id,
+        status: updatedRequest.status,
+        cancelledAt: updatedRequest.cancelled_at,
+      },
+      error: null,
+    },
+    { status: 200 }
+  );
+}
+
+/**
  * PATCH /api/requests/[id]
- * Updates a water request - supports "accept" and "deliver" actions
+ * Updates a water request - supports "accept", "deliver", and "cancel" actions
  *
  * Accept: { action: "accept", deliveryWindow?: string }
  * Response: { data: { id, status, acceptedAt, deliveryWindow, supplierId }, error: null }
@@ -158,7 +312,7 @@ export async function PATCH(
     // Parse request body
     const body: RequestBody = await request.json();
 
-    if (body.action !== "accept" && body.action !== "deliver") {
+    if (body.action !== "accept" && body.action !== "deliver" && body.action !== "cancel") {
       return NextResponse.json(
         {
           data: null,
@@ -171,17 +325,53 @@ export async function PATCH(
       );
     }
 
-    // Get current user (supplier)
+    // Get supabase client and current user
     const supabase = await createClient();
     const {
       data: { user },
-      error: userError,
     } = await supabase.auth.getUser();
 
-    if (userError || !user) {
+    // Cancel action has different auth requirements (consumer/guest vs supplier)
+    if (body.action === "cancel") {
+      // Fetch request with consumer_id and tracking_token for ownership check
+      const { data: existingRequest, error: fetchError } = await supabase
+        .from("water_requests")
+        .select("id, status, consumer_id, tracking_token")
+        .eq("id", requestId)
+        .single();
+
+      if (fetchError || !existingRequest) {
+        console.error("[API/REQUESTS/PATCH]", {
+          action: "fetch_request_for_cancel",
+          requestId,
+          error: fetchError?.message || "Not found",
+        });
+        return NextResponse.json(
+          {
+            data: null,
+            error: {
+              message: "Solicitud no encontrada",
+              code: "NOT_FOUND",
+            },
+          },
+          { status: 404 }
+        );
+      }
+
+      return handleCancelAction(
+        supabase,
+        requestId,
+        existingRequest,
+        user?.id || null,
+        body.trackingToken
+      );
+    }
+
+    // Accept and deliver actions require authenticated supplier
+    if (!user) {
       console.error("[API/REQUESTS/PATCH]", {
         action: "auth",
-        error: userError?.message || "No user",
+        error: "No user",
       });
       return NextResponse.json(
         {
@@ -238,7 +428,7 @@ export async function PATCH(
       );
     }
 
-    // Verify request exists
+    // Verify request exists (for accept/deliver actions)
     const { data: existingRequest, error: fetchError } = await supabase
       .from("water_requests")
       .select("id, status, supplier_id")

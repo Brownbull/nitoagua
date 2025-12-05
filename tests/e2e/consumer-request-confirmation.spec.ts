@@ -163,9 +163,12 @@ test.describe("Request Confirmation Screen", () => {
       name: /Nueva Solicitud/,
     });
 
-    // Wait for buttons to be visible first
-    await expect(verEstadoButton).toBeVisible();
-    await expect(nuevaSolicitudButton).toBeVisible();
+    // Wait for buttons to be visible first with extra time for webkit
+    await expect(verEstadoButton).toBeVisible({ timeout: 10000 });
+    await expect(nuevaSolicitudButton).toBeVisible({ timeout: 10000 });
+
+    // Wait for layout to stabilize
+    await page.waitForTimeout(500);
 
     // Check Ver Estado button
     const verEstadoBox = await verEstadoButton.boundingBox();

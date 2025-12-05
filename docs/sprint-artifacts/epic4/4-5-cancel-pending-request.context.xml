@@ -1,0 +1,238 @@
+<story-context id="bmm/story-context" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>5</storyId>
+    <title>Cancel Pending Request</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-04</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic4/4-5-cancel-pending-request.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>consumer (Doña María)</asA>
+    <iWant>to cancel my water request before a supplier accepts it</iWant>
+    <soThat>I can change my mind or correct a mistake without wasting the supplier's time</soThat>
+    <tasks>
+      <task id="1" title="Extend API for Cancel Action">
+        <subtasks>
+          <subtask>Add CancelRequestBody type to /api/requests/[id]/route.ts</subtask>
+          <subtask>Add handleCancelAction function with validation (status=pending, ownership check)</subtask>
+          <subtask>Update request with status=cancelled, cancelled_at=now</subtask>
+          <subtask>Handle race condition: return 409 if status changed</subtask>
+          <subtask>Return { data: { id, status, cancelledAt }, error: null }</subtask>
+        </subtasks>
+        <acceptanceCriteria>AC4-5-4, AC4-5-5, AC4-5-8</acceptanceCriteria>
+      </task>
+      <task id="2" title="Create Cancel Confirmation Dialog">
+        <subtasks>
+          <subtask>Create src/components/consumer/cancel-dialog.tsx</subtask>
+          <subtask>Use shadcn AlertDialog component</subtask>
+          <subtask>Props: requestId, onCancel, isOpen, onOpenChange</subtask>
+          <subtask>Title: "Cancelar Solicitud", Description with confirmation text</subtask>
+          <subtask>Actions: "Volver" (cancel), "Cancelar Solicitud" (destructive confirm)</subtask>
+          <subtask>Loading state during API call</subtask>
+        </subtasks>
+        <acceptanceCriteria>AC4-5-2, AC4-5-3</acceptanceCriteria>
+      </task>
+      <task id="3" title="Update Consumer Request Status Page">
+        <subtasks>
+          <subtask>Convert to client component for interactivity (or add client island)</subtask>
+          <subtask>Import and use CancelDialog component</subtask>
+          <subtask>Replace Link button with functional cancel button opening dialog</subtask>
+          <subtask>Handle cancel API call and response</subtask>
+          <subtask>Show toast on success</subtask>
+          <subtask>Refresh page data (use router.refresh() or revalidate)</subtask>
+          <subtask>Handle error states with toast</subtask>
+        </subtasks>
+        <acceptanceCriteria>AC4-5-1, AC4-5-4, AC4-5-6, AC4-5-7</acceptanceCriteria>
+      </task>
+      <task id="4" title="Update Guest Tracking Page">
+        <subtasks>
+          <subtask>Add same cancel button and dialog to /track/[token]/page.tsx</subtask>
+          <subtask>Pass tracking token instead of consumer_id for authorization</subtask>
+          <subtask>Modify API to accept trackingToken for guest cancellation</subtask>
+          <subtask>Verify guest cancel flow works end-to-end</subtask>
+        </subtasks>
+        <acceptanceCriteria>AC4-5-9</acceptanceCriteria>
+      </task>
+      <task id="5" title="Add RLS Policy for Consumer Cancel">
+        <subtasks>
+          <subtask>Verify existing RLS policy supports cancel</subtask>
+          <subtask>If needed, add policy for guest cancellation via tracking_token</subtask>
+          <subtask>Test both authenticated and guest cancellation paths</subtask>
+        </subtasks>
+        <acceptanceCriteria>AC4-5-5</acceptanceCriteria>
+      </task>
+      <task id="6" title="E2E Tests">
+        <subtasks>
+          <subtask>Create tests/e2e/cancel-request.spec.ts</subtask>
+          <subtask>Test: Cancel button visible only for pending requests</subtask>
+          <subtask>Test: Cancel dialog appears on button click</subtask>
+          <subtask>Test: "Volver" closes dialog without action</subtask>
+          <subtask>Test: "Cancelar Solicitud" triggers API call</subtask>
+          <subtask>Test: Success shows toast and updates UI</subtask>
+          <subtask>Test: Attempting cancel on accepted request shows error</subtask>
+          <subtask>Test: Guest cancel via tracking page</subtask>
+        </subtasks>
+        <acceptanceCriteria>AC4-5-1 through AC4-5-9</acceptanceCriteria>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC4-5-1">Cancel button visible only when request status = "pending"</criterion>
+    <criterion id="AC4-5-2">Clicking cancel button opens confirmation dialog: "¿Estás seguro de que quieres cancelar esta solicitud?"</criterion>
+    <criterion id="AC4-5-3">Confirmation dialog has "Cancelar Solicitud" and "Volver" buttons</criterion>
+    <criterion id="AC4-5-4">Confirming cancellation calls PATCH /api/requests/[id] with { action: "cancel" }</criterion>
+    <criterion id="AC4-5-5">Successful cancellation updates request status to "cancelled" with cancelled_at timestamp</criterion>
+    <criterion id="AC4-5-6">Page refreshes to show cancelled status with appropriate UI (gray styling, "Solicitud cancelada" message)</criterion>
+    <criterion id="AC4-5-7">Toast notification: "Solicitud cancelada exitosamente"</criterion>
+    <criterion id="AC4-5-8">If request already accepted (race condition), show error: "Esta solicitud ya fue aceptada y no puede ser cancelada"</criterion>
+    <criterion id="AC4-5-9">Cancel works for guest users on tracking page (/track/[token]) with same UX</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Functional Requirements FR14-FR16</section>
+        <snippet>FR15: Consumers can cancel a pending request (status = Pending only). FR16: Consumers cannot cancel a request once it has been accepted by a supplier.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>API Contracts - PATCH /api/requests/[id]</section>
+        <snippet>Cancel request (consumer only, if pending): { action: "cancel" }. Returns { data: { id, status, cancelledAt }, error: null }.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Schema - RLS Policies</section>
+        <snippet>Consumers can cancel own pending requests policy: USING ((consumer_id = auth.uid() OR tracking_token IS NOT NULL) AND status = 'pending').</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Confirmation Patterns</section>
+        <snippet>Cancel request requires Dialog: "Seguro que quieres cancelar?" StatusBadge for Cancelled shows Gray (#6B7280) with label "Cancelada".</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic4/tech-spec-epic-4.md</path>
+        <title>Epic 4 Technical Specification</title>
+        <section>Request Cancellation</section>
+        <snippet>Cancel API contract: PATCH /api/requests/[id] with { action: 'cancel' }. Validation: status must be 'pending', user must be consumer_id or guest with tracking_token.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/app/api/requests/[id]/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>PATCH handler</symbol>
+        <lines>138-386</lines>
+        <reason>Existing PATCH handler supports "accept" and "deliver" actions. Must extend RequestBody union type to include "cancel" action and add handleCancelAction function.</reason>
+      </file>
+      <file>
+        <path>src/app/(consumer)/request/[id]/page.tsx</path>
+        <kind>page-component</kind>
+        <symbol>RequestStatusPage, RequestStatusContent</symbol>
+        <lines>1-443</lines>
+        <reason>Consumer request status page with existing cancel button placeholder (lines 227-238) that currently navigates to home. Must add CancelDialog and make cancel button functional.</reason>
+      </file>
+      <file>
+        <path>src/app/track/[token]/page.tsx</path>
+        <kind>page-component</kind>
+        <symbol>TrackingPage, TrackingContent</symbol>
+        <lines>1-256</lines>
+        <reason>Guest tracking page. Must add cancel functionality for pending requests with trackingToken authorization.</reason>
+      </file>
+      <file>
+        <path>src/components/ui/alert-dialog.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>AlertDialog, AlertDialogAction, AlertDialogCancel</symbol>
+        <lines>1-158</lines>
+        <reason>Existing shadcn AlertDialog component to use for cancel confirmation dialog. Import and use these exports.</reason>
+      </file>
+      <file>
+        <path>src/components/shared/status-badge.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>StatusBadge, RequestStatus</symbol>
+        <reason>Status badge already supports "cancelled" status with gray styling. No changes needed.</reason>
+      </file>
+      <file>
+        <path>src/components/consumer/status-tracker.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>StatusTracker</symbol>
+        <reason>Timeline visualization that handles cancelled status. No changes needed.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <npm>
+        <package name="sonner" version="^2.0.7">Toast notifications - use toast.success() and toast.error()</package>
+        <package name="@radix-ui/react-alert-dialog" version="^1.1.15">Base primitives for AlertDialog component</package>
+        <package name="lucide-react" version="^0.555.0">Icons - XCircle for cancel button</package>
+        <package name="next" version="16.0.6">App Router with server/client components</package>
+        <package name="@supabase/supabase-js" version="^2.86.0">Database client for water_requests updates</package>
+      </npm>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="authorization">Consumer can only cancel own requests (consumer_id = auth.uid() OR valid tracking_token)</constraint>
+    <constraint type="status">Can only cancel requests where status = "pending" - not accepted, delivered, or already cancelled</constraint>
+    <constraint type="rls">RLS policy exists for consumer cancel but may need verification for guest (tracking_token) path</constraint>
+    <constraint type="race-condition">API must handle race condition where request was accepted between page load and cancel attempt - return 409 Conflict</constraint>
+    <constraint type="ui-pattern">Use AlertDialog with explicit confirmation as per UX spec - no accidental cancellations</constraint>
+    <constraint type="language">All UI text in Spanish (Chilean) as per PRD FR40</constraint>
+    <constraint type="api-response">Return { data: { id, status, cancelledAt }, error: null } on success per architecture contract</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>PATCH /api/requests/[id]</name>
+      <kind>REST endpoint</kind>
+      <signature>PATCH { action: "cancel", trackingToken?: string } → { data: { id, status, cancelledAt }, error: null }</signature>
+      <path>src/app/api/requests/[id]/route.ts</path>
+    </interface>
+    <interface>
+      <name>CancelRequestBody</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface CancelRequestBody { action: "cancel"; trackingToken?: string; }</signature>
+      <path>src/app/api/requests/[id]/route.ts</path>
+    </interface>
+    <interface>
+      <name>handleCancelAction</name>
+      <kind>function signature</kind>
+      <signature>async function handleCancelAction(supabase: SupabaseClient, requestId: string, existingRequest: { id, status, consumer_id, tracking_token }, userId: string | null, trackingToken?: string): Promise&lt;NextResponse&gt;</signature>
+      <path>src/app/api/requests/[id]/route.ts</path>
+    </interface>
+    <interface>
+      <name>CancelDialog</name>
+      <kind>React component</kind>
+      <signature>CancelDialog({ isOpen, onOpenChange, onConfirm, isLoading }: CancelDialogProps)</signature>
+      <path>src/components/consumer/cancel-dialog.tsx</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>E2E tests using Playwright. Tests should follow existing patterns in tests/e2e/*.spec.ts. Use test.describe() for grouping by acceptance criteria. Tests run against local dev server (npm run dev on port 3005). For authenticated tests, use test login helper or seed test users. Toast assertions use page.getByText(). Dialog assertions use AlertDialog data attributes.</standards>
+    <locations>
+      <location>tests/e2e/cancel-request.spec.ts (NEW - main test file)</location>
+      <location>tests/e2e/consumer-request-status.spec.ts (existing - may need updates)</location>
+      <location>tests/e2e/consumer-tracking.spec.ts (existing - may need updates for guest cancel)</location>
+    </locations>
+    <ideas>
+      <idea acRef="AC4-5-1">Test cancel button visibility: assert visible for pending status, assert NOT visible for accepted/delivered/cancelled status</idea>
+      <idea acRef="AC4-5-2">Test dialog opens: click cancel button, assert AlertDialog content appears with Spanish confirmation text</idea>
+      <idea acRef="AC4-5-3">Test dialog buttons: assert "Volver" and "Cancelar Solicitud" buttons present with correct text</idea>
+      <idea acRef="AC4-5-3">Test "Volver" closes dialog: click Volver, assert dialog closes, assert no API call made</idea>
+      <idea acRef="AC4-5-4">Test API call on confirm: intercept network, click "Cancelar Solicitud", assert PATCH /api/requests/[id] with action:cancel</idea>
+      <idea acRef="AC4-5-5">Test database update: create pending request, cancel it, query database to verify status=cancelled and cancelled_at set</idea>
+      <idea acRef="AC4-5-6">Test UI update after cancel: assert StatusBadge shows "Cancelada" with gray styling, assert "Solicitud cancelada" message visible</idea>
+      <idea acRef="AC4-5-7">Test toast notification: after successful cancel, assert toast with "Solicitud cancelada exitosamente" appears</idea>
+      <idea acRef="AC4-5-8">Test race condition error: mock API to return 409, assert error toast with "ya fue aceptada" message</idea>
+      <idea acRef="AC4-5-9">Test guest cancel flow: navigate to /track/[token] with pending request, verify same cancel UX works with trackingToken auth</idea>
+      <idea acRef="AC4-5-9">Test guest cancel API: assert PATCH includes trackingToken for guest cancellation</idea>
+      <idea acRef="all">Test loading state: during API call, assert "Cancelando..." text on button, assert button disabled</idea>
+    </ideas>
+  </tests>
+</story-context>

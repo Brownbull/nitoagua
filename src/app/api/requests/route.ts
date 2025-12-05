@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { requestSchema } from "@/lib/validations/request";
 
 /**
  * POST /api/requests
- * Creates a new water request for guest consumers
+ * Creates a new water request for both guest and registered consumers
  *
  * Request Body: RequestInput from validation schema
  * Response: { data: { id, trackingToken, status, createdAt }, error: null } on success
@@ -35,28 +36,40 @@ export async function POST(request: NextRequest) {
 
     const data = validationResult.data;
 
-    // Generate tracking token for guest requests
+    // Check if user is authenticated
+    const supabaseAuth = await createClient();
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+
+    // Generate tracking token for guest requests (still useful for sharing)
     const trackingToken = crypto.randomUUID();
 
     // Create Supabase admin client (bypasses RLS for server-side operations)
     const supabase = createAdminClient();
 
+    // Build insert data - set consumer_id if logged in, otherwise use guest fields
+    const baseInsertData = {
+      address: data.address,
+      special_instructions: data.specialInstructions,
+      amount: parseInt(data.amount, 10),
+      is_urgent: data.isUrgent,
+      latitude: data.latitude ?? null,
+      longitude: data.longitude ?? null,
+      tracking_token: trackingToken,
+      status: "pending" as const,
+      guest_name: data.name,
+      guest_phone: data.phone,
+      guest_email: data.email,
+    };
+
+    // Add consumer_id if logged in
+    const insertData = user
+      ? { ...baseInsertData, consumer_id: user.id }
+      : baseInsertData;
+
     // Insert water request into database
     const { data: insertedRequest, error: dbError } = await supabase
       .from("water_requests")
-      .insert({
-        guest_name: data.name,
-        guest_phone: data.phone,
-        guest_email: data.email,
-        address: data.address,
-        special_instructions: data.specialInstructions,
-        amount: parseInt(data.amount, 10),
-        is_urgent: data.isUrgent,
-        latitude: data.latitude ?? null,
-        longitude: data.longitude ?? null,
-        tracking_token: trackingToken,
-        status: "pending",
-      })
+      .insert(insertData)
       .select("id, tracking_token, status, created_at")
       .single();
 

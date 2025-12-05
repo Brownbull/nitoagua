@@ -1,28 +1,28 @@
 # NitoAgua Supabase Local Development Configuration
-# Ports offset by +5 to avoid conflicts with other local services
+# Ports in 55xxx range to avoid Windows reserved port conflicts
 
 [api]
 enabled = true
-port = 54326  # Default: 54321, offset +5
+port = 55326  # API gateway (was 54326)
 schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-port = 54327  # Default: 54322, offset +5
-shadow_port = 54328  # Default: 54323, offset +5
+port = 55327  # Postgres (was 54327)
+shadow_port = 55328  # Shadow DB (was 54328)
 major_version = 15
 
 [studio]
 enabled = true
-port = 54330  # Studio UI
+port = 55330  # Studio UI (was 54330)
 api_url = "http://127.0.0.1"
 
 [inbucket]
 enabled = true
-port = 54331  # Email testing inbox
-smtp_port = 54332
-pop3_port = 54333
+port = 55331  # Email testing inbox (was 54331)
+smtp_port = 55332
+pop3_port = 55333
 
 [storage]
 enabled = true

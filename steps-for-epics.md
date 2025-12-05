@@ -76,12 +76,21 @@ Before starting a new epic:
 
 ### Phase 3: Epic Completion
 
-8. **Run Retrospective**
+8. **Final Deployment Story**
+   - Each epic ends with a deployment & verification story (e.g., 3-8, 4-6)
+   - Pre-deployment checks: `npm run lint`, `npm run build`, `npm run test:e2e`
+   - Git workflow: develop → staging → main
+   - Verify Vercel production deployment
+   - Production smoke testing
+   - E2E suite verification against production
+
+9. **Run Retrospective**
    ```
    /bmad:bmm:workflows:retrospective
    ```
    - Reviews what went well
    - Identifies improvements
+   - Documents lessons learned and patterns
    - Prepares for next epic
 
 ---
@@ -123,6 +132,21 @@ Before starting a new epic:
 - Always verify Playwright setup before UI-heavy epics
 - Check backlog.md for technical debt items
 
+## Notes from Epic 3
+
+- **Browserless MCP server** integration enabled streamlined deployment and testing
+- **Google OAuth only** for all registered users (consumers and suppliers)
+- **Test login mechanism** for local E2E testing (env-gated, dev only)
+- **Patterns established**: Admin Client, Server Actions, Optimistic UI, AlertDialog confirmations
+- **Each epic MUST end with a deployment story** following git branching workflow
+
+## Epic 4 Preparation Notes
+
+- **Authentication changed**: Google OAuth only (not Email/Password as originally spec'd)
+- **Guest flow unchanged**: Consumers can still request water without registering
+- **Test login**: `ENABLE_TEST_LOGIN=true` in local .env for E2E tests
+- **Stories**: 4-1 through 4-5 (features) + 4-6 (deployment)
+
 ---
 
-*Last Updated: 2025-12-02 (Epic 1 Retrospective)*
+*Last Updated: 2025-12-04 (Epic 3 Retrospective / Epic 4 Preparation)*

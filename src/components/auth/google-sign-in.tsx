@@ -7,9 +7,10 @@ import { Loader2 } from "lucide-react";
 
 interface GoogleSignInProps {
   redirectTo?: string;
+  role?: "consumer" | "supplier";
 }
 
-export function GoogleSignIn({ redirectTo = "/auth/callback" }: GoogleSignInProps) {
+export function GoogleSignIn({ redirectTo = "/auth/callback", role = "consumer" }: GoogleSignInProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,10 +20,14 @@ export function GoogleSignIn({ redirectTo = "/auth/callback" }: GoogleSignInProp
 
     try {
       const supabase = createClient();
+      // Pass role to callback URL so auth callback can route to correct onboarding
+      const callbackUrl = new URL(`${window.location.origin}${redirectTo}`);
+      callbackUrl.searchParams.set("role", role);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}${redirectTo}`,
+          redirectTo: callbackUrl.toString(),
           queryParams: {
             access_type: "offline",
             prompt: "consent",

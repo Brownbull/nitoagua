@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/history", label: "Historial", icon: Clock },
-  { href: "/profile", label: "Perfil", icon: User },
+  { href: "/consumer-profile", label: "Perfil", icon: User },
 ];
 
 export function ConsumerNav() {

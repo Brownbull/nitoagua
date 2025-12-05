@@ -1,0 +1,279 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>6</storyId>
+    <title>Epic Deployment & Verification</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-04</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic4/4-6-epic-deployment-and-verification.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to deploy all Epic 4 changes through the git branching workflow and verify production</iWant>
+    <soThat>consumer accounts, profiles, request history, and pre-filled forms are live and working for real users</soThat>
+    <tasks>
+      <task id="1" title="Pre-deployment Checks">
+        <subtask>Run `npm run lint` - ensure no errors</subtask>
+        <subtask>Run `npm run build` - ensure build succeeds</subtask>
+        <subtask>Run `npm run test:e2e` - ensure all tests pass</subtask>
+        <subtask>Verify local development works with all Epic 4 features</subtask>
+        <subtask>Verify consumer registration flow works locally</subtask>
+        <subtask>Verify consumer profile editing works locally</subtask>
+        <subtask>Verify consumer history page works locally</subtask>
+      </task>
+      <task id="2" title="Git Commit & Push to Develop">
+        <subtask>Review all changes with `git status` and `git diff`</subtask>
+        <subtask>Stage all Epic 4 changes</subtask>
+        <subtask>Create commit with descriptive message</subtask>
+        <subtask>Push to develop branch</subtask>
+        <subtask>Verify Vercel preview deployment for develop branch</subtask>
+      </task>
+      <task id="3" title="Merge to Staging">
+        <subtask>Checkout staging branch</subtask>
+        <subtask>Merge develop into staging</subtask>
+        <subtask>Push staging branch</subtask>
+        <subtask>Verify Vercel preview deployment for staging</subtask>
+        <subtask>Test staging deployment manually (OAuth, onboarding, profile, history, pre-fill)</subtask>
+      </task>
+      <task id="4" title="Merge to Main (Production)">
+        <subtask>Checkout main branch</subtask>
+        <subtask>Merge staging into main</subtask>
+        <subtask>Push main branch</subtask>
+        <subtask>Monitor Vercel production deployment</subtask>
+      </task>
+      <task id="5" title="Production Verification">
+        <subtask>Navigate to https://nitoagua.vercel.app</subtask>
+        <subtask>Test consumer Google OAuth login flow</subtask>
+        <subtask>Test consumer registration (new user)</subtask>
+        <subtask>Test consumer profile editing</subtask>
+        <subtask>Test consumer history page</subtask>
+        <subtask>Test pre-filled request form</subtask>
+        <subtask>Verify supplier dashboard still works (no regression)</subtask>
+        <subtask>Verify guest consumer flow still works (no regression)</subtask>
+        <subtask>Test cancel request if Story 4-5 was included</subtask>
+      </task>
+      <task id="6" title="E2E Test Suite Verification">
+        <subtask>Run full E2E test suite against local</subtask>
+        <subtask>Verify existing tests still pass</subtask>
+        <subtask>Verify new consumer registration tests pass</subtask>
+        <subtask>Document any test adjustments needed</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC4-6-1">All Epic 4 changes committed to develop branch</criterion>
+    <criterion id="AC4-6-2">Develop merged to staging, preview deployment verified</criterion>
+    <criterion id="AC4-6-3">Staging merged to main, production deployment triggered</criterion>
+    <criterion id="AC4-6-4">Production deployment successful (Vercel build passes)</criterion>
+    <criterion id="AC4-6-5">Google OAuth login works for consumers in production</criterion>
+    <criterion id="AC4-6-6">Consumer can register and complete onboarding in production</criterion>
+    <criterion id="AC4-6-7">Consumer profile page loads and allows editing in production</criterion>
+    <criterion id="AC4-6-8">Consumer request history page shows past requests with statistics</criterion>
+    <criterion id="AC4-6-9">Pre-filled request form works for logged-in consumers</criterion>
+    <criterion id="AC4-6-10">All E2E tests pass (existing + new consumer tests)</criterion>
+    <criterion id="AC4-6-11">No regression in supplier flows (dashboard, accept, deliver still works)</criterion>
+    <criterion id="AC4-6-12">No regression in guest consumer flow (request without account)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic4/tech-spec-epic-4.md</path>
+        <title>Epic 4 Technical Specification</title>
+        <section>Full document</section>
+        <snippet>Epic 4 delivers consumer account functionality - registration via Google OAuth, profile management, pre-filled forms, request history, and request cancellation. Uses same auth flow as suppliers.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Deployment Architecture, Environment Setup</section>
+        <snippet>Next.js 15 on Vercel with Supabase backend. Vercel handles CDN, SSL, serverless functions. Environment variables configured in Vercel dashboard. Preview deployments for PRs.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Epic 4: User Accounts & Profiles</section>
+        <snippet>Epic 4 covers Stories 4-1 through 4-5: consumer registration, login, pre-filled forms, request history, and cancel pending requests. FRs: FR2-FR5, FR12, FR15-FR16, FR35, FR43-FR45.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic4/4-1-consumer-registration.md</path>
+        <title>Story 4-1: Consumer Registration</title>
+        <section>Dev Agent Record</section>
+        <snippet>Extended implementation covering Stories 4-1 through 4-4. New files: consumer/onboarding, profile-form, history page, test-login API. 20 new E2E tests added.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/3-8-epic-deployment-and-verification.md</path>
+        <title>Epic 3 Deployment Story</title>
+        <section>Full document</section>
+        <snippet>Reference deployment pattern from Epic 3. Same git branching workflow: develop → staging → main. Same Vercel deployment URLs and verification process.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <!-- Epic 4 New Consumer Files -->
+      <artifact>
+        <path>src/app/consumer/onboarding/page.tsx</path>
+        <kind>page</kind>
+        <symbol>ConsumerOnboardingPage</symbol>
+        <reason>Consumer onboarding page after Google OAuth - new in Epic 4</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/consumer/onboarding-form.tsx</path>
+        <kind>component</kind>
+        <symbol>OnboardingForm</symbol>
+        <reason>Consumer onboarding form collecting name, phone - new in Epic 4</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/consumer-profile/page.tsx</path>
+        <kind>page</kind>
+        <symbol>ConsumerProfilePage</symbol>
+        <reason>Consumer profile management page - new in Epic 4</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/consumer/profile-form.tsx</path>
+        <kind>component</kind>
+        <symbol>ProfileForm</symbol>
+        <reason>Consumer profile editing form - new in Epic 4</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/history/page.tsx</path>
+        <kind>page</kind>
+        <symbol>HistoryPage</symbol>
+        <reason>Consumer request history page with statistics - new in Epic 4</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/actions/consumer-profile.ts</path>
+        <kind>server-action</kind>
+        <symbol>updateConsumerProfile, completeOnboarding</symbol>
+        <reason>Server actions for consumer profile operations - new in Epic 4</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/validations/consumer-profile.ts</path>
+        <kind>validation</kind>
+        <symbol>consumerProfileSchema, onboardingSchema</symbol>
+        <reason>Zod validation schemas for consumer profile - new in Epic 4</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/api/auth/test-login/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>POST</symbol>
+        <reason>Test login API for E2E tests (dev only) - new in Epic 4</reason>
+      </artifact>
+      <!-- Modified Files -->
+      <artifact>
+        <path>src/app/auth/callback/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>GET</symbol>
+        <reason>OAuth callback - modified for role-based consumer routing</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(auth)/login/page.tsx</path>
+        <kind>page</kind>
+        <symbol>LoginPage</symbol>
+        <reason>Login page - modified to support role query param</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/google-sign-in.tsx</path>
+        <kind>component</kind>
+        <symbol>GoogleSignIn</symbol>
+        <reason>Google OAuth button - modified to accept role prop</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/page.tsx</path>
+        <kind>page</kind>
+        <symbol>HomePage</symbol>
+        <reason>Consumer home - modified to add "Crear Cuenta" link</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/dev-login.tsx</path>
+        <kind>component</kind>
+        <symbol>DevLogin</symbol>
+        <reason>Dev login component - modified to support two test accounts</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/layout/consumer-nav.tsx</path>
+        <kind>component</kind>
+        <symbol>ConsumerNav</symbol>
+        <reason>Consumer navigation - modified to add profile link</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(consumer)/request/page.tsx</path>
+        <kind>page</kind>
+        <symbol>RequestPage</symbol>
+        <reason>Request form page - modified for pre-fill from profile</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/api/requests/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>POST</symbol>
+        <reason>Requests API - modified to set consumer_id on submission</reason>
+      </artifact>
+      <!-- E2E Tests -->
+      <artifact>
+        <path>tests/e2e/consumer-registration.spec.ts</path>
+        <kind>test</kind>
+        <symbol>consumer-registration tests</symbol>
+        <reason>20 new E2E tests for consumer registration flow - new in Epic 4</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <ecosystem name="node">
+        <package name="next" version="16.0.6" />
+        <package name="react" version="19.2.0" />
+        <package name="@supabase/supabase-js" version="^2.86.0" />
+        <package name="@supabase/ssr" version="^0.8.0" />
+        <package name="react-hook-form" version="^7.67.0" />
+        <package name="zod" version="^4.1.13" />
+        <package name="@playwright/test" version="^1.57.0" />
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="git-workflow">Follow branching strategy: develop → staging → main. Never push directly to main.</constraint>
+    <constraint type="deployment">Vercel auto-deploys on push. Wait for build to complete before verification.</constraint>
+    <constraint type="environment">SUPABASE_SERVICE_ROLE_KEY must only be in production environment variables, not in preview.</constraint>
+    <constraint type="testing">All E2E tests must pass before merging to main. Run locally first.</constraint>
+    <constraint type="rollback">If issues found in production, revert HEAD on main and push to trigger redeploy.</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Git Branching</name>
+      <kind>workflow</kind>
+      <signature>develop (feature work) → staging (pre-prod testing) → main (production)</signature>
+      <path>docs/sprint-artifacts/epic4/4-6-epic-deployment-and-verification.md</path>
+    </interface>
+    <interface>
+      <name>Vercel Deployments</name>
+      <kind>deployment</kind>
+      <signature>main: nitoagua.vercel.app | staging: nitoagua-staging.vercel.app | develop: nitoagua-develop.vercel.app</signature>
+      <path>docs/architecture.md</path>
+    </interface>
+    <interface>
+      <name>npm scripts</name>
+      <kind>commands</kind>
+      <signature>npm run lint | npm run build | npm run test:e2e | npm run dev</signature>
+      <path>package.json</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>E2E tests use Playwright. Tests run against local dev server (port 3005). Test login API available in dev mode (ENABLE_TEST_LOGIN=true). Tests cover consumer registration, supplier flows, guest tracking, PWA functionality.</standards>
+    <locations>
+      <location>tests/e2e/*.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea acId="AC4-6-10">Run full E2E suite: npm run test:e2e - should show 283+ tests passing</idea>
+      <idea acId="AC4-6-11">Verify supplier-*.spec.ts tests still pass after Epic 4 changes</idea>
+      <idea acId="AC4-6-12">Verify consumer-request-*.spec.ts tests still pass for guest flow</idea>
+      <idea acId="AC4-6-5">Manual test: Google OAuth flow in production with real Google account</idea>
+      <idea acId="AC4-6-6">Manual test: New consumer registration completing onboarding</idea>
+      <idea acId="AC4-6-7">Manual test: Edit consumer profile and verify changes persist</idea>
+      <idea acId="AC4-6-8">Manual test: View request history with existing requests</idea>
+      <idea acId="AC4-6-9">Manual test: Submit request as logged-in consumer, verify pre-fill</idea>
+    </ideas>
+  </tests>
+</story-context>

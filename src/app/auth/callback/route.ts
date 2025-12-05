@@ -6,6 +6,8 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   const error = requestUrl.searchParams.get("error");
   const errorDescription = requestUrl.searchParams.get("error_description");
+  // Get role from query param - defaults to consumer if not specified
+  const intendedRole = requestUrl.searchParams.get("role") || "consumer";
   const origin = requestUrl.origin;
 
   // Handle OAuth errors from Google (user cancels, Google error, etc.)
@@ -46,9 +48,17 @@ export async function GET(request: Request) {
     }
 
     if (!profile) {
-      // New user - redirect to onboarding
-      console.log("[AUTH] New user, redirecting to onboarding:", user.id);
-      return NextResponse.redirect(`${origin}/onboarding`);
+      // New user - route to appropriate onboarding based on intended role
+      console.log("[AUTH] New user, intended role:", intendedRole, "user:", user.id);
+
+      if (intendedRole === "supplier") {
+        console.log("[AUTH] Redirecting new supplier to /onboarding");
+        return NextResponse.redirect(`${origin}/onboarding`);
+      } else {
+        // Default to consumer onboarding
+        console.log("[AUTH] Redirecting new consumer to /consumer/onboarding");
+        return NextResponse.redirect(`${origin}/consumer/onboarding`);
+      }
     }
 
     // Existing user - redirect based on role

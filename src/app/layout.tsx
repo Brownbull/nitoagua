@@ -33,7 +33,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ServiceWorkerRegistration />
         {children}
-        <Toaster />
+        <Toaster position="top-right" />
       </body>
     </html>
   );

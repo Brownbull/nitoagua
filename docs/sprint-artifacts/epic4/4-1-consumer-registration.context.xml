@@ -1,0 +1,209 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>4</epicId>
+    <storyId>1</storyId>
+    <title>Consumer Registration</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-04</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic4/4-1-consumer-registration.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>consumer (Dona Maria)</asA>
+    <iWant>to create an account using my Google account</iWant>
+    <soThat>my information is saved for faster future requests without managing another password</soThat>
+    <tasks>
+      <task id="1" title="Update Auth Callback for Consumer Role" acs="4">
+        <subtask>Modify src/app/auth/callback/route.ts to check role query param</subtask>
+        <subtask>If no profile and role=consumer -> redirect to /consumer/onboarding</subtask>
+        <subtask>If no profile and role=supplier -> redirect to /onboarding (existing)</subtask>
+        <subtask>Default to consumer if no role param specified</subtask>
+        <subtask>Add logging for auth routing decisions</subtask>
+      </task>
+      <task id="2" title="Consumer Onboarding Page" acs="4,5,9">
+        <subtask>Create src/app/(consumer)/onboarding/page.tsx - Onboarding page</subtask>
+        <subtask>Redirect authenticated users who already have profiles to home</subtask>
+        <subtask>Add page metadata (title: "Crear Cuenta - nitoagua")</subtask>
+        <subtask>Style consistent with consumer layout</subtask>
+      </task>
+      <task id="3" title="Consumer Onboarding Form" acs="5,6,9">
+        <subtask>Create src/components/consumer/onboarding-form.tsx</subtask>
+        <subtask>Form fields: name (text, required), phone (text, required)</subtask>
+        <subtask>Chilean phone format validation: /^\+56[0-9]{9}$/</subtask>
+        <subtask>Placeholder hints: "Tu nombre", "+56912345678"</subtask>
+        <subtask>Use React Hook Form + Zod for validation</subtask>
+        <subtask>Inline error display below each field</subtask>
+      </task>
+      <task id="4" title="Consumer Profile Creation" acs="6,7,8">
+        <subtask>Create src/lib/actions/consumer-profile.ts - Server action</subtask>
+        <subtask>Create Zod schema src/lib/validations/consumer-profile.ts</subtask>
+        <subtask>Insert profile with role='consumer' and consumer fields</subtask>
+        <subtask>Use createAdminClient() to bypass RLS (pattern from Epic 3)</subtask>
+        <subtask>On success: redirect to /</subtask>
+        <subtask>Show toast: "Cuenta creada! Ya puedes solicitar agua mas rapido"</subtask>
+      </task>
+      <task id="5" title="Crear Cuenta CTA on Consumer Home" acs="1,2">
+        <subtask>Add "Crear Cuenta" link below big action button (for non-logged-in users only)</subtask>
+        <subtask>Link navigates to /login?role=consumer</subtask>
+        <subtask>Check auth state to conditionally render (hide for logged-in users)</subtask>
+        <subtask>Style as secondary link text</subtask>
+      </task>
+      <task id="6" title="Update Login Page for Consumer Context" acs="2,3">
+        <subtask>Login page reads role query param</subtask>
+        <subtask>Pass role through OAuth state to callback</subtask>
+        <subtask>Show "Eres proveedor?" link -> /login?role=supplier</subtask>
+        <subtask>Default experience optimized for consumers</subtask>
+      </task>
+      <task id="7" title="Test Login for E2E (Local Only)" acs="testing">
+        <subtask>Create src/app/api/auth/test-login/route.ts</subtask>
+        <subtask>Only enable when ENABLE_TEST_LOGIN=true AND NODE_ENV=development</subtask>
+        <subtask>Accept { email, role } and create/return test session</subtask>
+        <subtask>Test emails: test-consumer@test.local, test-supplier@test.local</subtask>
+        <subtask>Return 404 in production (feature disabled)</subtask>
+      </task>
+      <task id="8" title="E2E Tests" acs="all">
+        <subtask>Create tests/e2e/consumer-registration.spec.ts</subtask>
+        <subtask>Test: "Crear Cuenta" link visible on consumer home (not logged in)</subtask>
+        <subtask>Test: Link navigates to login with role=consumer param</subtask>
+        <subtask>Test: Login page shows Google button</subtask>
+        <subtask>Test: Onboarding page requires authentication</subtask>
+        <subtask>Test: Onboarding form validates phone format</subtask>
+        <subtask>Test: Profile creation works (via test login)</subtask>
+        <subtask>Test: Redirect to home after profile creation</subtask>
+        <subtask>Test: Toast message displayed</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC4-1-1">"Crear Cuenta" link/button visible on consumer home for non-logged-in users</criterion>
+    <criterion id="AC4-1-2">Clicking "Crear Cuenta" navigates to login page with ?role=consumer param</criterion>
+    <criterion id="AC4-1-3">Login page shows "Continuar con Google" button (reuse from Epic 3)</criterion>
+    <criterion id="AC4-1-4">After Google auth, new consumers redirect to /consumer/onboarding</criterion>
+    <criterion id="AC4-1-5">Onboarding form collects: name (required), phone (required, Chilean format)</criterion>
+    <criterion id="AC4-1-6">Profile created with role='consumer' in profiles table</criterion>
+    <criterion id="AC4-1-7">After profile creation, redirect to consumer home (/)</criterion>
+    <criterion id="AC4-1-8">Toast notification: "Cuenta creada! Ya puedes solicitar agua mas rapido"</criterion>
+    <criterion id="AC4-1-9">Validation errors show inline below fields (Chilean phone format)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/prd.md" title="Product Requirements Document" section="FR2 - Consumer Registration" snippet="Consumers can optionally create an account with email and password (revised to Google OAuth). FR3: Registered consumers can log in and access their saved profile."/>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Authentication" snippet="Supabase Auth for email/password, magic links, session management. Google OAuth integration established in Epic 3."/>
+      <doc path="docs/ux-design-specification.md" title="UX Design Specification" section="Core User Experience" snippet="Consumer: 'Press the button, get called back with a delivery time.' Asymmetric Simplicity principle - consumers need ultra-simple, zero-friction experience."/>
+      <doc path="docs/sprint-artifacts/epic4/tech-spec-epic-4.md" title="Epic 4 Tech Spec" section="Authentication Flow (Revised)" snippet="Unified Google OAuth flow for both consumers and suppliers. Consumer onboarding is minimal (just name + phone). Guest flow unchanged."/>
+      <doc path="docs/sprint-artifacts/epic3/3-1-supplier-registration.md" title="Story 3-1 Reference" section="Pattern Reference" snippet="Consumer registration is the consumer equivalent of Story 3-1. Key patterns to reuse: Google OAuth flow, auth callback routing, server action pattern, admin client."/>
+    </docs>
+    <code>
+      <file path="src/components/auth/google-sign-in.tsx" kind="component" symbol="GoogleSignIn" lines="1-91" reason="Direct reuse - Google OAuth sign-in button component with loading state and error handling"/>
+      <file path="src/app/(auth)/login/page.tsx" kind="page" symbol="LoginPage" lines="1-74" reason="Login page to extend with role query param support and consumer context"/>
+      <file path="src/app/auth/callback/route.ts" kind="api-route" symbol="GET" lines="1-66" reason="Auth callback to modify for consumer role routing - currently only routes new users to /onboarding"/>
+      <file path="src/lib/actions/supplier-profile.ts" kind="server-action" symbol="createSupplierProfile" lines="1-91" reason="Pattern reference for consumer profile creation server action"/>
+      <file path="src/lib/validations/supplier-profile.ts" kind="validation" symbol="supplierProfileSchema" lines="1-63" reason="Pattern reference for Zod validation schema with Chilean phone regex"/>
+      <file path="src/lib/supabase/admin.ts" kind="utility" symbol="createAdminClient" lines="1-32" reason="Admin client for bypassing RLS during profile creation"/>
+      <file path="src/app/page.tsx" kind="page" symbol="Home" lines="1-37" reason="Consumer home page to add 'Crear Cuenta' CTA link"/>
+      <file path="src/components/consumer/big-action-button.tsx" kind="component" symbol="BigActionButton" reason="Reference for consumer home layout"/>
+      <file path="src/components/layout/consumer-nav.tsx" kind="component" symbol="ConsumerNav" reason="Consumer navigation component"/>
+      <file path="tests/e2e/supplier-auth.spec.ts" kind="test" symbol="Supplier Authentication tests" lines="1-289" reason="Pattern reference for auth E2E tests including Google button tests, redirect guards, error handling"/>
+    </code>
+    <dependencies>
+      <node>
+        <package name="@supabase/supabase-js" version="^2.86.0" purpose="Supabase client for auth and database"/>
+        <package name="@supabase/ssr" version="^0.8.0" purpose="SSR support for Supabase"/>
+        <package name="react-hook-form" version="^7.67.0" purpose="Form state management"/>
+        <package name="@hookform/resolvers" version="^5.2.2" purpose="Zod resolver for react-hook-form"/>
+        <package name="zod" version="^4.1.13" purpose="Schema validation"/>
+        <package name="sonner" version="^2.0.7" purpose="Toast notifications"/>
+        <package name="next" version="16.0.6" purpose="Framework"/>
+      </node>
+      <devDependencies>
+        <package name="@playwright/test" version="^1.57.0" purpose="E2E testing"/>
+      </devDependencies>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="architectural">Use Google OAuth only (no email/password) - consistency with supplier auth from Epic 3</constraint>
+    <constraint type="architectural">Use createAdminClient() for profile creation to bypass RLS policies</constraint>
+    <constraint type="pattern">Follow server action pattern from supplier-profile.ts for createConsumerProfile</constraint>
+    <constraint type="pattern">Use Zod for validation with Chilean phone regex: /^\+56[0-9]{9}$/</constraint>
+    <constraint type="pattern">Toast notifications via sonner for user feedback</constraint>
+    <constraint type="ux">Consumer onboarding must be minimal - only name and phone required (address optional later)</constraint>
+    <constraint type="ux">All UI text in Spanish (Chilean)</constraint>
+    <constraint type="security">Test login endpoint ONLY enabled in development with ENABLE_TEST_LOGIN=true</constraint>
+    <constraint type="security">Never expose service role key to client</constraint>
+    <constraint type="routing">New users without profile: check role param to route to correct onboarding</constraint>
+    <constraint type="routing">Default to consumer role if no role param provided</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface name="Google OAuth Flow" kind="auth-flow" path="src/components/auth/google-sign-in.tsx">
+      signInWithOAuth({ provider: "google", options: { redirectTo: "/auth/callback" } })
+    </interface>
+    <interface name="Auth Callback Route" kind="api-route" path="src/app/auth/callback/route.ts">
+      GET /auth/callback?code=xxx&amp;role=consumer|supplier
+      Returns: Redirect to /consumer/onboarding, /onboarding, /dashboard, or /
+    </interface>
+    <interface name="Consumer Profile Server Action" kind="server-action" path="src/lib/actions/consumer-profile.ts (NEW)">
+      createConsumerProfile(input: ConsumerOnboardingInput): Promise&lt;ActionResult&gt;
+      Input: { name: string, phone: string }
+      Returns: { success: boolean, error?: string }
+    </interface>
+    <interface name="Consumer Profile Schema" kind="validation" path="src/lib/validations/consumer-profile.ts (NEW)">
+      consumerOnboardingSchema = z.object({
+        name: z.string().min(2),
+        phone: z.string().regex(/^\+56[0-9]{9}$/)
+      })
+    </interface>
+    <interface name="Test Login API" kind="api-route" path="src/app/api/auth/test-login/route.ts (NEW)">
+      POST /api/auth/test-login
+      Body: { email: string, role: "consumer" | "supplier" }
+      Returns: Session cookies (dev only)
+    </interface>
+    <interface name="Profiles Table" kind="database" path="supabase schema">
+      profiles: {
+        id: UUID (auth.users FK),
+        role: "consumer" | "supplier",
+        name: string,
+        phone: string,
+        address?: string,
+        special_instructions?: string,
+        created_at: timestamp,
+        updated_at: timestamp
+      }
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Playwright is used for E2E testing. Tests are located in tests/e2e/ directory.
+      Test files follow the pattern: feature-name.spec.ts
+      Tests use data-testid attributes for reliable element selection.
+      Auth flows are tested with mock sessions or test login endpoints (local dev only).
+      Each acceptance criterion should have at least one corresponding test.
+      Tests should verify Spanish UI text.
+    </standards>
+    <locations>
+      <pattern>tests/e2e/*.spec.ts</pattern>
+      <pattern>tests/e2e/consumer-registration.spec.ts (NEW)</pattern>
+    </locations>
+    <ideas>
+      <idea ac="AC4-1-1">Test "Crear Cuenta" link visible on consumer home when not logged in</idea>
+      <idea ac="AC4-1-1">Test "Crear Cuenta" link NOT visible when user is logged in</idea>
+      <idea ac="AC4-1-2">Test link href includes ?role=consumer parameter</idea>
+      <idea ac="AC4-1-3">Test login page shows Google button (reuse from supplier-auth.spec.ts pattern)</idea>
+      <idea ac="AC4-1-4">Test /consumer/onboarding redirects to login if not authenticated</idea>
+      <idea ac="AC4-1-4">Test authenticated new consumer redirects to /consumer/onboarding after OAuth</idea>
+      <idea ac="AC4-1-5">Test onboarding form has name and phone fields</idea>
+      <idea ac="AC4-1-5">Test phone validation accepts +56912345678 format</idea>
+      <idea ac="AC4-1-5">Test phone validation rejects invalid formats</idea>
+      <idea ac="AC4-1-6">Test profile creation with role='consumer' (via test login)</idea>
+      <idea ac="AC4-1-7">Test redirect to / after successful profile creation</idea>
+      <idea ac="AC4-1-8">Test toast notification appears after registration</idea>
+      <idea ac="AC4-1-9">Test inline error messages display below form fields</idea>
+      <idea ac="regression">Test supplier flow still works (no regression from callback changes)</idea>
+    </ideas>
+  </tests>
+</story-context>

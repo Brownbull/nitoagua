@@ -15,8 +15,8 @@ Open http://localhost:3005
 | Service | URL |
 |---------|-----|
 | **App** | http://localhost:3005 |
-| **Supabase Studio** | http://127.0.0.1:54330 |
-| **Mailpit (Email)** | http://127.0.0.1:54331 |
+| **Supabase Studio** | http://127.0.0.1:55330 |
+| **Mailpit (Email)** | http://127.0.0.1:55331 |
 
 ## Setup (First Time)
 
@@ -44,14 +44,14 @@ npx supabase db reset
 npx supabase status
 ```
 
-### Local Services (ports offset +5)
+### Local Services (ports in 55xxx range)
 
 | Service | URL |
 |---------|-----|
-| Studio | http://127.0.0.1:54330 |
-| API | http://127.0.0.1:54326 |
-| Database | postgresql://postgres:postgres@127.0.0.1:54327/postgres |
-| Mailpit | http://127.0.0.1:54331 |
+| Studio | http://127.0.0.1:55330 |
+| API | http://127.0.0.1:55326 |
+| Database | postgresql://postgres:postgres@127.0.0.1:55327/postgres |
+| Mailpit | http://127.0.0.1:55331 |
 
 ### Switch to Local Dev
 
@@ -93,7 +93,7 @@ REMOTE_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 | Setting | Value |
 |---------|-------|
 | Host | `127.0.0.1` |
-| Port | `54327` |
+| Port | `55327` |
 | Database | `postgres` |
 | Username | `postgres` |
 | Password | `postgres` |

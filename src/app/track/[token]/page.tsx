@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, type RequestStatus } from "@/components/shared/status-badge";
 import { StatusTracker } from "@/components/consumer/status-tracker";
 import { TrackingRefresh } from "@/components/consumer/tracking-refresh";
+import { CancelRequestButton } from "@/components/consumer/cancel-request-button";
 import {
   formatDateSpanish,
   formatShortDate,
   maskAddress,
   formatPhone,
 } from "@/lib/utils/format";
-import { AlertTriangle, Phone, Droplets, MapPin, Calendar, Truck } from "lucide-react";
+import { AlertTriangle, Phone, Droplets, MapPin, Calendar, Truck, XCircle, RotateCcw, Clock } from "lucide-react";
 import Link from "next/link";
 
 interface TrackingPageProps {
@@ -56,11 +57,17 @@ function TrackingErrorPage() {
   );
 }
 
-function TrackingContent({ request }: { request: RequestWithSupplier }) {
+interface TrackingContentProps {
+  request: RequestWithSupplier;
+  trackingToken: string;
+}
+
+function TrackingContent({ request, trackingToken }: TrackingContentProps) {
   const status = request.status as RequestStatus;
   const isAccepted = status === "accepted";
   const isDelivered = status === "delivered";
   const isPending = status === "pending";
+  const isCancelled = status === "cancelled";
 
   return (
     <main className="min-h-screen bg-gray-50 py-6 px-4">
@@ -138,10 +145,53 @@ function TrackingContent({ request }: { request: RequestWithSupplier }) {
         {isPending && (
           <Card className="border-amber-200 bg-amber-50">
             <CardContent className="pt-6">
-              <p className="text-center text-amber-800">
-                Esperando confirmación del aguatero
-              </p>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
+                  <Clock className="h-6 w-6 text-amber-600" aria-hidden="true" />
+                </div>
+                <p className="text-lg font-medium text-amber-800 mb-1">
+                  Esperando confirmación del aguatero
+                </p>
+                <p className="text-sm text-amber-700">
+                  Te notificaremos cuando sea aceptada
+                </p>
+              </div>
             </CardContent>
+            {/* Cancel button for pending requests */}
+            <div className="px-6 pb-6">
+              <CancelRequestButton requestId={request.id} trackingToken={trackingToken} />
+            </div>
+          </Card>
+        )}
+
+        {/* Status-specific content: Cancelled */}
+        {isCancelled && (
+          <Card className="border-gray-200 bg-gray-50">
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                  <XCircle className="h-6 w-6 text-gray-500" aria-hidden="true" />
+                </div>
+                <p className="text-lg font-semibold text-gray-700 mb-1">
+                  Solicitud cancelada
+                </p>
+                <p className="text-sm text-gray-500">
+                  Esta solicitud fue cancelada y no será procesada
+                </p>
+              </div>
+            </CardContent>
+            <div className="px-6 pb-6">
+              <Button
+                variant="outline"
+                className="w-full"
+                asChild
+              >
+                <Link href="/request">
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Nueva Solicitud
+                </Link>
+              </Button>
+            </div>
           </Card>
         )}
 
@@ -252,5 +302,5 @@ export default async function TrackingPage({ params }: TrackingPageProps) {
     return <TrackingErrorPage />;
   }
 
-  return <TrackingContent request={request as RequestWithSupplier} />;
+  return <TrackingContent request={request as RequestWithSupplier} trackingToken={token} />;
 }

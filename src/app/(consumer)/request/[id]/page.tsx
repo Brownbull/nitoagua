@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, type RequestStatus } from "@/components/shared/status-badge";
 import { StatusTracker } from "@/components/consumer/status-tracker";
 import { TrackingRefresh } from "@/components/consumer/tracking-refresh";
+import { CancelRequestButton } from "@/components/consumer/cancel-request-button";
 import {
   formatDateSpanish,
   formatShortDate,
@@ -223,18 +224,9 @@ function RequestStatusContent({ request }: { request: RequestWithSupplier }) {
                 </p>
               </div>
             </CardContent>
-            {/* Cancel button for pending requests - links to cancel functionality (Epic 4) */}
+            {/* Cancel button for pending requests */}
             <div className="px-6 pb-6">
-              <Button
-                variant="outline"
-                className="w-full border-amber-300 text-amber-700 hover:bg-amber-100"
-                asChild
-              >
-                <Link href="/">
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Cancelar Solicitud
-                </Link>
-              </Button>
+              <CancelRequestButton requestId={request.id} />
             </div>
           </Card>
         )}
