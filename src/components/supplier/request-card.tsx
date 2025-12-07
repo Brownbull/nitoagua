@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -52,10 +55,18 @@ export function RequestCard({
   onDeliverRequest,
   currentTab,
 }: RequestCardProps) {
-  const timeAgo = formatDistanceToNow(new Date(request.created_at!), {
-    addSuffix: true,
-    locale: es,
-  });
+  // Use client-side only rendering for timeAgo to prevent hydration mismatch
+  // Server and client may have different timestamps causing React error #418
+  const [timeAgo, setTimeAgo] = useState<string>("");
+
+  useEffect(() => {
+    setTimeAgo(
+      formatDistanceToNow(new Date(request.created_at!), {
+        addSuffix: true,
+        locale: es,
+      })
+    );
+  }, [request.created_at]);
 
   const isUrgent = request.is_urgent === true;
   const customerName = request.guest_name || "Cliente";
