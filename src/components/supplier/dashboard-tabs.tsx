@@ -65,14 +65,13 @@ export function DashboardTabs({
     : defaultTab;
 
   const handleTabChange = (value: string) => {
-    // Update URL with new tab value
+    // Update URL with new tab value using replace to avoid history stack buildup
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", value);
-    router.push(`?${params.toString()}`, { scroll: false });
-    // Force a server refresh to get fresh data
-    // This is needed because router.push uses the client-side Router Cache
-    // which may serve stale data for the same route with different query params
-    router.refresh();
+    // Use replace instead of push to avoid creating history entries for each tab
+    // Don't call router.refresh() - the data is already loaded in props
+    // We only need to update the URL to reflect the current tab state
+    router.replace(`?${params.toString()}`, { scroll: false });
   };
 
   const handleAcceptClick = (request: WaterRequest) => {
