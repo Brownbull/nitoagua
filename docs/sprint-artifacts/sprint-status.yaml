@@ -76,12 +76,25 @@ development_status:
   4-3-pre-filled-request-form-for-registered-users: done  # APPROVED: Implemented in 4-1 extension, reviewed with 4-1
   4-4-consumer-request-history: done  # APPROVED: Implemented in 4-1 extension, reviewed with 4-1
   4-5-cancel-pending-request: done  # Implemented and approved via code review
-  4-6-epic-deployment-and-verification: review  # Production deployment complete, awaiting final review
-  epic-4-retrospective: optional
+  4-6-epic-deployment-and-verification: done  # APPROVED - Senior Dev Review passed 2025-12-05
+  epic-4-retrospective: completed  # Retrospective completed 2025-12-05
+
+  # Prep Sprint: Epic 5 Readiness
+  # =============================
+  # Purpose: Address technical debt and prepare foundation before Epic 5
+  # Decision: Made during Epic 4 retrospective to ensure clean slate
+  prep-5: contexted
+  prep-5-1-fix-dashboard-data-freshness: done  # CRITICAL - Approved 2025-12-05
+  prep-5-2-fix-tab-count-inconsistency: done  # CRITICAL - Approved 2025-12-07
+  prep-5-3-seeded-test-data-setup: done  # IMPORTANT - Enable E2E integration tests - APPROVED 2025-12-07
+  prep-5-4-resend-react-email-spike: done  # IMPORTANT - Research for Epic 5 - APPROVED 2025-12-07
+  prep-5-5-webkit-flaky-test-fix: done  # NICE-TO-HAVE - Fix ~21 intermittent failures - APPROVED 2025-12-07
+  prep-5-retrospective: optional
 
   # Epic 5: Notifications & Communication
+  # BLOCKED: Complete prep-5 sprint first
   epic-5: backlog
-  5-1-email-notification-setup-with-resend: backlog
-  5-2-guest-email-notifications: backlog
+  5-1-email-notification-setup-with-resend: drafted  # Story drafted 2025-12-07
+  5-2-guest-email-notifications: drafted  # Story drafted 2025-12-07
   5-3-in-app-notifications-for-registered-users: backlog
   epic-5-retrospective: optional

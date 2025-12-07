@@ -13,3 +13,4 @@ Routing guidance:
 | 2025-12-02 | 1-5 | 1 | TechDebt | Low | TBD | Open | Consider migrating middleware.ts to proxy pattern (Next.js 16 deprecation warning) |
 | 2025-12-02 | 1-2 | 1 | Security | Medium | TBD | Open | Fix function `update_updated_at_column` mutable search_path ([docs](https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable)) |
 | 2025-12-02 | 1-2 | 1 | Performance | Medium | TBD | Open | Optimize RLS policies to use `(select auth.uid())` pattern for better query performance ([docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select)) |
+| 2025-12-07 | prep-5-5 | prep-5 | TechDebt | Low | TBD | Open | Refactor timing-based performance tests (consumer-request-status.spec.ts:177, consumer-tracking.spec.ts:177) - use performance.mark/measure or skip in CI |

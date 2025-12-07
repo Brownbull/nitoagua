@@ -1,0 +1,214 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>prep-5</epicId>
+    <storyId>2</storyId>
+    <title>Fix Tab Count Inconsistency</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-05</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/prep5/prep-5-2-fix-tab-count-inconsistency.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>supplier (Don Pedro)</asA>
+    <iWant>the tab badge counts (Pendientes, Aceptadas, Completadas) to accurately reflect the current state</iWant>
+    <soThat>I can trust the dashboard numbers and plan my work accordingly</soThat>
+    <tasks>
+      <task id="1" title="Investigate Current Behavior">
+        <subtask>Add console logging to track optimistic state changes</subtask>
+        <subtask>Verify when router.refresh() completes and new data arrives</subtask>
+        <subtask>Check if optimistic Sets are cleared after refresh</subtask>
+      </task>
+      <task id="2" title="Fix Optimistic State Clearing">
+        <subtask>Clear optimisticallyAccepted after successful accept + refresh</subtask>
+        <subtask>Clear optimisticallyDelivered after successful deliver + refresh</subtask>
+        <subtask>Consider using useEffect to detect prop changes and clear stale optimistic state</subtask>
+      </task>
+      <task id="3" title="Ensure Consistent Data Source">
+        <subtask>Verify tab badges and tab content use the same filtered arrays</subtask>
+        <subtask>Add data-testid attributes to badge counts for testing</subtask>
+      </task>
+      <task id="4" title="E2E Tests for Count Consistency">
+        <subtask>Create tests/e2e/dashboard-tab-counts.spec.ts</subtask>
+        <subtask>Test: Accept request → counts update correctly</subtask>
+        <subtask>Test: Deliver request → counts update correctly</subtask>
+        <subtask>Test: Tab switching maintains correct counts</subtask>
+      </task>
+      <task id="5" title="Verify with prep-5-1 Fix">
+        <subtask>After prep-5-1 is implemented, re-test tab counts</subtask>
+        <subtask>Document if prep-5-1 fix resolves this issue entirely</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-prep-5-2-1">Tab badge counts always match the actual number of items in each tab</criterion>
+    <criterion id="AC-prep-5-2-2">After accepting a request, Pending count decreases by 1 and Accepted count increases by 1</criterion>
+    <criterion id="AC-prep-5-2-3">After delivering a request, Accepted count decreases by 1 and Completed count increases by 1</criterion>
+    <criterion id="AC-prep-5-2-4">Switching between tabs does not cause count inconsistencies</criterion>
+    <criterion id="AC-prep-5-2-5">Optimistic updates clear properly after server data refresh</criterion>
+    <criterion id="AC-prep-5-2-6">No regressions in E2E tests</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>Implementation Patterns - State Management</section>
+        <snippet>State Management: React Context + URL state (built-in). Simple enough for MVP, no Redux needed. Component Pattern shows interface props with callbacks for onAccept/onDecline.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/retrospectives/epic-4-retrospective.md</path>
+        <title>Epic 4 Retrospective</title>
+        <section>What Could Be Improved - Tab Count Inconsistency</section>
+        <snippet>Issue: Accepted/Completed counts behave inconsistently when switching tabs. Related to the same caching issue. Creates confusing UX. Identified as CRITICAL blocker for Epic 5.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Dashboard Component Structure</section>
+        <snippet>DashboardTabs component handles accept/deliver flows with optimistic updates. stats-header.tsx shows pending count. Tab navigation: Pendientes | Aceptadas | Completadas.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/prep5/prep-5-1-fix-dashboard-data-freshness.md</path>
+        <title>Related Story prep-5-1</title>
+        <section>Background</section>
+        <snippet>The router.refresh() call in dashboard-tabs.tsx works for actions (accept/deliver) but doesn't help on initial page load. After router.refresh() completes, the component re-renders with new props, but optimistic Sets may still contain old request IDs.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>UX Design Specification</title>
+        <section>Supplier Experience - Dashboard</section>
+        <snippet>Dashboard: Tab navigation (Pending, Accepted, Completed). Request cards with color-coded urgency. Statistics header showing counts. One-tap accept action.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR24-FR28 - Supplier Request Dashboard</section>
+        <snippet>FR24: Suppliers can view all incoming water requests in a single dashboard. FR27: Suppliers can filter requests by status (pending, accepted, delivered).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/components/supplier/dashboard-tabs.tsx</path>
+        <kind>component</kind>
+        <symbol>DashboardTabs, optimisticallyAccepted, optimisticallyDelivered</symbol>
+        <lines>42-43</lines>
+        <reason>PRIMARY FILE TO FIX. Contains optimistic state management with useState Sets. Lines 42-43 define the Sets. Lines 165-172 filter arrays using these Sets. Lines 98, 149 call router.refresh() but don't clear the Sets afterwards.</reason>
+      </file>
+      <file>
+        <path>src/components/supplier/dashboard-tabs.tsx</path>
+        <kind>component</kind>
+        <symbol>handleConfirmAccept</symbol>
+        <lines>65-109</lines>
+        <reason>Accept handler adds requestId to optimisticallyAccepted (line 67), calls router.refresh() (line 98), but never clears the Set after fresh data arrives.</reason>
+      </file>
+      <file>
+        <path>src/components/supplier/dashboard-tabs.tsx</path>
+        <kind>component</kind>
+        <symbol>handleConfirmDeliver</symbol>
+        <lines>111-162</lines>
+        <reason>Deliver handler adds requestId to optimisticallyDelivered (line 117), calls router.refresh() (line 149), but never clears the Set after fresh data arrives.</reason>
+      </file>
+      <file>
+        <path>src/components/supplier/dashboard-tabs.tsx</path>
+        <kind>component</kind>
+        <symbol>filteredPendingRequests, filteredAcceptedRequests</symbol>
+        <lines>165-172</lines>
+        <reason>These arrays are used for both tab content AND badge counts. Must stay synchronized. Lines 189-196 and 205-212 use .length for badges.</reason>
+      </file>
+      <file>
+        <path>src/components/supplier/dashboard-tabs.tsx</path>
+        <kind>component</kind>
+        <symbol>Tab badges</symbol>
+        <lines>189-196, 205-212, 221-228</lines>
+        <reason>Badge counts use filteredPendingRequests.length, filteredAcceptedRequests.length, completedRequests.length. These must match actual tab content.</reason>
+      </file>
+      <file>
+        <path>src/app/(supplier)/dashboard/page.tsx</path>
+        <kind>page</kind>
+        <symbol>SupplierDashboardPage</symbol>
+        <lines>1-188</lines>
+        <reason>Server component that fetches data and passes to DashboardTabs. Note: Line 17 has `export const dynamic = 'force-dynamic'` which may already be addressing prep-5-1.</reason>
+      </file>
+      <file>
+        <path>tests/e2e/supplier-dashboard.spec.ts</path>
+        <kind>test</kind>
+        <symbol>supplier-dashboard specs</symbol>
+        <lines>1-241</lines>
+        <reason>Existing dashboard tests. New tab count tests should follow same patterns. Has auth testing limitations - most tests verify structure, not live behavior.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <name>next</name>
+        <version>16.0.6</version>
+        <relevance>Core framework - provides useRouter with refresh() method</relevance>
+      </node>
+      <node>
+        <name>react</name>
+        <version>19.2.0</version>
+        <relevance>useState, useEffect hooks for optimistic state management</relevance>
+      </node>
+      <node>
+        <name>@radix-ui/react-tabs</name>
+        <version>^1.1.13</version>
+        <relevance>Tab component used for dashboard navigation</relevance>
+      </node>
+      <node>
+        <name>@playwright/test</name>
+        <version>^1.57.0</version>
+        <relevance>E2E testing framework for dashboard-tab-counts.spec.ts</relevance>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Optimistic state (useState Sets) persists across router.refresh() - not automatically cleared when props change</constraint>
+    <constraint>Tab badge counts must ALWAYS match actual item count in the tab content</constraint>
+    <constraint>After accept: Pending count decreases by 1, Accepted count increases by 1</constraint>
+    <constraint>After deliver: Accepted count decreases by 1, Completed count increases by 1</constraint>
+    <constraint>Cannot cause double-counting or negative counts</constraint>
+    <constraint>Must work correctly with prep-5-1 fix (force-dynamic already applied)</constraint>
+    <constraint>Cannot break existing 879+ E2E tests</constraint>
+    <constraint>Use useEffect to detect prop changes and clear stale optimistic state</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>DashboardTabsProps</name>
+      <kind>interface</kind>
+      <signature>interface DashboardTabsProps { pendingRequests: WaterRequest[]; acceptedRequests: WaterRequest[]; completedRequests: WaterRequest[]; defaultTab?: TabValue; }</signature>
+      <path>src/components/supplier/dashboard-tabs.tsx:16-21</path>
+    </interface>
+    <interface>
+      <name>React useEffect for props change</name>
+      <kind>hook-pattern</kind>
+      <signature>useEffect(() => { setOptimisticallyAccepted(new Set()); setOptimisticallyDelivered(new Set()); }, [pendingRequests, acceptedRequests, completedRequests]);</signature>
+      <path>Proposed fix pattern</path>
+    </interface>
+    <interface>
+      <name>router.refresh</name>
+      <kind>function</kind>
+      <signature>router.refresh(): void - Refreshes server component data without full page reload</signature>
+      <path>next/navigation</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Playwright E2E testing with test.describe() blocks organized by feature. Tests use data-testid attributes: pending-badge, accepted-badge, completed-badge, tab-pending, tab-accepted, tab-completed. Project has 879+ passing tests. Tests run via `npm run test:e2e`. Use test login mechanism (/api/auth/test-login) for authenticated tests where available.</standards>
+    <locations>
+      <location>tests/e2e/supplier-dashboard.spec.ts (existing)</location>
+      <location>tests/e2e/dashboard-tab-counts.spec.ts (NEW)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-prep-5-2-1">Test: Tab badge counts match actual item counts in each tab</idea>
+      <idea ac="AC-prep-5-2-1">Test: Verify pending-badge shows same count as content-pending items</idea>
+      <idea ac="AC-prep-5-2-2">Test: Accept request → Pending badge decreases by 1, Accepted badge increases by 1</idea>
+      <idea ac="AC-prep-5-2-3">Test: Deliver request → Accepted badge decreases by 1, Completed badge increases by 1</idea>
+      <idea ac="AC-prep-5-2-4">Test: Switch tabs multiple times → Counts remain consistent throughout</idea>
+      <idea ac="AC-prep-5-2-4">Test: Navigate away and back → Counts still accurate</idea>
+      <idea ac="AC-prep-5-2-5">Test: After router.refresh, optimistic state is cleared (no stale IDs)</idea>
+      <idea ac="AC-prep-5-2-6">Run full E2E suite to verify no regressions</idea>
+    </ideas>
+  </tests>
+</story-context>

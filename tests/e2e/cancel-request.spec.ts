@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { TRACKING_TOKENS } from "../fixtures/test-data";
 
 /**
  * Tests for Cancel Request functionality (Story 4-5)
@@ -129,17 +130,14 @@ test.describe("Cancel Request (Story 4-5)", () => {
 });
 
 /**
- * Integration tests requiring real database data
- * These tests need:
- * 1. A pending request with known ID and tracking token
- * 2. For consumer tests: authenticated user who owns the request
+ * Integration tests requiring seeded database data
+ * Run `npm run seed:test` before running these tests.
+ * These tests need the seeded data from tests/fixtures/test-data.ts
  */
-test.describe.skip("Cancel Request Integration Tests (require seeded data)", () => {
-  // Test constants - replace with actual seeded data
-  const _PENDING_REQUEST_ID = "[SEEDED_PENDING_REQUEST_ID]";
-  const PENDING_TRACKING_TOKEN = "[SEEDED_PENDING_TOKEN]";
-  const _ACCEPTED_REQUEST_ID = "[SEEDED_ACCEPTED_REQUEST_ID]";
-  const ACCEPTED_TRACKING_TOKEN = "[SEEDED_ACCEPTED_TOKEN]";
+test.describe("Cancel Request Integration Tests @seeded", () => {
+  // Using seeded test data tokens
+  const PENDING_TRACKING_TOKEN = TRACKING_TOKENS.pending;
+  const ACCEPTED_TRACKING_TOKEN = TRACKING_TOKENS.accepted;
 
   test.describe("AC4-5-1: Cancel button visible only for pending status", () => {
     test("cancel button visible on pending request tracking page", async ({
@@ -214,7 +212,8 @@ test.describe.skip("Cancel Request Integration Tests (require seeded data)", () 
   });
 
   test.describe("AC4-5-4 & AC4-5-5: Cancel API call and status update", () => {
-    test("confirming cancellation calls API and updates status", async ({
+    // NOTE: This test modifies seeded data. Re-run `npm run seed:test` after running.
+    test.skip("confirming cancellation calls API and updates status @destructive", async ({
       page,
     }) => {
       await page.goto(`/track/${PENDING_TRACKING_TOKEN}`);
@@ -237,20 +236,20 @@ test.describe.skip("Cancel Request Integration Tests (require seeded data)", () 
 
   test.describe("AC4-5-6: Cancelled status UI", () => {
     test("cancelled request shows gray styling", async ({ page }) => {
-      // Navigate to a cancelled request
-      await page.goto(`/track/[CANCELLED_TOKEN]`);
+      // Navigate to a cancelled request using seeded token
+      await page.goto(`/track/${TRACKING_TOKENS.cancelled}`);
 
       await expect(page.getByText("Solicitud cancelada")).toBeVisible();
 
-      // Should have gray badge
-      const badge = page.locator("span").filter({ hasText: "Cancelada" });
+      // Should have gray badge (use exact match to avoid multiple elements)
+      const badge = page.getByText("Cancelada", { exact: true });
       await expect(badge).toBeVisible();
     });
 
     test("cancelled request shows 'Nueva Solicitud' button", async ({
       page,
     }) => {
-      await page.goto(`/track/[CANCELLED_TOKEN]`);
+      await page.goto(`/track/${TRACKING_TOKENS.cancelled}`);
 
       await expect(
         page.getByRole("link", { name: /Nueva Solicitud/i })
@@ -259,7 +258,8 @@ test.describe.skip("Cancel Request Integration Tests (require seeded data)", () 
   });
 
   test.describe("AC4-5-7: Toast notification", () => {
-    test("success toast shows Spanish message", async ({ page }) => {
+    // NOTE: This test modifies seeded data. Re-run `npm run seed:test` after running.
+    test.skip("success toast shows Spanish message @destructive", async ({ page }) => {
       await page.goto(`/track/${PENDING_TRACKING_TOKEN}`);
 
       await page.getByRole("button", { name: /Cancelar Solicitud/i }).click();
@@ -292,7 +292,8 @@ test.describe.skip("Cancel Request Integration Tests (require seeded data)", () 
   });
 
   test.describe("AC4-5-9: Guest cancel via tracking page", () => {
-    test("guest can cancel pending request using tracking token", async ({
+    // NOTE: This test modifies seeded data. Re-run `npm run seed:test` after running.
+    test.skip("guest can cancel pending request using tracking token @destructive", async ({
       page,
     }) => {
       await page.goto(`/track/${PENDING_TRACKING_TOKEN}`);

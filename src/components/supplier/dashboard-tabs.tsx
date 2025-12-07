@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -41,6 +41,14 @@ export function DashboardTabs({
   // Optimistic state for immediate UI updates
   const [optimisticallyAccepted, setOptimisticallyAccepted] = useState<Set<string>>(new Set());
   const [optimisticallyDelivered, setOptimisticallyDelivered] = useState<Set<string>>(new Set());
+
+  // Clear optimistic state when fresh server data arrives (props change)
+  // This prevents stale optimistic IDs from accumulating and ensures
+  // tab badge counts stay consistent with actual server data
+  useEffect(() => {
+    setOptimisticallyAccepted(new Set());
+    setOptimisticallyDelivered(new Set());
+  }, [pendingRequests, acceptedRequests, completedRequests]);
 
   // Get current tab from URL or use default
   const currentTab = (searchParams.get("tab") as TabValue) || defaultTab;

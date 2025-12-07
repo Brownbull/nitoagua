@@ -1,0 +1,168 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>prep-5</epicId>
+    <storyId>1</storyId>
+    <title>Fix Dashboard Data Freshness</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-05</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/prep5/prep-5-1-fix-dashboard-data-freshness.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>supplier (Don Pedro)</asA>
+    <iWant>new water requests to appear immediately when I open the dashboard</iWant>
+    <soThat>I don't miss incoming requests and can respond promptly to consumers</soThat>
+    <tasks>
+      <task id="1" name="Add Dynamic Rendering to Dashboard">
+        <subtask>Add `export const dynamic = 'force-dynamic'` to dashboard page</subtask>
+        <subtask>OR use `unstable_noStore()` from `next/cache` in `fetchDashboardData()`</subtask>
+        <subtask>Test that page no longer serves cached data on load</subtask>
+      </task>
+      <task id="2" name="Verify Data Freshness Flow">
+        <subtask>Create manual test: Consumer creates request → Supplier login → Verify request appears</subtask>
+        <subtask>Verify no caching headers are being set that would cache the response</subtask>
+        <subtask>Confirm `router.refresh()` still works for accept/deliver actions</subtask>
+      </task>
+      <task id="3" name="E2E Test for Data Freshness">
+        <subtask>Create `tests/e2e/dashboard-data-freshness.spec.ts`</subtask>
+        <subtask>Test: Create request via API → Load dashboard → Request appears</subtask>
+        <subtask>Test: Multiple sessions scenario (consumer → supplier)</subtask>
+        <subtask>Add to test suite</subtask>
+      </task>
+      <task id="4" name="Verify No Performance Regression">
+        <subtask>Check dashboard load time before and after change</subtask>
+        <subtask>Ensure we're not re-fetching unnecessarily on tab switches</subtask>
+        <subtask>Document any performance trade-offs</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-prep-5-1-1">When supplier opens dashboard, pending requests reflect current database state (no stale cache)</criterion>
+    <criterion id="AC-prep-5-1-2">New requests created by consumers appear immediately on dashboard load without manual refresh</criterion>
+    <criterion id="AC-prep-5-1-3">Dashboard still performs efficiently (no excessive re-fetching on every interaction)</criterion>
+    <criterion id="AC-prep-5-1-4">Existing functionality preserved (accept, deliver, tab switching all still work)</criterion>
+    <criterion id="AC-prep-5-1-5">No regressions in E2E tests (879+ tests still passing)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>nitoagua Architecture Document</title>
+        <section>Caching Strategy</section>
+        <snippet>Static pages use revalidate=3600 (1 hour). Dynamic pages should use export const dynamic = "force-dynamic". Dashboard requires dynamic rendering for fresh data.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/retrospectives/epic-4-retrospective.md</path>
+        <title>Epic 4 Retrospective</title>
+        <section>What Could Be Improved - Supplier Dashboard Data Freshness</section>
+        <snippet>Issue: New requests don't appear on supplier dashboard without manual refresh. Consumer creates request → logs out → supplier logs in → request not visible. Likely cause: Next.js App Router aggressive caching.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic3/tech-spec-epic-3.md</path>
+        <title>Epic 3 Technical Specification</title>
+        <section>Dashboard Query</section>
+        <snippet>GET /api/requests returns WaterRequest[] with meta (total, pending, todayDeliveries, weekDeliveries). Dashboard fetches via server-side data fetching pattern.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/prep5/prep-5-1-fix-dashboard-data-freshness.md</path>
+        <title>Story prep-5-1</title>
+        <section>Dev Notes - Technical Approach Options</section>
+        <snippet>Option 1 (Recommended): export const dynamic = 'force-dynamic'. Option 2: unstable_noStore() in fetchDashboardData(). Option 3: revalidate = 0.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/app/(supplier)/dashboard/page.tsx</path>
+        <kind>page</kind>
+        <symbol>SupplierDashboardPage, fetchDashboardData</symbol>
+        <lines>1-183</lines>
+        <reason>PRIMARY FILE TO MODIFY. Server Component that fetches dashboard data. Add `export const dynamic = 'force-dynamic'` near metadata export to disable caching.</reason>
+      </file>
+      <file>
+        <path>src/components/supplier/dashboard-tabs.tsx</path>
+        <kind>component</kind>
+        <symbol>DashboardTabs</symbol>
+        <lines>1-287</lines>
+        <reason>Client component handling tab state and actions. Uses router.refresh() for accept/deliver - must still work after fix. Lines 98, 149 call router.refresh().</reason>
+      </file>
+      <file>
+        <path>tests/e2e/supplier-dashboard.spec.ts</path>
+        <kind>test</kind>
+        <symbol>supplier-dashboard specs</symbol>
+        <lines>1-241</lines>
+        <reason>Existing dashboard tests. New freshness tests should follow same patterns. Add new test file dashboard-data-freshness.spec.ts.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <name>next</name>
+        <version>16.0.6</version>
+        <relevance>Core framework - provides App Router, dynamic export, caching APIs</relevance>
+      </node>
+      <node>
+        <name>@supabase/supabase-js</name>
+        <version>^2.86.0</version>
+        <relevance>Database queries in fetchDashboardData</relevance>
+      </node>
+      <node>
+        <name>@supabase/ssr</name>
+        <version>^0.8.0</version>
+        <relevance>Server-side Supabase client creation</relevance>
+      </node>
+      <node>
+        <name>@playwright/test</name>
+        <version>^1.57.0</version>
+        <relevance>E2E testing framework for dashboard-data-freshness.spec.ts</relevance>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Next.js App Router uses aggressive caching by default - Server Components cache output in Full Route Cache</constraint>
+    <constraint>Use `export const dynamic = 'force-dynamic'` to opt out of static rendering for dynamic pages</constraint>
+    <constraint>Alternatively use `unstable_noStore()` from next/cache inside data fetching functions</constraint>
+    <constraint>router.refresh() must continue to work for optimistic UI updates on accept/deliver actions</constraint>
+    <constraint>Dashboard performance must remain acceptable (< 3 second load as per NFR3)</constraint>
+    <constraint>Cannot break existing 879+ E2E tests</constraint>
+    <constraint>Follow existing code patterns - use existing suppliers/components structure</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Next.js Dynamic Export</name>
+      <kind>page-config</kind>
+      <signature>export const dynamic = 'force-dynamic' | 'auto' | 'error' | 'force-static'</signature>
+      <path>src/app/(supplier)/dashboard/page.tsx</path>
+    </interface>
+    <interface>
+      <name>Next.js Cache Control</name>
+      <kind>function</kind>
+      <signature>import { unstable_noStore as noStore } from 'next/cache'; noStore();</signature>
+      <path>next/cache module</path>
+    </interface>
+    <interface>
+      <name>fetchDashboardData</name>
+      <kind>async-function</kind>
+      <signature>async function fetchDashboardData(supplierId: string): Promise&lt;{ pendingRequests, acceptedRequests, completedRequests, stats }&gt;</signature>
+      <path>src/app/(supplier)/dashboard/page.tsx</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Playwright E2E testing with test.describe() blocks organized by feature. Tests use data-testid attributes for element selection. Project has 879+ passing tests. Tests run via `npm run test:e2e`. Follow existing test patterns in supplier-dashboard.spec.ts. Use test login mechanism (/api/auth/test-login) for authenticated tests.</standards>
+    <locations>
+      <location>tests/e2e/supplier-dashboard.spec.ts</location>
+      <location>tests/e2e/dashboard-data-freshness.spec.ts (NEW)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-prep-5-1-1">Test that page renders fresh data after navigating away and back</idea>
+      <idea ac="AC-prep-5-1-2">Test: Create request via API → Load dashboard → Verify request appears in pending tab</idea>
+      <idea ac="AC-prep-5-1-2">Test: Create multiple requests → Each appears without page refresh</idea>
+      <idea ac="AC-prep-5-1-3">Test: Verify tab switching doesn't cause unnecessary refetch (optimistic UI still works)</idea>
+      <idea ac="AC-prep-5-1-4">Test: Accept request → Request moves to accepted tab (router.refresh works)</idea>
+      <idea ac="AC-prep-5-1-4">Test: Mark delivered → Request moves to completed tab (router.refresh works)</idea>
+      <idea ac="AC-prep-5-1-5">Run full E2E suite to verify no regressions</idea>
+    </ideas>
+  </tests>
+</story-context>

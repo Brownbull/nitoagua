@@ -1,0 +1,171 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>prep-5</epicId>
+    <storyId>5</storyId>
+    <title>WebKit Flaky Test Fix</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-07</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/prep5/prep-5-5-webkit-flaky-test-fix.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>the WebKit E2E tests to pass consistently</iWant>
+    <soThat>I can trust the test suite and not waste time re-running tests or investigating false failures</soThat>
+    <tasks>
+      <task id="1" title="Identify All Flaky Tests">
+        <subtask>Run full test suite 5 times on WebKit</subtask>
+        <subtask>Log which tests fail inconsistently</subtask>
+        <subtask>Categorize failures by type (timing, rendering, navigation)</subtask>
+        <subtask>Create tracking list of affected tests</subtask>
+      </task>
+      <task id="2" title="Analyze Root Causes">
+        <subtask>Review failed test screenshots and traces</subtask>
+        <subtask>Identify common patterns in failures</subtask>
+        <subtask>Document specific WebKit behaviors causing issues</subtask>
+        <subtask>Research known Playwright/WebKit issues</subtask>
+      </task>
+      <task id="3" title="Fix Timing-Related Issues">
+        <subtask>Add explicit waits before assertions where needed</subtask>
+        <subtask>Use waitForLoadState('networkidle') for navigation tests</subtask>
+        <subtask>Replace toBeVisible() with more robust checks where needed</subtask>
+        <subtask>Add page.waitForSelector() before interacting with dynamic elements</subtask>
+      </task>
+      <task id="4" title="Fix Rendering-Related Issues">
+        <subtask>Update CSS color assertions to use tolerance or different approach</subtask>
+        <subtask>Fix touch target tests to account for WebKit rendering differences</subtask>
+        <subtask>Consider using evaluate() for more reliable dimension checks</subtask>
+      </task>
+      <task id="5" title="Fix Navigation Issues">
+        <subtask>Ensure proper wait conditions after clicks</subtask>
+        <subtask>Use Promise.all([click, waitForNavigation]) pattern where needed</subtask>
+        <subtask>Add retry logic for inherently flaky external dependencies</subtask>
+      </task>
+      <task id="6" title="Verify Stability">
+        <subtask>Run full test suite 10 times consecutively on WebKit</subtask>
+        <subtask>Verify 0 failures across all runs</subtask>
+        <subtask>Run on all 3 browsers to ensure no regressions</subtask>
+        <subtask>Document any tests that still show flakiness</subtask>
+      </task>
+      <task id="7" title="Document Patterns">
+        <subtask>Create docs/technical/e2e-testing-patterns.md</subtask>
+        <subtask>Document WebKit-specific considerations</subtask>
+        <subtask>Add code examples for common scenarios</subtask>
+        <subtask>Update existing tests as needed</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-prep-5-5-1">WebKit flaky tests identified and documented</criterion>
+    <criterion id="AC-prep-5-5-2">Root cause analysis completed for each flaky test category</criterion>
+    <criterion id="AC-prep-5-5-3">Fixes implemented that make tests pass consistently (3+ consecutive runs)</criterion>
+    <criterion id="AC-prep-5-5-4">No new flaky tests introduced</criterion>
+    <criterion id="AC-prep-5-5-5">Test suite passes on all 3 browsers without retries needed</criterion>
+    <criterion id="AC-prep-5-5-6">Flaky test patterns documented for future prevention</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc path="docs/sprint-artifacts/epic3/epic-3-retrospective.md" title="Epic 3 Retrospective" section="What Could Be Improved #5">
+        WebKit Test Flakiness: ~21 intermittent webkit failures noted. Not blocking but worth investigating for full cross-browser confidence.
+      </doc>
+      <doc path="docs/sprint-artifacts/retrospectives/epic-4-retrospective.md" title="Epic 4 Retrospective" section="What Could Be Improved #4">
+        WebKit Flaky Tests: ~21 intermittent WebKit failures lingering from Epic 3. Creates "just re-run it" culture, erodes trust in test suite, slows down CI/CD.
+      </doc>
+      <doc path="docs/sprint-artifacts/retrospectives/epic-4-retrospective.md" title="Epic 4 Retrospective" section="Issues Identified - Nice-to-Have #5">
+        WebKit Flaky Test Fix: Identify and fix ~21 intermittent failures. Owner: Dana + Charlie.
+      </doc>
+      <doc path="playwright.config.ts" title="Playwright Configuration" section="Full Config">
+        Test configuration: testDir=./tests/e2e, timeout=60s, expect.timeout=15s, actionTimeout=15s, navigationTimeout=30s. Projects: chromium, firefox, webkit. CI retries: 2.
+      </doc>
+      <doc path="docs/architecture.md" title="Architecture Document" section="Tech Stack">
+        E2E testing framework: Playwright running on Chromium, Firefox, WebKit. Next.js 15 with App Router, TypeScript, Tailwind CSS.
+      </doc>
+    </docs>
+    <code>
+      <!-- Primary test files mentioned in story as likely flaky -->
+      <file path="tests/e2e/consumer-request-status.spec.ts" kind="test" symbol="Consumer Request Status Tests" reason="Contains touch target size checks using boundingBox() - known flaky in WebKit"/>
+      <file path="tests/e2e/consumer-request-confirmation.spec.ts" kind="test" symbol="Request Confirmation Tests" lines="158-182" reason="Touch target size test at line 158 with boundingBox(), also contains waitForTimeout patterns"/>
+      <file path="tests/e2e/supplier-dashboard.spec.ts" kind="test" symbol="Supplier Dashboard Tests" reason="Contains navigation waits and URL waitFor patterns that can be flaky"/>
+
+      <!-- Other test files that may have similar patterns -->
+      <file path="tests/e2e/consumer-home.spec.ts" kind="test" symbol="Consumer Home Tests" reason="Potential navigation timing issues"/>
+      <file path="tests/e2e/supplier-auth.spec.ts" kind="test" symbol="Supplier Auth Tests" reason="Auth redirect waits may have timing issues"/>
+      <file path="tests/e2e/consumer-registration.spec.ts" kind="test" symbol="Consumer Registration Tests" reason="OAuth flow tests may have timing issues"/>
+      <file path="tests/e2e/cancel-request.spec.ts" kind="test" symbol="Cancel Request Tests" reason="Alert dialog interactions may be timing-sensitive"/>
+      <file path="tests/e2e/supplier-accept.spec.ts" kind="test" symbol="Supplier Accept Tests" reason="Modal interactions may be timing-sensitive"/>
+      <file path="tests/e2e/supplier-deliver.spec.ts" kind="test" symbol="Supplier Deliver Tests" reason="AlertDialog confirmation patterns"/>
+
+      <!-- Configuration -->
+      <file path="playwright.config.ts" kind="config" symbol="Playwright Configuration" reason="Timeout settings, browser projects, retry configuration"/>
+    </code>
+    <dependencies>
+      <npm>
+        <devDependency name="@playwright/test" version="^1.57.0" purpose="E2E testing framework - primary tool for this story"/>
+        <devDependency name="typescript" version="^5" purpose="Test files written in TypeScript"/>
+        <devDependency name="ts-node" version="^10.9.2" purpose="Run TypeScript scripts"/>
+        <devDependency name="@faker-js/faker" version="^10.1.0" purpose="Generate test data"/>
+      </npm>
+      <framework name="Next.js" version="16.0.7" note="App Router - affects test page loading behavior"/>
+      <framework name="React" version="19.2.1" note="UI rendering - affects component mount timing"/>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint category="testing">Tests must pass consistently on all 3 browsers: Chromium, Firefox, WebKit</constraint>
+    <constraint category="testing">CI retries set to 2 - goal is to make retries unnecessary</constraint>
+    <constraint category="testing">Test timeout: 60s, Assertion timeout: 15s, Action timeout: 15s, Navigation timeout: 30s</constraint>
+    <constraint category="testing">Do not introduce new flaky tests while fixing existing ones</constraint>
+    <constraint category="pattern">Use robust wait patterns instead of arbitrary timeouts where possible</constraint>
+    <constraint category="pattern">Prefer class-based assertions over CSS value assertions for WebKit compatibility</constraint>
+    <constraint category="pattern">Use Promise.all pattern for click + navigation race conditions</constraint>
+    <constraint category="pattern">Use page.waitForSelector() before boundingBox() calls for WebKit stability</constraint>
+    <constraint category="documentation">Create docs/technical/e2e-testing-patterns.md with WebKit considerations</constraint>
+  </constraints>
+  <interfaces>
+    <interface name="Playwright Test API" kind="framework">
+      <method signature="page.waitForSelector(selector, options?)" purpose="Wait for element to appear in DOM"/>
+      <method signature="page.waitForLoadState(state)" purpose="Wait for page load state - networkidle, domcontentloaded, load"/>
+      <method signature="page.waitForURL(url, options?)" purpose="Wait for navigation to URL pattern"/>
+      <method signature="element.boundingBox()" purpose="Get element dimensions - can be flaky in WebKit without proper waits"/>
+      <method signature="expect(element).toBeVisible(options?)" purpose="Assert element visibility"/>
+      <method signature="expect(element).toHaveCSS(property, value)" purpose="Assert CSS - can be flaky with color values in WebKit"/>
+      <method signature="Promise.all([waitForNavigation, click])" purpose="Avoid race condition between click and navigation"/>
+    </interface>
+    <interface name="Playwright Configuration" kind="config" path="playwright.config.ts">
+      <option name="timeout" value="60000" purpose="Global test timeout"/>
+      <option name="expect.timeout" value="15000" purpose="Assertion timeout"/>
+      <option name="retries" value="2 in CI" purpose="Retry flaky tests (goal: eliminate need for this)"/>
+      <option name="projects" value="chromium, firefox, webkit" purpose="Multi-browser testing"/>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      Playwright E2E tests run on 3 browsers (Chromium, Firefox, WebKit) via projects configuration.
+      Tests use TypeScript and follow AAA pattern (Arrange-Act-Assert). Parallel execution enabled.
+      CI runs with 2 retries to mask flakiness - goal of this story is to eliminate the need for retries.
+      HTML and JUnit reporters configured for test results. Traces and screenshots captured on failure.
+      Test timeouts: 60s test, 15s assertion, 15s action, 30s navigation.
+    </standards>
+    <locations>
+      <location pattern="tests/e2e/*.spec.ts" description="All E2E test specs"/>
+      <location pattern="playwright.config.ts" description="Test configuration"/>
+      <location pattern="playwright-report/" description="HTML test reports"/>
+      <location pattern="test-results/" description="Test artifacts and JUnit XML"/>
+    </locations>
+    <ideas>
+      <idea ac="AC-prep-5-5-1">Run `npx playwright test --project=webkit` 5 times, log failures to tracking document</idea>
+      <idea ac="AC-prep-5-5-1">Use `--trace=on` to capture detailed traces of failing tests</idea>
+      <idea ac="AC-prep-5-5-2">Categorize failures into: timing, rendering (CSS/dimensions), navigation, element visibility</idea>
+      <idea ac="AC-prep-5-5-3">Replace boundingBox() tests with waitForSelector() + timeout buffer for WebKit</idea>
+      <idea ac="AC-prep-5-5-3">Replace toHaveCSS(background-color, rgb(...)) with toHaveClass(/bg-color-class/)</idea>
+      <idea ac="AC-prep-5-5-3">Use Promise.all([waitForURL, click]) for navigation race conditions</idea>
+      <idea ac="AC-prep-5-5-3">Add page.waitForLoadState('networkidle') before state-dependent assertions</idea>
+      <idea ac="AC-prep-5-5-5">Run full suite 10+ times on WebKit with `for i in {1..10}; do npx playwright test --project=webkit; done`</idea>
+      <idea ac="AC-prep-5-5-5">Verify all browsers pass with `npx playwright test` (no --project filter)</idea>
+      <idea ac="AC-prep-5-5-6">Create docs/technical/e2e-testing-patterns.md with WebKit-specific guidance</idea>
+    </ideas>
+  </tests>
+</story-context>

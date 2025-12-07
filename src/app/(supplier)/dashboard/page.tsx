@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   description: "Gestiona tus solicitudes de agua",
 };
 
+// Force dynamic rendering to ensure fresh data on every page load
+// This prevents Next.js from caching the page and serving stale request data
+// See: https://nextjs.org/docs/app/building-your-application/rendering/server-components#dynamic-rendering
+export const dynamic = "force-dynamic";
+
 // Stats calculation helpers
 function getStartOfToday(): string {
   const today = new Date();

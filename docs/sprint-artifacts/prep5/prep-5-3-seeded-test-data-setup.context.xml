@@ -1,0 +1,221 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>prep-5</epicId>
+    <storyId>3</storyId>
+    <title>Seeded Test Data Setup</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-07</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/prep5/prep-5-3-seeded-test-data-setup.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>QA engineer</asA>
+    <iWant>a reliable way to seed test data for E2E integration tests</iWant>
+    <soThat>I can test full user flows with realistic data instead of skipping integration tests</soThat>
+    <tasks>
+      <task id="1" title="Design Test Data Schema">
+        <subtask>Define test supplier profile data</subtask>
+        <subtask>Define test consumer profile data</subtask>
+        <subtask>Define sample water requests (pending, accepted, delivered, cancelled)</subtask>
+        <subtask>Document expected IDs/tokens for test reference</subtask>
+      </task>
+      <task id="2" title="Create Seeding Script">
+        <subtask>Create scripts/seed-test-data.ts (or .js)</subtask>
+        <subtask>Use Supabase admin client to bypass RLS</subtask>
+        <subtask>Implement upsert logic for idempotency</subtask>
+        <subtask>Add cleanup function for test isolation</subtask>
+      </task>
+      <task id="3" title="Add npm Script">
+        <subtask>Add npm run seed:test script to package.json</subtask>
+        <subtask>Add npm run seed:clean to remove test data</subtask>
+        <subtask>Document environment variable requirements</subtask>
+      </task>
+      <task id="4" title="Create Test Fixtures File">
+        <subtask>Create tests/fixtures/test-data.ts with constants</subtask>
+        <subtask>Export test user IDs, tracking tokens, request IDs</subtask>
+        <subtask>Make fixtures importable by E2E tests</subtask>
+      </task>
+      <task id="5" title="Update Skipped Tests">
+        <subtask>Identify all .skip() tests that need seeded data</subtask>
+        <subtask>Update tests to use seeded data fixtures</subtask>
+        <subtask>Remove .skip() and verify tests pass</subtask>
+      </task>
+      <task id="6" title="CI Integration">
+        <subtask>Add seeding step to CI pipeline (if applicable)</subtask>
+        <subtask>Verify seeding works with CI database</subtask>
+        <subtask>Document CI setup requirements</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-prep-5-3-1">Test data seeding script exists and can be run before E2E tests</criterion>
+    <criterion id="AC-prep-5-3-2">Seeded data includes: test supplier profile, test consumer profile, sample water requests in various states</criterion>
+    <criterion id="AC-prep-5-3-3">Seeding is idempotent (can run multiple times without duplicating data)</criterion>
+    <criterion id="AC-prep-5-3-4">Previously skipped integration tests can be unskipped and run against seeded data</criterion>
+    <criterion id="AC-prep-5-3-5">Seeding works in both local development and CI environments</criterion>
+    <criterion id="AC-prep-5-3-6">Documentation exists for using the seeding mechanism</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Data Architecture</section>
+        <snippet>Defines water request statuses (pending, accepted, delivered, cancelled) and the four water amount tiers (100L, 1000L, 5000L, 10000L). Consumers can be guests or registered; suppliers have profiles with pricing and service area.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Database Schema</section>
+        <snippet>Defines profiles table (id, role, name, phone, service_area, prices, is_available) and water_requests table (consumer_id, guest_*, tracking_token, status, supplier_id, amounts, timestamps). Uses Supabase with Row Level Security.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Implementation Patterns</section>
+        <snippet>All database operations use createClient from @supabase/supabase-js. Admin operations bypass RLS using SERVICE_ROLE_KEY. Generated types from src/types/database.ts ensure type safety.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>scripts/seed-test-user.ts</path>
+        <kind>script</kind>
+        <symbol>seedTestUser</symbol>
+        <lines>1-133</lines>
+        <reason>Existing seeding script pattern to follow. Creates test supplier with profile using admin client and upsert-like logic (check existing then insert). Can be extended for full test data seeding.</reason>
+      </artifact>
+      <artifact>
+        <path>scripts/cleanup-water-requests.ts</path>
+        <kind>script</kind>
+        <symbol>cleanup</symbol>
+        <lines>1-128</lines>
+        <reason>Cleanup pattern to follow. Shows how to delete records using admin client. Supports both local and remote targets. Uses --confirm flag for production safety.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/admin.ts</path>
+        <kind>service</kind>
+        <symbol>createAdminClient</symbol>
+        <lines>1-31</lines>
+        <reason>Admin client factory to use for seeding. Bypasses RLS using SERVICE_ROLE_KEY. Must only be used server-side.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/api/auth/test-login/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>POST handler</symbol>
+        <lines>1-173</lines>
+        <reason>Test login API showing how to create test users with profiles programmatically. Uses TEST_USERS constant pattern. Creates user via auth.admin.createUser, then profile via insert.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/support/fixtures/index.ts</path>
+        <kind>fixture</kind>
+        <symbol>test fixture</symbol>
+        <lines>1-17</lines>
+        <reason>Existing Playwright fixture extension pattern. Extends base test with userFactory. New test data fixtures should follow similar pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/support/fixtures/factories/user-factory.ts</path>
+        <kind>factory</kind>
+        <symbol>UserFactory</symbol>
+        <lines>1-55</lines>
+        <reason>User factory pattern with cleanup. Currently mock implementation with TODOs. Shows pattern for test data factories with cleanup method.</reason>
+      </artifact>
+      <artifact>
+        <path>src/types/database.ts</path>
+        <kind>types</kind>
+        <symbol>Database, Tables, TablesInsert</symbol>
+        <lines>1-317</lines>
+        <reason>Generated Supabase types. Use Tables&lt;'profiles'&gt; and Tables&lt;'water_requests'&gt; for type-safe test data. Shows exact schema: profiles (id, role, name, phone, prices) and water_requests (id, status, tracking_token, amounts, etc.)</reason>
+      </artifact>
+      <artifact>
+        <path>tests/e2e/cancel-request.spec.ts</path>
+        <kind>test</kind>
+        <symbol>test.describe.skip("Cancel Request Integration Tests")</symbol>
+        <lines>137-341</lines>
+        <reason>Skipped test suite requiring seeded data. Needs: pending request with known tracking_token, requests in various states for cancel flow testing.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/e2e/consumer-tracking.spec.ts</path>
+        <kind>test</kind>
+        <symbol>test.describe.skip("Integration Tests")</symbol>
+        <lines>214+</lines>
+        <reason>Skipped integration tests requiring seeded tracking tokens. Needs known tracking_tokens for status page testing.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/e2e/consumer-request-status.spec.ts</path>
+        <kind>test</kind>
+        <symbol>test.describe.skip("Authenticated User Tests")</symbol>
+        <lines>208+</lines>
+        <reason>Skipped tests requiring auth setup. Needs seeded consumer user with request history.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <ecosystem name="node">
+        <package name="@supabase/supabase-js" version="^2.86.0" relevance="Database access for seeding"/>
+        <package name="@faker-js/faker" version="^10.1.0" relevance="Dev dependency for generating realistic test data"/>
+        <package name="@playwright/test" version="^1.57.0" relevance="E2E testing framework using fixtures"/>
+        <package name="ts-node" version="^10.9.2" relevance="Run TypeScript scripts directly"/>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Use createAdminClient() from src/lib/supabase/admin.ts to bypass RLS when seeding</constraint>
+    <constraint type="pattern">Use upsert with onConflict: 'id' for idempotent seeding (can run multiple times safely)</constraint>
+    <constraint type="pattern">Fixed UUIDs for test data allow deterministic test references</constraint>
+    <constraint type="security">SERVICE_ROLE_KEY must never be exposed to browser; scripts run server-side only</constraint>
+    <constraint type="environment">Local Supabase runs at http://127.0.0.1:55326 with demo service role key</constraint>
+    <constraint type="naming">Test emails use @test.local domain (e.g., test-consumer@test.local, test-supplier@test.local)</constraint>
+    <constraint type="isolation">Test data should use recognizable prefixes (test-, seed-) to distinguish from real data</constraint>
+    <constraint type="cleanup">Always provide cleanup function to remove test data after tests complete</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>createAdminClient</name>
+      <kind>function</kind>
+      <signature>function createAdminClient(): SupabaseClient&lt;Database&gt;</signature>
+      <path>src/lib/supabase/admin.ts</path>
+    </interface>
+    <interface>
+      <name>profiles table insert</name>
+      <kind>database</kind>
+      <signature>{ id: string, role: 'consumer' | 'supplier', name: string, phone: string, service_area?: string, price_100l?: number, ... }</signature>
+      <path>src/types/database.ts</path>
+    </interface>
+    <interface>
+      <name>water_requests table insert</name>
+      <kind>database</kind>
+      <signature>{ id?: string, guest_phone: string, address: string, special_instructions: string, amount: number, status?: string, tracking_token?: string, consumer_id?: string, supplier_id?: string, ... }</signature>
+      <path>src/types/database.ts</path>
+    </interface>
+    <interface>
+      <name>Playwright test fixture</name>
+      <kind>test-framework</kind>
+      <signature>base.extend&lt;TestFixtures&gt;({ fixture: async ({}, use) =&gt; { ... } })</signature>
+      <path>tests/support/fixtures/index.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Playwright for E2E testing with multi-browser support (Chromium, Firefox, WebKit). Tests in tests/e2e/ directory with .spec.ts extension. Use page object pattern implicitly through Playwright locators. Fixtures extend base test via tests/support/fixtures/index.ts. Test timeout 60s, expect timeout 15s. Screenshots and traces captured on failure. CI runs with retries=2, workers=1.
+    </standards>
+    <locations>
+      <location>tests/e2e/*.spec.ts</location>
+      <location>tests/support/fixtures/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-prep-5-3-1">Test seeding script runs without errors: npx ts-node scripts/seed-test-data.ts</idea>
+      <idea ac="AC-prep-5-3-2">Verify seeded data exists: query profiles and water_requests tables for expected test records</idea>
+      <idea ac="AC-prep-5-3-3">Run seeding twice, verify no duplicate records created (idempotency test)</idea>
+      <idea ac="AC-prep-5-3-4">Run previously skipped tests (cancel-request, consumer-tracking integration) after seeding</idea>
+      <idea ac="AC-prep-5-3-5">Verify LOCAL_SUPABASE_URL and CI database URLs work with same seed script</idea>
+      <idea ac="AC-prep-5-3-6">README or script --help documents usage and required env vars</idea>
+    </ideas>
+  </tests>
+</story-context>

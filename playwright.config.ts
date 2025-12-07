@@ -19,6 +19,9 @@ export default defineConfig({
     video: 'retain-on-failure',
     actionTimeout: 15 * 1000, // Action timeout: 15s
     navigationTimeout: 30 * 1000, // Navigation timeout: 30s
+    // Ensure headless mode for WSL/Linux environments
+    // This prevents hanging when DISPLAY is set to a non-functional X server
+    headless: true,
   },
 
   outputDir: 'test-results/artifacts',

@@ -1,0 +1,251 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>prep-5</epicId>
+    <storyId>4</storyId>
+    <title>Resend/React Email Spike</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-07</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/prep5/prep-5-4-resend-react-email-spike.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to research and prototype Resend with React Email for nitoagua</iWant>
+    <soThat>we're prepared to implement email notifications in Epic 5</soThat>
+    <tasks>
+      <task id="1" title="Resend Research">
+        <subtask>Review Resend documentation and API</subtask>
+        <subtask>Understand free tier limits and pricing</subtask>
+        <subtask>Document authentication setup (API key)</subtask>
+        <subtask>Note any rate limits or restrictions</subtask>
+      </task>
+      <task id="2" title="React Email Research">
+        <subtask>Review React Email documentation</subtask>
+        <subtask>Understand component library available</subtask>
+        <subtask>Test local email preview workflow</subtask>
+        <subtask>Document integration with Resend</subtask>
+      </task>
+      <task id="3" title="Create Proof-of-Concept Template">
+        <subtask>Create emails/ directory for React Email templates</subtask>
+        <subtask>Build simple "Request Confirmation" template</subtask>
+        <subtask>Include nitoagua branding (colors, logo placeholder)</subtask>
+        <subtask>Test rendering in email preview</subtask>
+      </task>
+      <task id="4" title="Resend Integration POC">
+        <subtask>Create src/lib/email/resend.ts client configuration</subtask>
+        <subtask>Test sending email via Resend API (to test address)</subtask>
+        <subtask>Document any setup steps required</subtask>
+      </task>
+      <task id="5" title="Document Findings">
+        <subtask>Create docs/technical/email-setup.md with findings</subtask>
+        <subtask>Document environment variables needed</subtask>
+        <subtask>Estimate effort for Epic 5 stories</subtask>
+        <subtask>Flag any concerns or blockers</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC-prep-5-4-1">Research document created covering Resend features, pricing, and limitations</criterion>
+    <criterion id="AC-prep-5-4-2">React Email template development workflow documented</criterion>
+    <criterion id="AC-prep-5-4-3">Proof-of-concept email template created (e.g., request confirmation)</criterion>
+    <criterion id="AC-prep-5-4-4">Environment variable requirements documented</criterion>
+    <criterion id="AC-prep-5-4-5">Estimated effort for Epic 5 email stories documented</criterion>
+    <criterion id="AC-prep-5-4-6">Any blockers or concerns identified and flagged</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Email Service Decision (ADR-004)</section>
+        <snippet>Use Resend for transactional email. React Email integration matches Next.js stack. Excellent developer experience. Generous free tier (3,000 emails/month). Founded by Vercel alumni.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Project Structure - Email</section>
+        <snippet>Planned structure: src/lib/email/resend.ts (client), src/lib/email/templates/ (React Email templates), emails/ directory for preview development.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Environment Variables</section>
+        <snippet>RESEND_API_KEY=re_xxx required for email sending. Server-side only, not exposed to client.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Notifications &amp; Communication (FR34-FR37)</section>
+        <snippet>FR34: System sends email notification to guest consumers when request status changes. FR35: System shows in-app notification to registered consumers when status changes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Epic 5: Notifications &amp; Communication</section>
+        <snippet>Story 5-1: Email Notification Setup with Resend - Resend client config, email templates (request-confirmed, request-accepted, request-delivered). Story 5-2: Guest Email Notifications. Story 5-3: In-App Notifications.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 5.1 Technical Notes</section>
+        <snippet>Install: npm install resend @react-email/components. Environment variable: RESEND_API_KEY. Create React Email templates in emails/ for preview, copy to src/lib/email/templates/ for use.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/retrospectives/epic-4-retrospective.md</path>
+        <title>Epic 4 Retrospective</title>
+        <section>Epic 5 Readiness</section>
+        <snippet>[NOTIFY] stubs already in place in API routes. Consumer ID linking ready. Guest email capture from Epic 2 working. Blocked until prep sprint complete.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/app/api/requests/[id]/route.ts</path>
+        <kind>API Route</kind>
+        <symbol>handleDeliverAction, handleCancelAction, PATCH</symbol>
+        <lines>109-116, 260-264, 536-544</lines>
+        <reason>Contains [NOTIFY] stubs that will be replaced with actual Resend email calls in Epic 5. Shows notification trigger points for accepted, delivered, and cancelled states.</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>Utility</kind>
+        <symbol>createClient</symbol>
+        <lines>all</lines>
+        <reason>Server-side Supabase client pattern to follow for Resend client creation.</reason>
+      </file>
+      <file>
+        <path>src/lib/supabase/admin.ts</path>
+        <kind>Utility</kind>
+        <symbol>createAdminClient</symbol>
+        <lines>all</lines>
+        <reason>Admin client pattern reference for service-level operations.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>next</package>
+        <version>16.0.7</version>
+        <note>Framework - App Router for API routes where email will be triggered</note>
+      </node>
+      <package>
+        <name>@supabase/supabase-js</name>
+        <version>^2.86.0</version>
+        <note>Database client - requests table contains guest_email for notifications</note>
+      </package>
+      <package>
+        <name>zod</name>
+        <version>^4.1.13</version>
+        <note>Validation - use for email input validation</note>
+      </package>
+      <package>
+        <name>date-fns</name>
+        <version>^4.1.0</version>
+        <note>Date formatting for email templates</note>
+      </package>
+      <toInstall>
+        <package>
+          <name>resend</name>
+          <version>latest</version>
+          <note>Transactional email API - primary dependency for this spike</note>
+        </package>
+        <package>
+          <name>@react-email/components</name>
+          <version>latest</version>
+          <note>React Email components for template building</note>
+        </package>
+      </toInstall>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="pattern">Follow existing lib/ structure: create src/lib/email/resend.ts for client configuration</constraint>
+    <constraint type="pattern">API response format must match existing pattern: { data: T, error: null } or { data: null, error: { message, code } }</constraint>
+    <constraint type="environment">RESEND_API_KEY must be server-side only (no NEXT_PUBLIC_ prefix)</constraint>
+    <constraint type="security">Never expose email API keys to client-side code</constraint>
+    <constraint type="branding">Email templates must use nitoagua brand colors: Primary #0077B6 (Ocean Blue), Secondary #00A8E8</constraint>
+    <constraint type="language">All email copy must be in Spanish (Chilean) - interface language requirement from PRD</constraint>
+    <constraint type="scope">This is a RESEARCH spike - focus on learning and POC, not production-ready implementation</constraint>
+    <constraint type="testing">POC should demonstrate sending capability to a test email address, not production emails</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>NotificationTriggerPoints</name>
+      <kind>API Integration Points</kind>
+      <signature>
+        // Current stubs in src/app/api/requests/[id]/route.ts:
+        // Line 109-116: Request delivered notification
+        // Line 260-264: Request cancelled notification
+        // Line 536-544: Request accepted notification
+
+        // Pattern: console.log("[NOTIFY] ...", { requestId, ... })
+        // Will be replaced with: await sendEmail({ type, requestId, ... })
+      </signature>
+      <path>src/app/api/requests/[id]/route.ts</path>
+    </interface>
+    <interface>
+      <name>ResendClient (Planned)</name>
+      <kind>Email Client</kind>
+      <signature>
+        // To be created at: src/lib/email/resend.ts
+        import { Resend } from 'resend';
+
+        export const resend = new Resend(process.env.RESEND_API_KEY);
+
+        // Usage pattern:
+        await resend.emails.send({
+          from: 'nitoagua &lt;noreply@nitoagua.cl&gt;',
+          to: email,
+          subject: 'Subject in Spanish',
+          react: EmailTemplate({ props })
+        });
+      </signature>
+      <path>src/lib/email/resend.ts (to create)</path>
+    </interface>
+    <interface>
+      <name>EmailTemplate (Planned)</name>
+      <kind>React Email Component</kind>
+      <signature>
+        // To be created at: emails/request-confirmed.tsx
+        interface RequestConfirmedProps {
+          customerName: string;
+          requestId: string;
+          trackingUrl: string;
+          amount: number;
+        }
+
+        export default function RequestConfirmed(props: RequestConfirmedProps): JSX.Element
+      </signature>
+      <path>emails/request-confirmed.tsx (to create)</path>
+    </interface>
+    <interface>
+      <name>water_requests.guest_email</name>
+      <kind>Database Column</kind>
+      <signature>
+        -- From existing schema:
+        guest_email TEXT  -- Captured during guest request submission
+        -- Used for sending notifications to guest consumers (FR34)
+      </signature>
+      <path>supabase/migrations/001_initial_schema.sql</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      The project uses Playwright for E2E testing with tests in tests/e2e/. Tests run against local dev server on port 3005. Testing is done across Chromium, Firefox, and WebKit browsers. For this spike, testing focus is on manual verification that emails send correctly to a test address, not E2E automation. Email testing typically involves checking Resend dashboard for delivery confirmation or using a test inbox service.
+    </standards>
+    <locations>
+      <location>tests/e2e/*.spec.ts</location>
+      <location>playwright.config.ts</location>
+    </locations>
+    <ideas>
+      <idea ac="AC-prep-5-4-3">Manually verify POC template renders correctly using React Email preview server (npm run email:dev)</idea>
+      <idea ac="AC-prep-5-4-3">Manually send test email via Resend and verify delivery in Resend dashboard</idea>
+      <idea ac="AC-prep-5-4-4">Verify RESEND_API_KEY environment variable is properly loaded in development</idea>
+      <idea ac="AC-prep-5-4-6">Document any rate limiting encountered during testing</idea>
+      <idea ac="all">Consider creating a simple test endpoint (e.g., /api/test-email) for development testing only</idea>
+    </ideas>
+  </tests>
+</story-context>

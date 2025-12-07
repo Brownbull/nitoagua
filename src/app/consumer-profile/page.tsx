@@ -46,7 +46,7 @@ export default function ProfilePage() {
       if (profileData) {
         // If supplier, redirect to supplier profile
         if (profileData.role === "supplier") {
-          router.push("/perfil");
+          router.push("/profile");
           return;
         }
         setProfile(profileData);
