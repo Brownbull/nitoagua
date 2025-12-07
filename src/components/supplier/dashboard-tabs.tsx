@@ -42,6 +42,9 @@ export function DashboardTabs({
   const [optimisticallyAccepted, setOptimisticallyAccepted] = useState<Set<string>>(new Set());
   const [optimisticallyDelivered, setOptimisticallyDelivered] = useState<Set<string>>(new Set());
 
+  // Track if component has mounted (for hydration-safe rendering)
+  const [hasMounted, setHasMounted] = useState(false);
+
   // Clear optimistic state when fresh server data arrives (props change)
   // This prevents stale optimistic IDs from accumulating and ensures
   // tab badge counts stay consistent with actual server data
@@ -50,8 +53,16 @@ export function DashboardTabs({
     setOptimisticallyDelivered(new Set());
   }, [pendingRequests, acceptedRequests, completedRequests]);
 
+  // Mark as mounted after first render to prevent hydration mismatch
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
   // Get current tab from URL or use default
-  const currentTab = (searchParams.get("tab") as TabValue) || defaultTab;
+  // Use defaultTab during SSR and initial hydration to prevent mismatch
+  const currentTab = hasMounted
+    ? (searchParams.get("tab") as TabValue) || defaultTab
+    : defaultTab;
 
   const handleTabChange = (value: string) => {
     // Update URL with new tab value
