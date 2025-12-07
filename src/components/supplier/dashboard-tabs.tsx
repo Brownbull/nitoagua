@@ -58,6 +58,10 @@ export function DashboardTabs({
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", value);
     router.push(`?${params.toString()}`, { scroll: false });
+    // Force a server refresh to get fresh data
+    // This is needed because router.push uses the client-side Router Cache
+    // which may serve stale data for the same route with different query params
+    router.refresh();
   };
 
   const handleAcceptClick = (request: WaterRequest) => {
