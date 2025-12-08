@@ -1,16 +1,17 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RequestStatusClient } from "@/components/consumer/request-status-client";
 import {
   AlertTriangle,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
-
-interface RequestStatusPageProps {
-  params: Promise<{ id: string }>;
-}
+import { useParams } from "next/navigation";
 
 interface RequestWithSupplier {
   id: string;
@@ -28,6 +29,17 @@ interface RequestWithSupplier {
     name: string;
     phone: string;
   } | null;
+}
+
+/**
+ * Loading state while fetching request
+ */
+function LoadingState() {
+  return (
+    <div className="flex min-h-[calc(100vh-120px)] items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-[#0077B6]" />
+    </div>
+  );
 }
 
 /**
@@ -90,7 +102,8 @@ function AuthRequiredPage() {
 /**
  * Request Status Page (Consumer View)
  *
- * Server component that displays the detailed status of a consumer's request.
+ * Client component that displays the detailed status of a consumer's request.
+ * Uses client-side Supabase to match auth state with History page.
  * Requires authentication - user must be logged in and can only view their own requests.
  *
  * Route: /request/[id]
@@ -110,47 +123,79 @@ function AuthRequiredPage() {
  * - AC2-6-6: Accepted status shows supplier info with phone
  * - AC2-6-7: Delivered status shows completion timestamp
  */
-export default async function RequestStatusPage({ params }: RequestStatusPageProps) {
-  const { id } = await params;
-  const supabase = await createClient();
+export default function RequestStatusPage() {
+  const params = useParams();
+  const id = params.id as string;
 
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser();
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [request, setRequest] = useState<RequestWithSupplier | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-  // If not authenticated, show auth required page
-  if (!user) {
+  useEffect(() => {
+    async function loadRequest() {
+      const supabase = createClient();
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      setIsAuthenticated(true);
+
+      // Query for the request with supplier info
+      // Consumer can only see their own requests (consumer_id = user.id)
+      const { data: requestData, error } = await supabase
+        .from("water_requests")
+        .select(`
+          id,
+          status,
+          amount,
+          address,
+          special_instructions,
+          is_urgent,
+          created_at,
+          accepted_at,
+          delivered_at,
+          delivery_window,
+          supplier_id,
+          profiles!water_requests_supplier_id_fkey (
+            name,
+            phone
+          )
+        `)
+        .eq("id", id)
+        .eq("consumer_id", user.id)
+        .single();
+
+      if (error || !requestData) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
+      setRequest(requestData as RequestWithSupplier);
+      setLoading(false);
+    }
+
+    loadRequest();
+  }, [id]);
+
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (!isAuthenticated) {
     return <AuthRequiredPage />;
   }
 
-  // Query for the request with supplier info
-  // Consumer can only see their own requests (consumer_id = user.id)
-  const { data: request, error } = await supabase
-    .from("water_requests")
-    .select(`
-      id,
-      status,
-      amount,
-      address,
-      special_instructions,
-      is_urgent,
-      created_at,
-      accepted_at,
-      delivered_at,
-      delivery_window,
-      supplier_id,
-      profiles!water_requests_supplier_id_fkey (
-        name,
-        phone
-      )
-    `)
-    .eq("id", id)
-    .eq("consumer_id", user.id)
-    .single();
-
-  // If request not found or error, show not found page
-  if (error || !request) {
+  if (notFound || !request) {
     return <RequestNotFoundPage />;
   }
 
-  return <RequestStatusClient initialRequest={request as RequestWithSupplier} />;
+  return <RequestStatusClient initialRequest={request} />;
 }
