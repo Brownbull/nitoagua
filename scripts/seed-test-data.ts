@@ -292,7 +292,6 @@ async function seedRequests(supabase: any, userIds: { supplierActualId: string; 
 
   console.log(`  ✓ Seeded ${requestsToSeed.length} water requests`);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const req of requestsToSeed) {
     console.log(`    - ${req.status}: ${req.tracking_token}`);
   }
@@ -336,7 +335,6 @@ async function verifySeededData(supabase: any) {
     .like("tracking_token", "seed-token-%");
 
   console.log(`  ✓ Found ${requests?.length || 0} seeded requests:`);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const req of requests || []) {
     console.log(`    - [${req.status}] ${req.tracking_token}`);
   }

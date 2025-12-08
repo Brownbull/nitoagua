@@ -1,6 +1,6 @@
 # Story 5.1: Email Notification Setup with Resend
 
-Status: drafted
+Status: done
 
 ## Story
 

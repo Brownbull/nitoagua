@@ -1,0 +1,227 @@
+<story-context id="5-4-epic-deployment-and-verification" v="1.0">
+  <metadata>
+    <epicId>5</epicId>
+    <storyId>4</storyId>
+    <title>Epic 5 Deployment and Verification</title>
+    <status>in-progress</status>
+    <generatedAt>2025-12-07</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic5/5-4-epic-deployment-and-verification.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to deploy all Epic 5 changes through the git branching workflow and verify production</iWant>
+    <soThat>guest email notifications are live and working for real users requesting water</soThat>
+    <tasks>
+      <task id="1" title="Pre-deployment Checks">
+        <subtask>Run npm run lint - ensure no errors</subtask>
+        <subtask>Run npm run build - ensure build succeeds</subtask>
+        <subtask>Run npm run test:e2e - ensure all tests pass</subtask>
+        <subtask>Verify local development works with all Epic 5 features</subtask>
+        <subtask>Test email sending locally with RESEND_API_KEY configured</subtask>
+        <subtask>Verify guest request creates email (check Resend dashboard)</subtask>
+        <subtask>Verify accept/deliver actions create emails</subtask>
+      </task>
+      <task id="2" title="Git Commit and Push to Develop">
+        <subtask>Review all changes with git status and git diff</subtask>
+        <subtask>Stage all Epic 5 changes</subtask>
+        <subtask>Create commit with descriptive message</subtask>
+        <subtask>Push to develop branch</subtask>
+        <subtask>Verify Vercel preview deployment for develop branch</subtask>
+      </task>
+      <task id="3" title="Merge to Staging">
+        <subtask>Checkout staging branch</subtask>
+        <subtask>Merge develop into staging</subtask>
+        <subtask>Push staging branch</subtask>
+        <subtask>Verify Vercel preview deployment for staging</subtask>
+        <subtask>Verify RESEND_API_KEY is set in staging environment</subtask>
+        <subtask>Test staging deployment manually: guest request, accept, deliver emails</subtask>
+        <subtask>Verify registered user request does NOT send email</subtask>
+      </task>
+      <task id="4" title="Merge to Main (Production)">
+        <subtask>Checkout main branch</subtask>
+        <subtask>Merge staging into main</subtask>
+        <subtask>Push main branch</subtask>
+        <subtask>Monitor Vercel production deployment</subtask>
+      </task>
+      <task id="5" title="Production Verification">
+        <subtask>Navigate to https://nitoagua.vercel.app</subtask>
+        <subtask>Verify RESEND_API_KEY is configured in Vercel production dashboard</subtask>
+        <subtask>Test guest request creation - verify email received</subtask>
+        <subtask>Log in as supplier, accept the request - verify email received</subtask>
+        <subtask>Mark request as delivered - verify email received</subtask>
+        <subtask>Check Resend dashboard for sent emails</subtask>
+        <subtask>Verify supplier dashboard still works (no regression)</subtask>
+        <subtask>Verify consumer flows still work (no regression)</subtask>
+      </task>
+      <task id="6" title="E2E Test Suite Verification">
+        <subtask>Run full E2E test suite against local</subtask>
+        <subtask>Verify existing tests still pass</subtask>
+        <subtask>Document any test adjustments needed</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <ac id="AC5-4-1">All Epic 5 changes committed to develop branch</ac>
+    <ac id="AC5-4-2">Develop merged to staging, preview deployment verified</ac>
+    <ac id="AC5-4-3">Staging merged to main, production deployment triggered</ac>
+    <ac id="AC5-4-4">Production deployment successful (Vercel build passes)</ac>
+    <ac id="AC5-4-5">RESEND_API_KEY environment variable configured in Vercel production</ac>
+    <ac id="AC5-4-6">Guest request creates and sends confirmation email in production</ac>
+    <ac id="AC5-4-7">Accepting a guest request sends "accepted" email in production</ac>
+    <ac id="AC5-4-8">Marking request delivered sends "delivered" email in production</ac>
+    <ac id="AC5-4-9">Registered user requests do NOT trigger emails (in-app only per design)</ac>
+    <ac id="AC5-4-10">All E2E tests pass (existing + any new email-related tests)</ac>
+    <ac id="AC5-4-11">No regression in supplier flows (dashboard, accept, deliver still works)</ac>
+    <ac id="AC5-4-12">No regression in consumer flows (guest request, registered user request)</ac>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic4/4-6-epic-deployment-and-verification.md</path>
+        <title>Epic 4 Deployment Story</title>
+        <section>Reference Template</section>
+        <snippet>Epic 4 deployment followed: develop → staging → main branching strategy with Vercel auto-deploy. Used as template for Epic 5 deployment.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Branching Strategy</section>
+        <snippet>develop → staging → main with Vercel auto-deploy. Preview deployments for develop/staging, production for main.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic5/5-1-email-notification-setup-with-resend.md</path>
+        <title>Story 5-1 Email Setup</title>
+        <section>Email Infrastructure</section>
+        <snippet>Story 5-1 established email infrastructure via prep-5-4 spike: Resend client, React Email templates, sendEmail helper functions.</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic5/5-2-guest-email-notifications.md</path>
+        <title>Story 5-2 Guest Notifications</title>
+        <section>Email Integration</section>
+        <snippet>Story 5-2 integrates email sending into API routes: POST /api/requests (created), PATCH /api/requests/[id] (accepted/delivered).</snippet>
+      </doc>
+    </docs>
+    <code>
+      <file>
+        <path>src/lib/email/resend.ts</path>
+        <kind>utility</kind>
+        <symbol>getResendClient, EMAIL_CONFIG</symbol>
+        <reason>Resend client singleton - requires RESEND_API_KEY environment variable in production.</reason>
+      </file>
+      <file>
+        <path>src/lib/email/send-email.ts</path>
+        <kind>utility</kind>
+        <symbol>sendRequestConfirmedEmail, sendRequestAcceptedEmail, sendRequestDeliveredEmail</symbol>
+        <reason>Email sending functions - verify these work in production environment.</reason>
+      </file>
+      <file>
+        <path>src/app/api/requests/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>POST</symbol>
+        <reason>Request creation endpoint - should send confirmation email to guests after Story 5-2 integration.</reason>
+      </file>
+      <file>
+        <path>src/app/api/requests/[id]/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>PATCH (accept, deliver)</symbol>
+        <reason>Accept/deliver endpoints - should send notification emails to guests after Story 5-2 integration.</reason>
+      </file>
+      <file>
+        <path>emails/request-confirmed.tsx</path>
+        <kind>email-template</kind>
+        <symbol>RequestConfirmed</symbol>
+        <reason>Email template for request confirmation - verify renders correctly in production.</reason>
+      </file>
+      <file>
+        <path>emails/request-accepted.tsx</path>
+        <kind>email-template</kind>
+        <symbol>RequestAccepted</symbol>
+        <reason>Email template for request accepted - verify renders correctly in production.</reason>
+      </file>
+      <file>
+        <path>emails/request-delivered.tsx</path>
+        <kind>email-template</kind>
+        <symbol>RequestDelivered</symbol>
+        <reason>Email template for request delivered - verify renders correctly in production.</reason>
+      </file>
+      <file>
+        <path>.vercel/project.json</path>
+        <kind>config</kind>
+        <symbol>Vercel project configuration</symbol>
+        <reason>Contains project ID and org ID for Vercel deployment.</reason>
+      </file>
+    </code>
+    <dependencies>
+      <node>
+        <package>resend</package>
+        <version>^6.5.2</version>
+        <purpose>Transactional email API - requires API key in production</purpose>
+      </node>
+      <node>
+        <package>@react-email/components</package>
+        <version>^1.0.1</version>
+        <purpose>React Email components for templates</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="cost">RESEND FREE TIER: 100 emails/day, 3000 emails/month. For production verification, test ONE complete guest flow only (create→accept→deliver = 3 emails). Do NOT run repeated email tests. Use Resend dashboard to verify delivery instead of sending multiple test emails.</constraint>
+    <constraint type="environment">RESEND_API_KEY must be set in Vercel for all environments (Development, Preview, Production)</constraint>
+    <constraint type="environment">Do NOT use NEXT_PUBLIC_ prefix for RESEND_API_KEY - server-side only</constraint>
+    <constraint type="deployment">Follow branching strategy: develop → staging → main</constraint>
+    <constraint type="deployment">Verify each environment before merging to next</constraint>
+    <constraint type="testing">E2E tests must pass before production deployment</constraint>
+    <constraint type="rollback">If email issues in production, remove RESEND_API_KEY from Vercel - graceful degradation</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Vercel Environment Variables</name>
+      <kind>Configuration</kind>
+      <signature>RESEND_API_KEY=re_xxxxxxxxxxxx (Development, Preview, Production)</signature>
+      <path>Vercel Dashboard > Project Settings > Environment Variables</path>
+    </interface>
+    <interface>
+      <name>Git Branching</name>
+      <kind>Workflow</kind>
+      <signature>develop (preview) → staging (preview) → main (production)</signature>
+      <path>Git repository</path>
+    </interface>
+    <interface>
+      <name>Resend Dashboard</name>
+      <kind>External Service</kind>
+      <signature>https://resend.com/emails - monitor email delivery status</signature>
+      <path>External</path>
+    </interface>
+    <interface>
+      <name>Production URL</name>
+      <kind>Deployment</kind>
+      <signature>https://nitoagua.vercel.app</signature>
+      <path>Vercel</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Deployment verification is primarily manual testing in production. E2E tests run locally before deployment. Monitor Resend dashboard for email delivery confirmation.
+    </standards>
+    <locations>
+      <location>tests/e2e/*.spec.ts - run locally before deployment</location>
+      <location>https://resend.com/emails - verify email delivery</location>
+      <location>https://nitoagua.vercel.app - production testing</location>
+    </locations>
+    <ideas>
+      <idea ac="AC5-4-6">Create guest request with real email in production, verify email arrives in inbox</idea>
+      <idea ac="AC5-4-7">Accept the guest request as supplier, verify "accepted" email arrives</idea>
+      <idea ac="AC5-4-8">Mark request delivered, verify "delivered" email arrives</idea>
+      <idea ac="AC5-4-9">Create request as logged-in user, verify NO email sent (check Resend dashboard)</idea>
+      <idea ac="AC5-4-11">Test full supplier flow: login, view dashboard, accept request, mark delivered</idea>
+      <idea ac="AC5-4-12">Test full consumer flow: guest request, registered user request, history page</idea>
+    </ideas>
+  </tests>
+</story-context>

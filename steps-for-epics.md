@@ -140,13 +140,83 @@ Before starting a new epic:
 - **Patterns established**: Admin Client, Server Actions, Optimistic UI, AlertDialog confirmations
 - **Each epic MUST end with a deployment story** following git branching workflow
 
-## Epic 4 Preparation Notes
+## Epic 4 Completion Notes
 
-- **Authentication changed**: Google OAuth only (not Email/Password as originally spec'd)
-- **Guest flow unchanged**: Consumers can still request water without registering
-- **Test login**: `ENABLE_TEST_LOGIN=true` in local .env for E2E tests
-- **Stories**: 4-1 through 4-5 (features) + 4-6 (deployment)
+- **All 6 stories completed** (100% completion, zero regressions)
+- **Extended implementation**: Story 4-1 absorbed 4-2, 4-3, 4-4 in single session
+- **Test suite grew**: From ~526 to 879 tests (353 new tests)
+- **Key pattern**: Comprehensive upfront flow design enables early issue detection
+- **100% follow-through** on Epic 3 retrospective action items
+
+### Issues Identified for Resolution
+
+| Issue | Priority | Description |
+|-------|----------|-------------|
+| Dashboard data freshness | CRITICAL | New requests don't appear without manual refresh |
+| Tab count inconsistency | CRITICAL | Accepted/Completed counts inconsistent between tabs |
+| Seeded test data | IMPORTANT | E2E integration tests skipped due to missing fixtures |
+| WebKit flaky tests | NICE-TO-HAVE | ~21 intermittent failures lingering |
 
 ---
 
-*Last Updated: 2025-12-04 (Epic 3 Retrospective / Epic 4 Preparation)*
+## Prep Sprint: Epic 5 Readiness
+
+**Decision**: Complete a prep sprint before Epic 5 to address technical debt and ensure clean foundation.
+
+### Prep Sprint Stories
+
+| Story ID | Title | Priority | Owner |
+|----------|-------|----------|-------|
+| prep-5-1 | Fix Dashboard Data Freshness | CRITICAL | Charlie |
+| prep-5-2 | Fix Tab Count Inconsistency | CRITICAL | Charlie |
+| prep-5-3 | Seeded Test Data Setup | IMPORTANT | Dana |
+| prep-5-4 | Resend/React Email Spike | IMPORTANT | Elena |
+| prep-5-5 | WebKit Flaky Test Fix | NICE-TO-HAVE | Dana + Charlie |
+
+### Prep Sprint Workflow
+
+1. **Draft each prep story** using `/bmad:bmm:workflows:create-story`
+2. **Execute through normal workflow**: drafted → ready-for-dev → in-progress → review → done
+3. **Code review required** for each prep task
+4. **Complete all CRITICAL items** before starting Epic 5
+
+### Folder Structure
+
+```
+docs/sprint-artifacts/
+├── prep5/
+│   ├── prep-5-1-fix-dashboard-data-freshness.md
+│   ├── prep-5-2-fix-tab-count-inconsistency.md
+│   ├── prep-5-3-seeded-test-data-setup.md
+│   ├── prep-5-4-resend-react-email-spike.md
+│   └── prep-5-5-webkit-flaky-test-fix.md
+```
+
+---
+
+## Epic 5 Preparation Notes
+
+- **BLOCKED**: Complete prep-5 sprint first
+- **Resend API**: Will need API key configured in environment
+- **Notification stubs**: `console.log('[NOTIFY]...')` exists throughout API routes
+- **Stories**: 5-1 (email setup), 5-2 (guest notifications), 5-3 (in-app notifications)
+- **Dependencies**: Consumer profiles (4-1), request history (4-4), guest email capture (Epic 2)
+
+---
+
+## Current Progress
+
+| Epic | Status | Retrospective |
+|------|--------|---------------|
+| Epic 1: Foundation & Infrastructure | COMPLETE | DONE |
+| Epic 2: Consumer Water Request | COMPLETE | DONE |
+| Epic 3: Supplier Dashboard & Request Management | COMPLETE | DONE |
+| Epic 4: User Accounts & Profiles | COMPLETE | DONE |
+| **Prep-5: Epic 5 Readiness** | **IN PROGRESS** | Optional |
+| Epic 5: Notifications & Communication | BLOCKED | - |
+
+**Production URL**: https://nitoagua.vercel.app
+
+---
+
+*Last Updated: 2025-12-05 (Epic 4 Retrospective / Prep Sprint Planning)*

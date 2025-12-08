@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -9,6 +9,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { WaterRequest } from "@/lib/supabase/types";
+
+// useSyncExternalStore pattern for hydration-safe client detection
+// This is the React-recommended way to avoid hydration mismatches
+const emptySubscribe = () => () => {};
+const getServerSnapshot = () => false;
+const getClientSnapshot = () => true;
+
+function useIsClient() {
+  return useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
+}
 
 interface RequestCardProps {
   request: WaterRequest;
@@ -55,18 +65,17 @@ export function RequestCard({
   onDeliverRequest,
   currentTab,
 }: RequestCardProps) {
-  // Use client-side only rendering for timeAgo to prevent hydration mismatch
-  // Server and client may have different timestamps causing React error #418
-  const [timeAgo, setTimeAgo] = useState<string>("");
+  // Use useSyncExternalStore to safely detect client-side rendering
+  // This avoids hydration mismatches from time-based calculations
+  const isClient = useIsClient();
 
-  useEffect(() => {
-    setTimeAgo(
-      formatDistanceToNow(new Date(request.created_at!), {
+  // Compute timeAgo only on client to avoid hydration mismatch
+  const timeAgo = isClient
+    ? formatDistanceToNow(new Date(request.created_at!), {
         addSuffix: true,
         locale: es,
       })
-    );
-  }, [request.created_at]);
+    : "";
 
   const isUrgent = request.is_urgent === true;
   const customerName = request.guest_name || "Cliente";

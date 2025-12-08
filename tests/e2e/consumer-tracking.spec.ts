@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { TRACKING_TOKENS, SEEDED_PENDING_REQUEST, SEEDED_ACCEPTED_REQUEST, SEEDED_DELIVERED_REQUEST } from "../fixtures/test-data";
+import { TRACKING_TOKENS } from "../fixtures/test-data";
 
 /**
  * Tests for Request Status Tracking (Story 2-5)
