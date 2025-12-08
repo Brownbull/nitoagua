@@ -107,10 +107,15 @@ Implementation created in-app notification hooks and integrated with consumer na
 
 ### File List
 
-- src/hooks/use-unread-updates.ts (new)
-- src/hooks/use-request-polling.ts (new)
-- src/components/layout/consumer-nav.tsx (modified)
-- src/lib/notifications.ts (new)
+**New Files:**
+- src/hooks/use-request-polling.ts
+- src/hooks/use-unread-updates.ts
+- src/lib/notifications.ts
+- src/components/consumer/request-status-client.tsx
+
+**Modified Files:**
+- src/app/(consumer)/request/[id]/page.tsx
+- src/components/layout/consumer-nav.tsx
 
 ---
 
@@ -120,3 +125,4 @@ Implementation created in-app notification hooks and integrated with consumer na
 |------|--------|--------|
 | 2025-12-08 | Claude Opus 4.5 | Story created and completed |
 | 2025-12-08 | Claude Opus 4.5 | Senior Dev Review passed |
+| 2025-12-08 | Claude Opus 4.5 | Code lost during git clean - re-implemented and pushed to develop |

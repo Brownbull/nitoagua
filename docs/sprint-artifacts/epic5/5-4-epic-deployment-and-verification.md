@@ -1,6 +1,6 @@
 # Story 5.4: Epic 5 Deployment & Verification
 
-Status: review
+Status: done
 
 ## Story
 
@@ -149,7 +149,7 @@ The email system is designed to be non-blocking - API operations succeed even if
 - [x] Resend dashboard shows successful email deliveries (verified in Story 5-2)
 - [x] No regressions in existing functionality (341 E2E tests passing)
 - [x] Sprint status updated for all Epic 5 stories
-- [ ] Story status updated to `done` (pending SM review)
+- [x] Story status updated to `done`
 
 ---
 
