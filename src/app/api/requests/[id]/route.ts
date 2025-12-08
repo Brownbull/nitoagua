@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isGuestRequest, sendGuestNotification } from "@/lib/email";
 
 interface AcceptRequestBody {
   action: "accept";
@@ -106,14 +107,35 @@ async function handleDeliverAction(
     );
   }
 
-  // TODO: Epic 5 - Send email notification to customer
-  console.log(
-    "[NOTIFY] Request delivered - customer notification would send here",
-    {
-      requestId,
-      supplierId: userId,
-    }
-  );
+  // Send email notification to guest consumers (non-blocking)
+  // Fetch full request with guest info for notification
+  const { data: fullRequest } = await supabase
+    .from("water_requests")
+    .select("guest_email, guest_name, consumer_id, tracking_token, amount, address")
+    .eq("id", requestId)
+    .single();
+
+  if (fullRequest && isGuestRequest(fullRequest) && fullRequest.guest_email && fullRequest.guest_name) {
+    // Fetch supplier name for the email
+    const { data: supplierProfile } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("id", userId)
+      .single();
+
+    // Fire and forget - don't await, don't block response
+    sendGuestNotification({
+      type: "delivered",
+      guestEmail: fullRequest.guest_email,
+      guestName: fullRequest.guest_name,
+      requestId: requestId,
+      trackingToken: fullRequest.tracking_token || "",
+      amount: fullRequest.amount,
+      address: fullRequest.address,
+      supplierName: supplierProfile?.name || "Su aguatero",
+      deliveredAt: updatedRequest.delivered_at,
+    });
+  }
 
   // Return success response
   return NextResponse.json(
@@ -533,15 +555,35 @@ export async function PATCH(
       );
     }
 
-    // TODO: Epic 5 - Send email notification to customer
-    console.log(
-      "[NOTIFY] Request accepted - customer notification would send here",
-      {
-        requestId,
-        supplierId: user.id,
-        deliveryWindow: body.deliveryWindow || "none specified",
-      }
-    );
+    // Send email notification to guest consumers (non-blocking)
+    // Fetch full request with guest info for notification
+    const { data: fullRequest } = await supabase
+      .from("water_requests")
+      .select("guest_email, guest_name, consumer_id, tracking_token, amount, address")
+      .eq("id", requestId)
+      .single();
+
+    if (fullRequest && isGuestRequest(fullRequest) && fullRequest.guest_email && fullRequest.guest_name) {
+      // Fetch supplier name for the email
+      const { data: supplierProfile } = await supabase
+        .from("profiles")
+        .select("name, phone")
+        .eq("id", user.id)
+        .single();
+
+      // Fire and forget - don't await, don't block response
+      sendGuestNotification({
+        type: "accepted",
+        guestEmail: fullRequest.guest_email,
+        guestName: fullRequest.guest_name,
+        requestId: requestId,
+        trackingToken: fullRequest.tracking_token || "",
+        amount: fullRequest.amount,
+        address: fullRequest.address,
+        supplierName: supplierProfile?.name || "Su aguatero",
+        deliveryWindow: body.deliveryWindow,
+      });
+    }
 
     // Return success response
     return NextResponse.json(

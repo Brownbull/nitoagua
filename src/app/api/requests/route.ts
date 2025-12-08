@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { requestSchema } from "@/lib/validations/request";
+import { isGuestRequest, sendGuestNotification } from "@/lib/email";
 
 /**
  * POST /api/requests
@@ -85,6 +86,34 @@ export async function POST(request: NextRequest) {
         },
         { status: 500 }
       );
+    }
+
+    // Send confirmation email for guest requests (non-blocking)
+    const requestForCheck = {
+      guest_email: insertData.guest_email ?? null,
+      consumer_id: user?.id ?? null,
+    };
+
+    if (isGuestRequest(requestForCheck) && insertData.guest_email && insertData.guest_name) {
+      // Fetch supplier info for email (MVP: single supplier)
+      const { data: supplier } = await supabase
+        .from("profiles")
+        .select("phone")
+        .eq("role", "supplier")
+        .limit(1)
+        .single();
+
+      // Fire and forget - don't await, don't block response
+      sendGuestNotification({
+        type: "confirmed",
+        guestEmail: insertData.guest_email,
+        guestName: insertData.guest_name,
+        requestId: insertedRequest.id,
+        trackingToken: insertedRequest.tracking_token || "",
+        amount: insertData.amount,
+        address: insertData.address,
+        supplierPhone: supplier?.phone,
+      });
     }
 
     // Return success response
