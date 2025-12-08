@@ -28,13 +28,10 @@ export function getResendClient(): Resend | null {
 
 // Email configuration
 export const EMAIL_CONFIG = {
-  // During development/testing, use Resend's test domain
-  // For production, configure a verified custom domain
+  // Production configuration with verified custom domain
   from: {
     // Default sender for nitoagua notifications
-    noreply: "nitoagua <onboarding@resend.dev>",
-    // For production with verified domain:
-    // noreply: "nitoagua <noreply@nitoagua.cl>",
+    noreply: "nitoagua <noreply@nitoagua.cl>",
   },
   // Resend free tier limits (as of 2025)
   limits: {
