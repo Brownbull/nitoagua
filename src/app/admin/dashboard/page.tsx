@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth/guards";
-import { ShieldCheck, Package, DollarSign, Users, AlertCircle, ChevronRight } from "lucide-react";
+import { ShieldCheck, Package, DollarSign, Users, AlertCircle, ChevronRight, LogOut } from "lucide-react";
+import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
 
 export default async function AdminDashboardPage() {
   // Require admin access
@@ -143,6 +144,11 @@ export default async function AdminDashboardPage() {
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400" />
           </button>
+        </div>
+
+        {/* Logout button */}
+        <div className="mt-6">
+          <AdminLogoutButton />
         </div>
 
         {/* Note about placeholder */}

@@ -86,7 +86,7 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
+    <aside className="hidden lg:flex w-64 bg-gray-900 text-white min-h-screen flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-gray-800">
         <Link href="/admin/dashboard" className="flex items-center gap-3">
