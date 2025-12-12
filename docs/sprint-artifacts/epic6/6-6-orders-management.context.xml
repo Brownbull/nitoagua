@@ -1,0 +1,284 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>6.6</storyId>
+    <title>Orders Management</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic6/6-6-orders-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>admin</asA>
+    <iWant>to view all orders and their offer history</iWant>
+    <soThat>I can monitor the marketplace and intervene if needed</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <name>Orders Page Route</name>
+        <subtasks>
+          <subtask>Create src/app/admin/orders/page.tsx</subtask>
+          <subtask>Add "Pedidos" link to sidebar (enable existing disabled item)</subtask>
+          <subtask>Query all water_requests</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="1,2">
+        <name>Orders Table Component</name>
+        <subtasks>
+          <subtask>Create src/components/admin/orders-table.tsx</subtask>
+          <subtask>Columns: ID, Consumer, Amount, Status, Offers Count, Provider, Created</subtask>
+          <subtask>Status badges with colors</subtask>
+          <subtask>Pagination</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="2">
+        <name>Filters</name>
+        <subtasks>
+          <subtask>Status filter: all, pending, offers_pending, assigned, en_route, delivered, cancelled</subtask>
+          <subtask>Date range picker</subtask>
+          <subtask>Service area filter (comunas)</subtask>
+          <subtask>Apply filters to query</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="3,4,5">
+        <name>Order Detail View</name>
+        <subtasks>
+          <subtask>Create src/app/admin/orders/[id]/page.tsx</subtask>
+          <subtask>Full request details: amount, address, urgency, payment method</subtask>
+          <subtask>Consumer contact info (name, phone, email)</subtask>
+          <subtask>Provider contact (if assigned)</subtask>
+          <subtask>Order timeline visualization</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="3,7">
+        <name>Offer History Section</name>
+        <subtasks>
+          <subtask>List all offers for this request</subtask>
+          <subtask>Each offer: provider name, delivery window, status, created time</subtask>
+          <subtask>Highlight accepted offer</subtask>
+          <subtask>Show expired/cancelled offers</subtask>
+          <subtask>Analytics: count, time to first offer, time to selection</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="6">
+        <name>Cancel Order Action</name>
+        <subtasks>
+          <subtask>"Cancelar Pedido" button</subtask>
+          <subtask>Reason required modal</subtask>
+          <subtask>Update water_requests.status = 'cancelled'</subtask>
+          <subtask>Notify consumer and provider (if assigned)</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="1">
+        <name>Real-time Updates</name>
+        <subtasks>
+          <subtask>Subscribe to water_requests changes</subtask>
+          <subtask>Subscribe to offers changes for open orders</subtask>
+          <subtask>Update table/detail view in real-time</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="All">
+        <name>Testing</name>
+        <subtasks>
+          <subtask>E2E test: View orders table</subtask>
+          <subtask>E2E test: Filter by status and date</subtask>
+          <subtask>E2E test: View order detail with offer history</subtask>
+          <subtask>E2E test: Cancel order with reason</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC6.6.1">Orders page shows filterable table of all orders</criterion>
+    <criterion id="AC6.6.2">Filters: status, date range, service area</criterion>
+    <criterion id="AC6.6.3">Clicking order shows detail view with offer history</criterion>
+    <criterion id="AC6.6.4">Detail shows timeline: Created → Offers → Selected → Delivered</criterion>
+    <criterion id="AC6.6.5">Admin can view consumer and provider contact info</criterion>
+    <criterion id="AC6.6.6">Admin can cancel order with reason</criterion>
+    <criterion id="AC6.6.7">Offer analytics shown: offers received, time to first offer</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Story 6.6: Orders Management</section>
+        <snippet>Orders are water_requests table. Offers are offers table linked by request_id. Real-time via Supabase Realtime subscriptions. Join water_requests with offers for offer history.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document V2</title>
+        <section>Data Architecture - offers table</section>
+        <snippet>Offers table with request_id, provider_id, delivery_window_start/end, expires_at, status. Index on offers.expires_at WHERE status = 'active'.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd-v2.md</path>
+        <title>PRD V2</title>
+        <section>FR93-98: Admin Orders & Offers Operations</section>
+        <snippet>Admins can view all orders in list format, filter by status/date/provider/consumer, view order details/offers/timeline, manually cancel orders.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-mockups/02-admin-dashboard.html</path>
+        <title>Admin Mockups</title>
+        <section>Section 6: Pedidos (Live Orders), Section 8: Historial</section>
+        <snippet>Table with ID truncated, status badge, offers count chip. Two-column detail layout with timeline. Date tabs (Hoy/Semana/Mes) + calendar picker.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/auth/guards.ts</path>
+        <kind>auth-guard</kind>
+        <symbol>requireAdmin()</symbol>
+        <reason>Use this guard in orders pages to ensure only admins can access.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/admin/admin-sidebar.tsx</path>
+        <kind>component</kind>
+        <symbol>AdminSidebar</symbol>
+        <lines>43-47</lines>
+        <reason>Pedidos nav item exists but is disabled. Enable it.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/api/requests/route.ts</path>
+        <kind>api-route</kind>
+        <reason>Reference for water_requests query patterns.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>supabase-client</kind>
+        <symbol>createClient</symbol>
+        <reason>Server-side Supabase client for queries and real-time subscriptions.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.86.0</version>
+        <purpose>Real-time subscriptions for order/offer updates</purpose>
+      </node>
+      <node>
+        <package>@radix-ui/react-dialog</package>
+        <version>^1.1.15</version>
+        <purpose>Order detail modal or cancel reason modal</purpose>
+      </node>
+      <node>
+        <package>@radix-ui/react-select</package>
+        <version>^2.2.6</version>
+        <purpose>Status and service area filter dropdowns</purpose>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>^4.1.0</version>
+        <purpose>Date range filtering and time calculations</purpose>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.555.0</version>
+        <purpose>Icons (Package, Clock, Phone, Mail, etc.)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="auth">Orders routes must use requireAdmin() guard</constraint>
+    <constraint type="database">Orders in water_requests table, offers in offers table (linked by request_id)</constraint>
+    <constraint type="realtime">Use Supabase Realtime for live updates on orders and offers</constraint>
+    <constraint type="pagination">25 items per page with offset-based pagination</constraint>
+    <constraint type="ui">Follow admin gray theme per architecture spec</constraint>
+    <constraint type="i18n">All user-facing strings in Spanish</constraint>
+    <constraint type="contact">Display phone numbers as WhatsApp links for easy contact</constraint>
+    <constraint type="logging">Log admin actions: [ADMIN] ${action} by ${email} at ${timestamp}</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>OrderDetail</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface OrderDetail {
+  id: string;
+  consumer_name: string;
+  consumer_phone: string;
+  consumer_email?: string;
+  address: string;
+  comuna: string;
+  amount_liters: number;
+  urgency: 'normal' | 'urgent';
+  status: string;
+  created_at: string;
+  offers: OfferSummary[];
+  selected_offer?: OfferSummary;
+  provider?: ProviderSummary;
+  timeline: TimelineEvent[];
+}
+      </signature>
+      <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+    </interface>
+    <interface>
+      <name>OfferSummary</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface OfferSummary {
+  id: string;
+  provider_name: string;
+  delivery_window_start: string;
+  delivery_window_end: string;
+  status: 'active' | 'accepted' | 'expired' | 'cancelled' | 'request_filled';
+  created_at: string;
+}
+      </signature>
+      <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+    </interface>
+    <interface>
+      <name>offers table</name>
+      <kind>Database table</kind>
+      <signature>
+CREATE TABLE offers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id UUID NOT NULL REFERENCES water_requests(id) ON DELETE CASCADE,
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  delivery_window_start TIMESTAMPTZ NOT NULL,
+  delivery_window_end TIMESTAMPTZ NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active', 'accepted', 'expired', 'cancelled', 'request_filled')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  accepted_at TIMESTAMPTZ,
+  UNIQUE (request_id, provider_id)
+);
+      </signature>
+      <path>docs/architecture.md</path>
+    </interface>
+    <interface>
+      <name>cancelOrder()</name>
+      <kind>Server action</kind>
+      <signature>async function cancelOrder(orderId: string, reason: string): Promise&lt;{ success: boolean }&gt;</signature>
+      <path>To be created: src/lib/actions/admin.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      E2E tests using Playwright. Tests located in tests/e2e/ directory.
+      Admin tests require authenticated admin session.
+      Use data-testid attributes for reliable selectors.
+      Seed test data with orders in various statuses and with offers.
+    </standards>
+    <locations>
+      <location>tests/e2e/admin-orders.spec.ts (to be created)</location>
+      <location>tests/e2e/admin-auth.spec.ts (existing - reference for admin auth pattern)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC6.6.1">Test: Navigate to /admin/orders, verify table renders with orders</idea>
+      <idea ac="AC6.6.2">Test: Apply status filter, verify results filter correctly</idea>
+      <idea ac="AC6.6.2">Test: Apply date range filter, verify results filter correctly</idea>
+      <idea ac="AC6.6.3">Test: Click order row, verify detail view opens with offer history</idea>
+      <idea ac="AC6.6.4">Test: Verify timeline shows order progression with timestamps</idea>
+      <idea ac="AC6.6.5">Test: Verify consumer phone/email are displayed with click-to-action</idea>
+      <idea ac="AC6.6.6">Test: Click Cancelar, enter reason, verify order status changes to cancelled</idea>
+      <idea ac="AC6.6.7">Test: Verify offer analytics section shows count and timing metrics</idea>
+    </ideas>
+  </tests>
+</story-context>

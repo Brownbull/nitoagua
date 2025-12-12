@@ -39,6 +39,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_allowed_emails: {
+        Row: {
+          email: string
+          added_by: string
+          added_at: string
+          notes: string | null
+        }
+        Insert: {
+          email: string
+          added_by: string
+          added_at?: string
+          notes?: string | null
+        }
+        Update: {
+          email?: string
+          added_by?: string
+          added_at?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      admin_settings: {
+        Row: {
+          key: string
+          value: Json
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          value: Json
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          value?: Json
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           address: string | null

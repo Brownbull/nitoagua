@@ -1,0 +1,197 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>6.7</storyId>
+    <title>Offer Expiration Cron Job</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic6/6-7-offer-expiration-cron-job.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>the platform</asA>
+    <iWant>expired offers to be automatically marked as expired</iWant>
+    <soThat>consumers don't see stale offers</soThat>
+    <tasks>
+      <task id="1" ac="1,5">
+        <name>Cron Route</name>
+        <subtasks>
+          <subtask>Create src/app/api/cron/expire-offers/route.ts</subtask>
+          <subtask>Verify CRON_SECRET from Authorization header</subtask>
+          <subtask>Return 401 if unauthorized</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2">
+        <name>Expiration Logic</name>
+        <subtasks>
+          <subtask>Query offers WHERE status = 'active' AND expires_at &lt; NOW()</subtask>
+          <subtask>Batch update status to 'expired'</subtask>
+          <subtask>Use Supabase admin client for service role access</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="3">
+        <name>Provider Notifications</name>
+        <subtasks>
+          <subtask>For each expired offer, get provider_id</subtask>
+          <subtask>Create in-app notification: "Tu oferta expiró"</subtask>
+          <subtask>Include request summary in notification</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="4">
+        <name>Logging</name>
+        <subtasks>
+          <subtask>Log count of expired offers</subtask>
+          <subtask>Log execution time</subtask>
+          <subtask>Format: [CRON] Expired X offers in Yms</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="1">
+        <name>Vercel Cron Configuration</name>
+        <subtasks>
+          <subtask>Create or update vercel.json with cron config</subtask>
+          <subtask>Schedule: * * * * * (every minute)</subtask>
+          <subtask>Path: /api/cron/expire-offers</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="5">
+        <name>Environment Variable</name>
+        <subtasks>
+          <subtask>Add CRON_SECRET to Vercel environment</subtask>
+          <subtask>Add to .env.local for local testing</subtask>
+          <subtask>Document in README</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="All">
+        <name>Testing</name>
+        <subtasks>
+          <subtask>Unit test: Expiration query logic</subtask>
+          <subtask>Unit test: CRON_SECRET validation</subtask>
+          <subtask>Integration test: Full cron execution with test data</subtask>
+          <subtask>Manual test: Trigger via curl with secret</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC6.7.1">Cron job runs every minute via Vercel cron</criterion>
+    <criterion id="AC6.7.2">Job marks offers with expires_at &lt; NOW() as 'expired'</criterion>
+    <criterion id="AC6.7.3">Affected providers notified "Tu oferta expiró"</criterion>
+    <criterion id="AC6.7.4">Job logs count of expired offers</criterion>
+    <criterion id="AC6.7.5">Job authenticated via CRON_SECRET</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Story 6.7: Offer Expiration Cron Job</section>
+        <snippet>Cron job runs every minute via Vercel cron. Query: SELECT * FROM offers WHERE status = 'active' AND expires_at &lt; NOW(). Batch update: SET status = 'expired'. Create notification for each expired offer.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document V2</title>
+        <section>Cron Jobs (Vercel)</section>
+        <snippet>expire-offers runs every minute to mark expired offers. Uses CRON_SECRET header validation. Service role key for admin access.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd-v2.md</path>
+        <title>PRD V2</title>
+        <section>FR49: Expired offers cleanup</section>
+        <snippet>Expired offers are automatically cleaned up by cron job. Providers notified when their offers expire.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>supabase-client</kind>
+        <symbol>createClient</symbol>
+        <reason>Reference for creating Supabase client. Cron needs service role client instead.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/notifications.ts</path>
+        <kind>utility</kind>
+        <reason>Notification system from Epic 5 for creating in-app notifications.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.86.0</version>
+        <purpose>Direct Supabase client with service role key for batch operations</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="auth">Cron endpoint must validate CRON_SECRET from Authorization header</constraint>
+    <constraint type="security">Use service role key (not anon key) for admin-level database access</constraint>
+    <constraint type="schedule">Vercel cron schedule: * * * * * (every minute)</constraint>
+    <constraint type="logging">Log format: [CRON] Expired X offers in Yms</constraint>
+    <constraint type="idempotent">Cron must be idempotent - safe to run multiple times</constraint>
+    <constraint type="batch">Use batch update for efficiency, not individual updates</constraint>
+    <constraint type="notifications">Use existing notification system from Epic 5</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Cron Security Pattern</name>
+      <kind>Code pattern</kind>
+      <signature>
+export async function GET(request: Request) {
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+  // ... cron logic
+}
+      </signature>
+      <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+    </interface>
+    <interface>
+      <name>Vercel Cron Configuration</name>
+      <kind>Configuration</kind>
+      <signature>
+{
+  "crons": [{
+    "path": "/api/cron/expire-offers",
+    "schedule": "* * * * *"
+  }]
+}
+      </signature>
+      <path>vercel.json (to be created/updated)</path>
+    </interface>
+    <interface>
+      <name>offers table</name>
+      <kind>Database table</kind>
+      <signature>
+-- Index for efficient expiration queries
+CREATE INDEX idx_offers_expiration ON offers(expires_at) WHERE status = 'active';
+      </signature>
+      <path>docs/architecture.md</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Unit tests for cron logic. Integration tests for full execution.
+      Manual testing via curl with Authorization header.
+      No E2E UI tests needed (backend-only story).
+    </standards>
+    <locations>
+      <location>tests/unit/cron-expire-offers.test.ts (to be created)</location>
+      <location>tests/integration/cron-expire-offers.test.ts (to be created)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC6.7.1">Test: Call endpoint without CRON_SECRET, verify 401 response</idea>
+      <idea ac="AC6.7.2">Test: Create offer with expires_at in past, run cron, verify status = 'expired'</idea>
+      <idea ac="AC6.7.2">Test: Create active offer with future expires_at, run cron, verify status unchanged</idea>
+      <idea ac="AC6.7.3">Test: After expiration, verify notification created for provider</idea>
+      <idea ac="AC6.7.4">Test: Verify response includes expired count</idea>
+      <idea ac="AC6.7.5">Test: Call with correct CRON_SECRET, verify 200 response</idea>
+      <idea ac="AC6.7.5">Manual: curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/expire-offers</idea>
+    </ideas>
+  </tests>
+</story-context>

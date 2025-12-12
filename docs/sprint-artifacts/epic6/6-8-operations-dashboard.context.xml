@@ -1,0 +1,274 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>6.8</storyId>
+    <title>Operations Dashboard</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic6/6-8-operations-dashboard.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>admin</asA>
+    <iWant>to see platform metrics including offer analytics</iWant>
+    <soThat>I can monitor marketplace health</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <name>Dashboard Page Enhancement</name>
+        <subtasks>
+          <subtask>Update src/app/admin/dashboard/page.tsx</subtask>
+          <subtask>Add period selector: Hoy / Esta Semana / Este Mes</subtask>
+          <subtask>Pass period to metric queries</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2">
+        <name>Request Metrics Section</name>
+        <subtasks>
+          <subtask>Create metrics cards component</subtask>
+          <subtask>Total requests in period</subtask>
+          <subtask>Requests with offers % (at least one offer)</subtask>
+          <subtask>Avg offers per request</subtask>
+          <subtask>Timeout rate % (requests that hit 4hr timeout)</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="3">
+        <name>Offer Metrics Section</name>
+        <subtasks>
+          <subtask>Total offers submitted</subtask>
+          <subtask>Acceptance rate % (accepted / total)</subtask>
+          <subtask>Avg time to first offer (minutes)</subtask>
+          <subtask>Expiration rate % (expired / total)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="4">
+        <name>Financial Metrics</name>
+        <subtasks>
+          <subtask>Transaction volume (sum of delivered orders)</subtask>
+          <subtask>Commission earned (sum of commission_owed in period)</subtask>
+          <subtask>Pending settlements (current outstanding balance)</subtask>
+          <subtask>Currency formatting: $480,000 (not $480k)</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="5">
+        <name>Provider Metrics</name>
+        <subtasks>
+          <subtask>Active providers (approved status)</subtask>
+          <subtask>Online now (is_available = true)</subtask>
+          <subtask>New applications (pending this period)</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="6">
+        <name>Trend Indicators</name>
+        <subtasks>
+          <subtask>Calculate previous period values</subtask>
+          <subtask>Show ↑ or ↓ with percentage change</subtask>
+          <subtask>Color: green for positive, red for negative</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="7">
+        <name>Drill-down Navigation</name>
+        <subtasks>
+          <subtask>Make metric cards clickable</subtask>
+          <subtask>Navigate to filtered orders/providers page</subtask>
+          <subtask>Pass period and filter params in URL</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="All">
+        <name>Data Caching</name>
+        <subtasks>
+          <subtask>Cache metrics with 5-minute refresh</subtask>
+          <subtask>Show "Actualizado hace X min" timestamp</subtask>
+          <subtask>Manual refresh button</subtask>
+        </subtasks>
+      </task>
+      <task id="9" ac="All">
+        <name>Testing</name>
+        <subtasks>
+          <subtask>E2E test: Period selector changes data</subtask>
+          <subtask>E2E test: Metrics render correctly</subtask>
+          <subtask>E2E test: Drill-down navigation works</subtask>
+          <subtask>Unit test: Metric calculations</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC6.8.1">Dashboard shows period selector: Hoy / Esta Semana / Este Mes</criterion>
+    <criterion id="AC6.8.2">Request metrics: total, with offers %, avg offers/request, timeout rate</criterion>
+    <criterion id="AC6.8.3">Offer metrics: total, acceptance rate, avg time to first, expiration rate</criterion>
+    <criterion id="AC6.8.4">Financial: transaction volume, commission earned, pending settlements</criterion>
+    <criterion id="AC6.8.5">Provider: active count, online now, new applications</criterion>
+    <criterion id="AC6.8.6">Metrics show trend vs previous period (↑ ↓)</criterion>
+    <criterion id="AC6.8.7">Clicking metric drills down to filtered view</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Story 6.8: Operations Dashboard</section>
+        <snippet>Dashboard with period selector. Aggregate queries on water_requests, offers, profiles, commission_ledger. Cache results with revalidation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document V2</title>
+        <section>Cross-Cutting Concerns - Currency Handling</section>
+        <snippet>Storage: Integer (CLP has no decimals). Display: Full number $15.000 (no "k" notation). formatCLP() utility function.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd-v2.md</path>
+        <title>PRD V2</title>
+        <section>Admin Dashboard (Core)</section>
+        <snippet>Live orders dashboard with list view. Provider directory with status management. Pricing and commission configuration.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-mockups/02-admin-dashboard.html</path>
+        <title>Admin Mockups</title>
+        <section>Section 2: Dashboard</section>
+        <snippet>Period selector tabs. 2x2 or 3x2 grid of metric cards. Card pattern: Icon, label, value, trend indicator. Revenue card with dark gradient background.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/app/admin/dashboard/page.tsx</path>
+        <kind>page</kind>
+        <reason>Existing dashboard page to be enhanced with full metrics. Currently shows placeholder content.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/auth/guards.ts</path>
+        <kind>auth-guard</kind>
+        <symbol>requireAdmin()</symbol>
+        <reason>Dashboard already uses this guard. No changes needed.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/validations/request.ts</path>
+        <kind>utility</kind>
+        <symbol>formatPrice</symbol>
+        <reason>Existing CLP formatting function. Use for financial metrics display.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>supabase-client</kind>
+        <symbol>createClient</symbol>
+        <reason>Server-side Supabase client for aggregate queries.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@radix-ui/react-tabs</package>
+        <version>^1.1.13</version>
+        <purpose>Period selector tabs (Hoy / Esta Semana / Este Mes)</purpose>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>^4.1.0</version>
+        <purpose>Date calculations for period filtering and trend comparisons</purpose>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.555.0</version>
+        <purpose>Icons for metric cards (TrendingUp, TrendingDown, Package, Users, etc.)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="auth">Dashboard route already uses requireAdmin() guard</constraint>
+    <constraint type="performance">Aggregate queries must complete within 3 seconds</constraint>
+    <constraint type="currency">Display full CLP amounts ($480,000 not $480k)</constraint>
+    <constraint type="caching">Cache metrics with 5-minute TTL, show "Actualizado hace X min"</constraint>
+    <constraint type="trends">Calculate trend by comparing current period to equivalent previous period</constraint>
+    <constraint type="ui">Follow admin gray theme per architecture spec</constraint>
+    <constraint type="i18n">All user-facing strings in Spanish</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>DashboardMetrics</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface DashboardMetrics {
+  period: 'today' | 'week' | 'month';
+  requests: {
+    total: number;
+    withOffers: number;
+    withOffersPercent: number;
+    avgOffersPerRequest: number;
+    timeoutRate: number;
+    trend: number;
+  };
+  offers: {
+    total: number;
+    acceptanceRate: number;
+    avgTimeToFirst: number;
+    expirationRate: number;
+    trend: number;
+  };
+  financial: {
+    transactionVolume: number;
+    commissionEarned: number;
+    pendingSettlements: number;
+    trend: number;
+  };
+  providers: {
+    activeCount: number;
+    onlineNow: number;
+    newApplications: number;
+    trend: number;
+  };
+  lastUpdated: string;
+}
+      </signature>
+      <path>To be created: src/lib/queries/admin-metrics.ts</path>
+    </interface>
+    <interface>
+      <name>MetricCard</name>
+      <kind>React component props</kind>
+      <signature>
+interface MetricCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  trend?: number;
+  trendLabel?: string;
+  href?: string;
+  variant?: 'default' | 'primary' | 'revenue';
+}
+      </signature>
+      <path>To be created: src/components/admin/metrics-card.tsx</path>
+    </interface>
+    <interface>
+      <name>getDashboardMetrics()</name>
+      <kind>Server function</kind>
+      <signature>async function getDashboardMetrics(period: 'today' | 'week' | 'month'): Promise&lt;DashboardMetrics&gt;</signature>
+      <path>To be created: src/lib/queries/admin-metrics.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      E2E tests using Playwright. Tests located in tests/e2e/ directory.
+      Admin tests require authenticated admin session.
+      Use data-testid attributes for reliable selectors.
+      Unit tests for metric calculations in separate test files.
+    </standards>
+    <locations>
+      <location>tests/e2e/admin-dashboard.spec.ts (to be created/updated)</location>
+      <location>tests/unit/admin-metrics.test.ts (to be created)</location>
+      <location>tests/e2e/admin-auth.spec.ts (existing - reference for admin auth pattern)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC6.8.1">Test: Verify period selector with Hoy/Esta Semana/Este Mes tabs</idea>
+      <idea ac="AC6.8.1">Test: Click different period, verify metrics update</idea>
+      <idea ac="AC6.8.2">Test: Verify request metrics cards display correctly</idea>
+      <idea ac="AC6.8.3">Test: Verify offer metrics cards display correctly</idea>
+      <idea ac="AC6.8.4">Test: Verify financial metrics show full CLP amounts</idea>
+      <idea ac="AC6.8.5">Test: Verify provider metrics show correct counts</idea>
+      <idea ac="AC6.8.6">Test: Verify trend indicators show ↑ or ↓ with colors</idea>
+      <idea ac="AC6.8.7">Test: Click metric card, verify navigation to filtered view</idea>
+    </ideas>
+  </tests>
+</story-context>

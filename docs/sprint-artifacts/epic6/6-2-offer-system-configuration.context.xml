@@ -1,0 +1,262 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>6.2</storyId>
+    <title>Offer System Configuration</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic6/6-2-offer-system-configuration.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>admin</asA>
+    <iWant>to configure offer validity and request timeout settings</iWant>
+    <soThat>the marketplace operates with appropriate time constraints</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <name>Settings Page Route</name>
+        <subtasks>
+          <subtask>Create src/app/admin/settings/page.tsx</subtask>
+          <subtask>Add "Configuración" link to admin sidebar (enable existing disabled item)</subtask>
+          <subtask>Verify auth guard protects route</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2,3">
+        <name>Settings Form Component</name>
+        <subtasks>
+          <subtask>Create src/components/admin/settings-form.tsx</subtask>
+          <subtask>Offer Validity section with three inputs (default, min, max in minutes)</subtask>
+          <subtask>Request Timeout section with hours input</subtask>
+          <subtask>Preview text showing current configuration</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="6">
+        <name>Validation Logic</name>
+        <subtasks>
+          <subtask>Create Zod schema for settings validation in src/lib/validations/admin.ts</subtask>
+          <subtask>min > 0 validation</subtask>
+          <subtask>max >= default >= min validation</subtask>
+          <subtask>Timeout hours > 0 validation</subtask>
+          <subtask>Display validation errors inline</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="4">
+        <name>Confirmation Dialog</name>
+        <subtasks>
+          <subtask>Create confirmation modal before saving</subtask>
+          <subtask>Show what's changing (before/after values)</subtask>
+          <subtask>Cancel and Confirm buttons</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="5">
+        <name>Server Action for Settings</name>
+        <subtasks>
+          <subtask>Create src/lib/actions/admin.ts with updateSettings() action</subtask>
+          <subtask>Update admin_settings table for each setting key</subtask>
+          <subtask>Log change with admin user and timestamp</subtask>
+          <subtask>Return success/error response</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="2,3">
+        <name>Load Current Settings</name>
+        <subtasks>
+          <subtask>Query admin_settings on page load</subtask>
+          <subtask>Pre-fill form with current values</subtask>
+          <subtask>Handle missing settings (use defaults: default=30, min=15, max=120, timeout=4)</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="All">
+        <name>Testing</name>
+        <subtasks>
+          <subtask>E2E test: Navigate to settings from sidebar</subtask>
+          <subtask>E2E test: Update settings with valid values</subtask>
+          <subtask>E2E test: Validation errors for invalid values</subtask>
+          <subtask>E2E test: Confirmation dialog appears</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC6.2.1">Admin can navigate to "Configuración" from sidebar</criterion>
+    <criterion id="AC6.2.2">Settings page shows offer validity fields: default, min, max (in minutes)</criterion>
+    <criterion id="AC6.2.3">Settings page shows request timeout field (in hours)</criterion>
+    <criterion id="AC6.2.4">Changes require confirmation before saving</criterion>
+    <criterion id="AC6.2.5">Changes take effect immediately for new offers</criterion>
+    <criterion id="AC6.2.6">Invalid values show validation error (min > 0, max >= default >= min)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Story 6.2: Offer System Configuration</section>
+        <snippet>Settings stored in admin_settings table as key-value pairs with JSONB values. Keys: offer_validity_default, offer_validity_min, offer_validity_max, request_timeout_hours.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document V2</title>
+        <section>Default Admin Settings</section>
+        <snippet>Admin-configurable bounds for offer validity (min: 15min, max: 2hrs, default: 30min). Settings stored in admin_settings table. Changes take effect immediately for new offers.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd-v2.md</path>
+        <title>PRD V2</title>
+        <section>FR87-92: Admin Pricing & Configuration</section>
+        <snippet>Admins can set offer validity bounds (min: 15min, max: 2hrs). Admins can configure request timeout duration (default: 4 hours). Price changes take effect immediately for new requests.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-mockups/02-admin-dashboard.html</path>
+        <title>Admin Mockups</title>
+        <section>Section 11: Config (Configuración)</section>
+        <snippet>Settings layout with label + description + value chip pattern. Numeric inputs with unit labels (minutes, hours). Primary dark button for "Guardar Cambios".</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-audit/admin-flow-requirements.md</path>
+        <title>Admin Flow Requirements</title>
+        <section>Section 6: System Configuration</section>
+        <snippet>Configuration panel for offer validity settings, request timeout, and system-wide parameters.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/auth/guards.ts</path>
+        <kind>auth-guard</kind>
+        <symbol>requireAdmin()</symbol>
+        <reason>Use this guard in settings page to ensure only admins can access. Returns authenticated admin User.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/admin/admin-sidebar.tsx</path>
+        <kind>component</kind>
+        <symbol>AdminSidebar</symbol>
+        <lines>73-78</lines>
+        <reason>Settings nav item already exists but is disabled. Enable it by setting disabled: false on line 77.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/admin/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>AdminLayout</symbol>
+        <reason>Admin layout with sidebar and mobile warning. New settings page will use this layout automatically.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/validations/request.ts</path>
+        <kind>validation</kind>
+        <symbol>requestSchema</symbol>
+        <reason>Reference for Zod validation pattern with Spanish error messages. Use similar pattern for admin settings validation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/actions/consumer-profile.ts</path>
+        <kind>server-action</kind>
+        <reason>Reference for server action pattern with 'use server' directive and Supabase client usage.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>zod</package>
+        <version>^4.1.13</version>
+        <purpose>Schema validation for settings form</purpose>
+      </node>
+      <node>
+        <package>@hookform/resolvers</package>
+        <version>^5.2.2</version>
+        <purpose>React Hook Form Zod resolver</purpose>
+      </node>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.67.0</version>
+        <purpose>Form state management</purpose>
+      </node>
+      <node>
+        <package>@radix-ui/react-alert-dialog</package>
+        <version>^1.1.15</version>
+        <purpose>Confirmation dialog component</purpose>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>^2.0.7</version>
+        <purpose>Toast notifications for save success/error</purpose>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.555.0</version>
+        <purpose>Icons (Settings icon already in sidebar)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="auth">Route must use requireAdmin() guard from src/lib/auth/guards.ts</constraint>
+    <constraint type="database">Settings stored in admin_settings table as key-value pairs with JSONB values</constraint>
+    <constraint type="naming">Setting keys: offer_validity_default, offer_validity_min, offer_validity_max, request_timeout_hours</constraint>
+    <constraint type="defaults">Default values: default=30, min=15, max=120, timeout=4 (if not in database)</constraint>
+    <constraint type="validation">Validation rules: min > 0, max >= default >= min, timeout > 0</constraint>
+    <constraint type="ui">Follow admin gray theme (#374151) per architecture spec</constraint>
+    <constraint type="i18n">All user-facing strings in Spanish</constraint>
+    <constraint type="logging">Log admin actions: [ADMIN] ${action} by ${email} at ${timestamp}</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>AdminSettings</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface AdminSettings {
+  offer_validity_default: number;  // minutes, default 30
+  offer_validity_min: number;      // minutes, default 15
+  offer_validity_max: number;      // minutes, default 120
+  request_timeout_hours: number;   // hours, default 4
+}
+      </signature>
+      <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+    </interface>
+    <interface>
+      <name>admin_settings table</name>
+      <kind>Database table</kind>
+      <signature>
+CREATE TABLE admin_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_by UUID REFERENCES profiles(id),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+      </signature>
+      <path>docs/architecture.md</path>
+    </interface>
+    <interface>
+      <name>getSettings()</name>
+      <kind>Server function</kind>
+      <signature>async function getSettings(): Promise&lt;AdminSettings&gt;</signature>
+      <path>To be created: src/lib/actions/admin.ts</path>
+    </interface>
+    <interface>
+      <name>updateSettings()</name>
+      <kind>Server action</kind>
+      <signature>async function updateSettings(key: string, value: any): Promise&lt;{ success: boolean; updated: AdminSettings }&gt;</signature>
+      <path>To be created: src/lib/actions/admin.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      E2E tests using Playwright. Tests located in tests/e2e/ directory.
+      Pattern: describe block per page, test blocks per user flow.
+      Use data-testid attributes for reliable selectors.
+      Admin tests require authenticated admin session (see tests/e2e/admin-auth.spec.ts for pattern).
+    </standards>
+    <locations>
+      <location>tests/e2e/admin-settings.spec.ts (to be created)</location>
+      <location>tests/e2e/admin-auth.spec.ts (existing - reference for admin auth pattern)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC6.2.1">Test: Navigate to /admin/settings via sidebar link, verify page loads with form</idea>
+      <idea ac="AC6.2.2">Test: Verify offer validity inputs (default, min, max) are present with labels and unit indicators</idea>
+      <idea ac="AC6.2.3">Test: Verify request timeout input is present with hours label</idea>
+      <idea ac="AC6.2.4">Test: Click save, verify confirmation dialog appears before actual save</idea>
+      <idea ac="AC6.2.5">Test: Save new values, verify they persist on page reload</idea>
+      <idea ac="AC6.2.6">Test: Enter invalid values (min=0, max < default, default < min), verify inline error messages</idea>
+      <idea ac="AC6.2.6">Test: Verify form cannot submit when validation errors present</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,280 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>6.4</storyId>
+    <title>Provider Directory</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic6/6-4-provider-directory.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>admin</asA>
+    <iWant>to view and manage all providers</iWant>
+    <soThat>I can handle suspensions, status changes, and support issues</soThat>
+    <tasks>
+      <task id="1" ac="1">
+        <name>Provider Directory Page</name>
+        <subtasks>
+          <subtask>Create src/app/admin/providers/page.tsx</subtask>
+          <subtask>Add "Proveedores" link to sidebar (enable existing disabled item)</subtask>
+          <subtask>Query all profiles WHERE role = 'provider'</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="1,2">
+        <name>Provider Directory Component</name>
+        <subtasks>
+          <subtask>Create src/components/admin/provider-directory.tsx</subtask>
+          <subtask>Table with columns: Name, Phone, Status, Deliveries, Commission Owed, Joined</subtask>
+          <subtask>Status badges with colors (approved=green, suspended=orange, banned=red)</subtask>
+          <subtask>Pagination with 25 per page</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="1,3">
+        <name>Search and Filters</name>
+        <subtasks>
+          <subtask>Search bar with debounce (name, phone)</subtask>
+          <subtask>Status filter dropdown (all, pending, approved, suspended, banned)</subtask>
+          <subtask>Service area filter (multi-select comunas)</subtask>
+          <subtask>Column sorting</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="4">
+        <name>Provider Detail Panel</name>
+        <subtasks>
+          <subtask>Create slide-out panel or modal for provider details</subtask>
+          <subtask>Profile info and documents link</subtask>
+          <subtask>Delivery statistics summary</subtask>
+          <subtask>Commission ledger summary (total owed)</subtask>
+          <subtask>Service areas list</subtask>
+          <subtask>Account standing section</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="5,6">
+        <name>Suspend/Unsuspend Actions</name>
+        <subtasks>
+          <subtask>"Suspender" button with reason input and duration</subtask>
+          <subtask>Update profiles.verification_status = 'suspended'</subtask>
+          <subtask>"Reactivar" button for suspended providers</subtask>
+          <subtask>Trigger notification to provider</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="7">
+        <name>Ban Action</name>
+        <subtasks>
+          <subtask>"Banear" button with confirmation dialog</subtask>
+          <subtask>Warning: "Esta acción es permanente"</subtask>
+          <subtask>Update profiles.verification_status = 'banned'</subtask>
+          <subtask>Trigger notification to provider</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="8">
+        <name>Commission Rate Override</name>
+        <subtasks>
+          <subtask>Commission rate input field in detail panel</subtask>
+          <subtask>Update profiles.commission_override column</subtask>
+          <subtask>Display: "10% (predeterminado)" or "8% (personalizado)"</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="All">
+        <name>Testing</name>
+        <subtasks>
+          <subtask>E2E test: View provider directory</subtask>
+          <subtask>E2E test: Search and filter providers</subtask>
+          <subtask>E2E test: View provider details</subtask>
+          <subtask>E2E test: Suspend and unsuspend flow</subtask>
+          <subtask>E2E test: Ban provider with confirmation</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC6.4.1">Admin can view searchable table of all providers</criterion>
+    <criterion id="AC6.4.2">Table columns: Name, Phone, Status, Deliveries, Commission Owed, Joined</criterion>
+    <criterion id="AC6.4.3">Table supports filtering by status and service area</criterion>
+    <criterion id="AC6.4.4">Clicking provider shows detail panel</criterion>
+    <criterion id="AC6.4.5">Admin can suspend provider (with reason)</criterion>
+    <criterion id="AC6.4.6">Admin can unsuspend provider</criterion>
+    <criterion id="AC6.4.7">Admin can ban provider (requires confirmation)</criterion>
+    <criterion id="AC6.4.8">Admin can adjust commission rate per provider</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Story 6.4: Provider Directory</section>
+        <snippet>Provider status in profiles.verification_status. Commission override in profiles.commission_override (NULL = use default). Delivery count aggregated from completed water_requests.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document V2</title>
+        <section>Database Schema - profiles table</section>
+        <snippet>profiles table extended with role, verification_status, is_available, offer_validity_minutes, commission_override, bank_name, bank_account columns.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd-v2.md</path>
+        <title>PRD V2</title>
+        <section>FR80-86: Admin Provider Management</section>
+        <snippet>Admins can view directory, search/filter, view details, suspend/unsuspend, ban, and set per-provider commission rate.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-mockups/02-admin-dashboard.html</path>
+        <title>Admin Mockups</title>
+        <section>Section 4: Proveedores (Directory)</section>
+        <snippet>Dense data table with sortable columns. Status badges (green=active, orange=suspended, red=banned). Search bar with filters. Slide-out detail panel.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/auth/guards.ts</path>
+        <kind>auth-guard</kind>
+        <symbol>requireAdmin()</symbol>
+        <reason>Use this guard in provider directory page to ensure only admins can access.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/admin/admin-sidebar.tsx</path>
+        <kind>component</kind>
+        <symbol>AdminSidebar</symbol>
+        <lines>37-41</lines>
+        <reason>Proveedores nav item exists but is disabled. Enable it.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>supabase-client</kind>
+        <symbol>createClient</symbol>
+        <reason>Server-side Supabase client for querying providers and aggregating statistics.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@radix-ui/react-dialog</package>
+        <version>^1.1.15</version>
+        <purpose>Slide-out detail panel</purpose>
+      </node>
+      <node>
+        <package>@radix-ui/react-alert-dialog</package>
+        <version>^1.1.15</version>
+        <purpose>Ban confirmation dialog</purpose>
+      </node>
+      <node>
+        <package>@radix-ui/react-select</package>
+        <version>^2.2.6</version>
+        <purpose>Status and service area filter dropdowns</purpose>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>^2.0.7</version>
+        <purpose>Toast notifications for action feedback</purpose>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.555.0</version>
+        <purpose>Icons (Users, Search, Ban, etc.)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="auth">Provider directory route must use requireAdmin() guard</constraint>
+    <constraint type="database">Provider status in profiles.verification_status, commission in profiles.commission_override</constraint>
+    <constraint type="pagination">25 items per page with offset-based pagination</constraint>
+    <constraint type="search">Debounced search (300ms) on name and phone fields</constraint>
+    <constraint type="ui">Follow admin gray theme per architecture spec</constraint>
+    <constraint type="i18n">All user-facing strings in Spanish</constraint>
+    <constraint type="notifications">Use existing notification system for provider notifications</constraint>
+    <constraint type="logging">Log admin actions: [ADMIN] ${action} by ${email} at ${timestamp}</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ProviderDirectoryEntry</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface ProviderDirectoryEntry {
+  id: string;
+  name: string;
+  phone: string;
+  verification_status: 'pending' | 'approved' | 'rejected' | 'suspended' | 'banned';
+  deliveries_count: number;
+  commission_owed: number;
+  created_at: string;
+  service_areas: string[];
+  is_available: boolean;
+  commission_override?: number;
+}
+      </signature>
+      <path>To be created</path>
+    </interface>
+    <interface>
+      <name>comunas table</name>
+      <kind>Database table</kind>
+      <signature>
+CREATE TABLE comunas (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  region TEXT NOT NULL,
+  active BOOLEAN DEFAULT TRUE
+);
+      </signature>
+      <path>docs/architecture.md</path>
+    </interface>
+    <interface>
+      <name>provider_service_areas table</name>
+      <kind>Database table</kind>
+      <signature>
+CREATE TABLE provider_service_areas (
+  provider_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  comuna_id TEXT REFERENCES comunas(id),
+  PRIMARY KEY (provider_id, comuna_id)
+);
+      </signature>
+      <path>docs/architecture.md</path>
+    </interface>
+    <interface>
+      <name>suspendProvider()</name>
+      <kind>Server action</kind>
+      <signature>async function suspendProvider(providerId: string, reason: string): Promise&lt;{ success: boolean }&gt;</signature>
+      <path>To be created: src/lib/actions/admin.ts</path>
+    </interface>
+    <interface>
+      <name>banProvider()</name>
+      <kind>Server action</kind>
+      <signature>async function banProvider(providerId: string): Promise&lt;{ success: boolean }&gt;</signature>
+      <path>To be created: src/lib/actions/admin.ts</path>
+    </interface>
+    <interface>
+      <name>updateCommissionOverride()</name>
+      <kind>Server action</kind>
+      <signature>async function updateCommissionOverride(providerId: string, rate: number | null): Promise&lt;{ success: boolean }&gt;</signature>
+      <path>To be created: src/lib/actions/admin.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      E2E tests using Playwright. Tests located in tests/e2e/ directory.
+      Admin tests require authenticated admin session.
+      Use data-testid attributes for reliable selectors.
+      Seed test data with providers in various statuses for testing.
+    </standards>
+    <locations>
+      <location>tests/e2e/admin-providers.spec.ts (to be created)</location>
+      <location>tests/e2e/admin-auth.spec.ts (existing - reference for admin auth pattern)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC6.4.1">Test: Navigate to /admin/providers, verify table renders with providers</idea>
+      <idea ac="AC6.4.2">Test: Verify all required columns are present in table</idea>
+      <idea ac="AC6.4.3">Test: Use status filter, verify results filter correctly</idea>
+      <idea ac="AC6.4.3">Test: Use search bar, verify results filter by name/phone</idea>
+      <idea ac="AC6.4.4">Test: Click provider row, verify detail panel opens</idea>
+      <idea ac="AC6.4.5">Test: Click Suspender, enter reason, verify status changes to suspended</idea>
+      <idea ac="AC6.4.6">Test: For suspended provider, click Reactivar, verify status changes back</idea>
+      <idea ac="AC6.4.7">Test: Click Banear, confirm dialog appears with warning, confirm ban</idea>
+      <idea ac="AC6.4.8">Test: Edit commission rate, save, verify value persists</idea>
+    </ideas>
+  </tests>
+</story-context>

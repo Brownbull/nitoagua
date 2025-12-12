@@ -99,3 +99,32 @@ development_status:
   5-3-in-app-notifications-for-registered-users: done  # APPROVED - Re-implemented and merged 2025-12-08
   5-4-epic-deployment-and-verification: done  # APPROVED - Epic 5 fully deployed 2025-12-08
   epic-5-retrospective: completed  # Retrospective completed 2025-12-08 - MVP COMPLETE
+
+  # =============================================
+  # V2 POST-MVP EPICS (Consumer-Choice Offer Model)
+  # Reordered by dependency: Admin → Onboarding → Offers → Selection → UX
+  # =============================================
+
+  # Epic 6: Admin Operations Panel (FIRST V2 EPIC - no dependencies)
+  epic-6: contexted  # Tech spec created 2025-12-12
+  6-1-admin-authentication-and-access: review  # Implementation complete 2025-12-12
+  6-2-offer-system-configuration: ready-for-dev  # Context created 2025-12-12
+  6-3-provider-verification-queue: ready-for-dev  # Context created 2025-12-12
+  6-4-provider-directory: ready-for-dev  # Context created 2025-12-12
+  6-5-cash-settlement-tracking: ready-for-dev  # Context created 2025-12-12
+  6-6-orders-management: ready-for-dev  # Context created 2025-12-12
+  6-7-offer-expiration-cron-job: ready-for-dev  # Context created 2025-12-12
+  6-8-operations-dashboard: ready-for-dev  # Context created 2025-12-12
+  epic-6-retrospective: optional
+
+  # Epic 7: Provider Onboarding (depends on Epic 6 admin verification queue)
+  epic-7: backlog
+
+  # Epic 8: Provider Offer System (depends on Epic 7 for approved providers)
+  epic-8: backlog
+
+  # Epic 9: Consumer Offer Selection (depends on Epic 8 offers system)
+  epic-9: backlog
+
+  # Epic 10: Consumer UX Enhancements (depends on Epic 9 consumer flow)
+  epic-10: backlog

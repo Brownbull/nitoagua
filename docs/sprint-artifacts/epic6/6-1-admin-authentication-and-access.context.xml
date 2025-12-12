@@ -1,0 +1,282 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>1</storyId>
+    <title>Admin Authentication and Access</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic6/6-1-admin-authentication-and-access.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>platform administrator</asA>
+    <iWant>to access a secure admin panel via hidden URL with Google OAuth and allowlist verification</iWant>
+    <soThat>only authorized personnel can manage the platform</soThat>
+    <tasks>
+      <task id="1" ac="2">
+        <name>Database Migration</name>
+        <subtasks>
+          <subtask>Create migration 006_v2_admin_auth.sql</subtask>
+          <subtask>Create admin_allowed_emails table (email PK, added_by, added_at, notes)</subtask>
+          <subtask>Create admin_settings table (key PK, value JSONB, updated_by, updated_at)</subtask>
+          <subtask>Seed initial admin email(s) for testing</subtask>
+          <subtask>Apply migration to Supabase</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="1,6">
+        <name>Admin Route Group Structure</name>
+        <subtasks>
+          <subtask>Create src/app/(admin)/layout.tsx with gray theme</subtask>
+          <subtask>Create admin sidebar component src/components/admin/admin-sidebar.tsx</subtask>
+          <subtask>Implement desktop-first responsive layout (min-width: 1024px)</subtask>
+          <subtask>Add mobile warning component for viewport less than 1024px</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="1">
+        <name>Admin Login Page</name>
+        <subtasks>
+          <subtask>Create src/app/(admin)/login/page.tsx</subtask>
+          <subtask>Add Google OAuth button styled for admin context</subtask>
+          <subtask>Style page with neutral/professional appearance</subtask>
+          <subtask>No visible links from public app (hidden URL)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="2,3,4">
+        <name>Admin Auth Guard</name>
+        <subtasks>
+          <subtask>Create src/lib/auth/guards.ts with requireAdmin() function</subtask>
+          <subtask>Check admin_allowed_emails table for user email</subtask>
+          <subtask>Redirect to /admin/dashboard on success</subtask>
+          <subtask>Redirect to /admin/not-authorized on failure</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="4">
+        <name>Not Authorized Page</name>
+        <subtasks>
+          <subtask>Create src/app/(admin)/not-authorized/page.tsx</subtask>
+          <subtask>Display message: No autorizado. Contacta al administrador.</subtask>
+          <subtask>Provide logout option</subtask>
+          <subtask>Simple, professional styling</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="3,6">
+        <name>Admin Dashboard Shell</name>
+        <subtasks>
+          <subtask>Create src/app/(admin)/dashboard/page.tsx (placeholder)</subtask>
+          <subtask>Display Panel de Administracion heading</subtask>
+          <subtask>Show logged-in admin email</subtask>
+          <subtask>Sidebar navigation items (disabled for now)</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="2,5">
+        <name>Middleware Updates</name>
+        <subtasks>
+          <subtask>Update src/middleware.ts to handle /admin routes</subtask>
+          <subtask>Redirect unauthenticated users to /admin/login</subtask>
+          <subtask>Session persistence for 24 hours</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="all">
+        <name>Testing</name>
+        <subtasks>
+          <subtask>E2E test: Admin login flow with allowed email</subtask>
+          <subtask>E2E test: Admin login flow with non-allowed email</subtask>
+          <subtask>E2E test: Mobile viewport shows warning</subtask>
+          <subtask>E2E test: Unauthenticated access redirects to login</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC6.1.1">Admin can navigate to /admin and see login page with Google OAuth button</criterion>
+    <criterion id="AC6.1.2">After OAuth, system checks admin_allowed_emails table for user email</criterion>
+    <criterion id="AC6.1.3">If email found, user redirected to /admin/dashboard</criterion>
+    <criterion id="AC6.1.4">If email NOT found, user shown No autorizado message</criterion>
+    <criterion id="AC6.1.5">Admin session persists for 24 hours</criterion>
+    <criterion id="AC6.1.6">Desktop-optimized layout with sidebar navigation (gray theme)</criterion>
+    <criterion id="AC6.1.7">Mobile devices show Usa una computadora warning</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Story 6.1: Admin Authentication and Access</section>
+        <snippet>Admin login via Google OAuth with allowlist verification in admin_allowed_emails table. Desktop-first layout with sidebar navigation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document V2</title>
+        <section>Pattern 3: Admin Allowlist Authentication</section>
+        <snippet>Auth callback checks allowlist for admin routes. If next.startsWith('/admin'), query admin_allowed_emails table for user.email.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document V2</title>
+        <section>Project Structure - Admin Routes</section>
+        <snippet>Admin routes at src/app/(admin)/ with layout, login, not-authorized, dashboard pages. Gray theme, desktop-first design.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epics Document</title>
+        <section>Story 6.1: Admin Authentication and Access</section>
+        <snippet>Prerequisites: Story 1.3. Create admin route group, Google OAuth with allowlist check, desktop-optimized layout.</snippet>
+      </doc>
+      <!-- UX MOCKUPS AND DESIGN REFERENCES - CRITICAL FOR UI IMPLEMENTATION -->
+      <doc priority="high">
+        <path>docs/ux-mockups/02-admin-dashboard.html</path>
+        <title>Admin Dashboard Mockups - PRIMARY UI REFERENCE</title>
+        <section>Section 1: Login, Section 2: Dashboard</section>
+        <snippet>Complete visual mockups for admin login screen and dashboard shell. Gray theme, desktop-first design, sidebar navigation with icons. Open in browser to view interactive mockups.</snippet>
+      </doc>
+      <doc priority="high">
+        <path>docs/ux-audit/admin-flow-requirements.md</path>
+        <title>Admin Flow Requirements Document</title>
+        <section>Access Model, UI/UX Recommendations, Navigation Structure</section>
+        <snippet>Design principles: desktop-first, dense information display, neutral dark theme, quick actions. Navigation structure with Dashboard, Orders, Providers, Consumers, Finance, Settings.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-audit/admin-mockup-updates-2025-12-11.md</path>
+        <title>Admin Mockup Updates</title>
+        <section>Design Patterns Used, Component Patterns</section>
+        <snippet>Component patterns: search bars with icon+placeholder, tabs (selected=dark, unselected=outline), action buttons (primary=dark, secondary=outline, danger=red), stats cards pattern.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/app/(auth)/login/page.tsx</path>
+        <kind>page</kind>
+        <symbol>LoginPage</symbol>
+        <lines>1-108</lines>
+        <reason>Reference for OAuth login pattern - GoogleSignIn component, role-based redirect logic after authentication</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/(supplier)/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>SupplierLayout</symbol>
+        <lines>1-38</lines>
+        <reason>Pattern for role-based auth guard in layout - check user, verify role, redirect unauthorized</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/auth/callback/route.ts</path>
+        <kind>api-route</kind>
+        <symbol>GET</symbol>
+        <lines>1-75</lines>
+        <reason>OAuth callback handler - extend to check admin_allowed_emails when redirecting to /admin</reason>
+      </artifact>
+      <artifact>
+        <path>src/middleware.ts</path>
+        <kind>middleware</kind>
+        <symbol>middleware</symbol>
+        <lines>1-19</lines>
+        <reason>Main middleware - may need admin route handling for session refresh</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>utility</kind>
+        <symbol>createClient</symbol>
+        <reason>Server-side Supabase client creation - use for admin_allowed_emails queries</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/auth.ts</path>
+        <kind>utility</kind>
+        <symbol>getUser, getSession</symbol>
+        <lines>1-22</lines>
+        <reason>Auth utilities - pattern for creating requireAdmin() guard function</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/google-sign-in.tsx</path>
+        <kind>component</kind>
+        <symbol>GoogleSignIn</symbol>
+        <reason>Reusable Google OAuth button component - adapt styling for admin context</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/ssr</package>
+        <version>^0.8.0</version>
+        <purpose>Server-side Supabase client with cookie handling</purpose>
+      </node>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.86.0</version>
+        <purpose>Supabase client for auth and database queries</purpose>
+      </node>
+      <node>
+        <package>next</package>
+        <version>16.0.7</version>
+        <purpose>App router, middleware, server components</purpose>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.555.0</version>
+        <purpose>Icons for sidebar navigation</purpose>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>^2.0.7</version>
+        <purpose>Toast notifications for login feedback</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="security">Admin access requires email in admin_allowed_emails table - no self-registration</constraint>
+    <constraint type="security">Hidden URL - no links from public app point to /admin</constraint>
+    <constraint type="security">Session persistence limited to 24 hours per spec</constraint>
+    <constraint type="architecture">Follow existing route group pattern: src/app/(admin)/</constraint>
+    <constraint type="architecture">Gray/neutral theme distinct from blue consumer and orange provider themes</constraint>
+    <constraint type="architecture">Desktop-first design with minimum viewport width 1024px</constraint>
+    <constraint type="pattern">Use createClient from src/lib/supabase/server.ts for server-side queries</constraint>
+    <constraint type="pattern">Follow existing layout auth guard pattern from SupplierLayout</constraint>
+    <constraint type="ux">Spanish UI text: No autorizado, Panel de Administracion, Usa una computadora</constraint>
+    <constraint type="ux">Code comments in English per architecture spec</constraint>
+    <!-- UX MOCKUP CONSTRAINTS - MUST FOLLOW -->
+    <constraint type="ux-mockup" priority="high">MUST review docs/ux-mockups/02-admin-dashboard.html Section 1 (Login) before implementing login page</constraint>
+    <constraint type="ux-mockup" priority="high">MUST review docs/ux-mockups/02-admin-dashboard.html Section 2 (Dashboard) before implementing dashboard shell</constraint>
+    <constraint type="ux-mockup">Follow component patterns from admin mockups: dark primary buttons, outline secondary buttons, icon+label sidebar items</constraint>
+    <constraint type="ux-mockup">Sidebar navigation must include icons (lucide-react) as shown in mockups</constraint>
+    <constraint type="ux-mockup">Login page styling: centered card, gray background, Google OAuth button prominent</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>requireAdmin</name>
+      <kind>function</kind>
+      <signature>async function requireAdmin(): Promise&lt;User&gt; - Returns admin user or redirects to not-authorized</signature>
+      <path>src/lib/auth/guards.ts (to create)</path>
+    </interface>
+    <interface>
+      <name>admin_allowed_emails</name>
+      <kind>table</kind>
+      <signature>email TEXT PRIMARY KEY, added_by TEXT, added_at TIMESTAMPTZ DEFAULT NOW(), notes TEXT</signature>
+      <path>supabase/migrations/006_v2_admin_auth.sql (to create)</path>
+    </interface>
+    <interface>
+      <name>admin_settings</name>
+      <kind>table</kind>
+      <signature>key TEXT PRIMARY KEY, value JSONB NOT NULL, updated_by UUID REFERENCES profiles(id), updated_at TIMESTAMPTZ DEFAULT NOW()</signature>
+      <path>supabase/migrations/006_v2_admin_auth.sql (to create)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>E2E tests with Playwright following existing patterns in tests/e2e/. Use data-testid attributes for selectors. Tests should cover happy path and error scenarios. Mock or seed admin emails in test database.</standards>
+    <locations>
+      <location>tests/e2e/admin-auth.spec.ts (to create)</location>
+      <location>tests/e2e/*.spec.ts (existing patterns)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC6.1.1">Test /admin renders login page with Google OAuth button visible</idea>
+      <idea ac="AC6.1.2,AC6.1.3">Test admin in allowlist is redirected to /admin/dashboard after OAuth</idea>
+      <idea ac="AC6.1.2,AC6.1.4">Test non-admin user sees No autorizado message after OAuth</idea>
+      <idea ac="AC6.1.5">Test session persists across page navigation within 24 hours</idea>
+      <idea ac="AC6.1.6">Test sidebar navigation renders on desktop viewport</idea>
+      <idea ac="AC6.1.7">Test mobile warning displays on viewport less than 1024px</idea>
+      <idea ac="all">Test unauthenticated /admin/dashboard redirects to /admin/login</idea>
+    </ideas>
+  </tests>
+</story-context>

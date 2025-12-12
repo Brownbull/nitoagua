@@ -1,0 +1,291 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>6</epicId>
+    <storyId>6.3</storyId>
+    <title>Provider Verification Queue</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic6/6-3-provider-verification-queue.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>admin</asA>
+    <iWant>to review and approve/reject provider applications</iWant>
+    <soThat>only qualified providers can operate on the platform</soThat>
+    <tasks>
+      <task id="1" ac="1,2,3">
+        <name>Verification Queue Page</name>
+        <subtasks>
+          <subtask>Create src/app/admin/providers/verification/page.tsx</subtask>
+          <subtask>Add "Verificación" link to sidebar with badge count</subtask>
+          <subtask>Query providers WHERE verification_status = 'pending'</subtask>
+          <subtask>Sort by created_at ASC (oldest first)</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="1,2,3">
+        <name>Verification Queue Component</name>
+        <subtasks>
+          <subtask>Create src/components/admin/verification-queue.tsx</subtask>
+          <subtask>Application card: Name, photo, phone, submission date, status badge</subtask>
+          <subtask>Count badge in header: "5 pendientes"</subtask>
+          <subtask>Empty state: "No hay solicitudes pendientes"</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="4">
+        <name>Application Detail View</name>
+        <subtasks>
+          <subtask>Create src/app/admin/providers/verification/[id]/page.tsx</subtask>
+          <subtask>Show personal info section</subtask>
+          <subtask>Show service areas selected</subtask>
+          <subtask>Show bank account info (masked)</subtask>
+          <subtask>Internal notes textarea field</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="5">
+        <name>Document Viewer Component</name>
+        <subtasks>
+          <subtask>Create src/components/admin/document-viewer.tsx</subtask>
+          <subtask>List of documents: Cédula, Permiso sanitario, Vehicle photos, Certifications</subtask>
+          <subtask>Zoom controls (fit, 100%, 200%)</subtask>
+          <subtask>Download button per document</subtask>
+          <subtask>Use Supabase Storage signed URLs</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="6,9">
+        <name>Approval Action</name>
+        <subtasks>
+          <subtask>Create "Aprobar" button with confirmation dialog</subtask>
+          <subtask>Update profiles.verification_status = 'approved'</subtask>
+          <subtask>Trigger notification to provider (email + in-app)</subtask>
+          <subtask>Show success toast</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="7,9">
+        <name>Rejection Action</name>
+        <subtasks>
+          <subtask>Create "Rechazar" button with reason dropdown</subtask>
+          <subtask>Reason required: Select from predefined list</subtask>
+          <subtask>Update profiles.verification_status = 'rejected'</subtask>
+          <subtask>Store rejection reason</subtask>
+          <subtask>Trigger notification with reason</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="8,9">
+        <name>Request More Info Action</name>
+        <subtasks>
+          <subtask>Create "Solicitar Info" button</subtask>
+          <subtask>Checkboxes for missing documents</subtask>
+          <subtask>Update profiles.verification_status = 'more_info_needed'</subtask>
+          <subtask>Trigger notification with specific requests</subtask>
+        </subtasks>
+      </task>
+      <task id="8" ac="All">
+        <name>Testing</name>
+        <subtasks>
+          <subtask>E2E test: View verification queue with pending applications</subtask>
+          <subtask>E2E test: Open application detail view</subtask>
+          <subtask>E2E test: Approve application flow</subtask>
+          <subtask>E2E test: Reject application with reason</subtask>
+          <subtask>E2E test: Request more info flow</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC6.3.1">Admin can view queue of pending provider applications</criterion>
+    <criterion id="AC6.3.2">Queue shows count badge of pending applications</criterion>
+    <criterion id="AC6.3.3">Applications sorted by submission date (oldest first)</criterion>
+    <criterion id="AC6.3.4">Clicking application opens detail view with documents</criterion>
+    <criterion id="AC6.3.5">Document viewer supports zoom and download</criterion>
+    <criterion id="AC6.3.6">Admin can approve application (status → 'approved')</criterion>
+    <criterion id="AC6.3.7">Admin can reject application (reason required, status → 'rejected')</criterion>
+    <criterion id="AC6.3.8">Admin can request more info (select missing docs, status → 'more_info_needed')</criterion>
+    <criterion id="AC6.3.9">Action triggers notification to applicant</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+        <title>Epic 6 Technical Specification</title>
+        <section>Story 6.3: Provider Verification Queue</section>
+        <snippet>Provider verification status in profiles.verification_status: 'pending', 'approved', 'rejected', 'more_info_needed'. Documents stored in Supabase Storage bucket provider-documents.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document V2</title>
+        <section>Supabase Storage Buckets</section>
+        <snippet>provider-documents bucket: Private (RLS) for Cédula, licencia, permisos. Documents access via signed URLs with expiration.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd-v2.md</path>
+        <title>PRD V2</title>
+        <section>FR74-79: Admin Provider Verification</section>
+        <snippet>Admins can view queue of pending provider applications, view uploaded documents, approve/reject/request more info with reason.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-mockups/02-admin-dashboard.html</path>
+        <title>Admin Mockups</title>
+        <section>Section 3: Verificación (3A: Queue, 3B: Detail)</section>
+        <snippet>Queue layout with application cards. Detail view with side-by-side layout - info left, documents right. Action buttons: Aprobar (green), Rechazar (red), Más Info (outline).</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-audit/admin-flow-requirements.md</path>
+        <title>Admin Flow Requirements</title>
+        <section>Section 1.1: Verification Queue</section>
+        <snippet>Verification queue workflow and requirements for provider application review.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/auth/guards.ts</path>
+        <kind>auth-guard</kind>
+        <symbol>requireAdmin()</symbol>
+        <reason>Use this guard in verification pages to ensure only admins can access.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/admin/admin-sidebar.tsx</path>
+        <kind>component</kind>
+        <symbol>AdminSidebar</symbol>
+        <lines>31-35</lines>
+        <reason>Verificación nav item exists but is disabled. Enable it and add badge count prop.</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/admin/layout.tsx</path>
+        <kind>layout</kind>
+        <symbol>AdminLayout</symbol>
+        <reason>Admin layout with sidebar. New verification pages will use this automatically.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase/server.ts</path>
+        <kind>supabase-client</kind>
+        <symbol>createClient</symbol>
+        <reason>Server-side Supabase client for querying providers and creating signed URLs.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.86.0</version>
+        <purpose>Storage signed URLs for document viewing</purpose>
+      </node>
+      <node>
+        <package>@radix-ui/react-alert-dialog</package>
+        <version>^1.1.15</version>
+        <purpose>Confirmation dialogs for approve/reject actions</purpose>
+      </node>
+      <node>
+        <package>@radix-ui/react-dialog</package>
+        <version>^1.1.15</version>
+        <purpose>Document viewer modal</purpose>
+      </node>
+      <node>
+        <package>sonner</package>
+        <version>^2.0.7</version>
+        <purpose>Toast notifications for action feedback</purpose>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.555.0</version>
+        <purpose>Icons (ShieldCheck, ZoomIn, ZoomOut, Download)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint type="auth">All verification routes must use requireAdmin() guard</constraint>
+    <constraint type="database">Provider status stored in profiles.verification_status column</constraint>
+    <constraint type="storage">Documents in provider-documents bucket with RLS policies</constraint>
+    <constraint type="urls">Use signed URLs with expiration for document access</constraint>
+    <constraint type="ui">Follow admin gray theme per architecture spec</constraint>
+    <constraint type="i18n">All user-facing strings in Spanish</constraint>
+    <constraint type="notifications">Use existing notification system from Epic 5 for provider notifications</constraint>
+    <constraint type="logging">Log admin actions: [ADMIN] ${action} by ${email} at ${timestamp}</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>ProviderApplication</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface ProviderApplication {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  verification_status: 'pending' | 'approved' | 'rejected' | 'more_info_needed';
+  submitted_at: string;
+  documents: ProviderDocument[];
+  service_areas: string[];
+  bank_info: { bank_name: string; account_number: string } | null;
+  internal_notes?: string;
+}
+      </signature>
+      <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+    </interface>
+    <interface>
+      <name>ProviderDocument</name>
+      <kind>TypeScript interface</kind>
+      <signature>
+interface ProviderDocument {
+  id: string;
+  type: 'cedula' | 'licencia' | 'permiso_sanitario' | 'certificacion' | 'vehiculo';
+  storage_path: string;
+  original_filename: string;
+  uploaded_at: string;
+  verified_at?: string;
+}
+      </signature>
+      <path>docs/sprint-artifacts/epic6/tech-spec-epic-6.md</path>
+    </interface>
+    <interface>
+      <name>provider_documents table</name>
+      <kind>Database table</kind>
+      <signature>
+CREATE TABLE provider_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('cedula', 'licencia', 'permiso_sanitario', 'certificacion', 'vehiculo')),
+  storage_path TEXT NOT NULL,
+  original_filename TEXT,
+  uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+  verified_at TIMESTAMPTZ,
+  verified_by UUID REFERENCES profiles(id)
+);
+      </signature>
+      <path>docs/architecture.md</path>
+    </interface>
+    <interface>
+      <name>verifyProvider()</name>
+      <kind>Server action</kind>
+      <signature>async function verifyProvider(providerId: string, decision: 'approved' | 'rejected' | 'more_info_needed', reason?: string): Promise&lt;{ success: boolean }&gt;</signature>
+      <path>To be created: src/lib/actions/admin.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      E2E tests using Playwright. Tests located in tests/e2e/ directory.
+      Admin tests require authenticated admin session.
+      Use data-testid attributes for reliable selectors.
+      Seed test data with pending provider applications for testing.
+    </standards>
+    <locations>
+      <location>tests/e2e/admin-verification.spec.ts (to be created)</location>
+      <location>tests/e2e/admin-auth.spec.ts (existing - reference for admin auth pattern)</location>
+    </locations>
+    <ideas>
+      <idea ac="AC6.3.1">Test: Navigate to /admin/providers/verification, verify queue renders with pending applications</idea>
+      <idea ac="AC6.3.2">Test: Verify badge count matches number of pending applications</idea>
+      <idea ac="AC6.3.3">Test: Verify oldest applications appear first in queue</idea>
+      <idea ac="AC6.3.4">Test: Click application card, verify detail view opens with documents</idea>
+      <idea ac="AC6.3.5">Test: Click document, verify zoom controls and download button work</idea>
+      <idea ac="AC6.3.6">Test: Click Aprobar, confirm, verify status changes to approved</idea>
+      <idea ac="AC6.3.7">Test: Click Rechazar, select reason, verify status changes to rejected</idea>
+      <idea ac="AC6.3.8">Test: Click Solicitar Info, select missing docs, verify status changes</idea>
+      <idea ac="AC6.3.9">Test: Verify notification created after each action</idea>
+    </ideas>
+  </tests>
+</story-context>
