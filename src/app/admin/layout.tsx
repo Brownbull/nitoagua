@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { isAdmin } from "@/lib/auth/guards";
 
 export const metadata = {
   title: "Admin - nitoagua",
@@ -17,13 +18,16 @@ export default async function AdminLayout({
   // Get user email for sidebar display
   const userEmail = user?.email;
 
+  // Only show sidebar if user is an admin (not just authenticated)
+  const showSidebar = user && userEmail && await isAdmin(userEmail);
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar - only show if authenticated */}
-      {user && <AdminSidebar userEmail={userEmail} />}
+      {/* Sidebar - only show if authenticated AND admin */}
+      {showSidebar && <AdminSidebar userEmail={userEmail} />}
 
       {/* Main content */}
-      <main className={user ? "flex-1 overflow-auto" : "flex-1"}>
+      <main className={showSidebar ? "flex-1 overflow-auto" : "flex-1"}>
         {children}
       </main>
     </div>
