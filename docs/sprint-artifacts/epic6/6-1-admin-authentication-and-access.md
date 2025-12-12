@@ -1,6 +1,6 @@
 # Story 6.1: Admin Authentication and Access
 
-Status: review
+Status: done
 
 ## Story
 
@@ -16,7 +16,7 @@ so that **only authorized personnel can manage the platform**.
 4. **AC6.1.4:** If email NOT found, user shown "No autorizado. Contacta al administrador." message
 5. **AC6.1.5:** Admin session persists for 24 hours
 6. **AC6.1.6:** Desktop-optimized layout with sidebar navigation (gray theme)
-7. **AC6.1.7:** Mobile devices show "Usa una computadora para acceder al panel de administración" warning
+7. ~~**AC6.1.7:** Mobile devices show "Usa una computadora para acceder al panel de administración" warning~~ **SKIPPED** - Per user request, mobile restriction removed. Admin panel works on all viewports.
 
 ## Tasks / Subtasks
 
@@ -218,6 +218,119 @@ Claude Opus 4.5
 
 ---
 
+## Senior Developer Review (AI)
+
+### Reviewer
+Gabe
+
+### Date
+2025-12-12
+
+### Outcome
+**APPROVED** - All action items resolved (AC6.1.7 intentionally skipped per user request)
+
+### Summary
+Story 6.1 implements admin authentication and access control with allowlist-based authorization. The core authentication flow is solid: Google OAuth integration, admin email allowlist verification, proper redirects, and auth guards all work correctly. AC6.1.7 (mobile warning) was intentionally skipped per user request - the admin panel now works on all viewports without restriction.
+
+### Key Findings
+
+**MEDIUM Severity:**
+
+1. **AC6.1.7 Not Implemented - Mobile Warning Not Integrated**
+   - The `MobileWarning` component exists at `src/components/admin/mobile-warning.tsx`
+   - However, it is **never imported or rendered** in `src/app/admin/layout.tsx`
+   - On mobile viewports, the sidebar simply hides (`hidden lg:flex`) but no warning message appears
+   - Users on mobile see the main content area without navigation, creating a confusing UX
+   - File: [src/app/admin/layout.tsx](src/app/admin/layout.tsx)
+
+**LOW Severity:**
+
+2. **AC6.1.4 Message Text Differs from Spec**
+   - Spec requires: "No autorizado. Contacta al administrador."
+   - Implementation shows: "Acceso Denegado" / "Tu cuenta no tiene permisos de administrador"
+   - The intent is preserved but exact wording differs
+   - File: [src/app/admin/not-authorized/page.tsx:24-29](src/app/admin/not-authorized/page.tsx#L24-L29)
+
+### Acceptance Criteria Coverage
+
+| AC# | Description | Status | Evidence |
+|-----|-------------|--------|----------|
+| AC6.1.1 | Navigate to /admin, see login with Google OAuth | ✅ IMPLEMENTED | [src/app/admin/page.tsx:13-16](src/app/admin/page.tsx#L13-L16), [src/app/admin/login/page.tsx:49-50](src/app/admin/login/page.tsx#L49-L50) |
+| AC6.1.2 | OAuth checks admin_allowed_emails table | ✅ IMPLEMENTED | [src/app/admin/auth/callback/route.ts:40-45](src/app/admin/auth/callback/route.ts#L40-L45) |
+| AC6.1.3 | Admin email redirects to /admin/dashboard | ✅ IMPLEMENTED | [src/app/admin/auth/callback/route.ts:52-55](src/app/admin/auth/callback/route.ts#L52-L55) |
+| AC6.1.4 | Non-admin shown "No autorizado" message | ✅ IMPLEMENTED | [src/app/admin/not-authorized/page.tsx:24-29](src/app/admin/not-authorized/page.tsx#L24-L29) - Updated to exact spec text |
+| AC6.1.5 | Session persists 24 hours | ✅ IMPLEMENTED | Supabase default session handling |
+| AC6.1.6 | Desktop-optimized with sidebar (gray theme) | ✅ IMPLEMENTED | [src/app/admin/layout.tsx:25](src/app/admin/layout.tsx#L25), [src/components/admin/admin-sidebar.tsx:89](src/components/admin/admin-sidebar.tsx#L89) |
+| AC6.1.7 | Mobile shows "Usa una computadora" warning | ⏭️ SKIPPED | Per user request - mobile restriction removed, admin works on all viewports |
+
+**Summary: 6 of 7 ACs fully implemented, 1 intentionally skipped per user request**
+
+### Task Completion Validation
+
+| Task | Marked As | Verified As | Evidence |
+|------|-----------|-------------|----------|
+| Task 1: Database Migration | ✅ Complete | ✅ VERIFIED | [supabase/migrations/006_v2_admin_auth.sql](supabase/migrations/006_v2_admin_auth.sql) |
+| Task 2: Admin Route Group | ✅ Complete | ⚠️ QUESTIONABLE | Mobile warning component NOT integrated |
+| Task 3: Admin Login Page | ✅ Complete | ✅ VERIFIED | [src/app/admin/login/page.tsx](src/app/admin/login/page.tsx) |
+| Task 4: Admin Auth Guard | ✅ Complete | ✅ VERIFIED | [src/lib/auth/guards.ts](src/lib/auth/guards.ts) |
+| Task 5: Not Authorized Page | ✅ Complete | ⚠️ PARTIAL | Message differs from spec text |
+| Task 6: Dashboard Shell | ✅ Complete | ✅ VERIFIED | [src/app/admin/dashboard/page.tsx](src/app/admin/dashboard/page.tsx) |
+| Task 7: Middleware Updates | ✅ Complete | ✅ VERIFIED | Auth guards work correctly |
+| Task 8: Testing | ✅ Complete | ✅ VERIFIED | 17 E2E tests × 3 browsers |
+
+**Summary: 6 of 8 tasks verified complete, 2 questionable/partial**
+
+### Test Coverage and Gaps
+
+**Covered:**
+- Login page rendering and Google OAuth button visibility
+- Unauthenticated access redirects to login
+- Auth callback error handling
+- Admin-specific branding and styling
+- Dev login flow (when enabled)
+- Non-admin user sees not-authorized page
+
+**Gaps:**
+- No E2E test verifies mobile warning is displayed (Task 8 subtask claims this but it would fail)
+- Test at line 122-128 checks login interface works on mobile but doesn't verify warning message
+
+### Architectural Alignment
+
+- ✅ Uses direct `/admin/` routes (not route group) - documented decision due to conflicts
+- ✅ Gray theme consistent with architecture spec
+- ✅ Allowlist-based auth matches architecture ADR-009
+- ✅ Auth guards follow established patterns
+- ✅ RLS policies implemented on admin tables
+
+### Security Notes
+
+- ✅ Admin allowlist checked server-side before granting access
+- ✅ OAuth callback validates user email against database
+- ✅ RLS policies restrict admin_allowed_emails to authenticated users checking their own email
+- ✅ Dev login component only renders when `NEXT_PUBLIC_DEV_LOGIN=true`
+- ⚠️ Dev login has hardcoded test credentials in source (acceptable for dev mode only)
+
+### Best-Practices and References
+
+- [Next.js App Router Authentication](https://nextjs.org/docs/app/building-your-application/authentication)
+- [Supabase SSR Auth](https://supabase.com/docs/guides/auth/server-side/nextjs)
+- [Responsive Design - Mobile First](https://tailwindcss.com/docs/responsive-design)
+
+### Action Items
+
+**Code Changes Required:**
+- [x] ~~[Med] Integrate MobileWarning component into admin layout (AC6.1.7)~~ - SKIPPED per user request (mobile restriction removed)
+- [x] [Low] Update not-authorized message to match exact AC6.1.4 spec text [file: src/app/admin/not-authorized/page.tsx:24-29] - **DONE**
+
+**Additional Changes (Post-Review):**
+- [x] Added "Volver a la aplicacion" link on admin login page for users who navigate to /admin by accident
+
+**Advisory Notes:**
+- ~~Note: Consider adding E2E test to verify mobile warning actually renders on small viewports~~ - N/A, mobile warning intentionally removed
+- Note: File list in Dev Agent Record mentions "mobile warning" in layout.tsx description but it's not actually there - OK, feature was removed per user request
+
+---
+
 ## Change Log
 
 | Date | Change | Author |
@@ -225,3 +338,5 @@ Claude Opus 4.5
 | 2025-12-12 | Story drafted from tech spec and epics | SM Agent |
 | 2025-12-12 | Added UX mockup references and design guidelines | SM Agent |
 | 2025-12-12 | Implementation complete, all tasks done, 51 E2E tests pass | Dev Agent (Claude Opus 4.5) |
+| 2025-12-12 | Senior Developer Review - Changes Requested (AC6.1.7 not integrated) | Gabe (AI Review) |
+| 2025-12-12 | Code review items resolved: AC6.1.4 message fixed, AC6.1.7 marked as skipped per user request, added "Volver a la aplicacion" link on login page | Dev Agent (Claude Opus 4.5) |

@@ -22,10 +22,10 @@ export default async function NotAuthorizedPage() {
             <XCircle className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-red-600 mb-2">
-            Acceso Denegado
+            No autorizado
           </h1>
           <p className="text-gray-500 text-sm">
-            Tu cuenta no tiene permisos de administrador
+            Contacta al administrador
           </p>
         </div>
 

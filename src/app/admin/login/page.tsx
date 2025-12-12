@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AdminGoogleSignIn } from "@/components/admin/admin-google-sign-in";
 import { AdminDevLogin } from "@/components/admin/admin-dev-login";
-import { ShieldCheck, Info } from "lucide-react";
+import { ShieldCheck, Info, Home } from "lucide-react";
 
 const showDevLogin = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
 
@@ -59,6 +60,18 @@ export default async function AdminLoginPage() {
 
         {/* Dev login for local testing */}
         {showDevLogin && <AdminDevLogin />}
+
+        {/* Go back to main app */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            data-testid="go-home-link"
+          >
+            <Home className="w-4 h-4" />
+            Volver a la aplicacion
+          </Link>
+        </div>
       </div>
     </div>
   );
