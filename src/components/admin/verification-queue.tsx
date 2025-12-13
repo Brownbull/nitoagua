@@ -1,6 +1,6 @@
 "use client";
 
-import { User, ChevronRight, FileText, Clock } from "lucide-react";
+import { User } from "lucide-react";
 import Link from "next/link";
 import type { ProviderApplication } from "@/app/admin/verification/page";
 
@@ -74,58 +74,52 @@ export function VerificationQueue({ applications }: VerificationQueueProps) {
   return (
     <div className="space-y-3" data-testid="verification-queue">
       {applications.map((application) => (
-        <Link
+        <div
           key={application.id}
-          href={`/admin/verification/${application.id}`}
-          className="block bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow"
+          className="bg-white rounded-2xl p-4 shadow-sm"
           data-testid={`application-card-${application.id}`}
         >
-          <div className="flex items-center gap-4">
+          {/* Top row: Avatar, Name/Time, Status Badge */}
+          <div className="flex items-center gap-3.5 mb-3">
             {/* Avatar */}
-            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
               <User className="w-6 h-6 text-gray-500" />
             </div>
 
-            {/* Info */}
+            {/* Name and time */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="font-bold text-gray-900 truncate">
-                  {application.name}
-                </p>
-                {getStatusBadge(application.verification_status)}
-              </div>
-              <div className="flex items-center gap-3 text-sm text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {formatTimeAgo(application.created_at)}
-                </span>
-              </div>
+              <p className="text-base font-bold text-gray-900 truncate">
+                {application.name}
+              </p>
+              <p className="text-sm text-gray-500">
+                {formatTimeAgo(application.created_at)}
+              </p>
             </div>
 
-            {/* Metadata badges */}
-            <div className="flex flex-col items-end gap-1">
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-md text-xs text-gray-600">
-                <FileText className="w-3 h-3" />
-                {application.documents.length} docs
+            {/* Status badge */}
+            {getStatusBadge(application.verification_status)}
+          </div>
+
+          {/* Metadata badges row */}
+          <div className="flex gap-2 mb-3">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-md text-xs text-gray-600">
+              {application.documents.length} docs
+            </span>
+            {application.service_area && (
+              <span className="px-2 py-1 bg-gray-100 rounded-md text-xs text-gray-600">
+                {application.service_area}
               </span>
-              {application.service_area && (
-                <span className="px-2 py-1 bg-gray-100 rounded-md text-xs text-gray-600 truncate max-w-[100px]">
-                  {application.service_area}
-                </span>
-              )}
-            </div>
-
-            {/* Chevron */}
-            <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            )}
           </div>
 
           {/* Review button */}
-          <div className="mt-3">
-            <span className="block w-full py-3 bg-gray-800 text-white text-center rounded-xl text-sm font-semibold">
-              Revisar Solicitud
-            </span>
-          </div>
-        </Link>
+          <Link
+            href={`/admin/verification/${application.id}`}
+            className="block w-full py-3 bg-gray-800 text-white text-center rounded-xl text-sm font-semibold hover:bg-gray-900 transition-colors"
+          >
+            Revisar Solicitud
+          </Link>
+        </div>
       ))}
     </div>
   );
