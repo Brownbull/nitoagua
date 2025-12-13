@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,6 @@ const ADMIN_TEST_ACCOUNT = {
  * Only rendered when NEXT_PUBLIC_DEV_LOGIN=true
  */
 export function AdminDevLogin() {
-  const router = useRouter();
   const [email, setEmail] = useState<string>(ADMIN_TEST_ACCOUNT.email);
   const [password, setPassword] = useState<string>(ADMIN_TEST_ACCOUNT.password);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,10 +61,11 @@ export function AdminDevLogin() {
 
       if (adminEmail) {
         // User is an admin, redirect to dashboard
-        router.push("/admin/dashboard");
+        // Use window.location for full page reload to ensure server components re-render with new session
+        window.location.href = "/admin/dashboard";
       } else {
         // User is not an admin
-        router.push("/admin/not-authorized");
+        window.location.href = "/admin/not-authorized";
       }
     } catch {
       setError("Error al iniciar sesion");
