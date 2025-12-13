@@ -77,7 +77,7 @@ export function AdminDevLogin() {
   return (
     <div className="mt-6 pt-6 border-t border-gray-300">
       <div className="text-center mb-4">
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
           Dev Mode
         </span>
         <p className="text-xs text-gray-500 mt-1">

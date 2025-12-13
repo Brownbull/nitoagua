@@ -136,186 +136,185 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Offer Validity Section */}
         <div
-          className="bg-white rounded-2xl p-5 shadow-sm"
+          className="bg-white rounded-xl p-3.5 shadow-sm"
           data-testid="offer-validity-section"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Clock className="w-5 h-5 text-blue-600" />
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Clock className="w-4 h-4 text-blue-600" />
             </div>
             <div>
-              <h2 className="font-bold text-gray-900">Validez de Ofertas</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-sm font-bold text-gray-900">Validez de Ofertas</h2>
+              <p className="text-xs text-gray-500">
                 Tiempo que una oferta permanece activa
               </p>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-2.5">
             {/* Min validity */}
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <div>
                 <label
                   htmlFor="offer_validity_min"
-                  className="font-semibold text-gray-900"
+                  className="text-sm font-semibold text-gray-900"
                 >
                   Validez minima
                 </label>
-                <p className="text-xs text-gray-500">
-                  Tiempo minimo que una oferta estara activa
+                <p className="text-[11px] text-gray-500">
+                  Tiempo minimo para una oferta
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <input
                   id="offer_validity_min"
                   type="number"
                   {...register("offer_validity_min", { valueAsNumber: true })}
-                  className="w-20 px-3 py-2 text-right font-bold text-gray-900 bg-gray-100 rounded-lg border-0 focus:ring-2 focus:ring-gray-700"
+                  className="w-16 px-2 py-1.5 text-right text-sm font-bold text-gray-900 bg-gray-100 rounded-lg border-0 focus:ring-2 focus:ring-gray-700"
                   data-testid="input-offer-validity-min"
                 />
-                <span className="text-sm text-gray-500">min</span>
+                <span className="text-xs text-gray-500">min</span>
               </div>
             </div>
             {errors.offer_validity_min && (
               <p
-                className="text-sm text-red-600 flex items-center gap-1"
+                className="text-xs text-red-600 flex items-center gap-1"
                 data-testid="error-offer-validity-min"
               >
-                <AlertCircle className="w-4 h-4" />
+                <AlertCircle className="w-3.5 h-3.5" />
                 {errors.offer_validity_min.message}
               </p>
             )}
 
             {/* Default validity */}
-            <div className="flex items-center justify-between py-3 border-b border-gray-100">
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <div>
                 <label
                   htmlFor="offer_validity_default"
-                  className="font-semibold text-gray-900"
+                  className="text-sm font-semibold text-gray-900"
                 >
                   Validez por defecto
                 </label>
-                <p className="text-xs text-gray-500">
-                  Valor inicial al crear una oferta
+                <p className="text-[11px] text-gray-500">
+                  Valor inicial al crear oferta
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <input
                   id="offer_validity_default"
                   type="number"
                   {...register("offer_validity_default", {
                     valueAsNumber: true,
                   })}
-                  className="w-20 px-3 py-2 text-right font-bold text-gray-900 bg-gray-100 rounded-lg border-0 focus:ring-2 focus:ring-gray-700"
+                  className="w-16 px-2 py-1.5 text-right text-sm font-bold text-gray-900 bg-gray-100 rounded-lg border-0 focus:ring-2 focus:ring-gray-700"
                   data-testid="input-offer-validity-default"
                 />
-                <span className="text-sm text-gray-500">min</span>
+                <span className="text-xs text-gray-500">min</span>
               </div>
             </div>
             {errors.offer_validity_default && (
               <p
-                className="text-sm text-red-600 flex items-center gap-1"
+                className="text-xs text-red-600 flex items-center gap-1"
                 data-testid="error-offer-validity-default"
               >
-                <AlertCircle className="w-4 h-4" />
+                <AlertCircle className="w-3.5 h-3.5" />
                 {errors.offer_validity_default.message}
               </p>
             )}
 
             {/* Max validity */}
-            <div className="flex items-center justify-between py-3">
+            <div className="flex items-center justify-between py-2">
               <div>
                 <label
                   htmlFor="offer_validity_max"
-                  className="font-semibold text-gray-900"
+                  className="text-sm font-semibold text-gray-900"
                 >
                   Validez maxima
                 </label>
-                <p className="text-xs text-gray-500">
-                  Tiempo maximo permitido para una oferta
+                <p className="text-[11px] text-gray-500">
+                  Tiempo maximo permitido
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <input
                   id="offer_validity_max"
                   type="number"
                   {...register("offer_validity_max", { valueAsNumber: true })}
-                  className="w-20 px-3 py-2 text-right font-bold text-gray-900 bg-gray-100 rounded-lg border-0 focus:ring-2 focus:ring-gray-700"
+                  className="w-16 px-2 py-1.5 text-right text-sm font-bold text-gray-900 bg-gray-100 rounded-lg border-0 focus:ring-2 focus:ring-gray-700"
                   data-testid="input-offer-validity-max"
                 />
-                <span className="text-sm text-gray-500">min</span>
+                <span className="text-xs text-gray-500">min</span>
               </div>
             </div>
             {errors.offer_validity_max && (
               <p
-                className="text-sm text-red-600 flex items-center gap-1"
+                className="text-xs text-red-600 flex items-center gap-1"
                 data-testid="error-offer-validity-max"
               >
-                <AlertCircle className="w-4 h-4" />
+                <AlertCircle className="w-3.5 h-3.5" />
                 {errors.offer_validity_max.message}
               </p>
             )}
           </div>
 
           {/* Preview */}
-          <div className="mt-4 p-3 bg-gray-50 rounded-xl">
-            <p className="text-xs text-gray-500 mb-1">Rango configurado:</p>
-            <p className="font-semibold text-gray-900">
-              {currentValues.offer_validity_min} - {currentValues.offer_validity_max}{" "}
-              minutos (defecto: {currentValues.offer_validity_default} min)
+          <div className="mt-3 p-2.5 bg-gray-50 rounded-lg">
+            <p className="text-[11px] text-gray-500">Rango configurado:</p>
+            <p className="text-xs font-semibold text-gray-900">
+              {currentValues.offer_validity_min}-{currentValues.offer_validity_max} min (defecto: {currentValues.offer_validity_default})
             </p>
           </div>
         </div>
 
         {/* Request Timeout Section */}
         <div
-          className="bg-white rounded-2xl p-5 shadow-sm"
+          className="bg-white rounded-xl p-3.5 shadow-sm"
           data-testid="request-timeout-section"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-              <Timer className="w-5 h-5 text-amber-600" />
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+              <Timer className="w-4 h-4 text-amber-600" />
             </div>
             <div>
-              <h2 className="font-bold text-gray-900">Timeout de Pedidos</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-sm font-bold text-gray-900">Timeout de Pedidos</h2>
+              <p className="text-xs text-gray-500">
                 Tiempo antes de notificar si no hay ofertas
               </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between py-3">
+          <div className="flex items-center justify-between py-2">
             <div>
               <label
                 htmlFor="request_timeout_hours"
-                className="font-semibold text-gray-900"
+                className="text-sm font-semibold text-gray-900"
               >
                 Sin ofertas
               </label>
-              <p className="text-xs text-gray-500">
+              <p className="text-[11px] text-gray-500">
                 Notificar admin si no hay ofertas
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <input
                 id="request_timeout_hours"
                 type="number"
                 {...register("request_timeout_hours", { valueAsNumber: true })}
-                className="w-20 px-3 py-2 text-right font-bold text-gray-900 bg-amber-50 rounded-lg border-0 focus:ring-2 focus:ring-amber-500"
+                className="w-16 px-2 py-1.5 text-right text-sm font-bold text-gray-900 bg-amber-50 rounded-lg border-0 focus:ring-2 focus:ring-amber-500"
                 data-testid="input-request-timeout-hours"
               />
-              <span className="text-sm text-gray-500">hrs</span>
+              <span className="text-xs text-gray-500">hrs</span>
             </div>
           </div>
           {errors.request_timeout_hours && (
             <p
-              className="text-sm text-red-600 flex items-center gap-1 mt-2"
+              className="text-xs text-red-600 flex items-center gap-1 mt-2"
               data-testid="error-request-timeout-hours"
             >
-              <AlertCircle className="w-4 h-4" />
+              <AlertCircle className="w-3.5 h-3.5" />
               {errors.request_timeout_hours.message}
             </p>
           )}
@@ -325,10 +324,10 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
         <button
           type="submit"
           disabled={!hasChanges || isPending}
-          className="w-full py-4 bg-gradient-to-r from-gray-700 to-gray-900 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          className="w-full py-3 bg-gradient-to-r from-gray-700 to-gray-900 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           data-testid="save-settings-button"
         >
-          <Save className="w-5 h-5" />
+          <Save className="w-4 h-4" />
           {isPending ? "Guardando..." : "Guardar Cambios"}
         </button>
       </form>

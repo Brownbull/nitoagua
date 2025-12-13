@@ -88,32 +88,32 @@ export function VerificationActions({
   }
 
   return (
-    <section className="space-y-4" data-testid="verification-actions">
+    <section className="space-y-3" data-testid="verification-actions">
       {/* Main action buttons - show when no mode selected */}
       {actionMode === "none" && (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {/* Approve button */}
           <button
             onClick={() => setActionMode("approve")}
-            className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 hover:from-green-600 hover:to-green-700 transition-all shadow-lg"
+            className="w-full py-3.5 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:from-green-600 hover:to-green-700 transition-all shadow-sm"
             data-testid="btn-approve"
           >
-            <Check className="w-5 h-5" />
+            <Check className="w-4 h-4" />
             Aprobar
           </button>
 
           {/* Secondary actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-2.5">
             <button
               onClick={() => setActionMode("more_info")}
-              className="flex-1 py-3 bg-white text-yellow-600 border-2 border-yellow-400 rounded-xl font-semibold hover:bg-yellow-50 transition-colors"
+              className="flex-1 py-3 bg-white text-amber-600 border-2 border-amber-400 rounded-xl text-sm font-semibold hover:bg-amber-50 transition-colors"
               data-testid="btn-more-info"
             >
               Mas Info
             </button>
             <button
               onClick={() => setActionMode("reject")}
-              className="flex-1 py-3 bg-white text-red-600 border-2 border-red-400 rounded-xl font-semibold hover:bg-red-50 transition-colors"
+              className="flex-1 py-3 bg-white text-red-600 border-2 border-red-400 rounded-xl text-sm font-semibold hover:bg-red-50 transition-colors"
               data-testid="btn-reject"
             >
               Rechazar
@@ -121,7 +121,7 @@ export function VerificationActions({
           </div>
 
           {/* Notes textarea */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <div className="bg-white rounded-xl p-3.5 shadow-sm">
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">
               Notas Internas (Opcional)
             </label>
@@ -129,7 +129,7 @@ export function VerificationActions({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Agregar notas internas sobre este proveedor..."
-              className="w-full h-20 p-3 border-2 border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:border-gray-400"
+              className="w-full h-16 p-2.5 border-2 border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-gray-400"
               data-testid="notes-input"
             />
           </div>
@@ -138,24 +138,24 @@ export function VerificationActions({
 
       {/* Approval confirmation */}
       {actionMode === "approve" && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4" data-testid="approve-confirmation">
+        <div className="bg-white rounded-xl p-3.5 shadow-sm space-y-3" data-testid="approve-confirmation">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <Check className="w-5 h-5 text-green-600" />
+            <div className="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center">
+              <Check className="w-4 h-4 text-green-600" />
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Confirmar Aprobacion</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm font-semibold text-gray-900">Confirmar Aprobacion</p>
+              <p className="text-xs text-gray-500">
                 {providerName} podra operar en la plataforma
               </p>
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2.5">
             <button
               onClick={resetActionMode}
               disabled={isPending}
-              className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
               data-testid="btn-cancel-approve"
             >
               Cancelar
@@ -163,14 +163,14 @@ export function VerificationActions({
             <button
               onClick={() => handleSubmit("approved")}
               disabled={isPending}
-              className="flex-1 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
               data-testid="btn-confirm-approve"
             >
               {isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <Check className="w-5 h-5" />
+                  <Check className="w-4 h-4" />
                   Confirmar
                 </>
               )}
@@ -181,14 +181,14 @@ export function VerificationActions({
 
       {/* Rejection form */}
       {actionMode === "reject" && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4" data-testid="reject-form">
+        <div className="bg-white rounded-xl p-3.5 shadow-sm space-y-3" data-testid="reject-form">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-              <X className="w-5 h-5 text-red-600" />
+            <div className="w-9 h-9 bg-red-100 rounded-full flex items-center justify-center">
+              <X className="w-4 h-4 text-red-600" />
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Rechazar Solicitud</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm font-semibold text-gray-900">Rechazar Solicitud</p>
+              <p className="text-xs text-gray-500">
                 El proveedor sera notificado
               </p>
             </div>
@@ -202,17 +202,17 @@ export function VerificationActions({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Explica el motivo del rechazo..."
-              className="w-full h-24 p-3 border-2 border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:border-red-300"
+              className="w-full h-20 p-2.5 border-2 border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-red-300"
               data-testid="reject-reason-input"
               required
             />
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2.5">
             <button
               onClick={resetActionMode}
               disabled={isPending}
-              className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
               data-testid="btn-cancel-reject"
             >
               Cancelar
@@ -220,14 +220,14 @@ export function VerificationActions({
             <button
               onClick={() => handleSubmit("rejected")}
               disabled={isPending || !reason.trim()}
-              className="flex-1 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               data-testid="btn-confirm-reject"
             >
               {isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                   Rechazar
                 </>
               )}
@@ -238,29 +238,29 @@ export function VerificationActions({
 
       {/* Request more info form */}
       {actionMode === "more_info" && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4" data-testid="more-info-form">
+        <div className="bg-white rounded-xl p-3.5 shadow-sm space-y-3" data-testid="more-info-form">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-5 h-5 text-yellow-600" />
+            <div className="w-9 h-9 bg-amber-100 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-4 h-4 text-amber-600" />
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Solicitar Mas Informacion</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm font-semibold text-gray-900">Solicitar Mas Informacion</p>
+              <p className="text-xs text-gray-500">
                 Selecciona los documentos faltantes
               </p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 block">
               Documentos Faltantes *
             </label>
             {DOCUMENT_TYPES.map((doc) => (
               <label
                 key={doc.id}
-                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+                className={`flex items-center gap-2.5 p-2.5 rounded-lg cursor-pointer transition-colors ${
                   missingDocs.includes(doc.id)
-                    ? "bg-yellow-50 border-2 border-yellow-300"
+                    ? "bg-amber-50 border-2 border-amber-300"
                     : "bg-gray-50 border-2 border-transparent hover:bg-gray-100"
                 }`}
               >
@@ -268,7 +268,7 @@ export function VerificationActions({
                   type="checkbox"
                   checked={missingDocs.includes(doc.id)}
                   onChange={() => handleDocToggle(doc.id)}
-                  className="w-4 h-4 text-yellow-500 rounded focus:ring-yellow-400"
+                  className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400"
                   data-testid={`checkbox-${doc.id}`}
                 />
                 <span className="text-sm font-medium text-gray-900">{doc.label}</span>
@@ -284,16 +284,16 @@ export function VerificationActions({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Instrucciones adicionales para el proveedor..."
-              className="w-full h-20 p-3 border-2 border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:border-yellow-300"
+              className="w-full h-16 p-2.5 border-2 border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:border-amber-300"
               data-testid="more-info-message-input"
             />
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2.5">
             <button
               onClick={resetActionMode}
               disabled={isPending}
-              className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
               data-testid="btn-cancel-more-info"
             >
               Cancelar
@@ -301,15 +301,15 @@ export function VerificationActions({
             <button
               onClick={() => handleSubmit("more_info_needed")}
               disabled={isPending || missingDocs.length === 0}
-              className="flex-1 py-3 bg-yellow-500 text-white rounded-xl font-semibold hover:bg-yellow-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 bg-amber-500 text-white rounded-lg text-sm font-semibold hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               data-testid="btn-confirm-more-info"
             >
               {isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <AlertCircle className="w-5 h-5" />
-                  Enviar Solicitud
+                  <AlertCircle className="w-4 h-4" />
+                  Enviar
                 </>
               )}
             </button>

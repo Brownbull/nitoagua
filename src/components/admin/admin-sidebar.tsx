@@ -38,13 +38,13 @@ const navItems: NavItem[] = [
     label: "Proveedores",
     href: "/admin/providers",
     icon: Users,
-    disabled: true,
+    disabled: false,
   },
   {
     label: "Pedidos",
     href: "/admin/orders",
     icon: Package,
-    disabled: true,
+    disabled: false,
   },
   {
     label: "Problemas",
@@ -60,9 +60,9 @@ const navItems: NavItem[] = [
   },
   {
     label: "Finanzas",
-    href: "/admin/finance",
+    href: "/admin/settlement",
     icon: DollarSign,
-    disabled: true,
+    disabled: false,
   },
   {
     label: "Historial",
@@ -88,13 +88,13 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
   return (
     <aside className="hidden lg:flex w-64 bg-gray-900 text-white min-h-screen flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-gray-800">
+      <div className="p-5 border-b border-gray-800">
         <Link href="/admin/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gray-700 rounded-xl flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 bg-gray-700 rounded-lg flex items-center justify-center">
+            <ShieldCheck className="w-4 h-4 text-white" />
           </div>
           <div>
-            <span className="text-lg font-bold">nitoagua</span>
+            <span className="font-logo text-xl text-white">nitoagua</span>
             <span className="block text-xs text-gray-400 uppercase tracking-wide">
               Panel Admin
             </span>
@@ -103,8 +103,8 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <ul className="space-y-1">
+      <nav className="flex-1 p-3">
+        <ul className="space-y-0.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -114,26 +114,26 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
                 {item.disabled ? (
                   <span
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium",
+                      "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium",
                       "text-gray-500 cursor-not-allowed"
                     )}
                     data-testid={`nav-${item.label.toLowerCase()}`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-4 h-4" />
                     {item.label}
                   </span>
                 ) : (
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+                      "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
                       isActive
                         ? "bg-gray-800 text-white"
                         : "text-gray-400 hover:bg-gray-800 hover:text-white"
                     )}
                     data-testid={`nav-${item.label.toLowerCase()}`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-4 h-4" />
                     {item.label}
                   </Link>
                 )}
@@ -145,10 +145,10 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
 
       {/* User info */}
       {userEmail && (
-        <div className="p-4 border-t border-gray-800">
-          <div className="flex items-center gap-3 px-4 py-3">
-            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
-              <UserCircle className="w-5 h-5 text-gray-400" />
+        <div className="p-3 border-t border-gray-800">
+          <div className="flex items-center gap-3 px-3.5 py-2.5">
+            <div className="w-7 h-7 bg-gray-700 rounded-full flex items-center justify-center">
+              <UserCircle className="w-4 h-4 text-gray-400" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs text-gray-400 truncate">{userEmail}</p>

@@ -2,19 +2,24 @@
 
 /**
  * Seed admin user for local development
+ *
+ * Credentials are read from environment variables or use defaults.
+ * Set TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD in .env.local to customize.
  */
 
 import { createClient } from "@supabase/supabase-js";
 
 const LOCAL_CONFIG = {
   url: "http://127.0.0.1:55326",
+  // This is the default local Supabase service role key (not a secret)
   serviceRoleKey:
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU",
 };
 
+// Read from environment or use defaults for local dev
 const ADMIN_USER = {
-  email: "admin@nitoagua.cl",
-  password: "Admin123!",
+  email: process.env.TEST_ADMIN_EMAIL || "admin@nitoagua.local",
+  password: process.env.TEST_ADMIN_PASSWORD || "LocalDevPassword123!",
   profile: {
     role: "consumer",
     name: "Admin Test User",
@@ -82,7 +87,7 @@ async function createAdmin() {
 
   console.log("\n✅ Admin user created successfully!");
   console.log("   Email:", ADMIN_USER.email);
-  console.log("   Password:", ADMIN_USER.password);
+  console.log("   Password: (set via TEST_ADMIN_PASSWORD env var)");
 }
 
 createAdmin().catch(err => {

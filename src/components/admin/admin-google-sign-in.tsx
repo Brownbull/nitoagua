@@ -49,16 +49,16 @@ export function AdminGoogleSignIn() {
       <Button
         type="button"
         variant="outline"
-        className="w-full h-12 text-base font-medium border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
+        className="w-full py-3 text-sm font-semibold border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
         onClick={handleGoogleSignIn}
         disabled={isLoading}
         data-testid="admin-google-sign-in-button"
       >
         {isLoading ? (
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <svg
-            className="mr-2 h-5 w-5"
+            className="mr-2 h-4 w-4"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >

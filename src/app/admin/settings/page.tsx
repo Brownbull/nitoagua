@@ -18,25 +18,25 @@ export default async function AdminSettingsPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-200 to-white px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+      <header className="bg-gradient-to-r from-gray-200 to-white px-5 py-3">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
             <Link
               href="/admin/dashboard"
-              className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
+              className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
               data-testid="back-to-dashboard"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-4 h-4 text-gray-600" />
             </Link>
-            <span className="text-lg font-bold text-gray-700">nitoagua</span>
+            <span className="font-logo text-xl text-gray-700">nitoagua</span>
           </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-800 text-white text-xs font-semibold uppercase tracking-wide rounded-lg">
-            <ShieldCheck className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-800 text-white text-xs font-semibold uppercase tracking-wide rounded-lg">
+            <ShieldCheck className="w-3 h-3" />
             Admin
           </div>
         </div>
-        <h1 className="text-2xl font-extrabold text-gray-900">Configuracion</h1>
-        <p className="text-gray-600 text-sm">
+        <h1 className="text-xl font-extrabold text-gray-900">Configuracion</h1>
+        <p className="text-gray-500 text-sm">
           Ajustes del sistema de ofertas
         </p>
       </header>
@@ -44,17 +44,17 @@ export default async function AdminSettingsPage() {
       {/* Content */}
       <div className="p-6">
         {/* Admin session display */}
-        <div className="mb-6 p-4 bg-white rounded-xl shadow-sm">
-          <p className="text-sm text-gray-500">Sesion activa como:</p>
-          <p className="font-semibold text-gray-900">{user.email}</p>
+        <div className="mb-4 p-3.5 bg-white rounded-xl shadow-sm">
+          <p className="text-xs text-gray-500">Sesion activa como:</p>
+          <p className="text-sm font-semibold text-gray-900">{user.email}</p>
         </div>
 
         {/* Settings Form */}
         <SettingsForm initialSettings={settings} />
 
         {/* Info note */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-          <p className="text-sm text-blue-800">
+        <div className="mt-4 p-3.5 bg-blue-50 rounded-xl border border-blue-100">
+          <p className="text-xs text-blue-800">
             <strong>Nota:</strong> Los cambios se aplicaran inmediatamente a las nuevas ofertas.
             Las ofertas existentes mantendran su configuracion original.
           </p>

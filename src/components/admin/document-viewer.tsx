@@ -38,8 +38,8 @@ function getDocumentStatus(doc: ProviderDocument) {
   return {
     icon: AlertCircle,
     label: "Revisar",
-    bgColor: "bg-yellow-100",
-    iconColor: "text-yellow-600",
+    bgColor: "bg-amber-100",
+    iconColor: "text-amber-600",
   };
 }
 

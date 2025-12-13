@@ -10,13 +10,14 @@ so that **I can monitor marketplace health**.
 
 ## Acceptance Criteria
 
-1. **AC6.8.1:** Dashboard shows period selector: Hoy / Esta Semana / Este Mes
+1. **AC6.8.1:** Dashboard shows period selector: Semana / Mes / Año with dropdown options
 2. **AC6.8.2:** Request metrics: total, with offers %, avg offers/request, timeout rate
 3. **AC6.8.3:** Offer metrics: total, acceptance rate, avg time to first, expiration rate
 4. **AC6.8.4:** Financial: transaction volume, commission earned, pending settlements
 5. **AC6.8.5:** Provider: active count, online now, new applications
 6. **AC6.8.6:** Metrics show trend vs previous period (↑ ↓)
 7. **AC6.8.7:** Clicking metric drills down to filtered view
+8. **AC6.8.8:** Finanzas page period selector filters settlement data by selected period
 
 ## Tasks / Subtasks
 
@@ -64,10 +65,19 @@ so that **I can monitor marketplace health**.
   - [ ] Show "Actualizado hace X min" timestamp
   - [ ] Manual refresh button
 
-- [ ] **Task 9: Testing** (AC: All)
+- [ ] **Task 9: Finanzas Period Filtering** (AC: 8)
+  - [ ] Update settlement page to accept period params (URL search params or server action)
+  - [ ] Modify `getSettlementData()` to filter by date range
+  - [ ] Filter commission_ledger entries by created_at within period
+  - [ ] Filter withdrawal_requests by created_at within period
+  - [ ] Period selector dropdown selections trigger data refresh
+  - [ ] Note: Period selector UI already implemented in Story 6-5
+
+- [ ] **Task 10: Testing** (AC: All)
   - [ ] E2E test: Period selector changes data
   - [ ] E2E test: Metrics render correctly
   - [ ] E2E test: Drill-down navigation works
+  - [ ] E2E test: Finanzas period filtering works
   - [ ] Unit test: Metric calculations
 
 ## Dev Notes
@@ -77,6 +87,15 @@ so that **I can monitor marketplace health**.
 - Aggregate queries on water_requests, offers, profiles, commission_ledger
 - Use date filters based on period selector
 - Cache results client-side or server-side with revalidation
+
+### Finanzas Period Filtering (from Story 6-5)
+
+The period selector UI (Semana/Mes/Año dropdowns) was already implemented in Story 6-5 as a UI placeholder. This story will wire up the actual data filtering:
+
+- `DashboardPeriodSelector` component exists at `src/components/admin/dashboard-period-selector.tsx`
+- Settlement period selector embedded in `src/components/admin/settlement-dashboard.tsx`
+- Need to pass selected period to server and filter queries accordingly
+- Consider using URL search params or React Server Actions for data refresh
 
 ### UX Mockups & Design References
 
@@ -144,3 +163,4 @@ so that **I can monitor marketplace health**.
 |------|--------|--------|
 | 2025-12-12 | Story drafted from tech spec and epics | SM Agent |
 | 2025-12-12 | Added UX mockup references | SM Agent |
+| 2025-12-13 | Added AC6.8.8 and Task 9 for Finanzas period filtering (from Story 6-5 UI work) | Dev Agent |

@@ -41,7 +41,7 @@ export default async function AdminLoginPage() {
             <ShieldCheck className="w-3.5 h-3.5" />
             Panel Admin
           </div>
-          <h1 className="text-2xl font-bold text-gray-700">nitoagua</h1>
+          <h1 className="font-logo text-2xl text-gray-700">nitoagua</h1>
           <p className="text-gray-500 text-sm mt-1">
             Acceso exclusivo para administradores
           </p>

@@ -27,13 +27,13 @@ export function AdminLogoutButton() {
     <button
       onClick={handleLogout}
       disabled={isLoading}
-      className="flex items-center justify-center gap-2 w-full h-12 text-base font-semibold border-2 border-gray-200 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold border-2 border-gray-200 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       data-testid="admin-logout-button"
     >
       {isLoading ? (
-        <Loader2 className="w-5 h-5 animate-spin" />
+        <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
-        <LogOut className="w-5 h-5" />
+        <LogOut className="w-4 h-4" />
       )}
       Cerrar Sesion
     </button>

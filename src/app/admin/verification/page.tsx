@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { VerificationQueue } from "@/components/admin/verification-queue";
+import { VerificationFilterTabs } from "@/components/admin/verification-filter-tabs";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -98,64 +98,33 @@ export default async function VerificationPage() {
 
   // Fetch pending applications
   const applications = await getPendingApplications();
-  const pendingCount = applications.filter(
-    (a) => a.verification_status === "pending"
-  ).length;
-  const moreInfoCount = applications.filter(
-    (a) => a.verification_status === "more_info_needed"
-  ).length;
-
   console.log(`[ADMIN] Verification queue loaded by ${user.email}: ${applications.length} applications`);
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-200 to-white px-6 py-4">
-        <div className="flex items-center gap-3 mb-4">
+      <header className="bg-gradient-to-r from-gray-200 to-white px-5 py-3">
+        <div className="flex items-center gap-2 mb-3">
           <Link
             href="/admin/dashboard"
-            className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
             data-testid="back-to-dashboard"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-4 h-4 text-gray-600" />
           </Link>
-          <span className="text-lg font-bold text-gray-700">nitoagua</span>
+          <span className="font-logo text-xl text-gray-700">nitoagua</span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-yellow-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-extrabold text-gray-900">Verificaciones</h1>
-            <p className="text-gray-600 text-sm">
-              {applications.length === 0
-                ? "No hay solicitudes pendientes"
-                : `${applications.length} solicitudes en cola`}
-            </p>
-          </div>
-        </div>
+        <h1 className="text-xl font-extrabold text-gray-900">Verificaciones</h1>
+        <p className="text-gray-500 text-sm">
+          {applications.length === 0
+            ? "No hay solicitudes pendientes"
+            : `${applications.length} solicitudes pendientes`}
+        </p>
       </header>
 
       {/* Content */}
       <div className="p-6">
-        {/* Filter tabs */}
-        <div className="flex gap-2 mb-6">
-          <button
-            className="flex-1 py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-xl"
-            data-testid="filter-pending"
-          >
-            Pendientes ({pendingCount})
-          </button>
-          <button
-            className="flex-1 py-2.5 bg-white text-gray-600 text-sm font-semibold rounded-xl border-2 border-gray-200"
-            data-testid="filter-more-info"
-          >
-            Mas Info ({moreInfoCount})
-          </button>
-        </div>
-
-        {/* Queue */}
-        <VerificationQueue applications={applications} />
+        <VerificationFilterTabs applications={applications} />
       </div>
     </div>
   );

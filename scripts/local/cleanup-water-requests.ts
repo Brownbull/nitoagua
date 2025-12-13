@@ -20,8 +20,8 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load .env.scripts file if it exists
-const envScriptsPath = join(__dirname, "..", ".env.scripts");
+// Load .env.scripts file if it exists (project root)
+const envScriptsPath = join(__dirname, "..", "..", ".env.scripts");
 if (existsSync(envScriptsPath)) {
   const envContent = readFileSync(envScriptsPath, "utf-8");
   envContent.split("\n").forEach((line) => {

@@ -43,10 +43,10 @@ export default async function NotAuthorizedPage() {
 
           <Link
             href="/"
-            className="flex items-center justify-center gap-2 w-full h-12 text-base font-semibold border-2 border-gray-200 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold border-2 border-gray-200 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
             data-testid="go-home-button"
           >
-            <Home className="w-5 h-5" />
+            <Home className="w-4 h-4" />
             Ir a Inicio
           </Link>
         </div>
