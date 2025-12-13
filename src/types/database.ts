@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       admin_allowed_emails: {
@@ -64,11 +89,165 @@ export type Database = {
           },
         ]
       }
+      commission_ledger: {
+        Row: {
+          admin_id: string | null
+          amount: number
+          bank_reference: string | null
+          created_at: string
+          description: string | null
+          id: string
+          provider_id: string
+          request_id: string | null
+          type: string
+        }
+        Insert: {
+          admin_id?: string | null
+          amount: number
+          bank_reference?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          provider_id: string
+          request_id?: string | null
+          type: string
+        }
+        Update: {
+          admin_id?: string | null
+          amount?: number
+          bank_reference?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          provider_id?: string
+          request_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_ledger_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_ledger_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_ledger_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "water_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          data: Json
+          read: boolean
+          created_at: string
+          read_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          data?: Json
+          read?: boolean
+          created_at?: string
+          read_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          title?: string
+          message?: string
+          data?: Json
+          read?: boolean
+          created_at?: string
+          read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          delivery_window_end: string
+          delivery_window_start: string
+          expires_at: string
+          id: string
+          provider_id: string
+          request_id: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          delivery_window_end: string
+          delivery_window_start: string
+          expires_at: string
+          id?: string
+          provider_id: string
+          request_id: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          delivery_window_end?: string
+          delivery_window_start?: string
+          expires_at?: string
+          id?: string
+          provider_id?: string
+          request_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "water_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
           bank_account: string | null
           bank_name: string | null
+          commission_override: number | null
           created_at: string | null
           email: string | null
           id: string
@@ -84,6 +263,7 @@ export type Database = {
           role: string
           service_area: string | null
           special_instructions: string | null
+          suspension_reason: string | null
           updated_at: string | null
           verification_status: string | null
         }
@@ -91,6 +271,7 @@ export type Database = {
           address?: string | null
           bank_account?: string | null
           bank_name?: string | null
+          commission_override?: number | null
           created_at?: string | null
           email?: string | null
           id: string
@@ -106,6 +287,7 @@ export type Database = {
           role: string
           service_area?: string | null
           special_instructions?: string | null
+          suspension_reason?: string | null
           updated_at?: string | null
           verification_status?: string | null
         }
@@ -113,6 +295,7 @@ export type Database = {
           address?: string | null
           bank_account?: string | null
           bank_name?: string | null
+          commission_override?: number | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -128,6 +311,7 @@ export type Database = {
           role?: string
           service_area?: string | null
           special_instructions?: string | null
+          suspension_reason?: string | null
           updated_at?: string | null
           verification_status?: string | null
         }
@@ -186,7 +370,9 @@ export type Database = {
           accepted_at: string | null
           address: string
           amount: number
+          cancellation_reason: string | null
           cancelled_at: string | null
+          cancelled_by: string | null
           consumer_id: string | null
           created_at: string | null
           decline_reason: string | null
@@ -208,7 +394,9 @@ export type Database = {
           accepted_at?: string | null
           address: string
           amount: number
+          cancellation_reason?: string | null
           cancelled_at?: string | null
+          cancelled_by?: string | null
           consumer_id?: string | null
           created_at?: string | null
           decline_reason?: string | null
@@ -230,7 +418,9 @@ export type Database = {
           accepted_at?: string | null
           address?: string
           amount?: number
+          cancellation_reason?: string | null
           cancelled_at?: string | null
+          cancelled_by?: string | null
           consumer_id?: string | null
           created_at?: string | null
           decline_reason?: string | null
@@ -250,6 +440,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "water_requests_cancelled_by_fkey"
+            columns: ["cancelled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "water_requests_consumer_id_fkey"
             columns: ["consumer_id"]
             isOneToOne: false
@@ -259,6 +456,60 @@ export type Database = {
           {
             foreignKeyName: "water_requests_supplier_id_fkey"
             columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      withdrawal_requests: {
+        Row: {
+          amount: number
+          bank_reference: string | null
+          created_at: string | null
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          provider_id: string
+          receipt_path: string | null
+          rejection_reason: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          bank_reference?: string | null
+          created_at?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          provider_id: string
+          receipt_path?: string | null
+          rejection_reason?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_reference?: string | null
+          created_at?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          provider_id?: string
+          receipt_path?: string | null
+          rejection_reason?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_requests_provider_id_fkey"
+            columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -399,6 +650,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

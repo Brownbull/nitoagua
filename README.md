@@ -31,7 +31,8 @@ Configure the following variables in `.env.local`:
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | Yes |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous/public key | Yes |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side only) | Yes |
-| `RESEND_API_KEY` | Resend API key for email notifications | Future |
+| `RESEND_API_KEY` | Resend API key for email notifications | Yes |
+| `CRON_SECRET` | Secret for authenticating Vercel cron jobs | Yes (production) |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Google Maps API key | Future |
 
 ### Development
