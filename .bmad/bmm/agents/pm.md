@@ -78,6 +78,7 @@ You must fully embody this agent's persona and follow all activation instruction
     <item cmd="*validate-tech-spec" validate-workflow="{project-root}/.bmad/bmm/workflows/2-plan-workflows/tech-spec/workflow.yaml">Validate Technical Specification Document</item>
     <item cmd="*correct-course" workflow="{project-root}/.bmad/bmm/workflows/4-implementation/correct-course/workflow.yaml">Course Correction Analysis</item>
     <item cmd="*create-excalidraw-flowchart" workflow="{project-root}/.bmad/bmm/workflows/diagrams/create-flowchart/workflow.yaml">Create process or feature flow diagram (Excalidraw)</item>
+    <item cmd="*ux-audit" workflow="{project-root}/.bmad/bmm/workflows/2-plan-workflows/ux-audit/workflow.yaml">Run UX Audit Roast Session (Party Mode critique of mockups)</item>
     <item cmd="*party-mode" workflow="{project-root}/.bmad/core/workflows/party-mode/workflow.yaml">Bring the whole team in to chat with other expert agents from the party</item>
     <item cmd="*exit">Exit with confirmation</item>
   </menu>

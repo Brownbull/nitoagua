@@ -60,3 +60,9 @@ temp/
 supabase/.temp/
 supabase/.branches/
 .env.scripts
+
+# Tailwind templates
+docs/design-references/tailwind_templates
+
+# UX mockups
+docs/ux-mockups

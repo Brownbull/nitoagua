@@ -12,50 +12,25 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       admin_allowed_emails: {
         Row: {
-          email: string
-          added_by: string
           added_at: string
+          added_by: string
+          email: string
           notes: string | null
         }
         Insert: {
-          email: string
-          added_by: string
           added_at?: string
+          added_by: string
+          email: string
           notes?: string | null
         }
         Update: {
-          email?: string
-          added_by?: string
           added_at?: string
+          added_by?: string
+          email?: string
           notes?: string | null
         }
         Relationships: []
@@ -63,21 +38,21 @@ export type Database = {
       admin_settings: {
         Row: {
           key: string
-          value: Json
-          updated_by: string | null
           updated_at: string
+          updated_by: string | null
+          value: Json
         }
         Insert: {
           key: string
-          value: Json
-          updated_by?: string | null
           updated_at?: string
+          updated_by?: string | null
+          value: Json
         }
         Update: {
           key?: string
-          value?: Json
-          updated_by?: string | null
           updated_at?: string
+          updated_by?: string | null
+          value?: Json
         }
         Relationships: [
           {
@@ -86,14 +61,18 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       profiles: {
         Row: {
           address: string | null
+          bank_account: string | null
+          bank_name: string | null
           created_at: string | null
+          email: string | null
           id: string
+          internal_notes: string | null
           is_available: boolean | null
           name: string
           phone: string
@@ -101,15 +80,21 @@ export type Database = {
           price_1000l: number | null
           price_100l: number | null
           price_5000l: number | null
+          rejection_reason: string | null
           role: string
           service_area: string | null
           special_instructions: string | null
           updated_at: string | null
+          verification_status: string | null
         }
         Insert: {
           address?: string | null
+          bank_account?: string | null
+          bank_name?: string | null
           created_at?: string | null
+          email?: string | null
           id: string
+          internal_notes?: string | null
           is_available?: boolean | null
           name: string
           phone: string
@@ -117,15 +102,21 @@ export type Database = {
           price_1000l?: number | null
           price_100l?: number | null
           price_5000l?: number | null
+          rejection_reason?: string | null
           role: string
           service_area?: string | null
           special_instructions?: string | null
           updated_at?: string | null
+          verification_status?: string | null
         }
         Update: {
           address?: string | null
+          bank_account?: string | null
+          bank_name?: string | null
           created_at?: string | null
+          email?: string | null
           id?: string
+          internal_notes?: string | null
           is_available?: boolean | null
           name?: string
           phone?: string
@@ -133,12 +124,62 @@ export type Database = {
           price_1000l?: number | null
           price_100l?: number | null
           price_5000l?: number | null
+          rejection_reason?: string | null
           role?: string
           service_area?: string | null
           special_instructions?: string | null
           updated_at?: string | null
+          verification_status?: string | null
         }
         Relationships: []
+      }
+      provider_documents: {
+        Row: {
+          id: string
+          original_filename: string | null
+          provider_id: string
+          storage_path: string
+          type: string
+          uploaded_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          id?: string
+          original_filename?: string | null
+          provider_id: string
+          storage_path: string
+          type: string
+          uploaded_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          id?: string
+          original_filename?: string | null
+          provider_id?: string
+          storage_path?: string
+          type?: string
+          uploaded_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_documents_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_documents_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       water_requests: {
         Row: {
@@ -158,7 +199,7 @@ export type Database = {
           is_urgent: boolean | null
           latitude: number | null
           longitude: number | null
-          special_instructions: string
+          special_instructions: string | null
           status: string
           supplier_id: string | null
           tracking_token: string | null
@@ -180,7 +221,7 @@ export type Database = {
           is_urgent?: boolean | null
           latitude?: number | null
           longitude?: number | null
-          special_instructions: string
+          special_instructions?: string | null
           status?: string
           supplier_id?: string | null
           tracking_token?: string | null
@@ -202,7 +243,7 @@ export type Database = {
           is_urgent?: boolean | null
           latitude?: number | null
           longitude?: number | null
-          special_instructions?: string
+          special_instructions?: string | null
           status?: string
           supplier_id?: string | null
           tracking_token?: string | null
@@ -358,9 +399,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

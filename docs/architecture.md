@@ -1,867 +1,871 @@
-# nitoagua - Architecture Document
+# nitoagua - Architecture Document V2
 
 ## Executive Summary
 
-nitoagua is a Progressive Web App (PWA) built with Next.js 15, Supabase (PostgreSQL + Auth), and shadcn/ui. The architecture prioritizes simplicity for MVP validation: a single full-stack deployment on Vercel with Supabase handling database, authentication, and real-time capabilities. This decision-focused document ensures AI agents implement consistently across all features.
+nitoagua is a Progressive Web App (PWA) for water delivery coordination in rural Chile, connecting consumers with water providers (aguateros) through an admin-managed marketplace. Built with Next.js 15, Supabase, and shadcn/ui, the V2 architecture extends the validated MVP with:
 
-## Project Initialization
+- **Consumer-Choice Offer System** - Consumers select from provider offers (not auto-assignment)
+- **Provider Lifecycle Management** - Self-registration, document verification, earnings tracking
+- **Admin Operations Panel** - Provider verification, pricing control, settlement management
+- **Cash Settlement Tracking** - Commission debt ledger with aging and payment reconciliation
 
-First implementation story should execute:
+This decision-focused document ensures AI agents implement consistently across all features.
 
-```bash
-npx create-next-app@latest nitoagua --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"
-```
+## Version History
 
-This establishes the base architecture with:
-- Next.js 15.1 with App Router
-- TypeScript
-- Tailwind CSS
-- ESLint
-- `src/` directory structure
-- `@/*` import alias
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2025-12-01 | MVP architecture (single supplier) |
+| 2.0 | 2025-12-11 | V2 multi-provider marketplace, consumer-choice offers, admin panel |
 
-After initialization, install additional dependencies:
-
-```bash
-# Core dependencies
-npm install @supabase/supabase-js @supabase/ssr
-
-# UI components
-npx shadcn@latest init
-npx shadcn@latest add button card input textarea select dialog toast badge tabs form
-
-# Email
-npm install resend @react-email/components
-
-# Utilities
-npm install zod date-fns
-```
+---
 
 ## Decision Summary
 
-| Category | Decision | Version | Affects FRs | Rationale |
-|----------|----------|---------|-------------|-----------|
-| Framework | Next.js (App Router) | 15.1.x | All | PWA support, SSR, API routes, Vercel deployment |
-| Language | TypeScript | 5.x | All | Type safety, better DX, AI agent consistency |
-| Database | Supabase (PostgreSQL) | Latest | FR1-FR45 | Managed PostgreSQL, built-in auth, real-time, free tier |
-| ORM | Supabase Client | 2.x | FR1-FR45 | Native integration, no separate ORM needed for MVP |
-| Authentication | Supabase Auth | Built-in | FR1-FR6, FR19-FR23 | Email/password, magic links, session management |
-| UI Components | shadcn/ui + Tailwind | Latest | All UI | UX spec requirement, accessible, customizable |
-| Email Service | Resend + React Email | Latest | FR6, FR17, FR34-FR35 | Developer-friendly, React templates, free tier |
-| Deployment | Vercel | N/A | FR38-FR42 | Next.js native, edge functions, automatic HTTPS |
-| Maps | Google Maps API | Latest | FR28 | Address lookup, geolocation, rural Chile coverage |
-| State Management | React Context + URL state | Built-in | All | Simple enough for MVP, no Redux needed |
-| Forms | React Hook Form + Zod | Latest | FR7-FR13 | Validation, type safety, shadcn/ui integration |
+### Core Architecture Decisions (MVP - Unchanged)
 
-## Project Structure
+| Category | Decision | Rationale |
+|----------|----------|-----------|
+| Framework | Next.js 15 (App Router) | PWA support, SSR, API routes, Vercel deployment |
+| Language | TypeScript 5.x | Type safety, AI agent consistency |
+| Database | Supabase (PostgreSQL) | Managed DB, built-in auth, real-time, free tier |
+| UI Components | shadcn/ui + Tailwind | Accessible, customizable, matches UX spec |
+| Email Service | Resend + React Email | Developer-friendly, React templates |
+| Deployment | Vercel | Next.js native, edge functions, automatic HTTPS |
+| Maps | Google Maps API | Address lookup, geolocation, rural Chile coverage |
+
+### V2 Architecture Decisions
+
+| # | Category | Decision | Options Considered | Rationale |
+|---|----------|----------|-------------------|-----------|
+| 1 | Offer Broadcast | **Supabase Realtime** | Polling, Push Service (FCM) | Zero cost, instant, already available |
+| 2 | Offer Expiration | **Hybrid (Client + Cron)** | Server-only, Client-only, DB Trigger | Client shows countdown, Cron cleanup every 1 min |
+| 3 | Document Storage | **Supabase Storage** | Cloudinary, S3, Vercel Blob | Already integrated, RLS for access control |
+| 4 | Settlement Tracking | **Separate tables per concern** | Single table, Wallet model, Event-sourced | Clear separation, easy auditing, financial accuracy |
+| 5 | Admin Access | **Allowlist + profiles** | Role column only, Custom claims | Pre-seed allowlist, clean access check |
+| 6 | Notifications | **In-app + Selective Email** | In-app only, Email all | Realtime primary, email for critical events only |
+| 7 | Service Areas | **Comuna/Town selection** | Radius, Polygon zones | Familiar to Chileans, simple matching |
+| 8 | Offer Validity | **Admin-configurable bounds** | Fixed, Provider-only | Admin sets min/max, prevents abuse |
+
+---
+
+## Project Structure (V2)
 
 ```
 nitoagua/
 ├── src/
-│   ├── app/                          # Next.js App Router
-│   │   ├── (auth)/                   # Auth group routes
-│   │   │   ├── login/
-│   │   │   │   └── page.tsx
-│   │   │   ├── register/
-│   │   │   │   └── page.tsx
+│   ├── app/
+│   │   ├── (auth)/                    # Auth routes
+│   │   │   ├── login/page.tsx
 │   │   │   └── layout.tsx
-│   │   ├── (consumer)/               # Consumer group routes
-│   │   │   ├── page.tsx              # Consumer home (big button)
+│   │   │
+│   │   ├── (consumer)/                # Consumer routes (blue theme)
+│   │   │   ├── layout.tsx
 │   │   │   ├── request/
-│   │   │   │   ├── page.tsx          # New request form
+│   │   │   │   ├── page.tsx           # New request form
 │   │   │   │   └── [id]/
-│   │   │   │       └── page.tsx      # Request status
-│   │   │   ├── history/
-│   │   │   │   └── page.tsx          # Request history
+│   │   │   │       ├── page.tsx       # Request status
+│   │   │   │       └── offers/page.tsx # NEW: View/select offers
+│   │   │   ├── history/page.tsx
+│   │   │   └── profile/page.tsx
+│   │   │
+│   │   ├── (provider)/                # Provider routes (orange theme)
+│   │   │   ├── layout.tsx
+│   │   │   ├── dashboard/page.tsx     # Home with availability toggle
+│   │   │   ├── requests/              # Browse nearby requests
+│   │   │   │   ├── page.tsx           # Available requests list
+│   │   │   │   └── [id]/page.tsx      # Request detail + offer form
+│   │   │   ├── offers/                # My active offers
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/page.tsx
+│   │   │   ├── deliveries/            # Assigned deliveries
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/page.tsx
+│   │   │   ├── earnings/              # Earnings & settlement
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── history/page.tsx
+│   │   │   │   └── withdraw/page.tsx
 │   │   │   ├── profile/
-│   │   │   │   └── page.tsx          # User profile
-│   │   │   └── layout.tsx
-│   │   ├── (supplier)/               # Supplier group routes
-│   │   │   ├── dashboard/
-│   │   │   │   └── page.tsx          # Request dashboard
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── documents/page.tsx
+│   │   │   ├── settings/page.tsx      # Offer validity, service areas
+│   │   │   └── onboarding/            # Registration flow
+│   │   │       ├── page.tsx           # Personal info
+│   │   │       ├── documents/page.tsx # Document upload
+│   │   │       ├── bank/page.tsx      # Bank details
+│   │   │       └── pending/page.tsx   # Verification waiting
+│   │   │
+│   │   ├── (admin)/                   # Admin routes (gray theme, desktop-first)
+│   │   │   ├── layout.tsx
+│   │   │   ├── login/page.tsx
+│   │   │   ├── not-authorized/page.tsx
+│   │   │   ├── dashboard/page.tsx     # Operations overview
+│   │   │   ├── providers/
+│   │   │   │   ├── page.tsx           # Directory
+│   │   │   │   ├── verification/page.tsx
+│   │   │   │   └── [id]/page.tsx
+│   │   │   ├── orders/
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [id]/page.tsx
+│   │   │   ├── settlement/page.tsx    # Cash settlement tracking
+│   │   │   ├── pricing/page.tsx
+│   │   │   └── settings/page.tsx
+│   │   │
+│   │   ├── api/
 │   │   │   ├── requests/
-│   │   │   │   └── [id]/
-│   │   │   │       └── page.tsx      # Request detail
-│   │   │   ├── profile/
-│   │   │   │   └── page.tsx          # Supplier profile
-│   │   │   └── layout.tsx
-│   │   ├── api/                      # API routes
-│   │   │   ├── requests/
-│   │   │   │   ├── route.ts          # GET/POST requests
-│   │   │   │   └── [id]/
-│   │   │   │       └── route.ts      # GET/PATCH specific request
-│   │   │   ├── webhooks/
-│   │   │   │   └── resend/
-│   │   │   │       └── route.ts      # Email webhooks
-│   │   │   └── health/
-│   │   │       └── route.ts          # Health check
-│   │   ├── track/
-│   │   │   └── [token]/
-│   │   │       └── page.tsx          # Guest tracking page
-│   │   ├── layout.tsx                # Root layout
-│   │   ├── page.tsx                  # Landing/redirect
-│   │   ├── manifest.ts               # PWA manifest
-│   │   └── globals.css
+│   │   │   │   ├── route.ts
+│   │   │   │   └── [id]/route.ts
+│   │   │   ├── offers/                # NEW
+│   │   │   │   ├── route.ts
+│   │   │   │   └── [id]/route.ts
+│   │   │   ├── provider/
+│   │   │   │   ├── profile/route.ts
+│   │   │   │   ├── documents/route.ts # NEW
+│   │   │   │   ├── service-areas/route.ts # NEW
+│   │   │   │   └── earnings/route.ts  # NEW
+│   │   │   ├── admin/                 # NEW
+│   │   │   │   ├── providers/route.ts
+│   │   │   │   ├── pricing/route.ts
+│   │   │   │   ├── settings/route.ts
+│   │   │   │   └── settlement/route.ts
+│   │   │   ├── notifications/route.ts # NEW
+│   │   │   └── cron/                  # NEW
+│   │   │       ├── expire-offers/route.ts
+│   │   │       ├── request-timeout/route.ts
+│   │   │       └── settlement-reminders/route.ts
+│   │   │
+│   │   ├── auth/callback/route.ts
+│   │   ├── track/[token]/page.tsx
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── manifest.ts
+│   │
 │   ├── components/
-│   │   ├── ui/                       # shadcn/ui components
-│   │   │   ├── button.tsx
-│   │   │   ├── card.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── toast.tsx
-│   │   │   ├── badge.tsx
-│   │   │   └── ...
-│   │   ├── consumer/                 # Consumer-specific components
+│   │   ├── ui/                        # shadcn/ui primitives
+│   │   ├── consumer/
 │   │   │   ├── big-action-button.tsx
 │   │   │   ├── request-form.tsx
 │   │   │   ├── status-tracker.tsx
-│   │   │   └── amount-selector.tsx
-│   │   ├── supplier/                 # Supplier-specific components
-│   │   │   ├── request-card.tsx
-│   │   │   ├── request-list.tsx
-│   │   │   ├── stats-header.tsx
-│   │   │   └── delivery-modal.tsx
-│   │   ├── shared/                   # Shared components
+│   │   │   ├── offer-list.tsx         # NEW: View offers
+│   │   │   └── offer-card.tsx         # NEW
+│   │   ├── provider/                  # RENAMED from supplier
+│   │   │   ├── request-browser.tsx    # NEW
+│   │   │   ├── offer-form.tsx         # NEW
+│   │   │   ├── offer-countdown.tsx    # NEW
+│   │   │   ├── earnings-dashboard.tsx # NEW
+│   │   │   ├── document-upload.tsx    # NEW
+│   │   │   ├── service-area-picker.tsx # NEW
+│   │   │   └── availability-toggle.tsx # NEW
+│   │   ├── admin/                     # NEW
+│   │   │   ├── verification-queue.tsx
+│   │   │   ├── provider-directory.tsx
+│   │   │   ├── orders-table.tsx
+│   │   │   ├── pricing-editor.tsx
+│   │   │   ├── settlement-table.tsx
+│   │   │   └── settings-form.tsx
+│   │   ├── shared/
 │   │   │   ├── status-badge.tsx
-│   │   │   ├── address-input.tsx
-│   │   │   ├── phone-input.tsx
-│   │   │   ├── loading-spinner.tsx
-│   │   │   └── error-boundary.tsx
-│   │   └── layout/                   # Layout components
+│   │   │   ├── countdown-timer.tsx    # NEW
+│   │   │   └── notification-bell.tsx  # NEW
+│   │   └── layout/
 │   │       ├── consumer-nav.tsx
-│   │       ├── supplier-sidebar.tsx
-│   │       └── header.tsx
-│   ├── lib/
-│   │   ├── supabase/
-│   │   │   ├── client.ts             # Browser client
-│   │   │   ├── server.ts             # Server client
-│   │   │   ├── middleware.ts         # Auth middleware
-│   │   │   └── types.ts              # Database types
-│   │   ├── email/
-│   │   │   ├── resend.ts             # Resend client
-│   │   │   └── templates/
-│   │   │       ├── request-confirmed.tsx
-│   │   │       ├── request-accepted.tsx
-│   │   │       └── request-delivered.tsx
-│   │   ├── validations/
-│   │   │   ├── request.ts            # Request form validation
-│   │   │   ├── profile.ts            # Profile validation
-│   │   │   └── common.ts             # Shared validations
-│   │   └── utils/
-│   │       ├── format.ts             # Date/currency formatting
-│   │       ├── phone.ts              # Chilean phone validation
-│   │       └── constants.ts          # App constants
+│   │       ├── provider-nav.tsx       # NEW
+│   │       └── admin-sidebar.tsx      # NEW
+│   │
 │   ├── hooks/
-│   │   ├── use-auth.ts               # Auth state hook
-│   │   ├── use-requests.ts           # Requests data hook
-│   │   └── use-toast.ts              # Toast notifications
-│   └── types/
-│       ├── database.ts               # Supabase generated types
-│       ├── request.ts                # Request types
-│       └── user.ts                   # User types
-├── public/
-│   ├── icons/                        # PWA icons
-│   │   ├── icon-192.png
-│   │   └── icon-512.png
-│   └── sw.js                         # Service worker
+│   │   ├── use-auth.ts
+│   │   ├── use-realtime-offers.ts     # NEW
+│   │   ├── use-realtime-requests.ts   # NEW
+│   │   ├── use-notifications.ts       # NEW
+│   │   └── use-countdown.ts           # NEW
+│   │
+│   └── lib/
+│       ├── supabase/
+│       │   ├── client.ts
+│       │   ├── server.ts
+│       │   ├── admin.ts
+│       │   ├── middleware.ts
+│       │   ├── types.ts
+│       │   └── realtime.ts            # NEW
+│       ├── actions/
+│       │   ├── consumer-profile.ts
+│       │   ├── provider-profile.ts
+│       │   ├── offers.ts              # NEW
+│       │   ├── deliveries.ts          # NEW
+│       │   ├── settlement.ts          # NEW
+│       │   └── admin.ts               # NEW
+│       ├── validations/
+│       │   ├── request.ts
+│       │   ├── consumer-profile.ts
+│       │   ├── provider-profile.ts
+│       │   ├── offer.ts               # NEW
+│       │   └── admin.ts               # NEW
+│       ├── email/
+│       │   ├── resend.ts
+│       │   ├── send-email.ts
+│       │   └── templates/
+│       │       ├── offer-received.tsx # NEW
+│       │       ├── offer-accepted.tsx # NEW
+│       │       └── settlement-reminder.tsx # NEW
+│       ├── utils/
+│       │   ├── format.ts
+│       │   ├── date.ts                # NEW
+│       │   ├── currency.ts            # NEW
+│       │   └── commission.ts          # NEW
+│       ├── auth/
+│       │   └── guards.ts              # NEW
+│       └── notifications.ts
+│
 ├── supabase/
-│   ├── migrations/                   # Database migrations
-│   │   └── 001_initial_schema.sql
-│   └── seed.sql                      # Development seed data
-├── emails/                           # React Email templates (for preview)
-│   ├── request-confirmed.tsx
-│   ├── request-accepted.tsx
-│   └── request-delivered.tsx
-├── .env.local.example
-├── .env.local                        # Local env (gitignored)
-├── next.config.ts
-├── tailwind.config.ts
-├── tsconfig.json
-├── components.json                   # shadcn/ui config
+│   └── migrations/
+│       ├── 001_initial_schema.sql
+│       ├── 002_v2_offers.sql          # NEW
+│       ├── 003_v2_provider.sql        # NEW
+│       ├── 004_v2_admin.sql           # NEW
+│       └── 005_v2_settlement.sql      # NEW
+│
+├── vercel.json                        # Cron configuration
 └── package.json
 ```
 
-## FR Category to Architecture Mapping
+---
 
-| FR Category | Architecture Component | Primary Files |
-|-------------|----------------------|---------------|
-| Consumer Account & Access (FR1-FR6) | Supabase Auth + Auth Routes | `src/app/(auth)/*`, `src/lib/supabase/` |
-| Water Request Submission (FR7-FR13) | Request Form + API | `src/components/consumer/request-form.tsx`, `src/app/api/requests/` |
-| Request Management - Consumer (FR14-FR18) | Status Pages + Notifications | `src/app/(consumer)/request/[id]/`, `src/lib/email/` |
-| Supplier Registration & Profile (FR19-FR23) | Supplier Auth + Profile | `src/app/(auth)/`, `src/app/(supplier)/profile/` |
-| Supplier Request Dashboard (FR24-FR28) | Dashboard + RequestCard | `src/app/(supplier)/dashboard/`, `src/components/supplier/` |
-| Request Handling - Supplier (FR29-FR33) | API Routes + Actions | `src/app/api/requests/[id]/`, `src/components/supplier/` |
-| Notifications & Communication (FR34-FR37) | Resend + React Email | `src/lib/email/`, `emails/` |
-| Platform & PWA (FR38-FR42) | Next.js + Service Worker | `src/app/manifest.ts`, `public/sw.js` |
-| Data & Privacy (FR43-FR45) | Supabase RLS + API | `supabase/migrations/`, Row Level Security policies |
+## Data Architecture (V2)
 
-## Technology Stack Details
+### Database Schema
 
-### Core Technologies
+```sql
+-- ============================================
+-- EXISTING TABLES (Extended for V2)
+-- ============================================
 
-**Next.js 15.1** (Framework)
-- App Router for file-based routing
-- Server Components for performance
-- API Routes for backend logic
-- Built-in image optimization
-- Turbopack for fast development
+-- Profiles table (extended)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS role TEXT
+  CHECK (role IN ('consumer', 'provider', 'admin'));
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS verification_status TEXT
+  DEFAULT 'pending' CHECK (verification_status IN ('pending', 'approved', 'rejected', 'more_info_needed'));
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT false;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS offer_validity_minutes INTEGER DEFAULT 30;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS commission_override INTEGER; -- NULL = use default
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bank_name TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bank_account TEXT;
 
-**TypeScript 5.x** (Language)
-- Strict mode enabled
-- Path aliases configured (`@/*`)
-- Generated types from Supabase
+-- Water requests table (extended)
+ALTER TABLE water_requests ADD COLUMN IF NOT EXISTS payment_method TEXT
+  CHECK (payment_method IN ('cash', 'transfer'));
+ALTER TABLE water_requests ADD COLUMN IF NOT EXISTS comuna_id TEXT REFERENCES comunas(id);
+ALTER TABLE water_requests ADD COLUMN IF NOT EXISTS delivery_window_start TIMESTAMPTZ;
+ALTER TABLE water_requests ADD COLUMN IF NOT EXISTS delivery_window_end TIMESTAMPTZ;
 
-**Supabase** (Backend-as-a-Service)
-- PostgreSQL database (managed)
-- Row Level Security (RLS) for data isolation
-- Built-in authentication (email/password, magic links)
-- Real-time subscriptions (for future use)
-- Edge Functions (if needed)
+-- ============================================
+-- NEW TABLES FOR V2
+-- ============================================
 
-**shadcn/ui + Tailwind CSS** (UI)
-- Pre-built accessible components
-- Radix UI primitives
-- Customized with "Agua Pura" theme
-- Tailwind for utility-first styling
+-- Comunas (service areas)
+CREATE TABLE comunas (
+  id TEXT PRIMARY KEY,           -- 'villarrica', 'pucon'
+  name TEXT NOT NULL,            -- 'Villarrica', 'Pucón'
+  region TEXT NOT NULL,          -- 'Araucanía'
+  active BOOLEAN DEFAULT TRUE
+);
 
-**Resend + React Email** (Notifications)
-- Transactional email API
-- React-based email templates
-- Webhook support for delivery tracking
+-- Provider service areas (many-to-many)
+CREATE TABLE provider_service_areas (
+  provider_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  comuna_id TEXT REFERENCES comunas(id),
+  PRIMARY KEY (provider_id, comuna_id)
+);
 
-### Integration Points
+-- Provider documents
+CREATE TABLE provider_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('cedula', 'licencia', 'permiso_sanitario', 'certificacion', 'vehiculo')),
+  storage_path TEXT NOT NULL,    -- Supabase Storage path
+  original_filename TEXT,
+  uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+  verified_at TIMESTAMPTZ,
+  verified_by UUID REFERENCES profiles(id)
+);
+
+-- Offers
+CREATE TABLE offers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id UUID NOT NULL REFERENCES water_requests(id) ON DELETE CASCADE,
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+
+  -- Delivery window
+  delivery_window_start TIMESTAMPTZ NOT NULL,
+  delivery_window_end TIMESTAMPTZ NOT NULL,
+
+  -- Expiration
+  expires_at TIMESTAMPTZ NOT NULL,
+
+  -- Status
+  status TEXT NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active', 'accepted', 'expired', 'cancelled', 'request_filled')),
+
+  -- Timestamps
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  accepted_at TIMESTAMPTZ,
+
+  UNIQUE (request_id, provider_id)
+);
+
+-- Commission ledger
+CREATE TABLE commission_ledger (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  request_id UUID REFERENCES water_requests(id),
+
+  type TEXT NOT NULL CHECK (type IN ('commission_owed', 'commission_paid', 'adjustment')),
+  amount INTEGER NOT NULL,  -- CLP, positive = owed
+
+  description TEXT,
+  bank_reference TEXT,
+  admin_id UUID REFERENCES profiles(id),
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Withdrawal requests
+CREATE TABLE withdrawal_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+
+  amount INTEGER NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'rejected')),
+
+  processed_by UUID REFERENCES profiles(id),
+  processed_at TIMESTAMPTZ,
+  rejection_reason TEXT,
+
+  bank_name TEXT,
+  account_number TEXT,
+
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Admin allowed emails
+CREATE TABLE admin_allowed_emails (
+  email TEXT PRIMARY KEY,
+  added_by TEXT,
+  added_at TIMESTAMPTZ DEFAULT NOW(),
+  notes TEXT
+);
+
+-- Admin settings
+CREATE TABLE admin_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_by UUID REFERENCES profiles(id),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- In-app notifications
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT,
+
+  request_id UUID REFERENCES water_requests(id),
+  offer_id UUID REFERENCES offers(id),
+
+  read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- INDEXES
+-- ============================================
+
+CREATE INDEX idx_offers_request ON offers(request_id) WHERE status = 'active';
+CREATE INDEX idx_offers_provider ON offers(provider_id, status);
+CREATE INDEX idx_offers_expiration ON offers(expires_at) WHERE status = 'active';
+CREATE INDEX idx_ledger_provider ON commission_ledger(provider_id, created_at DESC);
+CREATE INDEX idx_notifications_unread ON notifications(user_id, read) WHERE read = FALSE;
+CREATE INDEX idx_requests_comuna ON water_requests(comuna_id, status);
+CREATE INDEX idx_provider_areas ON provider_service_areas(comuna_id);
+
+-- ============================================
+-- ROW LEVEL SECURITY
+-- ============================================
+
+-- Enable RLS on new tables
+ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE commission_ledger ENABLE ROW LEVEL SECURITY;
+ALTER TABLE withdrawal_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE provider_documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_allowed_emails ENABLE ROW LEVEL SECURITY;
+
+-- Offers: Consumers can view offers for their requests
+CREATE POLICY "Consumers can view offers for their requests"
+ON offers FOR SELECT
+USING (
+  request_id IN (
+    SELECT id FROM water_requests
+    WHERE consumer_id = auth.uid() OR tracking_token IS NOT NULL
+  )
+);
+
+-- Offers: Providers can view and create their own offers
+CREATE POLICY "Providers can manage their offers"
+ON offers FOR ALL
+USING (provider_id = auth.uid());
+
+-- Offers: Admins can view all
+CREATE POLICY "Admins can view all offers"
+ON offers FOR SELECT
+USING (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- Documents: Providers can manage their own
+CREATE POLICY "Providers can manage own documents"
+ON provider_documents FOR ALL
+USING (provider_id = auth.uid());
+
+-- Documents: Admins can view all
+CREATE POLICY "Admins can view all documents"
+ON provider_documents FOR SELECT
+USING (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- Notifications: Users can only see their own
+CREATE POLICY "Users can view own notifications"
+ON notifications FOR SELECT
+USING (user_id = auth.uid());
+
+-- Ledger: Providers can view their own
+CREATE POLICY "Providers can view own ledger"
+ON commission_ledger FOR SELECT
+USING (provider_id = auth.uid());
+
+-- Ledger: Admins can view and modify all
+CREATE POLICY "Admins can manage ledger"
+ON commission_ledger FOR ALL
+USING (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
+```
+
+### Default Admin Settings
+
+```sql
+INSERT INTO admin_settings (key, value) VALUES
+  ('default_commission_percent', '10'),
+  ('offer_validity_min', '15'),
+  ('offer_validity_max', '120'),
+  ('offer_validity_default', '30'),
+  ('request_timeout_hours', '4'),
+  ('urgency_surcharge_percent', '10');
+
+INSERT INTO comunas (id, name, region) VALUES
+  ('villarrica', 'Villarrica', 'Araucanía'),
+  ('pucon', 'Pucón', 'Araucanía'),
+  ('lican-ray', 'Licán Ray', 'Araucanía'),
+  ('curarrehue', 'Curarrehue', 'Araucanía'),
+  ('freire', 'Freire', 'Araucanía');
+```
+
+---
+
+## Novel Architectural Patterns
+
+### Pattern 1: Consumer-Choice Offer System
+
+**Flow:** Request broadcast → Providers submit offers → Consumer chooses
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Next.js App   │────▶│    Supabase      │     │     Resend      │
-│   (Vercel)      │     │  (PostgreSQL)    │     │   (Email API)   │
-│                 │     │                  │     │                 │
-│ - Server Comp.  │     │ - Database       │     │ - Transactional │
-│ - API Routes    │◀────│ - Auth           │     │ - Templates     │
-│ - Client Comp.  │     │ - RLS Policies   │     │                 │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-         │                                                │
-         │              ┌──────────────────┐             │
-         └─────────────▶│   Google Maps    │◀────────────┘
-                        │      API         │
-                        │                  │
-                        │ - Address lookup │
-                        │ - Geolocation    │
-                        └──────────────────┘
+Consumer creates       All providers        Consumer views      Consumer selects
+    request      ────▶  in comuna get  ────▶  active offers  ────▶   one offer
+                        notification          with countdown
+        │                    │                     │                    │
+        ▼                    ▼                     ▼                    ▼
+  water_requests       Supabase             offers table         offer.status =
+  status=pending       Realtime             status=active         'accepted'
+                                                 │
+                                                 ▼
+                                            Cron expires
+                                            after expires_at
 ```
 
-## Implementation Patterns
-
-These patterns ensure consistent implementation across all AI agents:
-
-### API Response Format
-
-All API routes MUST return this structure:
+**Realtime Subscriptions:**
 
 ```typescript
-// Success response
-{
-  data: T,
-  error: null
-}
+// Provider: Listen for new requests in service area
+supabase
+  .channel('new-requests')
+  .on('postgres_changes', {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'water_requests',
+    filter: 'status=eq.pending'
+  }, handleNewRequest)
+  .subscribe();
 
-// Error response
-{
-  data: null,
-  error: {
-    message: string,
-    code: string  // e.g., "VALIDATION_ERROR", "NOT_FOUND", "UNAUTHORIZED"
-  }
+// Consumer: Listen for offers on their request
+supabase
+  .channel(`offers-${requestId}`)
+  .on('postgres_changes', {
+    event: '*',
+    schema: 'public',
+    table: 'offers',
+    filter: `request_id=eq.${requestId}`
+  }, handleOfferChange)
+  .subscribe();
+```
+
+**Offer Selection Logic:**
+
+```typescript
+async function selectOffer(offerId: string, requestId: string) {
+  // 1. Validate offer is still active and not expired
+  // 2. Update offer status to 'accepted'
+  // 3. Update other offers to 'request_filled'
+  // 4. Update request with provider assignment
+  // 5. Realtime notifies all parties
 }
 ```
 
-### Database Query Pattern
+### Pattern 2: Cash Settlement Tracking
+
+**Flow:** Cash delivery → Commission debt created → Provider pays → Admin confirms
 
 ```typescript
-// Always use server client for mutations
-import { createClient } from "@/lib/supabase/server";
+// On delivery completion with cash payment
+if (paymentMethod === 'cash') {
+  await supabase.from('commission_ledger').insert({
+    provider_id: providerId,
+    request_id: requestId,
+    type: 'commission_owed',
+    amount: commissionAmount,
+    description: `Comisión de entrega #${requestId.slice(0, 8)}`
+  });
+}
 
-export async function createRequest(data: RequestInput) {
-  const supabase = await createClient();
+// Provider balance calculation
+const balance = await supabase
+  .from('commission_ledger')
+  .select('type, amount, created_at')
+  .eq('provider_id', providerId);
 
-  const { data: request, error } = await supabase
-    .from("requests")
-    .insert(data)
-    .select()
+// Aging buckets: current (<7d), week (7-14d), overdue (>14d)
+```
+
+### Pattern 3: Admin Allowlist Authentication
+
+```typescript
+// Auth callback checks allowlist for admin routes
+if (next.startsWith('/admin')) {
+  const { data: allowed } = await supabase
+    .from('admin_allowed_emails')
+    .select('email')
+    .eq('email', user.email)
     .single();
 
-  if (error) {
-    throw new DatabaseError(error.message, error.code);
+  if (!allowed) {
+    return redirect('/admin/not-authorized');
   }
-
-  return request;
 }
 ```
 
-### Form Validation Pattern
+---
 
-```typescript
-// src/lib/validations/request.ts
-import { z } from "zod";
-
-export const requestSchema = z.object({
-  name: z.string().min(2, "El nombre es requerido"),
-  phone: z.string().regex(/^\+56[0-9]{9}$/, "Formato: +56912345678"),
-  address: z.string().min(5, "La dirección es requerida"),
-  specialInstructions: z.string().min(1, "Las instrucciones son requeridas"),
-  amount: z.enum(["100", "1000", "5000", "10000"]),
-  email: z.string().email("Email inválido").optional(),
-  isUrgent: z.boolean().default(false),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
-});
-
-export type RequestInput = z.infer<typeof requestSchema>;
-```
-
-### Component Pattern
-
-```typescript
-// Always use this structure for components
-interface RequestCardProps {
-  request: Request;
-  onAccept?: (id: string) => void;
-  onDecline?: (id: string) => void;
-}
-
-export function RequestCard({ request, onAccept, onDecline }: RequestCardProps) {
-  // Component implementation
-}
-```
-
-## Consistency Rules
+## Implementation Patterns
 
 ### Naming Conventions
 
 | Element | Convention | Example |
 |---------|------------|---------|
-| Files (components) | kebab-case | `request-card.tsx` |
-| Files (utils/lib) | kebab-case | `format.ts` |
-| React Components | PascalCase | `RequestCard` |
-| Functions | camelCase | `createRequest` |
-| Variables | camelCase | `requestData` |
-| Constants | SCREAMING_SNAKE_CASE | `MAX_REQUEST_AMOUNT` |
-| Database tables | snake_case | `water_requests` |
-| Database columns | snake_case | `created_at` |
-| API routes | kebab-case | `/api/requests` |
-| URL params | kebab-case | `/request/[id]` |
-| CSS classes | Tailwind utilities | `bg-primary text-white` |
-| Environment vars | SCREAMING_SNAKE_CASE | `SUPABASE_URL` |
+| React Components | PascalCase | `OfferCard`, `EarningsDashboard` |
+| Files (components) | PascalCase | `OfferCard.tsx` |
+| Files (utils) | kebab-case | `date-utils.ts` |
+| Server Actions | camelCase verb-noun | `createOffer`, `selectOffer` |
+| Hooks | camelCase use- | `useRealtimeOffers` |
+| Database columns | snake_case | `delivery_window_start` |
+| API routes | kebab-case | `/api/offers` |
+| Constants | SCREAMING_SNAKE | `MAX_OFFER_VALIDITY` |
+| User-facing strings | Spanish | `"Oferta expirada"` |
+| Code comments | English | `// Calculate commission` |
 
-### Code Organization
-
-**Imports Order (enforced by ESLint):**
-1. React/Next.js imports
-2. Third-party libraries
-3. Internal aliases (`@/`)
-4. Relative imports
-5. Types
+### API Response Format
 
 ```typescript
-// Example
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+// All API responses use this structure
+interface ApiResponse<T> {
+  data: T | null;
+  error: { code: string; message: string } | null;
+}
 
-import { Button } from "@/components/ui/button";
-import { createRequest } from "@/lib/supabase/requests";
-import { requestSchema } from "@/lib/validations/request";
-
-import { RequestCard } from "./request-card";
-
-import type { Request } from "@/types/request";
+// Error codes (Spanish messages)
+const ERROR_CODES = {
+  VALIDATION_ERROR: 'Datos inválidos',
+  UNAUTHORIZED: 'No autorizado',
+  NOT_FOUND: 'No encontrado',
+  OFFER_EXPIRED: 'Esta oferta ha expirado',
+  REQUEST_ALREADY_ASSIGNED: 'Esta solicitud ya fue asignada',
+} as const;
 ```
 
-**File Structure within directories:**
-- `index.ts` for barrel exports (only if needed)
-- Components: Single component per file
-- Hooks: One hook per file
-- Types: Grouped by domain
+### Server Action Pattern
 
-### Error Handling
-
-**Client-side errors:**
 ```typescript
-try {
-  await submitRequest(data);
-  toast({ title: "Solicitud enviada", variant: "success" });
-} catch (error) {
-  if (error instanceof ValidationError) {
-    // Show field-level errors
-  } else {
-    toast({
-      title: "Error al enviar",
-      description: "Intenta de nuevo",
-      variant: "destructive"
-    });
+'use server';
+
+export async function createOffer(requestId: string, data: OfferFormData) {
+  // 1. Auth check
+  const user = await requireProvider();
+
+  // 2. Validate input
+  const validated = offerSchema.safeParse(data);
+  if (!validated.success) {
+    return { data: null, error: { code: 'VALIDATION_ERROR', message: 'Datos inválidos' } };
   }
+
+  // 3. Business logic validation
+  // 4. Execute operation
+  // 5. Revalidate paths
+  // 6. Return result
 }
 ```
 
-**Server-side errors:**
+### Auth Guards
+
 ```typescript
-// API route error handling
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const validated = requestSchema.parse(body);
-    const result = await createRequest(validated);
-    return NextResponse.json({ data: result, error: null });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { data: null, error: { message: "Datos inválidos", code: "VALIDATION_ERROR" } },
-        { status: 400 }
-      );
-    }
-    return NextResponse.json(
-      { data: null, error: { message: "Error interno", code: "INTERNAL_ERROR" } },
-      { status: 500 }
-    );
-  }
+// src/lib/auth/guards.ts
+export async function requireAuth() { /* ... */ }
+export async function requireProvider() { /* ... */ }
+export async function requireAdmin() { /* ... */ }
+```
+
+---
+
+## Cross-Cutting Concerns
+
+### Date/Time Handling
+
+| Aspect | Decision |
+|--------|----------|
+| Storage | UTC in database (`TIMESTAMPTZ`) |
+| Display | Chile time (`America/Santiago`) |
+| Library | `date-fns` with `es` locale |
+
+```typescript
+// src/lib/utils/date.ts
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { toZonedTime } from 'date-fns-tz';
+
+export function formatDateTime(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const chileTz = toZonedTime(d, 'America/Santiago');
+  return format(chileTz, "d 'de' MMMM, HH:mm", { locale: es });
 }
 ```
 
-### Logging Strategy
+### Currency Handling
 
-**Development:** Console logging with structured format
-**Production:** Vercel logs (automatic)
+| Aspect | Decision |
+|--------|----------|
+| Storage | Integer (CLP has no decimals) |
+| Display | Full number: `$15.000` (no "k" notation) |
 
 ```typescript
-// Use consistent log format
-console.log("[REQUEST]", { action: "create", userId, requestId });
-console.error("[ERROR]", { context: "createRequest", error: error.message });
-```
-
-## Data Architecture
-
-### Database Schema
-
-```sql
--- Users (handled by Supabase Auth, extended with profiles)
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('consumer', 'supplier')),
-  name TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  address TEXT,
-  special_instructions TEXT,
-  -- Supplier-specific fields
-  service_area TEXT,
-  price_100l INTEGER,
-  price_1000l INTEGER,
-  price_5000l INTEGER,
-  price_10000l INTEGER,
-  is_available BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Water Requests
-CREATE TABLE water_requests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  -- Consumer info (can be guest or registered)
-  consumer_id UUID REFERENCES profiles(id),
-  guest_name TEXT,
-  guest_phone TEXT NOT NULL,
-  guest_email TEXT,
-  tracking_token TEXT UNIQUE DEFAULT gen_random_uuid()::text,
-  -- Request details
-  address TEXT NOT NULL,
-  special_instructions TEXT NOT NULL,
-  latitude DECIMAL(10, 8),
-  longitude DECIMAL(11, 8),
-  amount INTEGER NOT NULL CHECK (amount IN (100, 1000, 5000, 10000)),
-  is_urgent BOOLEAN DEFAULT false,
-  -- Status workflow
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'delivered', 'cancelled')),
-  -- Supplier assignment
-  supplier_id UUID REFERENCES profiles(id),
-  delivery_window TEXT,
-  decline_reason TEXT,
-  -- Timestamps
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  accepted_at TIMESTAMPTZ,
-  delivered_at TIMESTAMPTZ,
-  cancelled_at TIMESTAMPTZ
-);
-
--- Row Level Security Policies
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE water_requests ENABLE ROW LEVEL SECURITY;
-
--- Consumers can read their own profile
-CREATE POLICY "Users can read own profile"
-  ON profiles FOR SELECT
-  USING (auth.uid() = id);
-
--- Consumers can update their own profile
-CREATE POLICY "Users can update own profile"
-  ON profiles FOR UPDATE
-  USING (auth.uid() = id);
-
--- Suppliers can read all pending requests
-CREATE POLICY "Suppliers can read pending requests"
-  ON water_requests FOR SELECT
-  USING (
-    status = 'pending'
-    OR supplier_id = auth.uid()
-    OR consumer_id = auth.uid()
-  );
-
--- Consumers can create requests
-CREATE POLICY "Anyone can create requests"
-  ON water_requests FOR INSERT
-  WITH CHECK (true);
-
--- Consumers can cancel their own pending requests
-CREATE POLICY "Consumers can cancel own pending requests"
-  ON water_requests FOR UPDATE
-  USING (
-    (consumer_id = auth.uid() OR tracking_token IS NOT NULL)
-    AND status = 'pending'
-  );
-
--- Suppliers can accept/complete requests
-CREATE POLICY "Suppliers can update assigned requests"
-  ON water_requests FOR UPDATE
-  USING (
-    supplier_id = auth.uid()
-    OR (status = 'pending' AND EXISTS (
-      SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'supplier'
-    ))
-  );
-
--- Indexes
-CREATE INDEX idx_requests_status ON water_requests(status);
-CREATE INDEX idx_requests_supplier ON water_requests(supplier_id);
-CREATE INDEX idx_requests_consumer ON water_requests(consumer_id);
-CREATE INDEX idx_requests_tracking ON water_requests(tracking_token);
-```
-
-### Data Flow
-
-```
-Consumer Request Flow:
-┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
-│ PENDING │───▶│ ACCEPTED│───▶│DELIVERED│    │CANCELLED│
-└─────────┘    └─────────┘    └─────────┘    └─────────┘
-     │              │              │              ▲
-     │              │              │              │
-     └──────────────┴──────────────┴──────────────┘
-                    (consumer can cancel if pending)
-```
-
-## API Contracts
-
-### Request Endpoints
-
-**POST /api/requests** - Create new request
-```typescript
-// Request body
-{
-  name: string,
-  phone: string,        // Format: +56912345678
-  address: string,
-  specialInstructions: string,
-  amount: 100 | 1000 | 5000 | 10000,
-  email?: string,       // Required for guests (for tracking link)
-  isUrgent?: boolean,
-  latitude?: number,
-  longitude?: number
-}
-
-// Response
-{
-  data: {
-    id: string,
-    trackingToken: string,  // For guest tracking
-    status: "pending"
-  },
-  error: null
+export function formatCLP(amount: number): string {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0
+  }).format(amount);
 }
 ```
 
-**GET /api/requests** - List requests (supplier)
-```typescript
-// Query params
-?status=pending|accepted|delivered
-&sort=created_at|amount|is_urgent
-&order=asc|desc
+### Commission Calculation
 
-// Response
-{
-  data: Request[],
-  error: null
+```typescript
+// src/lib/utils/commission.ts
+export async function calculateCommission(grossAmount: number, providerId: string) {
+  // Check provider-specific override, then default rate
+  const commissionPercent = provider?.commission_override ?? defaultRate ?? 10;
+  const commissionAmount = Math.round(grossAmount * commissionPercent / 100);
+  return { grossAmount, commissionPercent, commissionAmount, providerEarnings: grossAmount - commissionAmount };
 }
 ```
 
-**PATCH /api/requests/[id]** - Update request
-```typescript
-// Accept request
-{ action: "accept", deliveryWindow?: string }
+---
 
-// Mark delivered
-{ action: "deliver" }
+## Notification Matrix
 
-// Cancel request (consumer only, if pending)
-{ action: "cancel" }
+| Event | Consumer (Registered) | Consumer (Guest) | Provider |
+|-------|----------------------|------------------|----------|
+| New request nearby | - | - | 🔔 In-app |
+| New offer received | 🔔 In-app | 📧 Email | - |
+| Offer accepted | 🔔 + 📧 | 📧 Email | 🔔 + 📧 |
+| Offer expired | 🔔 In-app | 📧 (if only offer) | 🔔 In-app |
+| Provider en route | 🔔 In-app | 📧 Email | - |
+| Delivery completed | 🔔 + 📧 | 📧 Email | 🔔 In-app |
+| Verification result | - | - | 🔔 + 📧 |
+| Settlement reminder | - | - | 🔔 + 📧 |
 
-// Decline request (supplier)
-{ action: "decline", reason?: string }
-```
+---
 
-## Security Architecture
-
-### Authentication Flow
-
-1. **Registered Users:** Email/password via Supabase Auth
-2. **Guest Consumers:** No auth required for request submission
-3. **Guest Tracking:** Unique token in URL (`/track/[token]`)
-
-### Security Measures
-
-| Measure | Implementation |
-|---------|----------------|
-| HTTPS | Enforced by Vercel |
-| Password Hashing | Supabase Auth (bcrypt) |
-| Session Management | Supabase (JWT + cookies) |
-| CSRF Protection | Next.js built-in |
-| Input Validation | Zod schemas on all inputs |
-| SQL Injection | Parameterized queries via Supabase |
-| XSS Prevention | React DOM escaping + CSP headers |
-| Rate Limiting | Vercel Edge (100 req/10s default) |
-| Data Isolation | Row Level Security policies |
-
-### Environment Variables
-
-```bash
-# .env.local
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...  # Server-side only
-RESEND_API_KEY=re_xxx
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIza...
-```
-
-## Performance Considerations
-
-### NFR Compliance
-
-| NFR | Target | Strategy |
-|-----|--------|----------|
-| NFR1: Initial load | < 3s on 3G | Server components, code splitting, image optimization |
-| NFR2: Request submission | < 5s on 3G | Optimistic UI, background sync |
-| NFR3: Dashboard load | < 3s | Server-side data fetching, pagination |
-| NFR4: Responsive | No freezing | Suspense boundaries, loading states |
-
-### Caching Strategy
-
-```typescript
-// Static pages (landing, etc.)
-export const revalidate = 3600; // 1 hour
-
-// Dynamic pages (dashboard, requests)
-export const dynamic = "force-dynamic";
-
-// API routes
-export const runtime = "edge"; // For low latency
-```
-
-### PWA Configuration
-
-```typescript
-// src/app/manifest.ts
-export default function manifest() {
-  return {
-    name: "nitoagua",
-    short_name: "nitoagua",
-    description: "Coordina tu entrega de agua",
-    start_url: "/",
-    display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#0077B6",
-    icons: [
-      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
-  };
-}
-```
-
-## Deployment Architecture
-
-### Vercel Configuration
-
-```
-┌────────────────────────────────────────────────────────┐
-│                        Vercel                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │    Edge      │  │   Serverless │  │    Static    │ │
-│  │   Network    │  │   Functions  │  │    Assets    │ │
-│  │              │  │              │  │              │ │
-│  │ - CDN        │  │ - API Routes │  │ - JS/CSS     │ │
-│  │ - SSL/TLS    │  │ - ISR        │  │ - Images     │ │
-│  │ - DDoS       │  │ - SSR        │  │ - SW         │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘ │
-└────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-           ┌───────────────────────────────┐
-           │          Supabase             │
-           │  (São Paulo region - sa-east) │
-           │                               │
-           │  - PostgreSQL                 │
-           │  - Auth                       │
-           │  - Storage (future)           │
-           └───────────────────────────────┘
-```
-
-### Environment Setup
-
-| Environment | Purpose | Supabase Project |
-|-------------|---------|------------------|
-| Development | Local dev | Local or dev project |
-| Preview | PR previews | Dev project |
-| Production | Live app | Production project |
-
-## Development Environment
-
-### Prerequisites
-
-- Node.js 20.x LTS
-- npm 10.x or pnpm 9.x
-- Git
-- Supabase CLI (optional, for local development)
-- VS Code with recommended extensions
-
-### Setup Commands
-
-```bash
-# Clone and install
-git clone <repo-url>
-cd nitoagua
-npm install
-
-# Setup environment
-cp .env.local.example .env.local
-# Edit .env.local with your Supabase and API keys
-
-# Run development server
-npm run dev
-
-# Run with Supabase local (optional)
-supabase start
-npm run dev
-
-# Type generation (after schema changes)
-npx supabase gen types typescript --project-id <project-id> > src/types/database.ts
-
-# Build and test
-npm run build
-npm run lint
-```
-
-### VS Code Extensions (Recommended)
+## Cron Jobs (Vercel)
 
 ```json
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "bradlc.vscode-tailwindcss",
-    "prisma.prisma"
+  "crons": [
+    {
+      "path": "/api/cron/expire-offers",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/request-timeout",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/settlement-reminders",
+      "schedule": "0 9 * * *"
+    }
   ]
 }
 ```
 
-## Architecture Decision Records (ADRs)
-
-### ADR-001: Supabase over Firebase/Custom Backend
-
-**Decision:** Use Supabase as the Backend-as-a-Service
-
-**Context:** Need database, auth, and potential real-time features for MVP
-
-**Options Considered:**
-1. Firebase - More mature but complex, Firestore query limitations
-2. Custom Node.js backend - Maximum flexibility but more work
-3. Supabase - PostgreSQL, simpler RLS, good DX
-
-**Decision:** Supabase
-
-**Rationale:**
-- PostgreSQL is more familiar and powerful than Firestore
-- Row Level Security simplifies authorization
-- Free tier sufficient for MVP
-- Easy upgrade path to dedicated PostgreSQL later
-- Real-time built-in for future features
-
-### ADR-002: Next.js App Router over Pages Router
-
-**Decision:** Use App Router (not Pages Router)
-
-**Context:** Building new Next.js 15 application
-
-**Rationale:**
-- Server Components for better performance
-- Simpler data fetching patterns
-- Built-in layouts and loading states
-- Future-proof architecture
-- Better TypeScript support
-
-### ADR-003: No Separate ORM (Prisma/Drizzle)
-
-**Decision:** Use Supabase client directly for MVP
-
-**Context:** Need database access layer
-
-**Options Considered:**
-1. Prisma ORM - Excellent DX but adds complexity
-2. Drizzle ORM - Lighter weight but newer
-3. Supabase client - Direct access, no additional layer
-
-**Decision:** Supabase client for MVP
-
-**Rationale:**
-- Fewer dependencies for MVP
-- Supabase client is type-safe with generated types
-- Can add Prisma later if needed for complex queries
-- Simpler deployment (no migration step)
-
-### ADR-004: Resend over SendGrid/AWS SES
-
-**Decision:** Use Resend for transactional email
-
-**Context:** Need to send request confirmations and status updates
-
-**Rationale:**
-- React Email integration (matches Next.js stack)
-- Excellent developer experience
-- Generous free tier (3,000 emails/month)
-- Simple API, good documentation
-- Founded by Vercel alumni (good ecosystem fit)
-
-### ADR-005: Single-Tenant MVP Architecture
-
-**Decision:** Build for single supplier initially
-
-**Context:** MVP validation with one supplier
-
-**Rationale:**
-- Simplifies architecture significantly
-- Proves core value proposition first
-- Database schema supports multi-tenant future
-- Can add supplier selection in v2
-- Reduces initial complexity
+| Job | Schedule | Purpose |
+|-----|----------|---------|
+| expire-offers | Every minute | Mark expired offers, notify |
+| request-timeout | Every hour | Notify consumers with no offers after 4h |
+| settlement-reminders | Daily 9am | Remind providers with outstanding debt |
 
 ---
 
-_Generated by BMAD Decision Architecture Workflow v1.0_
-_Date: 2025-12-01_
+## Security Architecture
+
+### Role-Based Access
+
+| Resource | Consumer | Provider | Admin |
+|----------|----------|----------|-------|
+| Own profile | RW | RW | RW |
+| All profiles | - | - | R |
+| Own requests | RW | - | - |
+| Pending requests | R | R | R |
+| Offers (own) | R | RW | R |
+| All offers | - | - | RW |
+| Documents (own) | - | RW | - |
+| All documents | - | - | R |
+| Commission ledger | - | R (own) | RW |
+| Admin settings | - | - | RW |
+
+### Supabase Storage Buckets
+
+| Bucket | Access | Purpose |
+|--------|--------|---------|
+| `provider-documents` | Private (RLS) | Cédula, licencia, permisos |
+| `avatars` | Public | Profile photos |
+
+---
+
+## FR Coverage (V2)
+
+| Category | FRs | Architecture |
+|----------|-----|--------------|
+| Consumer Account (FR1-6) | ✅ | Existing MVP |
+| Request Submission (FR7-16) | ✅ | Extended with payment_method, comuna |
+| Request Management (FR17-23) | ✅ | Extended with negative states |
+| Provider Onboarding (FR24-32) | ✅ | New onboarding flow + documents |
+| Provider Dashboard (FR33-38) | ✅ | Availability toggle, Realtime |
+| **Consumer Choice (FR39-46)** | ✅ | **Replaced push with offer system** |
+| Provider Handling (FR47-52) | ✅ | Offer + delivery flow |
+| Earnings & Settlement (FR53-60) | ✅ | Commission ledger + aging |
+| Provider Profile (FR61-65) | ✅ | Extended profile + service areas |
+| Admin Auth (FR66-70) | ✅ | Allowlist + profiles |
+| Admin Verification (FR71-76) | ✅ | Verification queue + documents |
+| Admin Management (FR77-83) | ✅ | Provider directory + actions |
+| Admin Pricing (FR84-88) | ✅ | admin_settings table |
+| Admin Orders (FR89-93) | ✅ | Orders dashboard |
+| Admin Settlement (FR94-97) | ✅ | Ledger queries + payment recording |
+| Notifications (FR98-104) | ✅ | Realtime + email matrix |
+| Platform (FR105-110) | ✅ | Existing + admin desktop-first |
+
+---
+
+## Architecture Decision Records (V2)
+
+### ADR-006: Consumer-Choice over Push Assignment
+
+**Decision:** Consumer selects from provider offers instead of system auto-assignment
+
+**Context:** Original PRD V2 specified Uber-style push assignment with countdown timers
+
+**Rationale:**
+- Simpler architecture (no scoring algorithm, no cycling logic)
+- Better fit for rural connectivity (async-friendly, no timer sync issues)
+- Preserves trust relationships (consumer picks who they know)
+- Provider time valued through configurable offer expiration
+- Aligns with "human touch" product philosophy
+
+### ADR-007: Supabase Realtime for Offer Notifications
+
+**Decision:** Use Supabase Realtime subscriptions for broadcast and updates
+
+**Rationale:**
+- Zero additional cost (already have Supabase)
+- Instant delivery when online
+- Postgres changes trigger automatically
+- Simple polling fallback for reconnection
+
+### ADR-008: Separate Settlement Tables
+
+**Decision:** Use `commission_ledger` + `withdrawal_requests` instead of single transactions table
+
+**Rationale:**
+- Clear separation of concerns
+- Easy audit trail for financial data
+- Aging calculation straightforward
+- Matches mental model of debits/credits
+
+### ADR-009: Admin Allowlist over Role-Only
+
+**Decision:** Pre-seeded `admin_allowed_emails` table gates admin access
+
+**Rationale:**
+- Can add admins before they register
+- Clean separation from regular auth flow
+- Easy to audit who has admin access
+- Matches PRD V2 specification
+
+---
+
+## Development Setup (V2)
+
+### New Dependencies
+
+```bash
+# V2 additions
+npm install date-fns date-fns-tz  # Date handling
+npm install sonner                 # Toast notifications (if not present)
+```
+
+### Vercel Cron Setup
+
+1. Add `vercel.json` with cron configuration
+2. Set `CRON_SECRET` environment variable
+3. Verify cron authorization in each endpoint
+
+### Supabase Storage Setup
+
+1. Create `provider-documents` bucket (private)
+2. Apply RLS policies from schema
+3. Configure CORS for client uploads
+
+---
+
+_Generated by BMAD Decision Architecture Workflow v2.0_
+_Date: 2025-12-11_
 _For: Gabe_
+_PRD Version: V2 (110 FRs, 23 NFRs)_

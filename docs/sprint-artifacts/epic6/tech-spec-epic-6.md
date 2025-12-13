@@ -67,6 +67,23 @@ The Admin Panel enables operators to verify providers, configure offer validity 
 3. **RLS Policies**: All admin queries require `role = 'admin'` check
 4. **Gray Theme**: Neutral professional palette per architecture spec
 
+### Admin Navigation Components (CRITICAL - DO NOT DELETE)
+
+**⚠️ IMPORTANT:** The following navigation components are shared across ALL admin pages and must be preserved in every story:
+
+| Component | File | Purpose | Visibility |
+|-----------|------|---------|------------|
+| `AdminSidebar` | `src/components/admin/admin-sidebar.tsx` | Desktop navigation (lg+ screens) | `hidden lg:flex` |
+| `AdminBottomNav` | `src/components/admin/admin-bottom-nav.tsx` | Mobile navigation (< lg screens) | `lg:hidden` |
+
+**When adding new admin pages:**
+1. Add nav link to BOTH `AdminSidebar` AND `AdminBottomNav`
+2. Use consistent icons from `lucide-react`
+3. Mark future pages as `disabled: true` until implemented
+4. Test on both desktop AND mobile viewports
+
+**Layout file:** `src/app/admin/layout.tsx` renders both nav components conditionally based on admin auth status. DO NOT modify the `{showNav && <AdminBottomNav />}` pattern.
+
 ---
 
 ## Detailed Design

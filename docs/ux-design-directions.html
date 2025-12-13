@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>nitoagua - Direcciones de Diseno</title>
+    <!-- Google Fonts: Inter (Tailwind default) + Pacifico (logo) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #0077B6;
@@ -23,6 +27,13 @@
             --gray-700: #374151;
             --gray-800: #1F2937;
             --gray-900: #111827;
+            /* Shadows - Tailwind shadow scale */
+            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            /* Ring for focus states */
+            --ring-primary: 0 0 0 2px var(--primary);
         }
 
         * {
@@ -32,10 +43,18 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--gray-100);
             color: var(--gray-900);
             line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Logo font class */
+        .logo-font {
+            font-family: 'Pacifico', cursive;
+            letter-spacing: 0.5px;
         }
 
         /* Navigation */
@@ -118,6 +137,10 @@
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .mockup-card.hidden {
+            display: none;
         }
 
         .mockup-header {
@@ -211,118 +234,281 @@
            ============================================ */
         .d1-screen {
             padding-top: 32px;
+            padding-bottom: 100px; /* Space for bottom nav */
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Water background - solid color, no line */
+        .d1-water-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 80px;
+            background: #B8E8F5;
+            z-index: 0;
+        }
+
+        /* Animated water waves - shorter, positioned at button level */
+        .d1-wave {
+            position: absolute;
+            width: 200%;
+            height: 60px;
+            bottom: 120px;
+            left: -50%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 60' preserveAspectRatio='none'%3E%3Cpath d='M0,30 C150,50 350,10 600,30 C850,50 1050,10 1200,30 L1200,60 L0,60 Z' fill='%23CAF0F8' fill-opacity='0.8'/%3E%3C/svg%3E") repeat-x;
+            background-size: 400px 60px;
+            animation: wave-slow 12s ease-in-out infinite;
+            opacity: 0.9;
+        }
+
+        .d1-wave:nth-child(2) {
+            bottom: 115px;
+            height: 50px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 50' preserveAspectRatio='none'%3E%3Cpath d='M0,25 C200,40 400,10 600,25 C800,40 1000,10 1200,25 L1200,50 L0,50 Z' fill='%2390E0EF' fill-opacity='0.7'/%3E%3C/svg%3E") repeat-x;
+            background-size: 500px 50px;
+            animation: wave-medium 10s ease-in-out infinite reverse;
+            opacity: 0.7;
+        }
+
+        .d1-wave:nth-child(3) {
+            bottom: 110px;
+            height: 40px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 40' preserveAspectRatio='none'%3E%3Cpath d='M0,20 C180,32 360,8 540,20 C720,32 900,8 1080,20 L1200,20 L1200,40 L0,40 Z' fill='%2300B4D8' fill-opacity='0.5'/%3E%3C/svg%3E") repeat-x;
+            background-size: 450px 40px;
+            animation: wave-fast 8s ease-in-out infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes wave-slow {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-25%); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes wave-medium {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-20%); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes wave-fast {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-15%); }
+            100% { transform: translateX(0); }
         }
 
         .d1-header {
-            padding: 16px 20px;
+            padding: 12px 20px;
             text-align: center;
+            position: relative;
+            z-index: 1;
         }
 
         .d1-logo {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--primary-dark);
+            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
         }
 
         .d1-tagline {
-            font-size: 13px;
-            color: var(--gray-500);
-            margin-top: 4px;
+            font-size: 12px;
+            color: var(--primary);
+            margin-top: 2px;
         }
 
         .d1-main {
-            padding: 40px 20px;
+            padding: 20px 20px;
             text-align: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Button container for ripple effects */
+        .d1-button-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+        }
+
+        /* Ripple rings that appear on hover - slow water effect */
+        .d1-ripple {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 160px;
+            height: 160px;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 8px rgba(0, 119, 182, 0.2);
+        }
+
+        .d1-button-container:hover .d1-ripple {
+            animation: ripple-water 3s ease-out infinite;
+        }
+
+        .d1-button-container:hover .d1-ripple:nth-child(2) {
+            animation-delay: 0.8s;
+        }
+
+        .d1-button-container:hover .d1-ripple:nth-child(3) {
+            animation-delay: 1.6s;
+        }
+
+        @keyframes ripple-water {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.7;
+                border-width: 3px;
+            }
+            50% {
+                opacity: 0.4;
+                border-width: 2px;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2.2);
+                opacity: 0;
+                border-width: 1px;
+            }
         }
 
         .d1-big-button {
-            width: 200px;
-            height: 200px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             border: none;
             color: white;
-            font-size: 18px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 8px 32px rgba(0, 119, 182, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 119, 182, 0.5), inset 0 -4px 12px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: 0 auto;
-            transition: transform 0.2s;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: button-float 3s ease-in-out infinite;
+        }
+
+        @keyframes button-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
 
         .d1-big-button:hover {
-            transform: scale(1.05);
+            transform: scale(1.08) translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 119, 182, 0.6), inset 0 -4px 12px rgba(0,0,0,0.1);
+            animation: none;
         }
 
-        .d1-big-button svg {
+        .d1-big-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Water droplet icon */
+        .d1-big-button .droplet-icon {
             width: 48px;
             height: 48px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            position: relative;
+        }
+
+        .d1-big-button .droplet-icon svg {
+            width: 48px;
+            height: 48px;
         }
 
         .d1-status {
-            margin-top: 32px;
-            padding: 16px;
-            background: var(--primary-lighter);
+            padding: 12px;
+            background: rgba(255,255,255,0.9);
             border-radius: 12px;
-            margin: 32px 20px 0;
+            margin: 16px 20px;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(4px);
         }
 
         .d1-status-title {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--primary);
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .d1-status-text {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--gray-700);
         }
 
+        /* Bottom nav - icons only */
         .d1-bottom-nav {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 12px 20px;
+            padding: 16px 20px;
             background: white;
             border-top: 1px solid var(--gray-200);
             display: flex;
             justify-content: space-around;
+            z-index: 10;
         }
 
         .d1-nav-item {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             color: var(--gray-400);
-            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .d1-nav-item:hover {
+            background: var(--gray-100);
         }
 
         .d1-nav-item.active {
             color: var(--primary);
+            background: var(--primary-lighter);
         }
 
         .d1-nav-item svg {
             width: 24px;
             height: 24px;
-            margin-bottom: 2px;
         }
 
         /* ============================================
-           DIRECTION 2: CONSUMER - CARD-BASED
+           DIRECTION 2: CONSUMER - CARD-BASED (Premium)
            ============================================ */
         .d2-screen {
             padding-top: 32px;
+            padding-bottom: 100px; /* Space for bottom nav */
             background: var(--gray-50);
+            min-height: 100%;
         }
 
         .d2-header {
             padding: 16px 20px;
             background: white;
+            border-bottom: 1px solid var(--gray-100);
         }
 
         .d2-greeting {
@@ -334,6 +520,37 @@
             font-size: 20px;
             font-weight: 600;
             color: var(--gray-900);
+        }
+
+        /* Stats section - premium Tailwind style */
+        .d2-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: rgba(0, 119, 182, 0.1);
+            margin: 0;
+        }
+
+        .d2-stat {
+            background: white;
+            padding: 14px 10px;
+            text-align: center;
+        }
+
+        .d2-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.025em;
+        }
+
+        .d2-stat-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            margin-top: 2px;
+            letter-spacing: 0.05em;
         }
 
         .d2-content {
@@ -351,6 +568,7 @@
         .d2-card-primary {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             color: white;
+            box-shadow: 0 4px 14px rgba(0, 119, 182, 0.35);
         }
 
         .d2-card h3 {
@@ -373,6 +591,76 @@
             border-radius: 8px;
             font-weight: 600;
             font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .d2-card-btn:hover {
+            background: var(--gray-50);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Active request card with status indicator */
+        .d2-active-request {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid var(--gray-200);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .d2-active-request:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 119, 182, 0.15);
+        }
+
+        .d2-active-request.has-update {
+            border-color: var(--primary);
+            background: var(--primary-lighter);
+        }
+
+        .d2-request-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--warning);
+            flex-shrink: 0;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        .d2-request-status-dot.accepted {
+            background: var(--primary);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .d2-request-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .d2-request-amount {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .d2-request-status-text {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .d2-request-arrow {
+            color: var(--gray-400);
         }
 
         .d2-quick-actions {
@@ -389,6 +677,13 @@
             text-align: center;
             font-size: 13px;
             color: var(--gray-700);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .d2-quick-btn:hover {
+            border-color: var(--primary);
+            background: var(--primary-lighter);
         }
 
         .d2-quick-btn svg {
@@ -398,381 +693,1168 @@
             margin-bottom: 8px;
         }
 
+        /* Bottom nav for D2 */
+        .d2-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .d2-nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            color: var(--gray-400);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .d2-nav-item:hover {
+            background: var(--gray-100);
+        }
+
+        .d2-nav-item.active {
+            color: var(--primary);
+            background: var(--primary-lighter);
+        }
+
+        .d2-nav-item svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .d2-nav-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            background: var(--error);
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         /* ============================================
-           DIRECTION 3: CONSUMER - MINIMAL FORM
+           DIRECTION 3: CONSUMER - PREMIUM FORM
+           Tailwind Plus patterns (Light Theme)
            ============================================ */
         .d3-screen {
             padding-top: 32px;
-            background: white;
-        }
-
-        .d3-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .d3-header h1 {
-            font-size: 24px;
-            font-weight: 700;
+            padding-bottom: 80px;
+            background: var(--gray-50);
+            min-height: 100%;
             color: var(--gray-900);
         }
 
+        .d3-header {
+            padding: 20px 16px 16px;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .d3-header h1 {
+            font-size: 1.25rem;
+            line-height: 1.75rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            letter-spacing: -0.025em;
+        }
+
         .d3-header p {
-            font-size: 14px;
+            font-size: 0.875rem;
+            line-height: 1.375rem;
             color: var(--gray-500);
             margin-top: 4px;
         }
 
         .d3-form {
-            padding: 20px;
-        }
-
-        .d3-field {
-            margin-bottom: 20px;
-        }
-
-        .d3-field label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gray-700);
-            margin-bottom: 8px;
-        }
-
-        .d3-field input, .d3-field select {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--gray-200);
-            border-radius: 12px;
-            font-size: 16px;
-            transition: border-color 0.2s;
-        }
-
-        .d3-field input:focus, .d3-field select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .d3-amount-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-
-        .d3-amount-option {
             padding: 16px;
-            border: 2px solid var(--gray-200);
+        }
+
+        /* Form Card Container - Tailwind card with divide */
+        .d3-form-card {
+            background: white;
             border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 16px;
         }
 
-        .d3-amount-option.selected {
-            border-color: var(--primary);
-            background: var(--primary-lighter);
-        }
-
-        .d3-amount-option .volume {
-            font-size: 18px;
+        /* Section labels - Tailwind style */
+        .d3-section-label {
+            font-size: 0.8125rem;
+            line-height: 1.25rem;
             font-weight: 600;
             color: var(--gray-900);
-        }
-
-        .d3-amount-option .price {
-            font-size: 12px;
-            color: var(--gray-500);
-        }
-
-        .d3-submit {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
+            margin-bottom: 10px;
             margin-top: 20px;
+            letter-spacing: -0.01em;
         }
 
-        /* ============================================
-           DIRECTION 4: SUPPLIER DASHBOARD - DENSE
-           ============================================ */
-        .d4-dashboard {
-            display: flex;
-            height: 400px;
+        .d3-section-label:first-child {
+            margin-top: 0;
         }
 
-        .d4-sidebar {
-            width: 200px;
-            background: var(--gray-900);
-            padding: 20px 0;
-        }
-
-        .d4-logo {
-            padding: 0 20px 20px;
-            font-size: 18px;
-            font-weight: 700;
-            color: white;
-        }
-
-        .d4-nav-item {
-            padding: 12px 20px;
-            color: var(--gray-400);
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-        }
-
-        .d4-nav-item.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .d4-nav-item svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        .d4-main {
-            flex: 1;
-            background: var(--gray-50);
+        /* Inset label input group - Tailwind divide pattern */
+        .d3-input-group {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
             overflow: hidden;
         }
 
-        .d4-header {
-            padding: 16px 24px;
+        .d3-inset-field {
             background: white;
+            padding: 12px 14px 8px;
             border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            position: relative;
+            transition: background-color 0.15s ease-in-out;
         }
 
-        .d4-header h2 {
-            font-size: 18px;
-            font-weight: 600;
+        .d3-inset-field:last-child {
+            border-bottom: none;
         }
 
-        .d4-stats {
-            display: flex;
-            gap: 16px;
+        .d3-inset-field:hover {
+            background: var(--gray-50);
         }
 
-        .d4-stat {
-            text-align: center;
+        .d3-inset-field:focus-within {
+            background: rgba(0, 119, 182, 0.03);
+            box-shadow: inset 3px 0 0 var(--primary);
         }
 
-        .d4-stat-value {
-            font-size: 20px;
-            font-weight: 700;
+        .d3-inset-field label {
+            display: block;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .d3-inset-field:focus-within label {
             color: var(--primary);
         }
 
-        .d4-stat-label {
-            font-size: 11px;
-            color: var(--gray-500);
-        }
-
-        .d4-content {
-            padding: 16px 24px;
-        }
-
-        .d4-table {
+        .d3-inset-field input,
+        .d3-inset-field select,
+        .d3-inset-field textarea {
             width: 100%;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            font-size: 13px;
-        }
-
-        .d4-table th {
-            background: var(--gray-50);
-            padding: 12px 16px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--gray-600);
-            border-bottom: 1px solid var(--gray-200);
-        }
-
-        .d4-table td {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .d4-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
+            background: transparent;
+            border: none;
+            font-size: 0.9375rem;
+            line-height: 1.5rem;
+            color: var(--gray-900);
+            padding: 0;
+            outline: none;
             font-weight: 500;
         }
 
-        .d4-badge-pending {
-            background: #FEF3C7;
-            color: #92400E;
+        .d3-inset-field input::placeholder,
+        .d3-inset-field textarea::placeholder {
+            color: var(--gray-400);
+            font-weight: 400;
         }
 
-        .d4-badge-urgent {
-            background: #FEE2E2;
-            color: #991B1B;
-        }
-
-        .d4-action-btn {
-            padding: 6px 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
+        .d3-inset-field select {
+            appearance: none;
             cursor: pointer;
         }
 
-        /* ============================================
-           DIRECTION 5: SUPPLIER DASHBOARD - CARD VIEW
-           ============================================ */
-        .d5-dashboard {
-            height: 400px;
+        .d3-inset-field textarea {
+            resize: none;
+            min-height: 40px;
+        }
+
+        .d3-inset-field.readonly {
             background: var(--gray-50);
         }
 
-        .d5-header {
-            padding: 16px 20px;
-            background: white;
-            border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .d3-inset-field.readonly:hover {
+            background: var(--gray-50);
         }
 
-        .d5-header h2 {
-            font-size: 18px;
-            font-weight: 600;
+        .d3-inset-field.readonly input,
+        .d3-inset-field.readonly select {
+            color: var(--gray-600);
         }
 
-        .d5-tabs {
-            display: flex;
-            gap: 4px;
+        /* Two-column row - Tailwind grid */
+        .d3-row-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
         }
 
-        .d5-tab {
-            padding: 8px 16px;
-            background: transparent;
-            border: none;
-            font-size: 13px;
-            color: var(--gray-500);
-            cursor: pointer;
-            border-radius: 6px;
+        .d3-row-2col .d3-inset-field:first-child {
+            border-right: 1px solid var(--gray-200);
         }
 
-        .d5-tab.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .d5-content {
-            padding: 16px;
+        /* Amount selection - Tailwind small cards pattern */
+        .d3-amount-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
         }
 
-        .d5-request-card {
+        .d3-amount-option {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 10px;
+            background: white;
+            border: 1px solid var(--gray-300);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .d3-amount-option input[type="radio"] {
+            position: absolute;
+            inset: 0;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .d3-amount-option input[type="radio"]:focus {
+            outline: none;
+        }
+
+        .d3-amount-option:hover:not(:has(input:checked)) {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+
+        .d3-amount-option:has(input:checked) {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md), 0 0 0 1px var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .d3-amount-option:has(input:focus-visible) {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        .d3-amount-option .volume {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .d3-amount-option:has(input:checked) .volume {
+            color: white;
+        }
+
+        .d3-amount-option .price {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--gray-500);
+            margin-top: 3px;
+        }
+
+        .d3-amount-option:has(input:checked) .price {
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* Fallback for browsers without :has() */
+        .d3-amount-option.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md), 0 0 0 1px var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .d3-amount-option.selected .volume {
+            color: white;
+        }
+
+        .d3-amount-option.selected .price {
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* Toggle - Tailwind card pattern with hover effect */
+        .d3-toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-xs);
+            transition: all 0.15s ease-in-out;
+        }
+
+        .d3-toggle-row:hover {
+            border-color: var(--gray-300);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .d3-toggle-info {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .d3-toggle-label {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            font-weight: 500;
+            color: var(--gray-900);
+        }
+
+        .d3-toggle-desc {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .d3-toggle-switch {
+            position: relative;
+            display: inline-flex;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+            background: var(--gray-200);
+            border-radius: 9999px;
+            padding: 2px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .d3-toggle-switch:has(input:checked) {
+            background: var(--error);
+        }
+
+        .d3-toggle-switch:has(input:focus-visible) {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        .d3-toggle-knob {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 9999px;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .d3-toggle-switch:has(input:checked) .d3-toggle-knob {
+            transform: translateX(20px);
+        }
+
+        .d3-toggle-switch input {
+            position: absolute;
+            inset: 0;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        /* Fallback for browsers without :has() */
+        .d3-toggle-switch.active {
+            background: var(--error);
+        }
+
+        .d3-toggle-switch.active .d3-toggle-knob {
+            transform: translateX(20px);
+        }
+
+        /* Submit button - Premium Tailwind primary button */
+        .d3-submit {
+            width: 100%;
+            padding: 12px 16px;
+            background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: all 0.15s ease-in-out;
+            box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.15);
+            letter-spacing: 0.01em;
+        }
+
+        .d3-submit:hover {
+            background: linear-gradient(to bottom, var(--primary-light), var(--primary));
+            box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        .d3-submit:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .d3-submit:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Bottom nav for D3 - light theme */
+        .d3-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .d3-nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            color: var(--gray-400);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .d3-nav-item:hover {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .d3-nav-item.active {
+            color: var(--primary);
+            background: var(--primary-lighter);
+        }
+
+        .d3-nav-item svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        /* ============================================
+           DIRECTION 4: SUPPLIER - PHONE LIST VIEW
+           Tailwind Plus patterns (Light Theme)
+           ============================================ */
+        .d4-screen {
+            padding-top: 32px;
+            padding-bottom: 80px;
+            background: var(--gray-50);
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .d4-phone-header {
+            padding: 16px 16px 12px;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .d4-logo {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        /* Tailwind badge pattern */
+        .d4-supplier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .d4-supplier-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Stats - Premium Tailwind shared borders pattern */
+        .d4-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            overflow: hidden;
+            border-radius: 12px;
+            background: white;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--gray-100);
+        }
+
+        .d4-stat-card {
+            padding: 14px 8px;
+            text-align: center;
+            border-right: 1px solid var(--gray-200);
+            transition: background-color 0.15s ease-in-out;
+        }
+
+        .d4-stat-card:hover {
+            background: var(--gray-50);
+        }
+
+        .d4-stat-card:last-child {
+            border-right: none;
+        }
+
+        .d4-stat-value {
+            font-size: 1.625rem;
+            line-height: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.02em;
+        }
+
+        .d4-stat-label {
+            font-size: 0.6875rem;
+            font-weight: 500;
+            color: var(--gray-500);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .d4-section-label {
+            font-size: 0.75rem;
+            line-height: 1rem;
+            font-weight: 500;
+            color: var(--gray-500);
+            padding: 16px 12px 8px;
+        }
+
+        .d4-list {
+            flex: 1;
+            padding: 0 12px 12px;
+            overflow-y: auto;
+        }
+
+        /* List items - Premium Tailwind stacked list pattern */
+        .d4-list-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
             background: white;
             border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--gray-100);
+        }
+
+        .d4-list-item:hover {
+            background: var(--gray-50);
+            box-shadow: var(--shadow-sm);
+            transform: translateX(2px);
+        }
+
+        .d4-list-item.urgent {
+            background: rgba(239, 68, 68, 0.03);
+            border-color: rgba(239, 68, 68, 0.15);
+        }
+
+        .d4-list-item.urgent:hover {
+            background: rgba(239, 68, 68, 0.06);
+            box-shadow: var(--shadow-sm), 0 0 0 1px rgba(239, 68, 68, 0.1);
+        }
+
+        /* Status dot - Tailwind pattern */
+        .d4-status-indicator {
+            flex-shrink: 0;
+            padding: 4px;
+            border-radius: 9999px;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .d4-status-indicator::after {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background: var(--warning);
+        }
+
+        .d4-list-item.urgent .d4-status-indicator {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .d4-list-item.urgent .d4-status-indicator::after {
+            background: var(--error);
+            animation: pulse-urgent 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-urgent {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .d4-list-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .d4-list-name {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .d4-list-location {
+            font-size: 0.75rem;
+            line-height: 1.25rem;
+            color: var(--gray-500);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .d4-list-right {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .d4-list-volume {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Tailwind badge pattern */
+        .d4-badge {
+            display: inline-flex;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .d4-badge-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #B45309;
+        }
+
+        .d4-badge-urgent {
+            background: rgba(239, 68, 68, 0.1);
+            color: #DC2626;
+        }
+
+        .d4-list-arrow {
+            color: var(--gray-400);
+            flex-shrink: 0;
+        }
+
+        .d4-list-arrow svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Supplier bottom nav - D4 light theme */
+        .d4-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .d4-nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            color: var(--gray-400);
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            position: relative;
+        }
+
+        .d4-nav-item:hover {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .d4-nav-item.active {
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .d4-nav-item svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .d4-nav-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            background: var(--error);
+            color: white;
+            border-radius: 9999px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ============================================
+           DIRECTION 5: SUPPLIER - PHONE CARD VIEW
+           Tailwind Plus patterns (Light Theme)
+           ============================================ */
+        .d5-screen {
+            padding-top: 32px;
+            padding-bottom: 80px;
+            background: var(--gray-50);
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .d5-phone-header {
+            padding: 16px 16px 12px;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .d5-phone-header h2 {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        /* Tabs - Premium Tailwind pills pattern */
+        .d5-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--gray-100);
+            border-radius: 10px;
+            padding: 4px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+
+        .d5-tab {
+            padding: 8px 14px;
+            background: transparent;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-500);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .d5-tab:hover {
+            color: var(--gray-700);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .d5-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+            font-weight: 600;
+        }
+
+        /* Tailwind badge on tabs */
+        .d5-tab-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 6px;
+            margin-left: 6px;
+            background: var(--gray-200);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .d5-tab.active .d5-tab-count {
+            background: var(--primary-lighter);
+            color: var(--primary);
+        }
+
+        .d5-cards {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        /* Request card - Premium Tailwind card pattern */
+        .d5-request-card {
+            background: white;
+            border-radius: 14px;
             padding: 16px;
-            border-left: 4px solid var(--warning);
+            transition: all 0.15s ease-in-out;
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--gray-100);
+            cursor: pointer;
+        }
+
+        .d5-request-card:hover {
+            background: var(--gray-50);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-2px);
         }
 
         .d5-request-card.urgent {
-            border-left-color: var(--error);
+            background: rgba(239, 68, 68, 0.02);
+            border-color: rgba(239, 68, 68, 0.12);
+        }
+
+        .d5-request-card.urgent:hover {
+            background: rgba(239, 68, 68, 0.05);
+            box-shadow: var(--shadow-sm), 0 0 0 1px rgba(239, 68, 68, 0.08);
         }
 
         .d5-request-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 12px;
+            align-items: center;
+            margin-bottom: 8px;
         }
 
         .d5-request-id {
-            font-size: 12px;
+            font-size: 0.75rem;
             color: var(--gray-500);
         }
 
-        .d5-request-time {
-            font-size: 11px;
-            color: var(--gray-400);
+        /* Tailwind badge pattern */
+        .d5-request-badge {
+            display: inline-flex;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .d5-request-badge.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #B45309;
+        }
+
+        .d5-request-badge.urgent {
+            background: rgba(239, 68, 68, 0.1);
+            color: #DC2626;
         }
 
         .d5-request-name {
-            font-size: 15px;
+            font-size: 0.9375rem;
+            line-height: 1.5rem;
             font-weight: 600;
+            color: var(--gray-900);
             margin-bottom: 4px;
         }
 
         .d5-request-location {
-            font-size: 13px;
-            color: var(--gray-600);
-            margin-bottom: 8px;
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .d5-request-volume {
-            display: inline-block;
-            padding: 4px 8px;
+        .d5-request-location svg {
+            width: 14px;
+            height: 14px;
+            color: var(--gray-400);
+            flex-shrink: 0;
+        }
+
+        .d5-request-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .d5-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .d5-meta-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .d5-meta-icon.volume {
             background: var(--primary-lighter);
-            color: var(--primary-dark);
-            border-radius: 4px;
-            font-size: 12px;
+            color: var(--primary);
+        }
+
+        .d5-meta-icon.time {
+            background: rgba(245, 158, 11, 0.1);
+            color: #B45309;
+        }
+
+        .d5-meta-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .d5-meta-text {
+            font-size: 0.75rem;
+            line-height: 1rem;
+            color: var(--gray-500);
+        }
+
+        .d5-meta-value {
             font-weight: 600;
+            color: var(--gray-900);
         }
 
         .d5-request-actions {
             display: flex;
-            gap: 8px;
-            margin-top: 12px;
+            gap: 10px;
         }
 
+        /* Premium Tailwind button patterns */
         .d5-btn {
             flex: 1;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 500;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
             cursor: pointer;
             border: none;
+            transition: all 0.15s ease-in-out;
         }
 
         .d5-btn-primary {
-            background: var(--primary);
+            background: linear-gradient(to bottom, var(--success), #059669);
             color: white;
+            box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+
+        .d5-btn-primary:hover {
+            background: linear-gradient(to bottom, #34D399, var(--success));
+            box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        .d5-btn-primary:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .d5-btn-primary:focus-visible {
+            outline: 2px solid var(--success);
+            outline-offset: 2px;
         }
 
         .d5-btn-secondary {
-            background: var(--gray-100);
+            background: white;
             color: var(--gray-700);
+            box-shadow: var(--shadow-xs), inset 0 0 0 1px var(--gray-300);
+        }
+
+        .d5-btn-secondary:hover {
+            background: var(--gray-50);
+            box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--gray-300);
+        }
+
+        .d5-btn-secondary:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Supplier bottom nav - D5 light theme */
+        .d5-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .d5-nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            color: var(--gray-400);
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .d5-nav-item:hover {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .d5-nav-item.active {
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .d5-nav-item svg {
+            width: 22px;
+            height: 22px;
         }
 
         /* ============================================
-           DIRECTION 6: SUPPLIER - MAP FOCUS
+           DIRECTION 6: SUPPLIER - PHONE MAP VIEW
+           Tailwind Plus patterns (Light Theme)
            ============================================ */
-        .d6-dashboard {
-            height: 400px;
+        .d6-screen {
+            padding-top: 32px;
+            padding-bottom: 80px;
+            background: var(--gray-50);
+            min-height: 100%;
             display: flex;
+            flex-direction: column;
         }
 
-        .d6-map {
-            flex: 2;
-            background: linear-gradient(135deg, #E8F4FD 0%, #CAF0F8 100%);
+        .d6-phone-header {
+            padding: 12px 16px;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .d6-logo {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .d6-header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Premium Tailwind icon button pattern */
+        .d6-header-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: white;
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            box-shadow: var(--shadow-xs), inset 0 0 0 1px var(--gray-200);
+            border: none;
+        }
+
+        .d6-header-btn:hover {
+            background: var(--gray-50);
+            color: var(--gray-700);
+            box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--gray-300);
+            transform: translateY(-1px);
+        }
+
+        .d6-header-btn:active {
+            transform: translateY(0);
+        }
+
+        .d6-header-btn:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        .d6-header-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .d6-map-area {
+            flex: 1;
             position: relative;
+            overflow: hidden;
+        }
+
+        .d6-map-bg {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #E8F4FD 0%, var(--primary-lighter) 100%);
+            position: relative;
+        }
+
+        /* Light map grid pattern */
+        .d6-map-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 119, 182, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 119, 182, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
 
         .d6-map-placeholder {
             position: absolute;
-            top: 50%;
+            top: 25%;
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
@@ -786,6 +1868,10 @@
             color: var(--primary);
         }
 
+        .d6-map-placeholder p {
+            font-size: 0.875rem;
+        }
+
         .d6-marker {
             position: absolute;
             width: 32px;
@@ -796,77 +1882,464 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0, 119, 182, 0.4);
+            border: 2px solid white;
         }
 
         .d6-marker span {
             transform: rotate(45deg);
             color: white;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 0.6875rem;
+            font-weight: 700;
         }
 
-        .d6-sidebar {
-            width: 280px;
+        .d6-marker.urgent {
+            background: var(--error);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            animation: marker-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes marker-pulse {
+            0%, 100% { box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6); }
+        }
+
+        /* Drawer - Tailwind slide-over pattern */
+        .d6-drawer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
             background: white;
-            border-left: 1px solid var(--gray-200);
-            overflow-y: auto;
+            border-radius: 16px 16px 0 0;
+            padding: 12px 16px 16px;
+            box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1);
+            max-height: 180px;
         }
 
-        .d6-sidebar-header {
-            padding: 16px;
+        .d6-drawer-handle {
+            width: 36px;
+            height: 4px;
+            background: var(--gray-300);
+            border-radius: 9999px;
+            margin: 0 auto 12px;
+        }
+
+        .d6-drawer-header {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--gray-900);
+        }
+
+        .d6-drawer-count {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            font-weight: 400;
+        }
+
+        .d6-drawer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Drawer items - Premium Tailwind list pattern */
+        .d6-drawer-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--gray-100);
+        }
+
+        .d6-drawer-item:hover {
+            background: var(--gray-50);
+            box-shadow: var(--shadow-sm);
+            transform: translateX(2px);
+        }
+
+        .d6-drawer-item.urgent {
+            background: rgba(239, 68, 68, 0.02);
+            border-color: rgba(239, 68, 68, 0.12);
+        }
+
+        .d6-drawer-item.urgent:hover {
+            background: rgba(239, 68, 68, 0.05);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Number badge */
+        .d6-drawer-num {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .d6-drawer-item.urgent .d6-drawer-num {
+            background: var(--error);
+        }
+
+        .d6-drawer-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .d6-drawer-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .d6-drawer-info {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .d6-drawer-volume {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        /* Supplier bottom nav - D6 light theme */
+        .d6-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .d6-nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            color: var(--gray-400);
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .d6-nav-item:hover {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .d6-nav-item.active {
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .d6-nav-item svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        /* ============================================
+           DIRECTION 7: CONSUMER - HISTORY
+           Tailwind Plus patterns (Light Theme)
+           ============================================ */
+        .d7-screen {
+            padding-top: 32px;
+            padding-bottom: 80px;
+            background: var(--gray-50);
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            color: var(--gray-900);
+        }
+
+        .d7-header {
+            padding: 16px 16px 12px;
+            background: white;
             border-bottom: 1px solid var(--gray-200);
         }
 
-        .d6-sidebar-header h3 {
-            font-size: 14px;
+        .d7-header h1 {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
             font-weight: 600;
+            color: var(--gray-900);
         }
 
-        .d6-sidebar-header span {
-            font-size: 12px;
+        .d7-header p {
+            font-size: 0.875rem;
             color: var(--gray-500);
+            margin-top: 2px;
         }
 
-        .d6-request-list {
-            padding: 8px;
+        .d7-stats {
+            display: none; /* Stats moved to home */
         }
 
-        .d6-request-item {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            background: var(--gray-50);
-            cursor: pointer;
-            transition: background 0.2s;
+        .d7-list {
+            flex: 1;
+            padding: 0 16px 16px;
+            overflow-y: auto;
         }
 
-        .d6-request-item:hover {
-            background: var(--primary-lighter);
-        }
-
-        .d6-request-item h4 {
-            font-size: 14px;
+        .d7-section-title {
+            font-size: 0.75rem;
+            line-height: 1rem;
             font-weight: 500;
-            margin-bottom: 4px;
+            color: var(--gray-500);
+            margin-bottom: 10px;
+            margin-top: 16px;
         }
 
-        .d6-request-item p {
-            font-size: 12px;
+        .d7-section-title:first-child {
+            margin-top: 0;
+        }
+
+        /* Transaction list - Premium Tailwind stacked list pattern */
+        .d7-transaction {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--gray-100);
+        }
+
+        .d7-transaction:hover {
+            background: var(--gray-50);
+            box-shadow: var(--shadow-sm);
+            transform: translateX(2px);
+        }
+
+        /* Transaction with new notification - highlighted */
+        .d7-transaction.has-update {
+            background: rgba(0, 119, 182, 0.02);
+            border-color: rgba(0, 119, 182, 0.15);
+        }
+
+        .d7-transaction.has-update:hover {
+            background: rgba(0, 119, 182, 0.05);
+            box-shadow: var(--shadow-sm), 0 0 0 1px rgba(0, 119, 182, 0.1);
+        }
+
+        /* Icon with status dot - Premium Tailwind pattern */
+        .d7-tx-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.15s ease-in-out;
+        }
+
+        .d7-transaction:hover .d7-tx-icon {
+            transform: scale(1.05);
+        }
+
+        .d7-tx-icon.delivered {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08));
+            color: var(--success);
+        }
+
+        .d7-tx-icon.pending {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08));
+            color: var(--warning);
+        }
+
+        .d7-tx-icon.accepted {
+            background: linear-gradient(135deg, rgba(0, 119, 182, 0.15), rgba(0, 119, 182, 0.08));
+            color: var(--primary);
+        }
+
+        .d7-tx-icon.cancelled {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));
+            color: var(--error);
+        }
+
+        .d7-tx-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .d7-tx-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .d7-tx-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+
+        .d7-tx-amount {
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        /* Tailwind badge pattern */
+        .d7-tx-status {
+            display: inline-flex;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 2px 10px;
+            border-radius: 9999px;
+        }
+
+        .d7-tx-status.delivered {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .d7-tx-status.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #D97706;
+        }
+
+        .d7-tx-status.accepted {
+            background: rgba(0, 119, 182, 0.1);
+            color: var(--primary);
+        }
+
+        .d7-tx-status.cancelled {
+            background: rgba(239, 68, 68, 0.1);
+            color: #DC2626;
+        }
+
+        .d7-tx-address {
+            font-size: 0.875rem;
             color: var(--gray-500);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .d7-tx-date {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            margin-top: 3px;
+        }
+
+        /* Notification indicator on transaction */
+        .d7-tx-notification {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .d7-tx-notification svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .d7-tx-arrow {
+            color: var(--gray-400);
+            flex-shrink: 0;
+        }
+
+        .d7-tx-arrow svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Bottom nav for D7 - light theme */
+        .d7-bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 20px;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .d7-nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            color: var(--gray-400);
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            position: relative;
+        }
+
+        .d7-nav-item:hover {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .d7-nav-item.active {
+            color: var(--primary);
+            background: rgba(0, 119, 182, 0.1);
+        }
+
+        .d7-nav-item svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .d7-nav-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+            background: var(--error);
+            color: white;
+            border-radius: 9999px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
             .mockups-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .d4-sidebar, .d6-sidebar {
-                display: none;
-            }
-
-            .d5-content {
                 grid-template-columns: 1fr;
             }
         }
@@ -876,13 +2349,32 @@
     <nav class="top-nav">
         <h1>nitoagua - Direcciones de Diseno UX</h1>
         <div class="nav-controls">
-            <button class="nav-btn active">Consumidor</button>
-            <button class="nav-btn">Proveedor</button>
-            <button class="nav-btn">Todos</button>
+            <button class="nav-btn active" onclick="filterMockups('consumer')">Consumidor</button>
+            <button class="nav-btn" onclick="filterMockups('supplier')">Proveedor</button>
+            <button class="nav-btn" onclick="filterMockups('all')">Todos</button>
         </div>
     </nav>
 
     <div class="directions-container">
+        <!-- Consumer-Choice Model Update Banner -->
+        <div style="background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%); border: 2px solid #10B981; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <h3 style="color: #065F46; font-size: 16px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                Consolidated Mockups - Consumer-Choice Offer Model
+            </h3>
+            <p style="color: #047857; font-size: 14px; margin-bottom: 12px;">
+                All UX mockups are consolidated in three main files:
+            </p>
+            <ul style="color: #047857; font-size: 13px; margin-left: 24px; line-height: 1.8;">
+                <li><strong>Consumer:</strong> <a href="ux-mockups/00-consolidated-consumer-flow.html" style="color: #1E40AF;">00-consolidated-consumer-flow.html</a> - Full consumer flow including offer selection</li>
+                <li><strong>Provider:</strong> <a href="ux-mockups/01-consolidated-provider-flow.html" style="color: #1E40AF;">01-consolidated-provider-flow.html</a> - Full provider flow including offer submission</li>
+                <li><strong>Admin:</strong> <a href="ux-mockups/02-admin-dashboard.html" style="color: #1E40AF;">02-admin-dashboard.html</a> - Admin panel with offer settings (Section 12)</li>
+            </ul>
+        </div>
+
         <div class="direction-intro">
             <h2>Explorando Direcciones de Diseno</h2>
             <p>Seis enfoques diferentes para la experiencia de usuario de nitoagua. Cada direccion representa una filosofia de diseno distinta, optimizada para diferentes necesidades de usuario.</p>
@@ -890,7 +2382,7 @@
 
         <div class="mockups-grid">
             <!-- Direction 1: Consumer - Big Button Focus -->
-            <div class="mockup-card">
+            <div class="mockup-card" data-role="consumer">
                 <div class="mockup-header">
                     <h3>Direccion 1: Boton Grande</h3>
                     <span class="subtitle">Consumidor - Maximo impacto, minima friccion</span>
@@ -899,34 +2391,51 @@
                     <div class="phone-frame">
                         <div class="phone-notch"></div>
                         <div class="phone-screen d1-screen">
+                            <!-- Water background with waves -->
+                            <div class="d1-water-bg">
+                                <div class="d1-wave"></div>
+                                <div class="d1-wave"></div>
+                                <div class="d1-wave"></div>
+                            </div>
                             <div class="d1-header">
-                                <div class="d1-logo">nitoagua</div>
+                                <div class="d1-logo logo-font">nitoagua</div>
                                 <div class="d1-tagline">Agua a tu puerta</div>
                             </div>
                             <div class="d1-main">
-                                <button class="d1-big-button">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                    </svg>
-                                    Solicitar Agua
-                                </button>
+                                <div class="d1-button-container">
+                                    <!-- Ripple effects on hover -->
+                                    <div class="d1-ripple"></div>
+                                    <div class="d1-ripple"></div>
+                                    <div class="d1-ripple"></div>
+                                    <button class="d1-big-button">
+                                        <div class="droplet-icon">
+                                            <!-- Water droplet with plus sign -->
+                                            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <!-- Water droplet shape -->
+                                                <path d="M24 4C24 4 8 20 8 30C8 38.8366 15.1634 46 24 46C32.8366 46 40 38.8366 40 30C40 20 24 4 24 4Z" fill="white" fill-opacity="0.9"/>
+                                                <!-- Plus sign inside droplet -->
+                                                <path d="M24 20V34M17 27H31" stroke="#0077B6" stroke-width="3" stroke-linecap="round"/>
+                                                <!-- Shine highlight -->
+                                                <ellipse cx="16" cy="26" rx="3" ry="4" fill="white" fill-opacity="0.5"/>
+                                            </svg>
+                                        </div>
+                                        Solicitar Agua
+                                    </button>
+                                </div>
                             </div>
                             <div class="d1-status">
                                 <div class="d1-status-title">Tu ultima solicitud</div>
                                 <div class="d1-status-text">1000L - Entregado el 28 Nov</div>
                             </div>
                             <div class="d1-bottom-nav">
-                                <div class="d1-nav-item active">
-                                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                                    Inicio
+                                <div class="d1-nav-item active" title="Inicio">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                                 </div>
-                                <div class="d1-nav-item">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                    Historial
+                                <div class="d1-nav-item" title="Historial">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 </div>
-                                <div class="d1-nav-item">
+                                <div class="d1-nav-item" title="Perfil">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                    Perfil
                                 </div>
                             </div>
                         </div>
@@ -935,16 +2444,17 @@
                 <div class="mockup-notes">
                     <h4>Filosofia de Diseno</h4>
                     <ul>
-                        <li><strong>Un boton dominante</strong> - imposible perderse</li>
+                        <li><strong>Icono gota de agua + plus</strong> - representa el producto</li>
+                        <li><strong>Fondo de agua animado</strong> - olas en movimiento</li>
+                        <li><strong>Efecto ripple al hover</strong> - como gota cayendo al agua</li>
+                        <li>Boton flota suavemente, escala al pasar el mouse</li>
                         <li>Perfecto para Dona Maria (30 segundos, un pulgar)</li>
-                        <li>Estado minimo - solo lo esencial</li>
-                        <li>Inspirado en apps de emergencia y servicios rapidos</li>
                     </ul>
                 </div>
             </div>
 
             <!-- Direction 2: Consumer - Card Based -->
-            <div class="mockup-card">
+            <div class="mockup-card" data-role="consumer">
                 <div class="mockup-header">
                     <h3>Direccion 2: Tarjetas</h3>
                     <span class="subtitle">Consumidor - Organizado y amigable</span>
@@ -957,15 +2467,37 @@
                                 <div class="d2-greeting">Bienvenida</div>
                                 <div class="d2-name">Maria Gonzalez</div>
                             </div>
+                            <!-- Stats bar - Tailwind premium style -->
+                            <div class="d2-stats">
+                                <div class="d2-stat">
+                                    <div class="d2-stat-value">12.5k</div>
+                                    <div class="d2-stat-label">Litros</div>
+                                </div>
+                                <div class="d2-stat">
+                                    <div class="d2-stat-value">15</div>
+                                    <div class="d2-stat-label">Entregas</div>
+                                </div>
+                                <div class="d2-stat">
+                                    <div class="d2-stat-value">2</div>
+                                    <div class="d2-stat-label">En progreso</div>
+                                </div>
+                            </div>
                             <div class="d2-content">
                                 <div class="d2-card d2-card-primary">
                                     <h3>Necesitas agua?</h3>
                                     <p>Tu perfil esta listo. Solo selecciona la cantidad.</p>
                                     <button class="d2-card-btn">Solicitar Ahora</button>
                                 </div>
-                                <div class="d2-card">
-                                    <h3>Solicitud Activa</h3>
-                                    <p>1000L - Pendiente de confirmacion</p>
+                                <!-- Active request with status dot -->
+                                <div class="d2-active-request has-update">
+                                    <div class="d2-request-status-dot accepted"></div>
+                                    <div class="d2-request-info">
+                                        <div class="d2-request-amount">1000L - Aceptada</div>
+                                        <div class="d2-request-status-text">Proveedor en camino</div>
+                                    </div>
+                                    <div class="d2-request-arrow">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </div>
                                 </div>
                                 <div class="d2-quick-actions">
                                     <div class="d2-quick-btn">
@@ -978,289 +2510,600 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="d2-bottom-nav">
+                                <div class="d2-nav-item active" title="Inicio">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                </div>
+                                <div class="d2-nav-item" title="Historial">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="d2-nav-badge">3</span>
+                                </div>
+                                <div class="d2-nav-item" title="Perfil">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="mockup-notes">
                     <h4>Filosofia de Diseno</h4>
                     <ul>
-                        <li><strong>Tarjetas organizadas</strong> - informacion agrupada</li>
-                        <li>Saludo personalizado crea conexion</li>
-                        <li>Acciones rapidas visibles</li>
-                        <li>Mas informacion pero aun simple</li>
+                        <li><strong>Stats bar</strong> - Litros consumidos, entregas, en progreso</li>
+                        <li><strong>Active request card</strong> - status dot pulsante, tap para ver</li>
+                        <li>Navegacion con 3 iconos: Inicio, Historial (con badge), Perfil</li>
+                        <li>Estilo Tailwind Premium con transiciones suaves</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Direction 3: Consumer - Form Focus -->
-            <div class="mockup-card">
+            <!-- Direction 3: Consumer - Premium Form (Dark Theme) -->
+            <div class="mockup-card" data-role="consumer">
                 <div class="mockup-header">
-                    <h3>Direccion 3: Formulario Directo</h3>
-                    <span class="subtitle">Consumidor - Eficiente y claro</span>
+                    <h3>Direccion 3: Formulario Premium</h3>
+                    <span class="subtitle">Consumidor - Tailwind Premium Dark Theme</span>
                 </div>
                 <div class="mockup-device">
                     <div class="phone-frame">
                         <div class="phone-notch"></div>
                         <div class="phone-screen d3-screen">
                             <div class="d3-header">
-                                <h1>Solicitar Agua</h1>
-                                <p>Completa los campos para enviar tu solicitud</p>
+                                <h1>Nueva Solicitud</h1>
+                                <p>Completa los datos para pedir agua</p>
                             </div>
                             <div class="d3-form">
-                                <div class="d3-field">
-                                    <label>Tu nombre</label>
-                                    <input type="text" value="Maria Gonzalez" readonly style="background: var(--gray-50);">
-                                </div>
-                                <div class="d3-field">
-                                    <label>Cantidad de agua</label>
-                                    <div class="d3-amount-grid">
-                                        <div class="d3-amount-option">
-                                            <div class="volume">100L</div>
-                                            <div class="price">$5.000</div>
-                                        </div>
-                                        <div class="d3-amount-option selected">
-                                            <div class="volume">1000L</div>
-                                            <div class="price">$15.000</div>
-                                        </div>
-                                        <div class="d3-amount-option">
-                                            <div class="volume">5000L</div>
-                                            <div class="price">$45.000</div>
-                                        </div>
-                                        <div class="d3-amount-option">
-                                            <div class="volume">10000L</div>
-                                            <div class="price">$80.000</div>
-                                        </div>
+                                <!-- Profile info - grouped with shared borders -->
+                                <div class="d3-section-label">Tu informacion</div>
+                                <div class="d3-input-group">
+                                    <div class="d3-inset-field readonly">
+                                        <label>Nombre</label>
+                                        <input type="text" value="Maria Gonzalez" readonly>
+                                    </div>
+                                    <div class="d3-inset-field readonly">
+                                        <label>Telefono</label>
+                                        <input type="tel" value="+56 9 1234 5678" readonly>
                                     </div>
                                 </div>
+
+                                <!-- Location - grouped with shared borders -->
+                                <div class="d3-section-label">Ubicacion</div>
+                                <div class="d3-input-group">
+                                    <div class="d3-row-2col">
+                                        <div class="d3-inset-field readonly">
+                                            <label>Region</label>
+                                            <select disabled>
+                                                <option selected>Araucania</option>
+                                            </select>
+                                        </div>
+                                        <div class="d3-inset-field">
+                                            <label>Ciudad</label>
+                                            <select>
+                                                <option selected>Villarrica</option>
+                                                <option>Pucon</option>
+                                                <option>Temuco</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="d3-inset-field">
+                                        <label>Direccion</label>
+                                        <input type="text" placeholder="Calle, numero, sector...">
+                                    </div>
+                                    <div class="d3-inset-field">
+                                        <label>Notas para llegar</label>
+                                        <textarea placeholder="Ej: Casa con techo azul..."></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Amount selection - small cards -->
+                                <div class="d3-section-label">Cantidad</div>
+                                <div class="d3-amount-grid">
+                                    <div class="d3-amount-option">
+                                        <div class="volume">100L</div>
+                                        <div class="price">$5.000</div>
+                                    </div>
+                                    <div class="d3-amount-option selected">
+                                        <div class="volume">1000L</div>
+                                        <div class="price">$15.000</div>
+                                    </div>
+                                    <div class="d3-amount-option">
+                                        <div class="volume">5000L</div>
+                                        <div class="price">$45.000</div>
+                                    </div>
+                                </div>
+
+                                <!-- Urgency toggle - premium style -->
+                                <div class="d3-section-label">Opciones</div>
+                                <div class="d3-toggle-row">
+                                    <div class="d3-toggle-info">
+                                        <div class="d3-toggle-label">Solicitud urgente</div>
+                                        <div class="d3-toggle-desc">Prioridad en la entrega</div>
+                                    </div>
+                                    <div class="d3-toggle-switch active">
+                                        <div class="d3-toggle-knob"></div>
+                                    </div>
+                                </div>
+
                                 <button class="d3-submit">Enviar Solicitud</button>
+                            </div>
+                            <div class="d3-bottom-nav">
+                                <div class="d3-nav-item" title="Inicio">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                </div>
+                                <div class="d3-nav-item" title="Historial">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <div class="d3-nav-item" title="Perfil">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="mockup-notes">
-                    <h4>Filosofia de Diseno</h4>
+                    <h4>Filosofia de Diseno - Tailwind Premium</h4>
                     <ul>
-                        <li><strong>Directo al grano</strong> - sin distracciones</li>
-                        <li>Precios visibles para decision rapida</li>
-                        <li>Campos pre-llenados para usuarios registrados</li>
-                        <li>Flujo lineal y predecible</li>
+                        <li><strong>Dark theme</strong> - profesional, moderno</li>
+                        <li><strong>Inset labels</strong> - campos compactos con bordes compartidos</li>
+                        <li><strong>Small cards</strong> - seleccion de cantidad visual</li>
+                        <li><strong>Premium toggle</strong> - switch animado para urgencia</li>
+                        <li>Focus states con indigo glow</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Direction 4: Supplier Dashboard - Dense Table -->
-            <div class="mockup-card">
+            <!-- Direction 7: Consumer - History/Notifications -->
+            <div class="mockup-card" data-role="consumer">
                 <div class="mockup-header">
-                    <h3>Direccion 4: Dashboard Denso</h3>
-                    <span class="subtitle">Proveedor - Maximo control e informacion</span>
+                    <h3>Direccion 7: Historial + Notificaciones</h3>
+                    <span class="subtitle">Consumidor - Historial con alertas integradas</span>
                 </div>
                 <div class="mockup-device">
-                    <div class="dashboard-frame d4-dashboard">
-                        <div class="d4-sidebar">
-                            <div class="d4-logo">nitoagua</div>
-                            <div class="d4-nav-item active">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                Solicitudes
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen d7-screen">
+                            <div class="d7-header">
+                                <h1>Mi Historial</h1>
+                                <p>Tus solicitudes de agua</p>
                             </div>
-                            <div class="d4-nav-item">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                                Mapa
+                            <div class="d7-list">
+                                <div class="d7-section-title">En progreso</div>
+
+                                <!-- Transaction with notification - highlighted -->
+                                <div class="d7-transaction has-update">
+                                    <div class="d7-tx-icon accepted">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div class="d7-tx-content">
+                                        <div class="d7-tx-top">
+                                            <span class="d7-tx-amount">1000L</span>
+                                            <span class="d7-tx-status accepted">Aceptada</span>
+                                        </div>
+                                        <div class="d7-tx-address">Sector La Poza, calle Los Robles</div>
+                                        <div class="d7-tx-date">Hoy, 10:30</div>
+                                        <div class="d7-tx-notification">
+                                            <svg fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6"/></svg>
+                                            Proveedor en camino - hace 5 min
+                                        </div>
+                                    </div>
+                                    <div class="d7-tx-arrow">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
+
+                                <!-- Transaction pending - no notification -->
+                                <div class="d7-transaction">
+                                    <div class="d7-tx-icon pending">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div class="d7-tx-content">
+                                        <div class="d7-tx-top">
+                                            <span class="d7-tx-amount">5000L</span>
+                                            <span class="d7-tx-status pending">Pendiente</span>
+                                        </div>
+                                        <div class="d7-tx-address">Fundo El Roble km 12</div>
+                                        <div class="d7-tx-date">Ayer, 15:45</div>
+                                    </div>
+                                    <div class="d7-tx-arrow">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
+
+                                <div class="d7-section-title">Completadas</div>
+
+                                <!-- Delivered transaction -->
+                                <div class="d7-transaction">
+                                    <div class="d7-tx-icon delivered">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                    <div class="d7-tx-content">
+                                        <div class="d7-tx-top">
+                                            <span class="d7-tx-amount">1000L</span>
+                                            <span class="d7-tx-status delivered">Entregada</span>
+                                        </div>
+                                        <div class="d7-tx-address">Sector La Poza</div>
+                                        <div class="d7-tx-date">28 Nov, 14:20</div>
+                                    </div>
+                                    <div class="d7-tx-arrow">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
+
+                                <!-- Another delivered -->
+                                <div class="d7-transaction">
+                                    <div class="d7-tx-icon delivered">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                    <div class="d7-tx-content">
+                                        <div class="d7-tx-top">
+                                            <span class="d7-tx-amount">2000L</span>
+                                            <span class="d7-tx-status delivered">Entregada</span>
+                                        </div>
+                                        <div class="d7-tx-address">Sector La Poza</div>
+                                        <div class="d7-tx-date">15 Nov, 11:00</div>
+                                    </div>
+                                    <div class="d7-tx-arrow">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="d4-nav-item">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                Config
+                            <div class="d7-bottom-nav">
+                                <div class="d7-nav-item" title="Inicio">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                </div>
+                                <div class="d7-nav-item active" title="Historial">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="d7-nav-badge">1</span>
+                                </div>
+                                <div class="d7-nav-item" title="Perfil">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                </div>
                             </div>
                         </div>
-                        <div class="d4-main">
-                            <div class="d4-header">
-                                <h2>Solicitudes Pendientes</h2>
-                                <div class="d4-stats">
-                                    <div class="d4-stat">
+                    </div>
+                </div>
+                <div class="mockup-notes">
+                    <h4>Filosofia de Diseno - Premium Dark</h4>
+                    <ul>
+                        <li><strong>Dark theme</strong> - consistente con Direccion 3</li>
+                        <li><strong>Pill badges</strong> - status con colores suaves</li>
+                        <li>Transacciones con updates se resaltan en indigo</li>
+                        <li>Agrupadas por "En progreso" y "Completadas"</li>
+                        <li>Stats movidos a Home (Direccion 2)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Direction 4: Supplier Dashboard - List View (Premium Dark) -->
+            <div class="mockup-card" data-role="supplier">
+                <div class="mockup-header">
+                    <h3>Direccion 4: Lista de Solicitudes</h3>
+                    <span class="subtitle">Proveedor - Vista de lista compacta (Premium Dark)</span>
+                </div>
+                <div class="mockup-device">
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen d4-screen">
+                            <div class="d4-phone-header">
+                                <div class="d4-logo logo-font">nitoagua</div>
+                                <div class="d4-supplier-badge">
+                                    <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                    Verificado
+                                </div>
+                                <div class="d4-stats-row">
+                                    <div class="d4-stat-card">
                                         <div class="d4-stat-value">8</div>
                                         <div class="d4-stat-label">Pendientes</div>
                                     </div>
-                                    <div class="d4-stat">
+                                    <div class="d4-stat-card">
                                         <div class="d4-stat-value">23</div>
                                         <div class="d4-stat-label">Hoy</div>
                                     </div>
+                                    <div class="d4-stat-card">
+                                        <div class="d4-stat-value">156</div>
+                                        <div class="d4-stat-label">Este Mes</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="d4-content">
-                                <table class="d4-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Cliente</th>
-                                            <th>Ubicacion</th>
-                                            <th>Cantidad</th>
-                                            <th>Estado</th>
-                                            <th>Accion</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><strong>Maria G.</strong></td>
-                                            <td>Sector La Poza</td>
-                                            <td>1000L</td>
-                                            <td><span class="d4-badge d4-badge-urgent">Urgente</span></td>
-                                            <td><button class="d4-action-btn">Aceptar</button></td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Juan P.</strong></td>
-                                            <td>Camino Viejo</td>
-                                            <td>5000L</td>
-                                            <td><span class="d4-badge d4-badge-pending">Pendiente</span></td>
-                                            <td><button class="d4-action-btn">Aceptar</button></td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Carmen R.</strong></td>
-                                            <td>Las Vertientes</td>
-                                            <td>1000L</td>
-                                            <td><span class="d4-badge d4-badge-pending">Pendiente</span></td>
-                                            <td><button class="d4-action-btn">Aceptar</button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div class="d4-section-label">Solicitudes pendientes</div>
+                            <div class="d4-list">
+                                <div class="d4-list-item urgent">
+                                    <div class="d4-status-indicator"></div>
+                                    <div class="d4-list-left">
+                                        <div class="d4-list-name">Maria Gonzalez</div>
+                                        <div class="d4-list-location">Sector La Poza, calle Los Robles</div>
+                                    </div>
+                                    <div class="d4-list-right">
+                                        <div class="d4-list-volume">1000L</div>
+                                        <span class="d4-badge d4-badge-urgent">Urgente</span>
+                                    </div>
+                                    <div class="d4-list-arrow">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
+                                <div class="d4-list-item">
+                                    <div class="d4-status-indicator"></div>
+                                    <div class="d4-list-left">
+                                        <div class="d4-list-name">Juan Perez</div>
+                                        <div class="d4-list-location">Camino Viejo km 5</div>
+                                    </div>
+                                    <div class="d4-list-right">
+                                        <div class="d4-list-volume">5000L</div>
+                                        <span class="d4-badge d4-badge-pending">Pendiente</span>
+                                    </div>
+                                    <div class="d4-list-arrow">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
+                                <div class="d4-list-item">
+                                    <div class="d4-status-indicator"></div>
+                                    <div class="d4-list-left">
+                                        <div class="d4-list-name">Carmen Rodriguez</div>
+                                        <div class="d4-list-location">Las Vertientes</div>
+                                    </div>
+                                    <div class="d4-list-right">
+                                        <div class="d4-list-volume">1000L</div>
+                                        <span class="d4-badge d4-badge-pending">Pendiente</span>
+                                    </div>
+                                    <div class="d4-list-arrow">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
+                                <div class="d4-list-item">
+                                    <div class="d4-status-indicator"></div>
+                                    <div class="d4-list-left">
+                                        <div class="d4-list-name">Pedro Sanchez</div>
+                                        <div class="d4-list-location">Fundo El Roble km 12</div>
+                                    </div>
+                                    <div class="d4-list-right">
+                                        <div class="d4-list-volume">10000L</div>
+                                        <span class="d4-badge d4-badge-pending">Pendiente</span>
+                                    </div>
+                                    <div class="d4-list-arrow">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d4-bottom-nav">
+                                <div class="d4-nav-item active" title="Dashboard">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                                    <span class="d4-nav-badge">8</span>
+                                </div>
+                                <div class="d4-nav-item" title="Mapa">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                                </div>
+                                <div class="d4-nav-item" title="Perfil">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="mockup-notes">
-                    <h4>Filosofia de Diseno</h4>
+                    <h4>Filosofia de Diseno - Premium Dark</h4>
                     <ul>
-                        <li><strong>Tabla densa</strong> - maximo de info visible</li>
-                        <li>Sidebar para navegacion rapida</li>
-                        <li>Estadisticas en cabecera</li>
-                        <li>Ideal para Don Pedro revisando el dia</li>
+                        <li><strong>Dark theme</strong> - consistente con app completa</li>
+                        <li><strong>Stats cards</strong> - metricas claras en grilla</li>
+                        <li><strong>Status indicators</strong> - dot pulsante para urgente</li>
+                        <li><strong>Pill badges</strong> - estado con color suave</li>
+                        <li>Nav con badge de pendientes</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Direction 5: Supplier Dashboard - Card View -->
-            <div class="mockup-card">
+            <!-- Direction 5: Supplier Dashboard - Card View (Premium Dark) -->
+            <div class="mockup-card" data-role="supplier">
                 <div class="mockup-header">
                     <h3>Direccion 5: Tarjetas de Solicitud</h3>
-                    <span class="subtitle">Proveedor - Visual y escaneable</span>
+                    <span class="subtitle">Proveedor - Vista de tarjetas apiladas (Premium Dark)</span>
                 </div>
                 <div class="mockup-device">
-                    <div class="dashboard-frame d5-dashboard">
-                        <div class="d5-header">
-                            <h2>Mis Solicitudes</h2>
-                            <div class="d5-tabs">
-                                <button class="d5-tab active">Pendientes (8)</button>
-                                <button class="d5-tab">Aceptadas (3)</button>
-                                <button class="d5-tab">Completadas</button>
-                            </div>
-                        </div>
-                        <div class="d5-content">
-                            <div class="d5-request-card urgent">
-                                <div class="d5-request-header">
-                                    <span class="d5-request-id">#1234</span>
-                                    <span class="d5-request-time">Hace 15 min</span>
-                                </div>
-                                <div class="d5-request-name">Maria Gonzalez</div>
-                                <div class="d5-request-location">Sector La Poza, pasando el puente</div>
-                                <span class="d5-request-volume">1000L - URGENTE</span>
-                                <div class="d5-request-actions">
-                                    <button class="d5-btn d5-btn-primary">Aceptar</button>
-                                    <button class="d5-btn d5-btn-secondary">Ver</button>
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen d5-screen">
+                            <div class="d5-phone-header">
+                                <h2>Mis Solicitudes</h2>
+                                <div class="d5-tabs">
+                                    <button class="d5-tab active">Pendientes<span class="d5-tab-count">8</span></button>
+                                    <button class="d5-tab">Aceptadas<span class="d5-tab-count">3</span></button>
+                                    <button class="d5-tab">Historial</button>
                                 </div>
                             </div>
-                            <div class="d5-request-card">
-                                <div class="d5-request-header">
-                                    <span class="d5-request-id">#1233</span>
-                                    <span class="d5-request-time">Hace 1 hora</span>
+                            <div class="d5-cards">
+                                <div class="d5-request-card urgent">
+                                    <div class="d5-request-header">
+                                        <span class="d5-request-id">#1234</span>
+                                        <span class="d5-request-badge urgent">Urgente</span>
+                                    </div>
+                                    <div class="d5-request-name">Maria Gonzalez</div>
+                                    <div class="d5-request-location">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Sector La Poza, calle Los Robles
+                                    </div>
+                                    <div class="d5-request-meta">
+                                        <div class="d5-meta-item">
+                                            <div class="d5-meta-icon volume">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                            </div>
+                                            <span class="d5-meta-text"><span class="d5-meta-value">1000L</span></span>
+                                        </div>
+                                        <div class="d5-meta-item">
+                                            <div class="d5-meta-icon time">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            </div>
+                                            <span class="d5-meta-text">Hace <span class="d5-meta-value">15 min</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="d5-request-actions">
+                                        <button class="d5-btn d5-btn-primary">Aceptar</button>
+                                        <button class="d5-btn d5-btn-secondary">Ver detalle</button>
+                                    </div>
                                 </div>
-                                <div class="d5-request-name">Juan Perez</div>
-                                <div class="d5-request-location">Camino Viejo km 5</div>
-                                <span class="d5-request-volume">5000L</span>
-                                <div class="d5-request-actions">
-                                    <button class="d5-btn d5-btn-primary">Aceptar</button>
-                                    <button class="d5-btn d5-btn-secondary">Ver</button>
+                                <div class="d5-request-card">
+                                    <div class="d5-request-header">
+                                        <span class="d5-request-id">#1233</span>
+                                        <span class="d5-request-badge pending">Pendiente</span>
+                                    </div>
+                                    <div class="d5-request-name">Juan Perez</div>
+                                    <div class="d5-request-location">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Camino Viejo km 5
+                                    </div>
+                                    <div class="d5-request-meta">
+                                        <div class="d5-meta-item">
+                                            <div class="d5-meta-icon volume">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                            </div>
+                                            <span class="d5-meta-text"><span class="d5-meta-value">5000L</span></span>
+                                        </div>
+                                        <div class="d5-meta-item">
+                                            <div class="d5-meta-icon time">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            </div>
+                                            <span class="d5-meta-text">Hace <span class="d5-meta-value">1 hora</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="d5-request-actions">
+                                        <button class="d5-btn d5-btn-primary">Aceptar</button>
+                                        <button class="d5-btn d5-btn-secondary">Ver detalle</button>
+                                    </div>
+                                </div>
+                                <div class="d5-request-card">
+                                    <div class="d5-request-header">
+                                        <span class="d5-request-id">#1232</span>
+                                        <span class="d5-request-badge pending">Pendiente</span>
+                                    </div>
+                                    <div class="d5-request-name">Carmen Rodriguez</div>
+                                    <div class="d5-request-location">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                        Las Vertientes, sector norte
+                                    </div>
+                                    <div class="d5-request-meta">
+                                        <div class="d5-meta-item">
+                                            <div class="d5-meta-icon volume">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                            </div>
+                                            <span class="d5-meta-text"><span class="d5-meta-value">1000L</span></span>
+                                        </div>
+                                        <div class="d5-meta-item">
+                                            <div class="d5-meta-icon time">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            </div>
+                                            <span class="d5-meta-text">Hace <span class="d5-meta-value">2 horas</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="d5-request-actions">
+                                        <button class="d5-btn d5-btn-primary">Aceptar</button>
+                                        <button class="d5-btn d5-btn-secondary">Ver detalle</button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="d5-request-card">
-                                <div class="d5-request-header">
-                                    <span class="d5-request-id">#1232</span>
-                                    <span class="d5-request-time">Hace 2 horas</span>
+                            <div class="d5-bottom-nav">
+                                <div class="d5-nav-item active" title="Dashboard">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                                 </div>
-                                <div class="d5-request-name">Carmen Rodriguez</div>
-                                <div class="d5-request-location">Las Vertientes, casa azul</div>
-                                <span class="d5-request-volume">1000L</span>
-                                <div class="d5-request-actions">
-                                    <button class="d5-btn d5-btn-primary">Aceptar</button>
-                                    <button class="d5-btn d5-btn-secondary">Ver</button>
+                                <div class="d5-nav-item" title="Mapa">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                                </div>
+                                <div class="d5-nav-item" title="Perfil">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="mockup-notes">
-                    <h4>Filosofia de Diseno</h4>
+                    <h4>Filosofia de Diseno - Premium Dark</h4>
                     <ul>
-                        <li><strong>Tarjetas visuales</strong> - facil escaneo</li>
-                        <li>Codigo de color para urgencia</li>
-                        <li>Toda la info clave visible</li>
-                        <li>Acciones claras por solicitud</li>
+                        <li><strong>Dark theme</strong> - consistente con toda la app</li>
+                        <li><strong>Tabs con contadores</strong> - filtro por estado</li>
+                        <li><strong>Meta icons</strong> - volumen y tiempo destacados</li>
+                        <li><strong>Pill badges</strong> - status con color suave</li>
+                        <li>Botones con jerarquia clara (verde = accion principal)</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Direction 6: Supplier Dashboard - Map Focus -->
-            <div class="mockup-card">
+            <!-- Direction 6: Supplier Dashboard - Map Focus (Premium Dark) -->
+            <div class="mockup-card" data-role="supplier">
                 <div class="mockup-header">
                     <h3>Direccion 6: Enfoque en Mapa</h3>
-                    <span class="subtitle">Proveedor - Planificacion geografica</span>
+                    <span class="subtitle">Proveedor - Vista de mapa con solicitudes (Premium Dark)</span>
                 </div>
                 <div class="mockup-device">
-                    <div class="dashboard-frame d6-dashboard">
-                        <div class="d6-map">
-                            <div class="d6-map-placeholder">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                                <p>Mapa de Solicitudes</p>
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen d6-screen">
+                            <div class="d6-phone-header">
+                                <div class="d6-logo logo-font">nitoagua</div>
+                                <div class="d6-header-actions">
+                                    <button class="d6-header-btn" title="Filtrar">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                                    </button>
+                                    <button class="d6-header-btn" title="Centrar">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="d6-marker" style="top: 30%; left: 25%;"><span>1</span></div>
-                            <div class="d6-marker" style="top: 45%; left: 40%;"><span>2</span></div>
-                            <div class="d6-marker" style="top: 35%; left: 55%;"><span>3</span></div>
-                            <div class="d6-marker" style="top: 60%; left: 30%;"><span>4</span></div>
-                            <div class="d6-marker" style="top: 55%; left: 65%;"><span>5</span></div>
-                        </div>
-                        <div class="d6-sidebar">
-                            <div class="d6-sidebar-header">
-                                <h3>Solicitudes Pendientes</h3>
-                                <span>5 en tu zona</span>
+                            <div class="d6-map-area">
+                                <div class="d6-map-bg">
+                                    <div class="d6-map-grid"></div>
+                                    <div class="d6-map-placeholder">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                                        <p>Mapa de entregas</p>
+                                    </div>
+                                    <div class="d6-marker urgent" style="top: 15%; left: 20%;"><span>1</span></div>
+                                    <div class="d6-marker" style="top: 25%; left: 50%;"><span>2</span></div>
+                                    <div class="d6-marker" style="top: 20%; left: 70%;"><span>3</span></div>
+                                    <div class="d6-marker" style="top: 40%; left: 35%;"><span>4</span></div>
+                                    <div class="d6-marker" style="top: 35%; left: 60%;"><span>5</span></div>
+                                </div>
+                                <div class="d6-drawer">
+                                    <div class="d6-drawer-handle"></div>
+                                    <div class="d6-drawer-header">
+                                        <span>Solicitudes Cercanas</span>
+                                        <span class="d6-drawer-count">5 pendientes</span>
+                                    </div>
+                                    <div class="d6-drawer-list">
+                                        <div class="d6-drawer-item urgent">
+                                            <div class="d6-drawer-num">1</div>
+                                            <div class="d6-drawer-content">
+                                                <div class="d6-drawer-name">Maria Gonzalez</div>
+                                                <div class="d6-drawer-info">Sector La Poza - Urgente</div>
+                                            </div>
+                                            <div class="d6-drawer-volume">1000L</div>
+                                        </div>
+                                        <div class="d6-drawer-item">
+                                            <div class="d6-drawer-num">2</div>
+                                            <div class="d6-drawer-content">
+                                                <div class="d6-drawer-name">Juan Perez</div>
+                                                <div class="d6-drawer-info">Camino Viejo km 5</div>
+                                            </div>
+                                            <div class="d6-drawer-volume">5000L</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="d6-request-list">
-                                <div class="d6-request-item">
-                                    <h4>1. Maria Gonzalez</h4>
-                                    <p>1000L - Sector La Poza</p>
+                            <div class="d6-bottom-nav">
+                                <div class="d6-nav-item" title="Dashboard">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                                 </div>
-                                <div class="d6-request-item">
-                                    <h4>2. Juan Perez</h4>
-                                    <p>5000L - Camino Viejo</p>
+                                <div class="d6-nav-item active" title="Mapa">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                                 </div>
-                                <div class="d6-request-item">
-                                    <h4>3. Carmen Rodriguez</h4>
-                                    <p>1000L - Las Vertientes</p>
-                                </div>
-                                <div class="d6-request-item">
-                                    <h4>4. Pedro Sanchez</h4>
-                                    <p>10000L - Fundo El Roble</p>
-                                </div>
-                                <div class="d6-request-item">
-                                    <h4>5. Ana Torres</h4>
-                                    <p>1000L - Parcela 15</p>
+                                <div class="d6-nav-item" title="Perfil">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="mockup-notes">
-                    <h4>Filosofia de Diseno</h4>
+                    <h4>Filosofia de Diseno - Premium Dark</h4>
                     <ul>
-                        <li><strong>Mapa central</strong> - planifica rutas visualmente</li>
-                        <li>Lista sincronizada con marcadores</li>
-                        <li>Ve clusters de solicitudes cercanas</li>
-                        <li>Ideal para optimizar entregas (v2+)</li>
+                        <li><strong>Dark theme</strong> - mapa con grid sutil</li>
+                        <li><strong>Marcadores animados</strong> - urgente pulsa en rojo</li>
+                        <li><strong>Drawer con detalles</strong> - nombre, ubicacion, volumen</li>
+                        <li>Header con botones de filtro/centrar</li>
+                        <li>Ideal para optimizar rutas (v2+)</li>
                     </ul>
                 </div>
             </div>
@@ -1270,8 +3113,8 @@
     <div style="padding: 24px; max-width: 1400px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #0077B6 0%, #00A8E8 100%); color: white; padding: 24px; border-radius: 16px;">
             <h2 style="font-size: 18px; margin-bottom: 12px;">Recomendacion del Disenador</h2>
-            <p style="margin-bottom: 16px;"><strong>Consumidor:</strong> Combinacion de Direccion 1 (boton grande para inicio) + Direccion 3 (formulario directo) para el flujo de solicitud. La accion principal debe ser imposible de perder.</p>
-            <p><strong>Proveedor:</strong> Direccion 5 (tarjetas) para el MVP, evolucionando a Direccion 6 (mapa) en v2 cuando se agregue optimizacion de rutas. Las tarjetas son mas faciles de implementar y permiten acciones rapidas.</p>
+            <p style="margin-bottom: 16px;"><strong>Consumidor:</strong> Combinacion de Direccion 1 (boton grande para inicio) + Direccion 3 (formulario) + Direccion 7 (historial con notificaciones). Navegacion con 3 iconos: Inicio, Historial (con badge para actualizaciones), Perfil.</p>
+            <p><strong>Proveedor:</strong> Direccion 5 (tarjetas apiladas verticalmente) para el MVP, evolucionando a Direccion 6 (mapa) en v2. Navegacion inferior con iconos: Dashboard, Mapa, Perfil.</p>
         </div>
     </div>
 
@@ -1279,5 +3122,30 @@
         <p>nitoagua UX Design - Direcciones de Diseno</p>
         <p>Generado por BMad Method - Create UX Design Workflow</p>
     </footer>
+
+    <script>
+        function filterMockups(role) {
+            // Update button states
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Filter mockup cards
+            document.querySelectorAll('.mockup-card').forEach(card => {
+                const cardRole = card.getAttribute('data-role');
+                if (role === 'all' || cardRole === role) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        // Initialize with consumer view
+        document.addEventListener('DOMContentLoaded', function() {
+            filterMockups('consumer');
+        });
+    </script>
 </body>
 </html>

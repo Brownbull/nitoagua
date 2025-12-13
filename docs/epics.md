@@ -1085,3 +1085,1332 @@ _This epic breakdown was created using the BMad Method - Create Epics and Storie
 _All functional requirements from PRD are mapped and traceable._
 
 _UX Design and Architecture context have been incorporated for complete implementation guidance._
+
+---
+
+# Post-MVP Epics (V2 Consumer-Choice Offer Model)
+
+**Source:** PRD V2, Architecture V2, UX Mockups (2025-12-11)
+**Scope:** Multi-provider marketplace with Consumer-Choice Offer System
+
+The following epics implement the V2 architecture where providers submit offers on requests and consumers select their preferred provider. This replaces the original push-style assignment model with a marketplace-style offer system.
+
+### Epic Summary (Post-MVP)
+
+| Epic | Title | Stories | User Value |
+|------|-------|---------|------------|
+| 6 | Admin Operations Panel | 8 | Provider verification, offer settings, settlement tracking, operations |
+| 7 | Provider Onboarding | 5 | Self-registration, document upload, verification flow |
+| 8 | Provider Offer System | 7 | Browse requests, submit offers, track offer status, earnings visibility |
+| 9 | Consumer Offer Selection | 5 | View multiple offers, select preferred provider, offer countdown |
+| 10 | Consumer UX Enhancements | 5 | Map pinpoint, negative states, payment options, improved messaging |
+
+**Total Post-MVP:** 5 Epics, 30 Stories
+
+**Implementation Order:** Epics are numbered by dependency order (6→7→8→9→10). Start with Epic 6 and proceed sequentially.
+
+---
+
+## Epic 6: Admin Operations Panel
+
+**Goal:** Create comprehensive admin panel for platform management including offer system configuration, provider verification, settlement tracking, and operations monitoring. Desktop-first design optimized for operations team.
+
+**User Value:** Platform operators can configure offer validity, verify providers, track cash settlements, and monitor the marketplace from a single dashboard. Critical for managing the Consumer-Choice Offer Model.
+
+**FRs Covered:** FR69-FR98 (Admin Authentication, Provider Management, Offer Configuration, Settlement Tracking)
+
+**Dependencies:**
+- **FIRST V2 EPIC** - No V2 dependencies (depends only on MVP Story 1.3)
+- Required by Epic 7, 8, 9 (offer validity settings, provider verification)
+
+---
+
+### Story 6.1: Admin Authentication and Access
+
+As a **platform administrator**,
+I want **to access a secure admin panel via hidden URL**,
+So that **only authorized personnel can manage the platform**.
+
+**Acceptance Criteria:**
+
+**Given** an admin knows the entry point
+**When** they navigate to `/admin`
+**Then** they see:
+- Admin login page (separate from consumer/provider)
+- Google OAuth button
+- No visible links from public app
+
+**And** after Google OAuth:
+- System checks `admin_allowed_emails` table
+- If email found → login succeeds, redirect to dashboard
+- If email NOT found → "No autorizado. Contacta al administrador."
+
+**And** after successful login:
+- Session persists for 24 hours
+- Activity logged with timestamp
+- Desktop-optimized layout (min-width warning on mobile)
+
+**Prerequisites:** Story 1.3
+
+**Technical Notes:**
+- Create `src/app/(admin)/` route group
+- Create `src/app/(admin)/login/page.tsx`
+- Create `src/app/(admin)/not-authorized/page.tsx`
+- Use `admin_allowed_emails` table (pre-seeded)
+- Layout with sidebar navigation
+
+**Mockup Reference:** `docs/ux-mockups/02-admin-dashboard.html`
+
+---
+
+### Story 6.2: Offer System Configuration
+
+As an **admin**,
+I want **to configure offer validity and request timeout settings**,
+So that **the marketplace operates with appropriate time constraints**.
+
+**Acceptance Criteria:**
+
+**Given** an admin navigates to "Configuración"
+**When** they view offer settings
+**Then** they see:
+
+**Offer Validity Section:**
+- Default validity: [input] minutes (current: 30)
+- Minimum validity: [input] minutes (current: 15)
+- Maximum validity: [input] minutes (current: 120)
+- Preview: "Providers can set offer validity between 15-120 min, default 30 min"
+
+**Request Timeout Section:**
+- Request timeout: [input] hours (current: 4)
+- Message: "Requests with no offers after 4 hours are marked 'no_offers'"
+
+**And** changes require confirmation
+**And** changes are logged in audit trail
+**And** changes take effect immediately for new offers
+
+**Prerequisites:** Story 6.1
+
+**Technical Notes:**
+- Create `src/app/(admin)/settings/page.tsx`
+- Store in `admin_settings` table with keys:
+  - `offer_validity_default`
+  - `offer_validity_min`
+  - `offer_validity_max`
+  - `request_timeout_hours`
+- Create `src/components/admin/settings-form.tsx`
+
+---
+
+### Story 6.3: Provider Verification Queue
+
+As an **admin**,
+I want **to review and approve/reject provider applications**,
+So that **only qualified providers can operate on the platform**.
+
+**Acceptance Criteria:**
+
+**Given** an admin opens the verification queue
+**When** the queue loads
+**Then** they see:
+- Count badge: "5 pendientes"
+- List sorted by submission date (oldest first)
+- Each application shows: Name, photo, phone, submission date, status
+
+**And** clicking an application opens detail view:
+- Personal info section
+- Document viewer with zoom/download:
+  - Cédula de identidad
+  - Permisos sanitarios
+  - Vehicle photos
+  - Certifications (if provided)
+- Service areas selected
+- Bank account info
+- Internal notes field
+
+**And** action buttons:
+- "Aprobar" → Confirmation → Status = 'approved'
+- "Rechazar" → Reason required (dropdown) → Status = 'rejected'
+- "Solicitar Info" → Checkboxes for needed docs → Status = 'more_info_needed'
+
+**And** action triggers notification to applicant (email + in-app)
+
+**Prerequisites:** Story 6.1, Story 7.1 (provider registration)
+
+**Technical Notes:**
+- Create `src/app/(admin)/providers/verification/page.tsx`
+- Create `src/components/admin/verification-queue.tsx`
+- Document viewer with Supabase Storage URLs
+- Update `profiles.verification_status` on action
+
+---
+
+### Story 6.4: Provider Directory
+
+As an **admin**,
+I want **to view and manage all providers**,
+So that **I can handle suspensions, status changes, and support issues**.
+
+**Acceptance Criteria:**
+
+**Given** an admin opens provider directory
+**When** the page loads
+**Then** they see:
+- Searchable table with columns: Name, Phone, Status, Deliveries, Commission Owed, Joined
+- Filters: Status (pending, approved, suspended, banned), Service Area
+- Sort by any column
+
+**And** clicking a provider shows detail panel:
+- Profile info and documents
+- Delivery statistics
+- Commission ledger summary
+- Service areas
+- Account standing
+
+**And** available actions:
+- Suspend (with reason and duration)
+- Unsuspend
+- Ban (requires confirmation)
+- Adjust commission rate (override)
+- Send notification
+
+**Prerequisites:** Story 6.3
+
+**Technical Notes:**
+- Create `src/app/(admin)/providers/page.tsx`
+- Create `src/components/admin/provider-directory.tsx`
+- Pagination with 25 per page
+- Search with debounce
+
+---
+
+### Story 6.5: Cash Settlement Tracking
+
+As an **admin**,
+I want **to track and verify commission payments from providers**,
+So that **cash settlements are properly recorded**.
+
+**Acceptance Criteria:**
+
+**Given** an admin navigates to "Liquidaciones"
+**When** the settlement page loads
+**Then** they see:
+
+**Summary Cards:**
+- Total pending: $XX,XXX (all providers)
+- Overdue (>7 days): $XX,XXX
+- Payments pending verification: X
+
+**Pending Payments Table:**
+- Provider name
+- Amount submitted
+- Receipt uploaded
+- Submitted date
+- "Verificar" / "Rechazar" buttons
+
+**Provider Balances Table:**
+- Provider name
+- Total owed
+- Days outstanding
+- Last payment date
+- "Ver Detalle" link
+
+**And** clicking "Verificar":
+- View receipt image
+- Enter bank reference (optional)
+- Confirm → Creates `commission_paid` entry
+- Provider notified: "Pago confirmado"
+
+**And** clicking "Rechazar":
+- Reason required
+- Provider notified with reason
+- Payment record marked rejected
+
+**Prerequisites:** Story 6.1, Story 8.7
+
+**Technical Notes:**
+- Create `src/app/(admin)/settlement/page.tsx`
+- Create `src/components/admin/settlement-table.tsx`
+- Query `commission_ledger` grouped by provider
+- Query `withdrawal_requests` with status = 'pending'
+
+---
+
+### Story 6.6: Orders Management
+
+As an **admin**,
+I want **to view all orders and their offer history**,
+So that **I can monitor the marketplace and intervene if needed**.
+
+**Acceptance Criteria:**
+
+**Given** an admin navigates to "Pedidos"
+**When** the orders page loads
+**Then** they see:
+- Filters: Status, Date range, Service area
+- Table: ID, Consumer, Amount, Status, Offers, Provider, Created
+- Status badges with colors
+
+**And** clicking an order shows:
+- Full request details
+- Consumer contact info
+- **Offer history**: All offers with status, provider, delivery window
+- Timeline: Created → Offers received → Selected → Delivered
+- Provider contact (if assigned)
+
+**And** available actions:
+- Cancel order (with reason)
+- Contact consumer (shows phone/email)
+- Contact provider (shows phone)
+
+**And** offer analytics per request:
+- Number of offers received
+- Time to first offer
+- Time to selection
+
+**Prerequisites:** Story 6.1
+
+**Technical Notes:**
+- Create `src/app/(admin)/orders/page.tsx`
+- Create `src/components/admin/orders-table.tsx`
+- Join `water_requests` with `offers` for offer history
+- Real-time updates for active orders
+
+---
+
+### Story 6.7: Offer Expiration Cron Job
+
+As **the platform**,
+I want **expired offers to be automatically marked as expired**,
+So that **consumers don't see stale offers**.
+
+**Acceptance Criteria:**
+
+**Given** offers exist with `expires_at` in the past
+**When** the cron job runs (every 1 minute)
+**Then**:
+- Offers with `status = 'active'` AND `expires_at < NOW()` → status = 'expired'
+- Affected providers notified: "Tu oferta expiró"
+- Log count of expired offers
+
+**And** the cron is configured in `vercel.json`:
+```json
+{
+  "crons": [{
+    "path": "/api/cron/expire-offers",
+    "schedule": "* * * * *"
+  }]
+}
+```
+
+**Prerequisites:** Story 8.2 (offers exist)
+
+**Technical Notes:**
+- Create `src/app/api/cron/expire-offers/route.ts`
+- Use CRON_SECRET for authentication
+- Batch update for efficiency
+- Log to console for monitoring
+
+---
+
+### Story 6.8: Operations Dashboard
+
+As an **admin**,
+I want **to see platform metrics including offer analytics**,
+So that **I can monitor marketplace health**.
+
+**Acceptance Criteria:**
+
+**Given** an admin opens the dashboard (home)
+**When** the dashboard loads
+**Then** they see:
+
+**Period selector:** Hoy / Esta Semana / Este Mes
+
+**Request Metrics:**
+- Total requests
+- Requests with offers (%)
+- Avg offers per request
+- Request timeout rate (%)
+
+**Offer Metrics:**
+- Total offers submitted
+- Offer acceptance rate (%)
+- Avg time to first offer
+- Offer expiration rate (%)
+
+**Financial:**
+- Transaction volume
+- Commission earned
+- Pending cash settlements
+- Overdue settlements
+
+**Provider:**
+- Active providers
+- Online now
+- New applications
+
+**And** each metric shows trend vs previous period (↑ ↓)
+**And** clicking metrics drills down to filtered view
+
+**Prerequisites:** Story 6.6
+
+**Technical Notes:**
+- Create `src/app/(admin)/dashboard/page.tsx`
+- Aggregate queries with date filters
+- Use shadcn/ui charts for visualizations
+- Cache metrics with 5-minute refresh
+
+---
+
+### Story 6.9: Pricing Configuration
+
+As an **admin**,
+I want **to configure platform-wide water prices and commission rates**,
+So that **pricing is consistent across all providers and the platform earns sustainable commission**.
+
+**Acceptance Criteria:**
+
+**Given** an admin navigates to "Precios"
+**When** the pricing page loads
+**Then** they see:
+
+**Water Pricing Section:**
+- Price inputs for each tier: 100L, 1000L, 5000L, 10000L
+- Values in CLP with "$" prefix
+- Current defaults: $5,000 / $20,000 / $75,000 / $140,000
+
+**Urgency Surcharge Section:**
+- Percentage input (default: 10%)
+- Description: "Porcentaje adicional para pedidos urgentes"
+
+**Commission Section:**
+- Percentage input (default: 10%)
+- Preview calculation: "En un pedido de $20,000, la plataforma gana $3,000"
+
+**And** changes require confirmation dialog
+**And** changes take effect immediately for new requests
+**And** success toast confirms "Precios actualizados"
+
+**Prerequisites:** Story 6.1
+
+**Technical Notes:**
+- Create `src/app/(admin)/pricing/page.tsx`
+- Store in `admin_settings` table with keys: `price_100l`, `price_1000l`, `price_5000l`, `price_10000l`, `urgency_surcharge_percent`, `default_commission_percent`
+- Create `src/components/admin/pricing-form.tsx`
+
+**Mockup Reference:** `docs/ux-mockups/02-admin-dashboard.html` - Section 5 (5A: Configuracion de Precios)
+
+**FRs Covered:** FR87, FR88, FR92
+
+---
+
+## Epic 7: Provider Onboarding
+
+**Goal:** Enable new providers to self-register, upload documents, and go through verification process. Essential for marketplace growth.
+
+**User Value:** Water providers can join the platform independently, submit required documents, and start receiving requests after verification. Removes manual onboarding bottleneck.
+
+**FRs Covered:** FR24-FR32 (Provider Registration & Onboarding)
+
+**Dependencies:**
+- Requires Epic 6 (Admin) for verification queue
+
+---
+
+### Story 7.1: Provider Registration Flow
+
+As a **potential water provider**,
+I want **to register and submit my documents for verification**,
+So that **I can start receiving water delivery requests**.
+
+**Acceptance Criteria:**
+
+**Given** a person navigates to `/provider/register`
+**When** they start registration
+**Then** they progress through steps:
+
+**Step 1: Welcome**
+- "¿Quieres ser repartidor de agua?"
+- Requirements listed: vehicle, permits, certifications
+- "Comenzar con Google" button
+
+**Step 2: Personal Information (after Google OAuth)**
+- Name (pre-filled from Google)
+- Phone (required, Chilean format validation)
+- Profile photo (optional)
+
+**Step 3: Service Areas**
+- Multi-select of comunas: Villarrica, Pucón, Curarrehue, Licán Ray
+- At least one required
+
+**Step 4: Document Upload**
+- Cédula de identidad (required)
+- Permiso sanitario (required)
+- Certificación de agua (optional)
+- Vehicle photos (required)
+- Vehicle capacity in liters
+
+**Step 5: Bank Account**
+- Bank name (dropdown)
+- Account type
+- Account number
+- RUT
+
+**Step 6: Review & Submit**
+- Summary of all info
+- "Enviar Solicitud" button
+
+**And** upon submission:
+- Profile created with `verification_status = 'pending'`
+- Documents uploaded to Supabase Storage
+- Admin notified of new application
+- Provider sees "pending verification" screen
+
+**Prerequisites:** Story 1.3
+
+**Technical Notes:**
+- Create `src/app/(provider)/onboarding/` with step pages
+- Create `provider_documents` records for each upload
+- Create `provider_service_areas` records
+- Use Supabase Storage with RLS for documents
+
+**Mockup Reference:** `docs/ux-mockups/01-consolidated-provider-flow.html` (Onboarding screens)
+
+---
+
+### Story 7.2: Verification Status Screen
+
+As a **provider applicant**,
+I want **to see my verification status and any required actions**,
+So that **I know what to do next**.
+
+**Acceptance Criteria:**
+
+**Given** a provider with pending verification logs in
+**When** they access the app
+**Then** they see status-specific screens:
+
+**Pending:**
+- "Tu solicitud está en revisión"
+- "Tiempo estimado: 24-48 horas"
+- List of documents submitted
+- Support contact info
+
+**Approved:**
+- "¡Bienvenido a nitoagua!"
+- Quick tutorial on using dashboard
+- "Comenzar a trabajar" button
+- Redirects to provider dashboard
+
+**Rejected:**
+- "Tu solicitud no fue aprobada"
+- Reason shown (from admin)
+- "Contactar Soporte" button
+- "Volver a intentar" (after 30 days)
+
+**More Info Needed:**
+- "Necesitamos más información"
+- Specific requests listed
+- Upload fields for missing items
+- "Enviar" button to resubmit
+
+**Prerequisites:** Story 7.1
+
+**Technical Notes:**
+- Create `src/app/(provider)/onboarding/pending/page.tsx`
+- Check `profiles.verification_status` on provider login
+- Redirect non-approved providers to status screen
+
+---
+
+### Story 7.3: Service Area Configuration
+
+As a **verified provider**,
+I want **to configure which areas I serve**,
+So that **I only see requests in my operating areas**.
+
+**Acceptance Criteria:**
+
+**Given** a provider navigates to settings
+**When** they view service areas
+**Then** they see:
+- List of available comunas with checkboxes
+- Current selections highlighted
+- "Guardar" button
+
+**And** available comunas include:
+- Villarrica
+- Pucón
+- Curarrehue
+- Licán Ray
+
+**And** at least one comuna must be selected
+**And** changes take effect immediately for request visibility
+
+**Prerequisites:** Story 7.2
+
+**Technical Notes:**
+- Create `src/app/(provider)/settings/page.tsx`
+- Create `src/components/provider/service-area-picker.tsx`
+- Update `provider_service_areas` table
+- Verify via `comunas` table (pre-seeded)
+
+---
+
+### Story 7.4: Provider Availability Toggle
+
+As a **verified provider**,
+I want **to toggle my availability status**,
+So that **I control when I receive request notifications**.
+
+**Acceptance Criteria:**
+
+**Given** a provider is on their dashboard
+**When** they see the availability toggle
+**Then**:
+- Large, prominent toggle at top of screen
+- Green "DISPONIBLE" when ON
+- Gray "NO DISPONIBLE" when OFF
+
+**And** when ON:
+- Provider can browse available requests
+- Real-time updates for new requests
+
+**And** when OFF:
+- "No estás recibiendo solicitudes"
+- Can still view pending offers and deliveries
+- Cannot browse new requests
+
+**And** toggle state persists across sessions
+
+**Prerequisites:** Story 7.2, Story 3.3
+
+**Technical Notes:**
+- Update `profiles.is_available` column
+- Create `src/components/provider/availability-toggle.tsx`
+- Style similar to Uber's "Go Online" toggle
+- Real-time subscription conditional on availability
+
+---
+
+### Story 7.5: Provider Document Management
+
+As a **verified provider**,
+I want **to view and update my uploaded documents**,
+So that **I can keep my profile current**.
+
+**Acceptance Criteria:**
+
+**Given** a provider navigates to profile
+**When** they view documents section
+**Then** they see:
+- List of uploaded documents
+- Document type, upload date, verification status
+- Preview thumbnail for each
+- "Actualizar" button per document
+
+**And** clicking a document shows:
+- Full image viewer
+- Download option
+- "Subir Nueva Versión" button
+
+**And** uploading new version:
+- Replaces existing document
+- Status resets to "pending verification" for that doc only
+- Admin notified of update
+
+**Prerequisites:** Story 7.1
+
+**Technical Notes:**
+- Create `src/app/(provider)/profile/documents/page.tsx`
+- Use Supabase Storage signed URLs for secure access
+- Track document versions if needed
+
+---
+
+## Epic 8: Provider Offer System
+
+**Goal:** Enable providers to browse available requests and submit competitive offers. Core feature of the Consumer-Choice Offer Model where providers actively pursue work rather than passively receiving assignments.
+
+**User Value:** Providers gain control over their work by choosing which requests to pursue, seeing exactly what they'll earn before committing, and competing fairly with other providers.
+
+**FRs Covered:** FR39, FR40, FR41, FR42, FR43, FR44, FR50, FR51, FR52, FR53, FR54, FR55, FR56, FR57, FR58
+
+**Dependencies:**
+- Requires Epic 6 (Admin) for offer validity configuration
+- Requires Epic 7 (Provider Onboarding) for provider registration
+
+---
+
+### Story 8.1: Provider Request Browser
+
+As a **verified provider**,
+I want **to browse available water requests in my service areas**,
+So that **I can find work that fits my schedule and location**.
+
+**Acceptance Criteria:**
+
+**Given** a provider is logged in and available (toggle ON)
+**When** they navigate to "Solicitudes Disponibles"
+**Then** they see:
+- List of pending requests in their configured service areas
+- Each request card shows:
+  - Customer location (comuna/address - no exact address until offer accepted)
+  - Water amount: "5,000 litros"
+  - Urgency indicator: "Normal" or "Urgente ⚡"
+  - Time since posted: "Hace 15 min"
+  - Number of offers already: "2 ofertas"
+  - "Ver Detalles" button
+
+**And** requests are sorted by:
+- Urgency first (urgent requests at top)
+- Then by time posted (newest first)
+
+**And** list updates in real-time via Supabase Realtime
+**And** requests disappear when filled or timed out
+
+**Prerequisites:** Story 3.3 (provider dashboard exists), Story 7.4
+
+**Technical Notes:**
+- Create `src/app/(provider)/requests/page.tsx`
+- Create `src/components/provider/request-browser.tsx`
+- Use `use-realtime-requests.ts` hook
+- Query: Requests WHERE comuna_id IN (provider's service areas) AND status = 'pending'
+- RLS: Only show requests in provider's service areas
+
+**Mockup Reference:** `docs/ux-mockups/01-consolidated-provider-flow.html` (Request Browser screen)
+
+---
+
+### Story 8.2: Submit Offer on Request
+
+As a **provider viewing a request**,
+I want **to submit an offer with my delivery window**,
+So that **the consumer can consider my offer alongside others**.
+
+**Acceptance Criteria:**
+
+**Given** a provider is viewing request details
+**When** they tap "Hacer Oferta"
+**Then** they see an offer form:
+- **Delivery window picker**: Start time + End time (2-hour window recommended)
+- **Price display**: "$XX,XXX" (fixed price from platform, not editable)
+- **Earnings preview**: "Ganarás: $XX,XXX (después de X% comisión)"
+- **Optional message**: Text field for notes to consumer
+- **Offer validity**: "Tu oferta expira en 30 min" (from admin settings)
+- "Enviar Oferta" primary button
+- "Cancelar" secondary button
+
+**And** upon submission:
+- Offer created with status 'active'
+- `expires_at` calculated from `offer_validity_minutes` setting
+- Provider sees confirmation: "¡Oferta enviada! Te notificaremos si es aceptada"
+- Provider redirected to "Mis Ofertas" page
+
+**And** provider cannot submit duplicate offers on same request
+
+**Prerequisites:** Story 8.1
+
+**Technical Notes:**
+- Create `src/app/(provider)/requests/[id]/page.tsx`
+- Create `src/components/provider/offer-form.tsx`
+- Create `src/lib/actions/offers.ts` with `createOffer()` action
+- Validate delivery window is in future
+- Get `offer_validity_minutes` from `admin_settings` table
+- Insert into `offers` table with calculated `expires_at`
+
+---
+
+### Story 8.3: Provider's Active Offers List
+
+As a **provider**,
+I want **to see all my pending offers and their status**,
+So that **I can track which requests I'm waiting on**.
+
+**Acceptance Criteria:**
+
+**Given** a provider has submitted offers
+**When** they navigate to "Mis Ofertas"
+**Then** they see:
+- List of active offers grouped by status:
+  - "Pendientes" - waiting for consumer decision
+  - "Aceptadas" - consumer selected this offer (now deliveries)
+  - "Expiradas/Rechazadas" - not selected
+
+**And** each pending offer shows:
+- Request summary (amount, location)
+- Delivery window offered
+- Time remaining: "Expira en 25:30"
+- "Cancelar Oferta" button
+
+**And** offers update in real-time (acceptance, expiration)
+
+**Prerequisites:** Story 8.2
+
+**Technical Notes:**
+- Create `src/app/(provider)/offers/page.tsx`
+- Group by status with tabs or accordion
+- Real-time subscription on offers table for provider_id
+- Show countdown using `use-countdown.ts` hook
+
+---
+
+### Story 8.4: Withdraw Pending Offer
+
+As a **provider**,
+I want **to withdraw an offer I submitted**,
+So that **I can cancel if my availability changes**.
+
+**Acceptance Criteria:**
+
+**Given** a provider has an active pending offer
+**When** they tap "Cancelar Oferta"
+**Then** they see confirmation:
+- "¿Cancelar esta oferta?"
+- "El cliente ya no verá tu oferta"
+- "Confirmar" / "Volver" buttons
+
+**And** upon confirmation:
+- Offer status changes to 'cancelled'
+- Provider sees "Oferta cancelada"
+- Consumer's offer list updates (offer removed)
+
+**And** provider can submit new offer on same request if still pending
+
+**Prerequisites:** Story 8.3
+
+**Technical Notes:**
+- Add `withdrawOffer(offerId)` action
+- RLS: Provider can only cancel their own active offers
+- Real-time update to consumer's view
+
+---
+
+### Story 8.5: Offer Acceptance Notification
+
+As a **provider with accepted offer**,
+I want **to be notified immediately when my offer is selected**,
+So that **I can prepare for the delivery**.
+
+**Acceptance Criteria:**
+
+**Given** a consumer selects a provider's offer
+**When** the offer is accepted
+**Then** the provider receives:
+- In-app notification: "¡Tu oferta fue aceptada!"
+- Push notification (if enabled)
+- Email notification with delivery details
+
+**And** the notification includes:
+- Customer name and phone
+- Full delivery address (now revealed)
+- Water amount
+- Delivery window they committed to
+- "Ver Detalles" button
+
+**And** the offer moves to "Entregas Activas" section
+
+**Prerequisites:** Story 8.3, Story 9.2 (consumer selects offer)
+
+**Technical Notes:**
+- Create notification on offer acceptance (Story 9.2 transaction)
+- Email template: `offer-accepted.tsx`
+- In-app notification via `notifications` table
+
+---
+
+### Story 8.6: Earnings Dashboard
+
+As a **provider**,
+I want **to see my earnings with commission breakdown**,
+So that **I understand exactly what I've earned and what I owe**.
+
+**Acceptance Criteria:**
+
+**Given** a provider navigates to "Ganancias"
+**When** the earnings page loads
+**Then** they see:
+- Period selector: Hoy / Esta Semana / Este Mes
+- Summary cards:
+  - "Total Entregas": Count of completed deliveries
+  - "Ingreso Bruto": $XX,XXX
+  - "Comisión (X%)": -$X,XXX
+  - "Ganancia Neta": $XX,XXX (highlighted)
+
+**And** cash payment section:
+- "Efectivo Recibido": $XX,XXX
+- "Comisión Pendiente": $XX,XXX (what provider owes platform)
+- "Pagar Comisión" button
+
+**And** delivery history list:
+- Date, amount, payment method
+- Commission breakdown per delivery
+
+**Prerequisites:** Story 3.6 (mark as delivered exists)
+
+**Technical Notes:**
+- Create `src/app/(provider)/earnings/page.tsx`
+- Create `src/components/provider/earnings-dashboard.tsx`
+- Aggregate from `commission_ledger` table
+- Calculate pending = SUM(commission_owed) - SUM(commission_paid)
+
+---
+
+### Story 8.7: Cash Commission Settlement
+
+As a **provider with pending commission**,
+I want **to pay my platform commission via bank transfer**,
+So that **I stay in good standing**.
+
+**Acceptance Criteria:**
+
+**Given** a provider has pending commission from cash deliveries
+**When** they tap "Pagar Comisión"
+**Then** they see:
+- Amount due: "$XX,XXX"
+- Platform bank details:
+  - Banco: [Bank Name]
+  - Cuenta: [Account Number]
+  - Titular: nitoagua SpA
+  - RUT: XX.XXX.XXX-X
+- Upload receipt button
+- "Confirmar Pago" button
+
+**And** upon submission:
+- Payment record created with status 'pending_verification'
+- Admin notified for verification
+- Provider sees "Pago enviado - En verificación"
+
+**And** once admin verifies:
+- Commission ledger updated (commission_paid)
+- Provider notified: "Pago confirmado"
+- Pending balance reduced
+
+**Prerequisites:** Story 8.6
+
+**Technical Notes:**
+- Create `src/app/(provider)/earnings/withdraw/page.tsx`
+- Use Supabase Storage for receipt uploads
+- Create `withdrawal_requests` record
+- Admin verification in Story 6.5
+
+---
+
+## Epic 9: Consumer Offer Selection
+
+**Goal:** Enable consumers to view and select from multiple provider offers on their water requests. Core feature of the Consumer-Choice Offer Model.
+
+**User Value:** Consumers get choice and control by viewing multiple offers with different delivery windows, then selecting their preferred provider. No more passive waiting - active selection empowers consumers.
+
+**FRs Covered:** FR45, FR46, FR47, FR48, FR14, FR22, FR23
+
+**Dependencies:**
+- Requires Epic 8 (Provider Offer System) for providers to submit offers
+- Epic 6 (Admin) for offer validity configuration
+
+---
+
+### Story 9.1: Offer List View for Consumers
+
+As a **consumer with a pending request**,
+I want **to view all offers submitted by providers**,
+So that **I can compare options and choose the best fit for my needs**.
+
+**Acceptance Criteria:**
+
+**Given** a consumer has submitted a water request
+**When** they view their request status page
+**Then** they see:
+- Request summary at top (amount, address, urgency)
+- "Ofertas Recibidas" section with count badge
+- List of offers sorted by delivery window (soonest first)
+
+**And** each offer card shows:
+- Provider name and avatar (if available)
+- Delivery window: "Entrega: 2:00 PM - 4:00 PM"
+- Price: "$XX,XXX" (base price for now - all offers same price)
+- Time remaining: "Expira en 28:45" (countdown timer)
+- "Seleccionar" button
+
+**And** if no offers yet:
+- "Esperando ofertas de repartidores..."
+- "Tu solicitud fue enviada a los aguateros de la zona"
+- Request timeout notice: "Si no recibes ofertas en 4 horas, te notificaremos"
+
+**And** offers update in real-time via Supabase Realtime
+
+**Prerequisites:** Story 2.6 (request status page exists)
+
+**Technical Notes:**
+- Create `src/app/(consumer)/request/[id]/offers/page.tsx`
+- Create `src/components/consumer/offer-list.tsx`
+- Create `src/components/consumer/offer-card.tsx`
+- Use `use-realtime-offers.ts` hook for live updates
+- Query: `SELECT * FROM offers WHERE request_id = ? AND status = 'active' ORDER BY delivery_window_start`
+
+**Mockup Reference:** `docs/ux-mockups/00-consolidated-consumer-flow.html` (Offer Selection screen)
+
+---
+
+### Story 9.2: Select Provider Offer
+
+As a **consumer viewing offers**,
+I want **to select my preferred provider's offer**,
+So that **my water delivery is confirmed with that provider**.
+
+**Acceptance Criteria:**
+
+**Given** a consumer is viewing offers on their request
+**When** they tap "Seleccionar" on an offer
+**Then** they see a confirmation modal:
+- Provider info (name, avatar)
+- Delivery window selected
+- Price confirmation
+- "Confirmar Selección" primary button
+- "Volver" secondary button
+
+**And** upon confirmation:
+- Selected offer status changes to 'accepted'
+- Request status changes to 'accepted'
+- Selected offer's `accepted_at` timestamp is set
+- All other offers on request change to 'request_filled'
+- Consumer sees "¡Listo! Tu pedido fue asignado a [Provider Name]"
+- Consumer is redirected to updated request status page
+
+**And** provider is notified their offer was accepted
+**And** other providers are notified their offers expired (request filled)
+
+**Prerequisites:** Story 9.1
+
+**Technical Notes:**
+- Create `src/lib/actions/offers.ts` with `selectOffer(offerId)` action
+- Transaction: Update offer → Update request → Cancel other offers → Create notifications
+- RLS: Consumer can only select offers on their own requests
+- Trigger email notification to provider (Story 5.2 pattern)
+
+---
+
+### Story 9.3: Offer Countdown Timer (Consumer View)
+
+As a **consumer viewing offers**,
+I want **to see how long each offer remains valid**,
+So that **I know I need to decide before offers expire**.
+
+**Acceptance Criteria:**
+
+**Given** a consumer is viewing offers
+**When** offers are displayed
+**Then** each offer shows:
+- Countdown timer: "Expira en MM:SS" (when < 1 hour)
+- Countdown timer: "Expira en X h MM min" (when > 1 hour)
+- Visual urgency indicator (orange when < 10 min, red when < 5 min)
+
+**And** when an offer expires while consumer is viewing:
+- Offer card shows "Expirada" badge (gray)
+- "Seleccionar" button is disabled
+- Offer moves to bottom of list or fades
+
+**And** countdown updates every second (client-side)
+
+**Prerequisites:** Story 9.1
+
+**Technical Notes:**
+- Create `src/hooks/use-countdown.ts` hook
+- Create `src/components/shared/countdown-timer.tsx`
+- Calculate from `offers.expires_at` timestamp
+- Handle timezone correctly (server stores UTC, display local)
+
+---
+
+### Story 9.4: Request Timeout Notification
+
+As a **consumer whose request received no offers**,
+I want **to be notified when my request times out**,
+So that **I know to try again or contact support**.
+
+**Acceptance Criteria:**
+
+**Given** a consumer's request has been pending for 4 hours
+**When** no offers have been received
+**Then** a cron job:
+- Updates request status to 'no_offers'
+- Creates in-app notification for consumer
+- Sends email notification (if email provided)
+
+**And** the consumer sees:
+- Status: "Sin Ofertas" (orange badge)
+- Message: "Lo sentimos, no hay aguateros disponibles ahora"
+- Suggestion: "Intenta de nuevo más tarde o contacta soporte"
+- "Nueva Solicitud" button
+- "Contactar Soporte" link (WhatsApp)
+
+**Prerequisites:** Story 9.1, Story 5.1 (email notifications)
+
+**Technical Notes:**
+- Create `src/app/api/cron/request-timeout/route.ts`
+- Add `no_offers` to request status enum
+- Query: `SELECT * FROM water_requests WHERE status = 'pending' AND created_at < NOW() - INTERVAL '4 hours'`
+- Configure Vercel cron to run every 15 minutes
+
+---
+
+### Story 9.5: Request Status with Offer Context
+
+As a **consumer tracking their request**,
+I want **to see the selected provider's offer details on the status page**,
+So that **I have the delivery information I agreed to**.
+
+**Acceptance Criteria:**
+
+**Given** a consumer has selected an offer on their request
+**When** they view the request status page
+**Then** they see:
+- Current status with timeline (Solicitado → Aceptado → En Camino → Entregado)
+- Selected offer details:
+  - Provider name and phone
+  - Confirmed delivery window: "Entrega estimada: 2:00 PM - 4:00 PM"
+- "Llamar al repartidor" button
+- "Cancelar" button (if still cancellable)
+
+**And** when no offer selected yet:
+- "Ver Ofertas" button linking to offers page
+- Count of current offers: "3 ofertas disponibles"
+
+**Prerequisites:** Story 9.2, Story 2.6
+
+**Technical Notes:**
+- Update `src/app/(consumer)/request/[id]/page.tsx`
+- Join offers table to get selected offer details
+- Show delivery window from accepted offer
+
+---
+
+## Epic 10: Consumer UX Enhancements
+
+**Goal:** Address UX improvements identified during audit. Focus on location accuracy, negative states, payment options, and improved messaging.
+
+**User Value:** Consumers get more accurate deliveries through map pinpoint, clearer communication about order status, and can choose their payment method.
+
+**FRs Covered:** FR14, FR15, FR16, FR22, FR23
+
+**Dependencies:**
+- Builds on MVP consumer flow (Epics 2-4)
+
+---
+
+### Story 10.1: Map Location Pinpoint
+
+As a **consumer**,
+I want **to confirm my exact location on a map**,
+So that **the provider can find me accurately**.
+
+**Acceptance Criteria:**
+
+**Given** a consumer enters their address in the request form
+**When** they tap "Confirmar Ubicación"
+**Then** they see:
+- Interactive map centered on entered address
+- Draggable pin for fine-tuning
+- Address text displayed below map
+- "Confirmar" / "Cambiar Dirección" buttons
+
+**And** coordinates are saved with request (`latitude`, `longitude`)
+**And** if map fails to load, text-only submission allowed with warning
+
+**Prerequisites:** Story 2.2
+
+**Technical Notes:**
+- Create `src/components/consumer/location-pinpoint.tsx`
+- Use Google Maps JavaScript API
+- Add `latitude`, `longitude` columns to `water_requests`
+- Graceful degradation for offline/failed map
+
+---
+
+### Story 10.2: Payment Method Selection
+
+As a **consumer**,
+I want **to choose how I'll pay**,
+So that **I can use cash or bank transfer**.
+
+**Acceptance Criteria:**
+
+**Given** a consumer is on the request form
+**When** they reach payment step
+**Then** they see:
+- "Efectivo" (Cash) - default, most common
+  - "Paga al repartidor cuando llegue"
+- "Transferencia" (Bank transfer)
+  - Platform bank details shown
+  - "Transfiere antes de la entrega"
+
+**And** selected payment method is saved with request
+**And** provider sees payment method in request details
+
+**Prerequisites:** Story 2.3
+
+**Technical Notes:**
+- Add `payment_method` column (enum: 'cash', 'transfer')
+- Create `src/components/consumer/payment-selector.tsx`
+- Default to 'cash'
+
+---
+
+### Story 10.3: Negative Status States
+
+As a **consumer**,
+I want **to see clear explanations when my request fails**,
+So that **I understand what happened and what to do next**.
+
+**Acceptance Criteria:**
+
+**Given** a request enters a negative state
+**When** consumer views status
+**Then** they see status-specific screens:
+
+**No Offers (timeout):**
+- Status: "Sin Ofertas" (orange)
+- "No hay aguateros disponibles ahora"
+- "Intentar de nuevo" button
+
+**Cancelled by User:**
+- Status: "Cancelada" (gray)
+- "Cancelaste esta solicitud"
+- "Nueva Solicitud" button
+
+**Cancelled by Provider:**
+- Status: "Cancelada" (gray)
+- Reason if provided
+- "Contactar Soporte" option
+
+**And** each negative state includes support contact
+
+**Prerequisites:** Story 2.6, Story 9.4
+
+**Technical Notes:**
+- Add 'no_offers', 'cancelled', 'failed' to status enum
+- Create `src/components/consumer/negative-status.tsx`
+- Add `cancel_reason` column
+
+---
+
+### Story 10.4: Urgency Pricing Display
+
+As a **consumer**,
+I want **to see urgency pricing impact clearly**,
+So that **I can make informed decisions**.
+
+**Acceptance Criteria:**
+
+**Given** a consumer is on the request form
+**When** they toggle urgency
+**Then** they see:
+- Normal: "Normal" (no surcharge shown)
+- Urgente: "Urgente (+X%)" with visual indicator
+
+**And** review screen shows price breakdown:
+- Base price
+- Urgency surcharge (if applicable)
+- Total
+
+**Prerequisites:** Story 2.2, Story 2.3
+
+**Technical Notes:**
+- Get `urgency_surcharge_percent` from admin settings
+- Update request form urgency toggle
+- Update review screen price display
+
+---
+
+### Story 10.5: Remove Fake Social Proof
+
+As a **consumer**,
+I want **to see authentic trust signals**,
+So that **I can trust the platform based on real information**.
+
+**Acceptance Criteria:**
+
+**Given** the consumer home screen
+**When** the page loads
+**Then** fake stats are NOT displayed:
+- No "500+ ENTREGAS"
+- No "50+ AGUATEROS"
+- No "4.8 RATING"
+
+**And** instead, qualitative signals shown:
+- "Proveedores verificados"
+- "Agua certificada"
+- "Servicio confiable"
+
+**And** once real metrics exist (>50 deliveries), actual numbers can replace qualitative signals
+
+**Prerequisites:** Story 2.1
+
+**Technical Notes:**
+- Update `src/app/(consumer)/page.tsx`
+- Create feature flag for real stats threshold
+- Track actual metrics for future display
+
+---
+
+## Updated Epic Summary
+
+### All Epics Overview
+
+| Epic | Title | Stories | Scope |
+|------|-------|---------|-------|
+| 1 | Foundation & Infrastructure | 5 | MVP |
+| 2 | Consumer Water Request | 6 | MVP |
+| 3 | Supplier Dashboard & Request Management | 7 | MVP |
+| 4 | User Accounts & Profiles | 5 | MVP |
+| 5 | Notifications & Communication | 3 | MVP |
+| 6 | Admin Operations Panel | 8 | V2 |
+| 7 | Provider Onboarding | 5 | V2 |
+| 8 | Provider Offer System | 7 | V2 |
+| 9 | Consumer Offer Selection | 5 | V2 |
+| 10 | Consumer UX Enhancements | 5 | V2 |
+
+**Total:** 10 Epics, 56 Stories (26 MVP + 30 V2)
+
+### V2 Implementation Order
+
+Epics 6-10 are numbered in dependency order. Implement sequentially:
+
+1. **Epic 6** - Admin Operations Panel (foundation for V2)
+2. **Epic 7** - Provider Onboarding (requires admin verification)
+3. **Epic 8** - Provider Offer System (requires verified providers)
+4. **Epic 9** - Consumer Offer Selection (requires offers to exist)
+5. **Epic 10** - Consumer UX Enhancements (polish layer)
+
+### Key Dependencies
+
+```
+Epic 6.1 (Admin Auth) ──────────────────────────────────┐
+                                                        │
+Epic 6.2 (Offer Config) ←───────────────────────────────┤
+         │                                              │
+         ├─→ Epic 8.2 (Submit Offer) ←── Epic 8.1       │
+         │            │                                 │
+         │            └─→ Epic 9.1 (View Offers) ←──────┤
+         │                        │                     │
+         │                        └─→ Epic 9.2 (Select) │
+         │                                    │         │
+         │                                    ├─→ Epic 8.5 (Acceptance Notification)
+         │                                    │
+         └─→ Epic 6.7 (Expiration Cron) ─────→ Epic 9.3 (Countdown)
+
+Epic 7.1 (Provider Registration) ←── Epic 6.1
+         │
+         └─→ Epic 6.3 (Verification Queue)
+                     │
+                     └─→ Epic 7.2 (Verification Status) ─→ Epic 8.1 (Request Browser)
+```
+
+---
+
+_V2 Post-MVP Epics generated for Consumer-Choice Offer Model (2025-12-12)_
+
+_PRD Reference: `docs/prd-v2.md`_
+_Architecture Reference: `docs/architecture.md`_
+_UX Mockups: `docs/ux-mockups/`_

@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth/guards";
-import { ShieldCheck, Package, DollarSign, Users, AlertCircle, ChevronRight, LogOut } from "lucide-react";
+import { ShieldCheck, Package, DollarSign, Users, AlertCircle, ChevronRight, Settings } from "lucide-react";
 import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
+import Link from "next/link";
 
 export default async function AdminDashboardPage() {
   // Require admin access
@@ -108,9 +109,10 @@ export default async function AdminDashboardPage() {
         </p>
         <div className="space-y-3">
           {/* Pending verifications */}
-          <button
-            className="flex items-center gap-4 w-full p-4 bg-white rounded-2xl border-2 border-gray-200 text-left"
-            disabled
+          <Link
+            href="/admin/verification"
+            className="flex items-center gap-4 w-full p-4 bg-white rounded-2xl border-2 border-gray-200 text-left hover:bg-gray-50 transition-colors"
+            data-testid="quick-action-verification"
           >
             <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
               <ShieldCheck className="w-5 h-5 text-yellow-600" />
@@ -124,7 +126,7 @@ export default async function AdminDashboardPage() {
               </p>
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400" />
-          </button>
+          </Link>
 
           {/* Reported problems */}
           <button
@@ -144,6 +146,26 @@ export default async function AdminDashboardPage() {
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400" />
           </button>
+
+          {/* System Settings */}
+          <Link
+            href="/admin/settings"
+            className="flex items-center gap-4 w-full p-4 bg-white rounded-2xl border-2 border-gray-200 text-left hover:bg-gray-50 transition-colors"
+            data-testid="quick-action-settings"
+          >
+            <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+              <Settings className="w-5 h-5 text-gray-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">
+                Configuracion
+              </p>
+              <p className="text-sm text-gray-500">
+                Ajustes del sistema de ofertas
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </Link>
         </div>
 
         {/* Logout button */}

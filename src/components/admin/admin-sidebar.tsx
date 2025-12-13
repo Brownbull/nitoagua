@@ -32,7 +32,7 @@ const navItems: NavItem[] = [
     label: "Verificacion",
     href: "/admin/verification",
     icon: ShieldCheck,
-    disabled: true,
+    disabled: false,
   },
   {
     label: "Proveedores",
@@ -74,7 +74,7 @@ const navItems: NavItem[] = [
     label: "Config",
     href: "/admin/settings",
     icon: Settings,
-    disabled: true,
+    disabled: false,
   },
 ];
 

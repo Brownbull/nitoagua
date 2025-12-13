@@ -259,6 +259,6 @@ test.describe("Admin Dev Login (Local Testing)", () => {
     expect(page.url()).toContain("/admin/not-authorized");
 
     // Should show access denied message
-    await expect(page.getByText("Acceso Denegado")).toBeVisible();
+    await expect(page.getByText("No autorizado")).toBeVisible();
   });
 });

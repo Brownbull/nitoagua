@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { AdminBottomNav } from "@/components/admin/admin-bottom-nav";
 import { isAdmin } from "@/lib/auth/guards";
 
 export const metadata = {
@@ -18,18 +19,22 @@ export default async function AdminLayout({
   // Get user email for sidebar display
   const userEmail = user?.email;
 
-  // Only show sidebar if user is an admin (not just authenticated)
-  const showSidebar = user && userEmail && await isAdmin(userEmail);
+  // Only show navigation if user is an admin (not just authenticated)
+  const adminCheck = user && userEmail ? await isAdmin(userEmail) : false;
+  const showNav = user && userEmail && adminCheck;
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar - only show if authenticated AND admin */}
-      {showSidebar && <AdminSidebar userEmail={userEmail} />}
+      {/* Sidebar - desktop only, show if authenticated AND admin */}
+      {showNav && <AdminSidebar userEmail={userEmail} />}
 
-      {/* Main content */}
-      <main className={showSidebar ? "flex-1 overflow-auto" : "flex-1"}>
+      {/* Main content - add bottom padding on mobile for bottom nav */}
+      <main className={showNav ? "flex-1 overflow-auto pb-16 lg:pb-0" : "flex-1"}>
         {children}
       </main>
+
+      {/* Bottom nav - mobile only, show if authenticated AND admin */}
+      {showNav && <AdminBottomNav />}
     </div>
   );
 }
