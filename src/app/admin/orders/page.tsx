@@ -4,6 +4,9 @@ import { OrdersTable } from "@/components/admin/orders-table";
 import { Package, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+// Revalidate every 30 seconds - orders change frequently but not instantly
+export const revalidate = 30;
+
 export const metadata = {
   title: "Pedidos - Admin nitoagua",
   description: "Gestion de pedidos y solicitudes de agua",
@@ -87,7 +90,12 @@ async function getOrdersData(filters?: {
 
   // Apply status filter
   if (filters?.status && filters.status !== "all") {
-    query = query.eq("status", filters.status);
+    // "pending" filter includes both "pending" and "offers_pending" statuses
+    if (filters.status === "pending") {
+      query = query.in("status", ["pending", "offers_pending"]);
+    } else {
+      query = query.eq("status", filters.status);
+    }
   }
 
   // Apply date range filter
@@ -108,44 +116,41 @@ async function getOrdersData(filters?: {
     return { orders: [], stats: getEmptyStats(), comunas: [] };
   }
 
-  // Get unique provider IDs
+  // Get unique IDs for batch fetching
   const providerIds = [...new Set((requests || [])
     .map(r => r.supplier_id)
     .filter((id): id is string => id !== null))];
 
-  // Get unique consumer IDs
   const consumerIds = [...new Set((requests || [])
     .map(r => r.consumer_id)
     .filter((id): id is string => id !== null))];
 
-  // Fetch provider names
-  const { data: providers } = providerIds.length > 0
-    ? await adminClient
-        .from("profiles")
-        .select("id, name")
-        .in("id", providerIds)
-    : { data: [] };
-
-  const providerMap = new Map((providers || []).map(p => [p.id, p.name]));
-
-  // Fetch consumer names (for registered users)
-  const { data: consumers } = consumerIds.length > 0
-    ? await adminClient
-        .from("profiles")
-        .select("id, name, phone, email")
-        .in("id", consumerIds)
-    : { data: [] };
-
-  const consumerMap = new Map((consumers || []).map(c => [c.id, { name: c.name, phone: c.phone, email: c.email }]));
-
-  // Count offers per request
   const requestIds = (requests || []).map(r => r.id);
-  const { data: offerCounts } = requestIds.length > 0
-    ? await adminClient
-        .from("offers")
-        .select("request_id")
-        .in("request_id", requestIds)
-    : { data: [] };
+
+  // Fetch related data IN PARALLEL for better performance
+  const [providersResult, consumersResult, offerCountsResult] = await Promise.all([
+    // Fetch provider names
+    providerIds.length > 0
+      ? adminClient.from("profiles").select("id, name").in("id", providerIds)
+      : Promise.resolve({ data: [] }),
+
+    // Fetch consumer names (for registered users)
+    consumerIds.length > 0
+      ? adminClient.from("profiles").select("id, name, phone, email").in("id", consumerIds)
+      : Promise.resolve({ data: [] }),
+
+    // Count offers per request
+    requestIds.length > 0
+      ? adminClient.from("offers").select("request_id").in("request_id", requestIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const providers = providersResult.data || [];
+  const consumers = consumersResult.data || [];
+  const offerCounts = offerCountsResult.data || [];
+
+  const providerMap = new Map(providers.map(p => [p.id, p.name]));
+  const consumerMap = new Map(consumers.map(c => [c.id, { name: c.name, phone: c.phone, email: c.email }]));
 
   const offerCountMap = new Map<string, number>();
   (offerCounts || []).forEach(o => {

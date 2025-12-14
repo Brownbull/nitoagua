@@ -113,9 +113,10 @@ development_status:
   6-4-provider-directory: done  # APPROVED 2025-12-13 - Senior Dev Review passed
   6-5-cash-settlement-tracking: done  # APPROVED 2025-12-13 - Senior Dev Review passed
   6-6-orders-management: done  # APPROVED 2025-12-13 - Senior Dev Review passed
-  6-7-offer-expiration-cron-job: review  # Implementation complete 2025-12-13
-  6-8-operations-dashboard: ready-for-dev  # Context created 2025-12-12
-  6-9-pricing-configuration: drafted  # Created 2025-12-12 - Water prices, commission, urgency surcharge
+  6-7-offer-expiration-cron-job: done  # APPROVED 2025-12-13 - Senior Dev Review passed
+  6-8-operations-dashboard: done  # APPROVED 2025-12-14 - Senior Dev Review passed
+  6-9-pricing-configuration: done  # APPROVED 2025-12-14 - Senior Dev Review passed
+  6-10-epic-deployment-and-verification: in-progress  # Started 2025-12-14 - Deploying to production
   epic-6-retrospective: optional
 
   # Epic 7: Provider Onboarding (depends on Epic 6 admin verification queue)

@@ -10,16 +10,14 @@ import {
   Settings,
   ShieldCheck,
   DollarSign,
-  AlertCircle,
-  ClipboardList,
   UserCircle,
+  CreditCard,
 } from "lucide-react";
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
-  disabled?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -32,49 +30,31 @@ const navItems: NavItem[] = [
     label: "Verificacion",
     href: "/admin/verification",
     icon: ShieldCheck,
-    disabled: false,
   },
   {
     label: "Proveedores",
     href: "/admin/providers",
     icon: Users,
-    disabled: false,
   },
   {
     label: "Pedidos",
     href: "/admin/orders",
     icon: Package,
-    disabled: false,
-  },
-  {
-    label: "Problemas",
-    href: "/admin/problems",
-    icon: AlertCircle,
-    disabled: true,
-  },
-  {
-    label: "Consumidores",
-    href: "/admin/consumers",
-    icon: UserCircle,
-    disabled: true,
   },
   {
     label: "Finanzas",
     href: "/admin/settlement",
     icon: DollarSign,
-    disabled: false,
   },
   {
-    label: "Historial",
-    href: "/admin/history",
-    icon: ClipboardList,
-    disabled: true,
+    label: "Precios",
+    href: "/admin/pricing",
+    icon: CreditCard,
   },
   {
     label: "Config",
     href: "/admin/settings",
     icon: Settings,
-    disabled: false,
   },
 ];
 
@@ -111,32 +91,19 @@ export function AdminSidebar({ userEmail }: AdminSidebarProps) {
 
             return (
               <li key={item.href}>
-                {item.disabled ? (
-                  <span
-                    className={cn(
-                      "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium",
-                      "text-gray-500 cursor-not-allowed"
-                    )}
-                    data-testid={`nav-${item.label.toLowerCase()}`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {item.label}
-                  </span>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-gray-800 text-white"
-                        : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                    )}
-                    data-testid={`nav-${item.label.toLowerCase()}`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {item.label}
-                  </Link>
-                )}
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-gray-800 text-white"
+                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                  )}
+                  data-testid={`nav-${item.label.toLowerCase()}`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {item.label}
+                </Link>
               </li>
             );
           })}

@@ -1,23 +1,22 @@
 import { requireAdmin } from "@/lib/auth/guards";
-import { getSettings } from "@/lib/actions/admin";
-import { DEFAULT_ADMIN_SETTINGS } from "@/lib/validations/admin";
-import { SettingsForm } from "@/components/admin/settings-form";
-import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
+import { getPricingSettings } from "@/lib/actions/admin";
+import { DEFAULT_PRICING_SETTINGS } from "@/lib/validations/admin";
+import { PricingForm } from "@/components/admin/pricing-form";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-// Revalidate every 5 minutes - settings rarely change
+// Revalidate every 5 minutes - pricing settings rarely change
 export const revalidate = 300;
 
-export default async function AdminSettingsPage() {
+export default async function AdminPricingPage() {
   // Require admin access
-  const user = await requireAdmin();
+  await requireAdmin();
 
-  // Load current settings
-  const settingsResult = await getSettings();
+  // Load current pricing settings
+  const settingsResult = await getPricingSettings();
   const settings = settingsResult.success && settingsResult.data
     ? settingsResult.data
-    : DEFAULT_ADMIN_SETTINGS;
+    : DEFAULT_PRICING_SETTINGS;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -39,34 +38,23 @@ export default async function AdminSettingsPage() {
             Admin
           </div>
         </div>
-        <h1 className="text-xl font-extrabold text-gray-900">Configuracion</h1>
+        <h1 className="text-xl font-extrabold text-gray-900">Precios</h1>
         <p className="text-gray-500 text-sm">
-          Ajustes del sistema de ofertas
+          Configura precios y comisiones de la plataforma
         </p>
       </header>
 
       {/* Content */}
       <div className="p-6">
-        {/* Admin session display */}
-        <div className="mb-4 p-3.5 bg-white rounded-xl shadow-sm">
-          <p className="text-xs text-gray-500">Sesion activa como:</p>
-          <p className="text-sm font-semibold text-gray-900">{user.email}</p>
-        </div>
-
-        {/* Settings Form */}
-        <SettingsForm initialSettings={settings} />
+        {/* Pricing Form */}
+        <PricingForm initialSettings={settings} />
 
         {/* Info note */}
         <div className="mt-4 p-3.5 bg-blue-50 rounded-xl border border-blue-100">
           <p className="text-xs text-blue-800">
-            <strong>Nota:</strong> Los cambios se aplicaran inmediatamente a las nuevas ofertas.
-            Las ofertas existentes mantendran su configuracion original.
+            <strong>Nota:</strong> Los nuevos precios se aplicaran inmediatamente a las nuevas
+            solicitudes. Las solicitudes existentes mantendran sus precios originales.
           </p>
-        </div>
-
-        {/* Logout button */}
-        <div className="mt-6">
-          <AdminLogoutButton />
         </div>
       </div>
     </div>

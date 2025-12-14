@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { formatPrice } from "@/lib/validations/request";
 import {
   DollarSign,
@@ -21,22 +22,20 @@ import type {
   SettlementSummary,
   PendingPayment,
   ProviderBalance,
+  SettlementPeriod,
 } from "@/app/admin/settlement/page";
 import { VerifyPaymentModal } from "./verify-payment-modal";
 import { RejectPaymentModal } from "./reject-payment-modal";
 import { ReceiptViewerModal } from "./receipt-viewer-modal";
 import { ProviderBalanceDetailModal } from "./provider-balance-detail-modal";
 
-type Period = "week" | "month" | "year";
+type Period = SettlementPeriod;
 
-// Generate weeks for the current month
-const getWeeksOfMonth = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const weeks: { label: string; value: string }[] = [];
+// Generate weeks for a specific month
+const getWeeksOfMonth = (year: number, month: number) => {
+  const lastDay = new Date(year, month, 0);
+  const weeks: { label: string; value: number }[] = [];
+  const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
   let weekStart = 1;
   let weekNum = 1;
@@ -44,8 +43,8 @@ const getWeeksOfMonth = () => {
   while (weekStart <= lastDay.getDate()) {
     const weekEnd = Math.min(weekStart + 6, lastDay.getDate());
     weeks.push({
-      label: `${weekStart} - ${weekEnd} Dic`,
-      value: `week-${weekNum}`,
+      label: `${weekStart} - ${weekEnd} ${monthNames[month - 1]}`,
+      value: weekNum,
     });
     weekStart = weekEnd + 1;
     weekNum++;
@@ -56,44 +55,54 @@ const getWeeksOfMonth = () => {
 
 // Months of the year
 const MONTHS = [
-  { label: "Enero", value: "01" },
-  { label: "Febrero", value: "02" },
-  { label: "Marzo", value: "03" },
-  { label: "Abril", value: "04" },
-  { label: "Mayo", value: "05" },
-  { label: "Junio", value: "06" },
-  { label: "Julio", value: "07" },
-  { label: "Agosto", value: "08" },
-  { label: "Septiembre", value: "09" },
-  { label: "Octubre", value: "10" },
-  { label: "Noviembre", value: "11" },
-  { label: "Diciembre", value: "12" },
+  { label: "Enero", value: 1 },
+  { label: "Febrero", value: 2 },
+  { label: "Marzo", value: 3 },
+  { label: "Abril", value: 4 },
+  { label: "Mayo", value: 5 },
+  { label: "Junio", value: 6 },
+  { label: "Julio", value: 7 },
+  { label: "Agosto", value: 8 },
+  { label: "Septiembre", value: 9 },
+  { label: "Octubre", value: 10 },
+  { label: "Noviembre", value: 11 },
+  { label: "Diciembre", value: 12 },
 ];
 
-// Available years (placeholder - would come from data)
+// Available years
 const YEARS = [
-  { label: "2025", value: "2025" },
-  { label: "2024", value: "2024" },
-  { label: "2023", value: "2023" },
+  { label: "2025", value: 2025 },
+  { label: "2024", value: 2024 },
+  { label: "2023", value: 2023 },
 ];
 
 interface SettlementDashboardProps {
   summary: SettlementSummary;
   pendingPayments: PendingPayment[];
   providerBalances: ProviderBalance[];
+  currentPeriod?: {
+    type: Period;
+    week?: number;
+    month: number;
+    year: number;
+  };
 }
 
 export function SettlementDashboard({
   summary,
   pendingPayments,
   providerBalances,
+  currentPeriod,
 }: SettlementDashboardProps) {
-  // Period selector state
-  const [selectedPeriod, setSelectedPeriod] = useState<Period>("month");
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Initialize state from currentPeriod prop (from URL params)
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>(currentPeriod?.type || "month");
   const [dropdownOpen, setDropdownOpen] = useState<Period | null>(null);
-  const [selectedWeek, setSelectedWeek] = useState<string>("week-1");
-  const [selectedMonth, setSelectedMonth] = useState<string>("12"); // December
-  const [selectedYear, setSelectedYear] = useState<string>("2025");
+  const [selectedWeek, setSelectedWeek] = useState<number>(currentPeriod?.week || 1);
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentPeriod?.month || new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(currentPeriod?.year || new Date().getFullYear());
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -108,7 +117,19 @@ export function SettlementDashboard({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const weeks = getWeeksOfMonth();
+  // Navigate with new period params
+  const navigateWithPeriod = (period: Period, week?: number, month?: number, year?: number) => {
+    const params = new URLSearchParams();
+    params.set("period", period);
+    if (period === "week" && week) {
+      params.set("week", week.toString());
+    }
+    params.set("month", (month || selectedMonth).toString());
+    params.set("year", (year || selectedYear).toString());
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const weeks = getWeeksOfMonth(selectedYear, selectedMonth);
 
   const handlePeriodClick = (period: Period) => {
     if (selectedPeriod === period) {
@@ -121,6 +142,27 @@ export function SettlementDashboard({
     }
   };
 
+  const handleWeekSelect = (weekNum: number) => {
+    setSelectedWeek(weekNum);
+    setSelectedPeriod("week");
+    setDropdownOpen(null);
+    navigateWithPeriod("week", weekNum, selectedMonth, selectedYear);
+  };
+
+  const handleMonthSelect = (monthNum: number) => {
+    setSelectedMonth(monthNum);
+    setSelectedPeriod("month");
+    setDropdownOpen(null);
+    navigateWithPeriod("month", undefined, monthNum, selectedYear);
+  };
+
+  const handleYearSelect = (year: number) => {
+    setSelectedYear(year);
+    setSelectedPeriod("year");
+    setDropdownOpen(null);
+    navigateWithPeriod("year", undefined, selectedMonth, year);
+  };
+
   const getSelectedLabel = (period: Period) => {
     switch (period) {
       case "week":
@@ -130,7 +172,7 @@ export function SettlementDashboard({
         const month = MONTHS.find(m => m.value === selectedMonth);
         return month?.label || "Mes";
       case "year":
-        return selectedYear;
+        return selectedYear.toString();
     }
   };
 
@@ -205,13 +247,9 @@ export function SettlementDashboard({
               {weeks.map((week) => (
                 <button
                   key={week.value}
-                  onClick={() => {
-                    setSelectedWeek(week.value);
-                    setSelectedPeriod("week");
-                    setDropdownOpen(null);
-                  }}
+                  onClick={() => handleWeekSelect(week.value)}
                   className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 ${
-                    selectedWeek === week.value ? "bg-gray-100 font-semibold" : ""
+                    selectedWeek === week.value && selectedPeriod === "week" ? "bg-gray-100 font-semibold" : ""
                   }`}
                 >
                   {week.label}
@@ -240,13 +278,9 @@ export function SettlementDashboard({
               {MONTHS.map((month) => (
                 <button
                   key={month.value}
-                  onClick={() => {
-                    setSelectedMonth(month.value);
-                    setSelectedPeriod("month");
-                    setDropdownOpen(null);
-                  }}
+                  onClick={() => handleMonthSelect(month.value)}
                   className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 ${
-                    selectedMonth === month.value ? "bg-gray-100 font-semibold" : ""
+                    selectedMonth === month.value && selectedPeriod === "month" ? "bg-gray-100 font-semibold" : ""
                   }`}
                 >
                   {month.label}
@@ -275,13 +309,9 @@ export function SettlementDashboard({
               {YEARS.map((year) => (
                 <button
                   key={year.value}
-                  onClick={() => {
-                    setSelectedYear(year.value);
-                    setSelectedPeriod("year");
-                    setDropdownOpen(null);
-                  }}
+                  onClick={() => handleYearSelect(year.value)}
                   className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 ${
-                    selectedYear === year.value ? "bg-gray-100 font-semibold" : ""
+                    selectedYear === year.value && selectedPeriod === "year" ? "bg-gray-100 font-semibold" : ""
                   }`}
                 >
                   {year.label}

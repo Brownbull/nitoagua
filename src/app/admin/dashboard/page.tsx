@@ -1,14 +1,25 @@
 import { requireAdmin } from "@/lib/auth/guards";
-import { ShieldCheck, Package, DollarSign, Users, AlertCircle, ChevronRight, Settings } from "lucide-react";
-import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
-import { DashboardPeriodSelector } from "@/components/admin/dashboard-period-selector";
+import { ShieldCheck, ChevronRight, Settings, AlertCircle, CreditCard } from "lucide-react";
+import { OperationsDashboard } from "@/components/admin/operations-dashboard";
+import { getDashboardMetrics } from "@/lib/queries/admin-metrics";
 import Link from "next/link";
+
+// Revalidate every 5 minutes - dashboard stats refresh on client side
+export const revalidate = 300;
+
+export const metadata = {
+  title: "Dashboard - Admin nitoagua",
+  description: "Panel de administracion y metricas operativas",
+};
 
 export default async function AdminDashboardPage() {
   // Require admin access
   const user = await requireAdmin();
 
-  // Placeholder data - will be replaced with real data in Story 6.8
+  // Fetch initial metrics for "month" period (default)
+  const initialMetrics = await getDashboardMetrics("month");
+
+  // Format today's date
   const todayDate = new Date().toLocaleDateString("es-CL", {
     day: "numeric",
     month: "short",
@@ -16,7 +27,7 @@ export default async function AdminDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 pb-24">
       {/* Header */}
       <header className="bg-gradient-to-r from-gray-200 to-white px-5 py-3">
         <div className="flex items-center justify-between mb-3">
@@ -28,152 +39,106 @@ export default async function AdminDashboardPage() {
         </div>
         <h1 className="text-xl font-extrabold text-gray-900">Dashboard</h1>
         <p className="text-gray-500 text-sm">
-          Resumen de hoy, {todayDate}
+          {todayDate}
         </p>
       </header>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="p-4">
         {/* Admin email display */}
         <div className="mb-4 p-3.5 bg-white rounded-xl shadow-sm">
           <p className="text-xs text-gray-500">Sesion activa como:</p>
           <p className="text-sm font-semibold text-gray-900">{user.email}</p>
         </div>
 
-        {/* Period selector */}
-        <div className="mb-4">
-          <DashboardPeriodSelector />
-        </div>
-
-        {/* Metrics Grid - placeholder data */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {/* Orders */}
-          <div className="bg-white rounded-xl p-3.5 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Package className="w-3.5 h-3.5 text-blue-600" />
-              </div>
-              <span className="text-xs text-gray-500">Pedidos</span>
-            </div>
-            <p className="text-xl font-extrabold text-gray-900">--</p>
-            <p className="text-xs text-gray-400">Sin datos</p>
-          </div>
-
-          {/* Revenue */}
-          <div className="bg-white rounded-xl p-3.5 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 bg-green-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-3.5 h-3.5 text-green-600" />
-              </div>
-              <span className="text-xs text-gray-500">Ingresos</span>
-            </div>
-            <p className="text-xl font-extrabold text-gray-900">--</p>
-            <p className="text-xs text-gray-400">Sin datos</p>
-          </div>
-
-          {/* Commission */}
-          <div className="bg-white rounded-xl p-3.5 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-3.5 h-3.5 text-amber-600" />
-              </div>
-              <span className="text-xs text-gray-500">Comision</span>
-            </div>
-            <p className="text-xl font-extrabold text-gray-900">--</p>
-            <p className="text-xs text-gray-400">Sin datos</p>
-          </div>
-
-          {/* Active providers */}
-          <div className="bg-white rounded-xl p-3.5 shadow-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <Users className="w-3.5 h-3.5 text-indigo-600" />
-              </div>
-              <span className="text-xs text-gray-500">En Linea</span>
-            </div>
-            <p className="text-xl font-extrabold text-gray-900">--</p>
-            <p className="text-xs text-gray-400">Sin datos</p>
-          </div>
-        </div>
+        {/* Operations Dashboard with Period Selector and Metrics */}
+        <OperationsDashboard initialMetrics={initialMetrics} />
 
         {/* Quick Actions */}
-        <p className="text-xs font-semibold text-gray-500 uppercase mb-3">
-          Acciones Rapidas
-        </p>
-        <div className="space-y-3">
-          {/* Pending verifications */}
-          <Link
-            href="/admin/verification"
-            className="flex items-center gap-3 w-full p-3.5 bg-white rounded-xl border-2 border-gray-200 text-left hover:bg-gray-50 transition-colors"
-            data-testid="quick-action-verification"
-          >
-            <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-amber-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">
-                Verificaciones Pendientes
-              </p>
-              <p className="text-xs text-gray-500">
-                Revisar solicitudes de proveedores
-              </p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          </Link>
-
-          {/* Reported problems */}
-          <button
-            className="flex items-center gap-3 w-full p-3.5 bg-white rounded-xl border-2 border-gray-200 text-left opacity-60"
-            disabled
-          >
-            <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center">
-              <AlertCircle className="w-4 h-4 text-red-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">
-                Problemas Reportados
-              </p>
-              <p className="text-xs text-gray-500">
-                Resolver incidencias de pedidos
-              </p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          </button>
-
-          {/* System Settings */}
-          <Link
-            href="/admin/settings"
-            className="flex items-center gap-3 w-full p-3.5 bg-white rounded-xl border-2 border-gray-200 text-left hover:bg-gray-50 transition-colors"
-            data-testid="quick-action-settings"
-          >
-            <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
-              <Settings className="w-4 h-4 text-gray-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-900">
-                Configuracion
-              </p>
-              <p className="text-xs text-gray-500">
-                Ajustes del sistema de ofertas
-              </p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          </Link>
-        </div>
-
-        {/* Logout button */}
         <div className="mt-6">
-          <AdminLogoutButton />
-        </div>
+          <p className="text-xs font-semibold text-gray-500 uppercase mb-3">
+            Acciones Rapidas
+          </p>
+          <div className="space-y-3">
+            {/* Pending verifications */}
+            <Link
+              href="/admin/verification"
+              className="flex items-center gap-3 w-full p-3.5 bg-white rounded-xl border-2 border-gray-200 text-left hover:bg-gray-50 transition-colors"
+              data-testid="quick-action-verification"
+            >
+              <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center">
+                <ShieldCheck className="w-4 h-4 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  Verificaciones Pendientes
+                </p>
+                <p className="text-xs text-gray-500">
+                  Revisar solicitudes de proveedores
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </Link>
 
-        {/* Note about placeholder */}
-        <div className="mt-4 p-3.5 bg-gray-200 rounded-xl">
-          <p className="text-xs text-gray-600 text-center">
-            Panel de Administracion - Vista preliminar
-          </p>
-          <p className="text-xs text-gray-500 text-center mt-1">
-            Los datos y funcionalidades completas se implementaran en historias posteriores
-          </p>
+            {/* Reported problems */}
+            <button
+              className="flex items-center gap-3 w-full p-3.5 bg-white rounded-xl border-2 border-gray-200 text-left opacity-60"
+              disabled
+            >
+              <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center">
+                <AlertCircle className="w-4 h-4 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  Problemas Reportados
+                </p>
+                <p className="text-xs text-gray-500">
+                  Resolver incidencias de pedidos
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </button>
+
+            {/* Pricing Configuration */}
+            <Link
+              href="/admin/pricing"
+              className="flex items-center gap-3 w-full p-3.5 bg-white rounded-xl border-2 border-gray-200 text-left hover:bg-gray-50 transition-colors"
+              data-testid="quick-action-pricing"
+            >
+              <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center">
+                <CreditCard className="w-4 h-4 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  Precios
+                </p>
+                <p className="text-xs text-gray-500">
+                  Tarifas y comisiones
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </Link>
+
+            {/* System Settings */}
+            <Link
+              href="/admin/settings"
+              className="flex items-center gap-3 w-full p-3.5 bg-white rounded-xl border-2 border-gray-200 text-left hover:bg-gray-50 transition-colors"
+              data-testid="quick-action-settings"
+            >
+              <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Settings className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">
+                  Configuracion
+                </p>
+                <p className="text-xs text-gray-500">
+                  Ajustes del sistema de ofertas
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </Link>
+          </div>
         </div>
       </div>
     </div>

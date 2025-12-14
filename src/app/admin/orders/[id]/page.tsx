@@ -2,6 +2,9 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+
+// Revalidate every 30 seconds - order details can be slightly stale
+export const revalidate = 30;
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -122,31 +125,58 @@ async function getOrderDetail(orderId: string): Promise<{
     return { order: null, offers: [], analytics: { total_offers: 0, time_to_first_offer: null, time_to_selection: null } };
   }
 
-  // Get consumer info if registered user
-  let consumerInfo: { name: string; phone: string; email: string | null } | null = null;
-  if (request.consumer_id) {
-    const { data: consumer } = await adminClient
-      .from("profiles")
-      .select("name, phone, email")
-      .eq("id", request.consumer_id)
-      .single();
-    if (consumer) {
-      consumerInfo = consumer;
-    }
+  // Fetch consumer, provider, and offers IN PARALLEL for better performance
+  const [consumerResult, providerResult, offersResult] = await Promise.all([
+    // Get consumer info if registered user
+    request.consumer_id
+      ? adminClient
+          .from("profiles")
+          .select("name, phone, email")
+          .eq("id", request.consumer_id)
+          .single()
+      : Promise.resolve({ data: null }),
+
+    // Get provider info if assigned
+    request.supplier_id
+      ? adminClient
+          .from("profiles")
+          .select("name, phone, email")
+          .eq("id", request.supplier_id)
+          .single()
+      : Promise.resolve({ data: null }),
+
+    // Fetch offers for this request
+    adminClient
+      .from("offers")
+      .select(`
+        id,
+        provider_id,
+        delivery_window_start,
+        delivery_window_end,
+        status,
+        created_at,
+        accepted_at
+      `)
+      .eq("request_id", orderId)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  const consumerInfo = consumerResult.data;
+  const providerInfo = providerResult.data;
+  const offersData = offersResult.data;
+
+  if (offersResult.error) {
+    console.error("[ADMIN] Error fetching offers:", offersResult.error.message);
   }
 
-  // Get provider info
-  let providerInfo: { name: string; phone: string; email: string | null } | null = null;
-  if (request.supplier_id) {
-    const { data: provider } = await adminClient
-      .from("profiles")
-      .select("name, phone, email")
-      .eq("id", request.supplier_id)
-      .single();
-    if (provider) {
-      providerInfo = provider;
-    }
-  }
+  // Get provider names for offers (second parallel batch)
+  const offerProviderIds = [...new Set((offersData || []).map(o => o.provider_id))];
+  const { data: offerProviders } = offerProviderIds.length > 0
+    ? await adminClient
+        .from("profiles")
+        .select("id, name")
+        .in("id", offerProviderIds)
+    : { data: [] };
 
   // Extract comuna from address
   const extractComuna = (address: string): string => {
@@ -181,34 +211,6 @@ async function getOrderDetail(orderId: string): Promise<{
     provider_email: providerInfo?.email || null,
     delivery_window: request.delivery_window,
   };
-
-  // Fetch offers for this request
-  const { data: offersData, error: offersError } = await adminClient
-    .from("offers")
-    .select(`
-      id,
-      provider_id,
-      delivery_window_start,
-      delivery_window_end,
-      status,
-      created_at,
-      accepted_at
-    `)
-    .eq("request_id", orderId)
-    .order("created_at", { ascending: true });
-
-  if (offersError) {
-    console.error("[ADMIN] Error fetching offers:", offersError.message);
-  }
-
-  // Get provider names for offers
-  const offerProviderIds = [...new Set((offersData || []).map(o => o.provider_id))];
-  const { data: offerProviders } = offerProviderIds.length > 0
-    ? await adminClient
-        .from("profiles")
-        .select("id, name")
-        .in("id", offerProviderIds)
-    : { data: [] };
 
   const providerNameMap = new Map((offerProviders || []).map(p => [p.id, p.name]));
 

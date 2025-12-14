@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -14,7 +14,6 @@ import {
   Truck,
   CheckCircle,
   XCircle,
-  AlertCircle,
   Calendar,
   MapPin,
   Radio,
@@ -63,6 +62,12 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState(currentFilters);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Track when component is mounted to avoid hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Enable real-time updates
   const { isConnected, lastUpdate } = useRealtimeOrders({ enabled: true });
@@ -137,16 +142,27 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
   const toggleStatusFilter = (status: string) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    // If clicking same status that's already active, clear it
-    if (currentFilters.status === status) {
+    // "all" or "total" always clears the filter
+    if (status === "all") {
+      params.delete("status");
+      router.push(`/admin/orders?${params.toString()}`);
+      setCurrentPage(1);
+      return;
+    }
+
+    // "pending" is a special case - it includes both "pending" and "offers_pending"
+    // Check if we're already filtering by "pending" (which covers both statuses)
+    const isPendingActive = currentFilters.status === "pending" || currentFilters.status === "offers_pending";
+
+    if (status === "pending" && isPendingActive) {
+      // Clicking pending when already active - clear filter
+      params.delete("status");
+    } else if (currentFilters.status === status) {
+      // Clicking same status that's already active - clear it
       params.delete("status");
     } else {
-      // Otherwise, set the new status filter
-      if (status === "all") {
-        params.delete("status");
-      } else {
-        params.set("status", status);
-      }
+      // Set the new status filter
+      params.set("status", status);
     }
 
     router.push(`/admin/orders?${params.toString()}`);
@@ -155,18 +171,18 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
 
   return (
     <div className="space-y-4">
-      {/* Real-time Indicator */}
+      {/* Real-time Indicator - only show dynamic content after mount to avoid hydration mismatch */}
       <div className="flex items-center justify-end gap-2">
         <span className={cn(
           "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium",
-          isConnected
+          isMounted && isConnected
             ? "bg-green-50 text-green-700"
             : "bg-gray-100 text-gray-500"
         )}>
-          <Radio className={cn("w-3 h-3", isConnected && "animate-pulse")} />
-          {isConnected ? "En vivo" : "Conectando..."}
+          <Radio className={cn("w-3 h-3", isMounted && isConnected && "animate-pulse")} />
+          {isMounted ? (isConnected ? "En vivo" : "Conectando...") : "Conectando..."}
         </span>
-        {lastUpdate && (
+        {isMounted && lastUpdate && (
           <span className="text-xs text-gray-400">
             Actualizado: {format(lastUpdate, "HH:mm:ss")}
           </span>
@@ -179,7 +195,7 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
           label="Pendientes"
           value={stats.pending}
           color="amber"
-          isActive={currentFilters.status === "pending"}
+          isActive={currentFilters.status === "pending" || currentFilters.status === "offers_pending"}
           onClick={() => toggleStatusFilter("pending")}
         />
         <StatsCard
@@ -214,7 +230,7 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
           label="Total"
           value={stats.total}
           color="gray"
-          isActive={currentFilters.status === "all"}
+          isActive={!hasActiveFilters}
           onClick={() => toggleStatusFilter("all")}
         />
       </div>

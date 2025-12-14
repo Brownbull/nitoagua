@@ -3,7 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { SettlementDashboard } from "@/components/admin/settlement-dashboard";
 import { DollarSign, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { differenceInDays } from "date-fns";
+import { differenceInDays, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from "date-fns";
+import { es } from "date-fns/locale";
 
 export const metadata = {
   title: "Liquidaciones - Admin nitoagua",
@@ -38,7 +39,55 @@ export interface SettlementSummary {
   pending_verifications: number;
 }
 
-async function getSettlementData(): Promise<{
+export type SettlementPeriod = "week" | "month" | "year";
+
+interface DateRange {
+  start: Date;
+  end: Date;
+}
+
+/**
+ * Get date range for settlement period filtering
+ */
+function getDateRange(period: SettlementPeriod, weekNum?: number, monthNum?: number, year?: number): DateRange {
+  const now = new Date();
+  const targetYear = year || now.getFullYear();
+  const targetMonth = monthNum !== undefined ? monthNum - 1 : now.getMonth();
+
+  switch (period) {
+    case "week": {
+      // Calculate week of month
+      const weekIndex = weekNum !== undefined ? weekNum - 1 : 0;
+      const monthStart = new Date(targetYear, targetMonth, 1);
+      const weekStart = new Date(monthStart);
+      weekStart.setDate(1 + (weekIndex * 7));
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      // Cap at end of month
+      const monthEnd = endOfMonth(monthStart);
+      return {
+        start: weekStart,
+        end: weekEnd > monthEnd ? monthEnd : weekEnd,
+      };
+    }
+    case "month": {
+      const monthDate = new Date(targetYear, targetMonth, 1);
+      return {
+        start: startOfMonth(monthDate),
+        end: endOfMonth(monthDate),
+      };
+    }
+    case "year": {
+      const yearDate = new Date(targetYear, 0, 1);
+      return {
+        start: startOfYear(yearDate),
+        end: endOfYear(yearDate),
+      };
+    }
+  }
+}
+
+async function getSettlementData(dateRange?: DateRange): Promise<{
   summary: SettlementSummary;
   pendingPayments: PendingPayment[];
   providerBalances: ProviderBalance[];
@@ -47,7 +96,8 @@ async function getSettlementData(): Promise<{
   const now = new Date();
 
   // 1. Get pending withdrawal requests (for verification)
-  const { data: withdrawalRequests, error: wrError } = await adminClient
+  // Filter by created_at if date range provided
+  let wrQuery = adminClient
     .from("withdrawal_requests")
     .select(`
       id,
@@ -59,6 +109,14 @@ async function getSettlementData(): Promise<{
     `)
     .eq("status", "pending")
     .order("created_at", { ascending: true });
+
+  if (dateRange) {
+    wrQuery = wrQuery
+      .gte("created_at", dateRange.start.toISOString())
+      .lte("created_at", dateRange.end.toISOString());
+  }
+
+  const { data: withdrawalRequests, error: wrError } = await wrQuery;
 
   if (wrError) {
     console.error("[ADMIN] Error fetching withdrawal requests:", wrError.message);
@@ -83,8 +141,9 @@ async function getSettlementData(): Promise<{
     status: wr.status || "pending",
   }));
 
-  // 2. Get all commission ledger entries
-  const { data: ledgerEntries, error: ledgerError } = await adminClient
+  // 2. Get commission ledger entries
+  // Filter by created_at if date range provided
+  let ledgerQuery = adminClient
     .from("commission_ledger")
     .select(`
       id,
@@ -94,6 +153,14 @@ async function getSettlementData(): Promise<{
       created_at
     `)
     .order("created_at", { ascending: true });
+
+  if (dateRange) {
+    ledgerQuery = ledgerQuery
+      .gte("created_at", dateRange.start.toISOString())
+      .lte("created_at", dateRange.end.toISOString());
+  }
+
+  const { data: ledgerEntries, error: ledgerError } = await ledgerQuery;
 
   if (ledgerError) {
     console.error("[ADMIN] Error fetching commission ledger:", ledgerError.message);
@@ -208,14 +275,31 @@ async function getSettlementData(): Promise<{
   return { summary, pendingPayments, providerBalances };
 }
 
-export default async function SettlementPage() {
+export default async function SettlementPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   // Require admin access
   const user = await requireAdmin();
 
-  // Fetch settlement data
-  const { summary, pendingPayments, providerBalances } = await getSettlementData();
+  // Parse search params for period filtering
+  const params = await searchParams;
+  const periodType = (typeof params.period === "string" ? params.period : "month") as SettlementPeriod;
+  const weekNum = typeof params.week === "string" ? parseInt(params.week) : undefined;
+  const monthNum = typeof params.month === "string" ? parseInt(params.month) : new Date().getMonth() + 1;
+  const year = typeof params.year === "string" ? parseInt(params.year) : new Date().getFullYear();
 
-  console.log(`[ADMIN] Settlement dashboard loaded by ${user.email}: ${pendingPayments.length} pending payments, ${providerBalances.length} provider balances`);
+  // Get date range for filtering
+  const dateRange = getDateRange(periodType, weekNum, monthNum, year);
+
+  // Fetch settlement data with period filter
+  const { summary, pendingPayments, providerBalances } = await getSettlementData(dateRange);
+
+  // Format period label for header
+  const periodLabel = formatPeriodLabel(periodType, weekNum, monthNum, year);
+
+  console.log(`[ADMIN] Settlement dashboard loaded by ${user.email}: ${pendingPayments.length} pending payments, ${providerBalances.length} provider balances, period: ${periodLabel}`);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -237,8 +321,8 @@ export default async function SettlementPage() {
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-gray-900">Finanzas</h1>
-            <p className="text-gray-500 text-sm">
-              Diciembre 2025
+            <p className="text-gray-500 text-sm" data-testid="period-label">
+              {periodLabel}
             </p>
           </div>
         </div>
@@ -250,8 +334,35 @@ export default async function SettlementPage() {
           summary={summary}
           pendingPayments={pendingPayments}
           providerBalances={providerBalances}
+          currentPeriod={{
+            type: periodType,
+            week: weekNum,
+            month: monthNum,
+            year: year,
+          }}
         />
       </div>
     </div>
   );
+}
+
+/**
+ * Format period label for display
+ */
+function formatPeriodLabel(period: SettlementPeriod, weekNum?: number, monthNum?: number, year?: number): string {
+  const now = new Date();
+  const targetYear = year || now.getFullYear();
+  const targetMonth = monthNum !== undefined ? monthNum - 1 : now.getMonth();
+
+  const monthName = format(new Date(targetYear, targetMonth, 1), "MMMM", { locale: es });
+  const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+  switch (period) {
+    case "week":
+      return weekNum ? `Semana ${weekNum} - ${capitalizedMonth} ${targetYear}` : `${capitalizedMonth} ${targetYear}`;
+    case "month":
+      return `${capitalizedMonth} ${targetYear}`;
+    case "year":
+      return `Año ${targetYear}`;
+  }
 }

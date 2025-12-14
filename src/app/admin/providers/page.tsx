@@ -4,6 +4,9 @@ import { ProviderDirectory } from "@/components/admin/provider-directory";
 import { Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+// Revalidate every 60 seconds - provider list doesn't change very frequently
+export const revalidate = 60;
+
 export const metadata = {
   title: "Proveedores - Admin nitoagua",
   description: "Directorio de proveedores registrados",
