@@ -200,3 +200,24 @@ test.describe("Consumer Navigation", () => {
     expect(homeColor).toContain("0, 119, 182");
   });
 });
+
+test.describe("Admin Access", () => {
+  test("subtle admin button is present and links to /admin", async ({ page }) => {
+    await page.goto("/");
+
+    const adminLink = page.getByTestId("admin-access-link");
+    await expect(adminLink).toBeVisible();
+    await expect(adminLink).toHaveAttribute("href", "/admin");
+  });
+
+  test("admin button click redirects to admin login", async ({ page }) => {
+    await page.goto("/");
+
+    const adminLink = page.getByTestId("admin-access-link");
+    await adminLink.click();
+
+    // Should redirect to admin login since not authenticated
+    await page.waitForURL("**/admin/login", { timeout: 10000 });
+    expect(page.url()).toContain("/admin/login");
+  });
+});
