@@ -190,7 +190,7 @@ export function DashboardMetrics({
       </div>
 
       {/* Financial Metrics Section */}
-      <div>
+      <div data-testid="financial-section">
         <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
           Finanzas
         </p>
@@ -252,7 +252,7 @@ export function DashboardMetrics({
       </div>
 
       {/* Provider Metrics Section */}
-      <div>
+      <div data-testid="providers-section">
         <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
           Proveedores
         </p>

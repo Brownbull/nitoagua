@@ -192,7 +192,7 @@ test.describe("Operations Dashboard - Financial Metrics", () => {
   });
 
   test("AC6.8.1 - Financial metrics section is visible", async ({ page }) => {
-    await expect(page.getByText("Finanzas")).toBeVisible();
+    await expect(page.getByTestId("financial-section")).toBeVisible();
   });
 
   test("AC6.8.1 - Revenue card is visible with dark gradient styling", async ({
@@ -229,7 +229,7 @@ test.describe("Operations Dashboard - Provider Metrics", () => {
   });
 
   test("AC6.8.1 - Provider metrics section is visible", async ({ page }) => {
-    await expect(page.getByText("Proveedores")).toBeVisible();
+    await expect(page.getByTestId("providers-section")).toBeVisible();
   });
 
   test("AC6.8.1 - Active providers metric is visible", async ({ page }) => {

@@ -31,8 +31,13 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    // Check if it's an auth error (redirect)
-    if (error instanceof Error && error.message.includes("redirect")) {
+    // Check if it's a Next.js redirect (from requireAdmin)
+    // Next.js redirect throws with NEXT_REDIRECT or has digest property
+    if (
+      error instanceof Error &&
+      (error.message.includes("NEXT_REDIRECT") ||
+        (error as { digest?: string }).digest?.startsWith("NEXT_REDIRECT"))
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
