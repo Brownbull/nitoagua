@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { Settings } from "lucide-react";
 import { BigActionButton } from "@/components/consumer/big-action-button";
 import { ConsumerNav } from "@/components/layout/consumer-nav";
 import { createClient } from "@/lib/supabase/client";
@@ -40,6 +41,16 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Subtle admin access - top right corner */}
+      <Link
+        href="/admin"
+        className="absolute top-4 right-4 p-2 text-gray-300 hover:text-gray-400 transition-colors"
+        aria-label="Admin"
+        data-testid="admin-access-link"
+      >
+        <Settings className="w-5 h-5" />
+      </Link>
+
       <main className="flex flex-1 flex-col items-center justify-center px-4 pb-16">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-gray-900">
