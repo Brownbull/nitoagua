@@ -65,6 +65,7 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
   const [isMounted, setIsMounted] = useState(false);
 
   // Track when component is mounted to avoid hydration mismatch
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setIsMounted(true);
   }, []);

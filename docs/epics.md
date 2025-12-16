@@ -1100,12 +1100,12 @@ The following epics implement the V2 architecture where providers submit offers 
 | Epic | Title | Stories | User Value |
 |------|-------|---------|------------|
 | 6 | Admin Operations Panel | 8 | Provider verification, offer settings, settlement tracking, operations |
-| 7 | Provider Onboarding | 5 | Self-registration, document upload, verification flow |
+| 7 | Provider Onboarding | 6 | Self-registration, document upload, verification flow, deployment |
 | 8 | Provider Offer System | 7 | Browse requests, submit offers, track offer status, earnings visibility |
 | 9 | Consumer Offer Selection | 5 | View multiple offers, select preferred provider, offer countdown |
 | 10 | Consumer UX Enhancements | 5 | Map pinpoint, negative states, payment options, improved messaging |
 
-**Total Post-MVP:** 5 Epics, 30 Stories
+**Total Post-MVP:** 5 Epics, 31 Stories
 
 **Implementation Order:** Epics are numbered by dependency order (6→7→8→9→10). Start with Epic 6 and proceed sequentially.
 
@@ -1726,6 +1726,52 @@ So that **I can keep my profile current**.
 - Create `src/app/(provider)/profile/documents/page.tsx`
 - Use Supabase Storage signed URLs for secure access
 - Track document versions if needed
+
+---
+
+### Story 7.6: Epic Deployment & Verification
+
+As a **developer**,
+I want **to deploy all Epic 7 changes through the git branching workflow and verify production with test users**,
+So that **the provider registration flow is live and working for new water providers**.
+
+**Acceptance Criteria:**
+
+**Given** Story 7-1 (Provider Registration Flow) is complete and approved
+**When** deployment workflow is executed
+**Then**:
+- All changes committed to develop branch
+- Develop merged to staging with preview verification
+- Staging merged to main with production deployment
+- Production build succeeds on Vercel
+
+**And** database setup verified:
+- `provider-documents` storage bucket exists with correct RLS policies
+- `comunas` table seeded with Villarrica region data
+- `provider_service_areas` table with RLS policies
+- Migration applied successfully
+
+**And** production verification with test user:
+- Test user created (`provider2@nitoagua.cl`)
+- Provider onboarding welcome page loads
+- Multi-step wizard navigates correctly
+- Document upload works
+- Registration submission creates pending profile
+- Admin can verify provider in queue
+- Approved provider redirects to dashboard
+
+**And** no regression in existing flows:
+- Consumer request flow works
+- Supplier dashboard works
+- Admin panel accessible
+
+**Prerequisites:** Story 7.1
+
+**Technical Notes:**
+- Production URL: https://nitoagua.vercel.app
+- Test credentials: `provider2@nitoagua.cl` / `provider2.123`
+- Branching strategy: develop → staging → main
+- Storage bucket may need manual creation in Supabase Dashboard
 
 ---
 

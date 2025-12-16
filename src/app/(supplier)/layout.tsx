@@ -22,10 +22,10 @@ export default async function SupplierLayout({
     .eq("id", user.id)
     .single();
 
-  // If no profile, redirect to onboarding
+  // If no profile, redirect to provider onboarding (new registration flow)
   if (!profile) {
-    console.log("[AUTH] No profile found for user, redirecting to onboarding:", user.id);
-    redirect("/onboarding");
+    console.log("[AUTH] No profile found for user, redirecting to provider onboarding:", user.id);
+    redirect("/provider/onboarding/personal");
   }
 
   // If not a supplier, redirect to consumer home

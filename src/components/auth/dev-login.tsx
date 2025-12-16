@@ -10,9 +10,13 @@ import { Loader2 } from "lucide-react";
 
 // Test accounts for local development
 const TEST_ACCOUNTS = {
-  supplier: { email: "khujta@gmail.com", password: "password.123" },
-  consumer: { email: "khujtatest@gmail.com", password: "password.123" },
+  supplier: { email: "supplier@nitoagua.cl", password: "supplier.123" },
+  consumer: { email: "consumer@nitoagua.cl", password: "consumer.123" },
+  // New supplier (for testing onboarding flow) - no profile yet
+  newSupplier: { email: "provider2@nitoagua.cl", password: "provider2.123" },
 } as const;
+
+type Role = "consumer" | "supplier" | "newSupplier";
 
 /**
  * Development-only login component for email/password authentication.
@@ -21,13 +25,13 @@ const TEST_ACCOUNTS = {
  */
 export function DevLogin() {
   const router = useRouter();
-  const [selectedRole, setSelectedRole] = useState<"consumer" | "supplier">("consumer");
+  const [selectedRole, setSelectedRole] = useState<Role>("consumer");
   const [email, setEmail] = useState<string>(TEST_ACCOUNTS.consumer.email);
   const [password, setPassword] = useState<string>(TEST_ACCOUNTS.consumer.password);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleRoleChange(role: "consumer" | "supplier") {
+  function handleRoleChange(role: Role) {
     setSelectedRole(role);
     setEmail(TEST_ACCOUNTS[role].email);
     setPassword(TEST_ACCOUNTS[role].password);
@@ -71,8 +75,8 @@ export function DevLogin() {
           }
         } else {
           // No profile - redirect to appropriate onboarding based on selected role
-          if (selectedRole === "supplier") {
-            router.push("/onboarding");
+          if (selectedRole === "supplier" || selectedRole === "newSupplier") {
+            router.push("/provider/onboarding/personal");
           } else {
             router.push("/consumer/onboarding");
           }
@@ -114,6 +118,15 @@ export function DevLogin() {
           disabled={isLoading}
         >
           Supplier
+        </Button>
+        <Button
+          type="button"
+          variant={selectedRole === "newSupplier" ? "default" : "outline"}
+          className="flex-1 text-sm"
+          onClick={() => handleRoleChange("newSupplier")}
+          disabled={isLoading}
+        >
+          New Supplier
         </Button>
       </div>
 

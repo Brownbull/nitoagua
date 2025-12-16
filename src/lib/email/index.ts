@@ -22,3 +22,14 @@ export {
   type AcceptedNotificationData,
   type DeliveredNotificationData,
 } from "./send-guest-notification";
+
+// Provider notification utilities
+export {
+  sendProviderApprovedEmail,
+  sendProviderRejectedEmail,
+  sendProviderMoreInfoNeededEmail,
+  sendProviderVerificationNotification,
+  type SendProviderApprovedEmailParams,
+  type SendProviderRejectedEmailParams,
+  type SendProviderMoreInfoNeededEmailParams,
+} from "./send-provider-notification";
