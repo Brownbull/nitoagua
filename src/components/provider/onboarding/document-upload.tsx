@@ -1,31 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Upload,
-  X,
-  FileImage,
+  CreditCard,
+  Car,
+  FileText,
+  Shield,
   ArrowRight,
   ArrowLeft,
   Loader2,
   AlertCircle,
-  Check,
+  Info,
+  IdCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ProgressIndicator } from "./progress-indicator";
 import {
   DOCUMENT_LABELS,
   REQUIRED_DOCUMENTS,
-  VEHICLE_CAPACITIES,
+  OPTIONAL_DOCUMENTS,
   type DocumentType,
 } from "@/lib/validations/provider-registration";
 import { cn } from "@/lib/utils";
@@ -44,17 +38,57 @@ interface DocumentSection {
   error: string | null;
 }
 
+// Document configuration with icons and descriptions (per UX mockup Section 13.3)
+const DOCUMENT_CONFIG: Record<
+  DocumentType,
+  {
+    icon: React.ElementType;
+    description: string;
+    optional?: boolean;
+  }
+> = {
+  cedula: {
+    icon: CreditCard,
+    description: "Frente y reverso",
+  },
+  licencia_conducir: {
+    icon: IdCard,
+    description: "Requerido si usas vehículo motorizado",
+  },
+  vehiculo: {
+    icon: Car,
+    description: "Exterior e interior del vehículo",
+  },
+  permiso_sanitario: {
+    icon: Shield,
+    description: "Opcional - mejora tu perfil",
+    optional: true,
+  },
+  certificacion: {
+    icon: FileText,
+    description: "Opcional - mejora tu perfil",
+    optional: true,
+  },
+};
+
 export function DocumentUpload({ userId }: { userId: string }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [vehicleCapacity, setVehicleCapacity] = useState<number | undefined>();
   const [documents, setDocuments] = useState<Record<DocumentType, DocumentSection>>({
     cedula: { type: "cedula", files: [], isUploading: false, error: null },
-    permiso_sanitario: { type: "permiso_sanitario", files: [], isUploading: false, error: null },
+    licencia_conducir: { type: "licencia_conducir", files: [], isUploading: false, error: null },
     vehiculo: { type: "vehiculo", files: [], isUploading: false, error: null },
+    permiso_sanitario: { type: "permiso_sanitario", files: [], isUploading: false, error: null },
     certificacion: { type: "certificacion", files: [], isUploading: false, error: null },
   });
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<DocumentType, HTMLInputElement | null>>({
+    cedula: null,
+    licencia_conducir: null,
+    vehiculo: null,
+    permiso_sanitario: null,
+    certificacion: null,
+  });
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -62,20 +96,17 @@ export function DocumentUpload({ userId }: { userId: string }) {
       const saved = localStorage.getItem("nitoagua_provider_onboarding");
       if (saved) {
         const { data } = JSON.parse(saved);
-        if (data.vehicleCapacity) {
-          setVehicleCapacity(data.vehicleCapacity);
-        }
         if (data.documents) {
-          // Restore document paths from saved data
           const restored: Record<DocumentType, DocumentSection> = {
             cedula: { type: "cedula", files: [], isUploading: false, error: null },
-            permiso_sanitario: { type: "permiso_sanitario", files: [], isUploading: false, error: null },
+            licencia_conducir: { type: "licencia_conducir", files: [], isUploading: false, error: null },
             vehiculo: { type: "vehiculo", files: [], isUploading: false, error: null },
+            permiso_sanitario: { type: "permiso_sanitario", files: [], isUploading: false, error: null },
             certificacion: { type: "certificacion", files: [], isUploading: false, error: null },
           };
 
           Object.entries(data.documents).forEach(([type, paths]) => {
-            if (Array.isArray(paths) && paths.length > 0) {
+            if (Array.isArray(paths) && paths.length > 0 && type in restored) {
               restored[type as DocumentType].files = (paths as string[]).map((path, i) => ({
                 name: `Archivo ${i + 1}`,
                 path,
@@ -168,25 +199,9 @@ export function DocumentUpload({ userId }: { userId: string }) {
     [userId]
   );
 
-  const removeFile = useCallback(
-    async (type: DocumentType, path: string) => {
-      try {
-        const supabase = createClient();
-        await supabase.storage.from("provider-documents").remove([path]);
-
-        setDocuments((prev) => ({
-          ...prev,
-          [type]: {
-            ...prev[type],
-            files: prev[type].files.filter((f) => f.path !== path),
-          },
-        }));
-      } catch (error) {
-        console.error(`[Upload] Error removing file:`, error);
-      }
-    },
-    []
-  );
+  const triggerFileInput = (type: DocumentType) => {
+    fileInputRefs.current[type]?.click();
+  };
 
   const validateAndSubmit = async () => {
     setGlobalError(null);
@@ -199,177 +214,192 @@ export function DocumentUpload({ userId }: { userId: string }) {
       }
     }
 
-    // Validate vehicle capacity
-    if (!vehicleCapacity) {
-      setGlobalError("Selecciona la capacidad de tu vehículo");
-      return;
-    }
-
     setIsSubmitting(true);
 
     // Save to localStorage
     try {
       const existing = localStorage.getItem("nitoagua_provider_onboarding");
-      const progress = existing ? JSON.parse(existing) : { currentStep: 4, data: {} };
+      const progress = existing ? JSON.parse(existing) : { currentStep: 2, data: {} };
       progress.data = {
         ...progress.data,
-        vehicleCapacity,
         documents: {
           cedula: documents.cedula.files.map((f) => f.path),
-          permiso_sanitario: documents.permiso_sanitario.files.map((f) => f.path),
+          licencia_conducir: documents.licencia_conducir.files.map((f) => f.path),
           vehiculo: documents.vehiculo.files.map((f) => f.path),
+          permiso_sanitario: documents.permiso_sanitario.files.map((f) => f.path),
           certificacion: documents.certificacion.files.map((f) => f.path),
         },
       };
-      progress.currentStep = 5;
+      progress.currentStep = 3;
       localStorage.setItem("nitoagua_provider_onboarding", JSON.stringify(progress));
     } catch {
       // Ignore errors
     }
 
-    router.push("/provider/onboarding/bank");
+    // Go to step 3: Vehicle
+    router.push("/provider/onboarding/vehicle");
   };
 
   const handleBack = () => {
-    router.push("/provider/onboarding/areas");
+    router.push("/provider/onboarding/personal");
   };
 
-  const isComplete =
-    REQUIRED_DOCUMENTS.every((type) => documents[type].files.length > 0) &&
-    vehicleCapacity !== undefined;
+  const isComplete = REQUIRED_DOCUMENTS.every((type) => documents[type].files.length > 0);
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-64px)]">
-      <ProgressIndicator currentStep={4} totalSteps={6} />
+    <div className="flex flex-col min-h-screen bg-white">
+      {/* Header with gradient */}
+      <div
+        className="px-5 pt-4 pb-4"
+        style={{
+          background: "linear-gradient(180deg, rgba(254, 215, 170, 0.5) 0%, white 100%)",
+        }}
+      >
+        {/* Step 2 of 6: Documents */}
+        <ProgressIndicator currentStep={2} totalSteps={6} onBack={handleBack} />
 
-      <div className="flex-1 px-4 py-6">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Documentos</h1>
-          <p className="text-gray-600 text-sm mb-6">
-            Sube tus documentos para verificación. Archivos JPG, PNG o PDF (máx.
-            10MB)
-          </p>
+        <h1 className="text-2xl font-bold text-gray-900 mt-4">Documentos</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Sube fotos claras de tus documentos. Serán revisados por nuestro equipo.
+        </p>
+      </div>
 
-          <div className="space-y-6">
-            {/* Document Upload Sections */}
-            {(["cedula", "permiso_sanitario", "vehiculo", "certificacion"] as DocumentType[]).map(
-              (type) => {
-                const section = documents[type];
-                const isRequired = REQUIRED_DOCUMENTS.includes(type);
-                const hasFiles = section.files.length > 0;
+      {/* Document list */}
+      <div className="flex-1 px-5 py-4 overflow-y-auto">
+        <div className="space-y-2">
+          {(["cedula", "licencia_conducir", "vehiculo", "permiso_sanitario"] as DocumentType[]).map(
+            (type) => {
+              const section = documents[type];
+              const config = DOCUMENT_CONFIG[type];
+              const hasFiles = section.files.length > 0;
+              const isOptional = config.optional;
+              const Icon = config.icon;
 
-                return (
-                  <div key={type} className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      {hasFiles ? (
-                        <Check className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <FileImage className="w-4 h-4 text-gray-500" />
-                      )}
-                      {DOCUMENT_LABELS[type]}
-                      {isRequired && !hasFiles && (
-                        <span className="text-red-500">*</span>
-                      )}
-                    </Label>
+              return (
+                <div key={type}>
+                  {/* Hidden file input */}
+                  <input
+                    ref={(el) => { fileInputRefs.current[type] = el; }}
+                    type="file"
+                    className="hidden"
+                    accept="image/jpeg,image/png,application/pdf"
+                    onChange={(e) => handleFileUpload(type, e.target.files)}
+                    data-testid={`upload-${type}`}
+                  />
 
-                    {/* Upload Area */}
-                    <label
-                      className={cn(
-                        "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-colors",
-                        section.isUploading
-                          ? "border-orange-300 bg-orange-50"
-                          : hasFiles
-                            ? "border-green-300 bg-green-50 hover:bg-green-100"
-                            : "border-gray-300 bg-gray-50 hover:bg-gray-100"
-                      )}
-                    >
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/jpeg,image/png,application/pdf"
-                        onChange={(e) => handleFileUpload(type, e.target.files)}
-                        disabled={section.isUploading}
-                        data-testid={`upload-${type}`}
-                      />
-                      {section.isUploading ? (
-                        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
-                      ) : (
-                        <>
-                          <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                          <span className="text-sm text-gray-500">
-                            {hasFiles ? "Agregar otro archivo" : "Toca para subir"}
-                          </span>
-                        </>
-                      )}
-                    </label>
-
-                    {/* Uploaded Files */}
-                    {section.files.length > 0 && (
-                      <div className="space-y-2">
-                        {section.files.map((file) => (
-                          <div
-                            key={file.path}
-                            className="flex items-center justify-between p-2 bg-white border rounded-lg"
-                          >
-                            <div className="flex items-center gap-2 truncate">
-                              <FileImage className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                              <span className="text-sm text-gray-700 truncate">
-                                {file.name}
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeFile(type, file.path)}
-                              className="p-1 text-gray-400 hover:text-red-500"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                  {/* Document Card - Mockup Style */}
+                  <div
+                    className={cn(
+                      "rounded-xl p-4",
+                      hasFiles
+                        ? "bg-gray-50 border border-green-500"
+                        : isOptional
+                          ? "bg-white border border-dashed border-gray-200"
+                          : "bg-white border border-gray-200"
                     )}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Icon */}
+                      <div
+                        className={cn(
+                          "w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0",
+                          hasFiles
+                            ? "bg-green-100"
+                            : isOptional
+                              ? "bg-gray-50"
+                              : "bg-gray-100"
+                        )}
+                      >
+                        <Icon
+                          className={cn(
+                            "w-6 h-6",
+                            hasFiles
+                              ? "text-green-600"
+                              : isOptional
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                          )}
+                        />
+                      </div>
+
+                      {/* Text */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {DOCUMENT_LABELS[type]}
+                        </div>
+                        <div
+                          className={cn(
+                            "text-xs",
+                            hasFiles ? "text-green-600" : isOptional ? "text-gray-400" : "text-gray-500"
+                          )}
+                        >
+                          {hasFiles ? "✓ Subido" : config.description}
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <button
+                        type="button"
+                        onClick={() => triggerFileInput(type)}
+                        disabled={section.isUploading}
+                        className={cn(
+                          "text-xs font-medium",
+                          section.isUploading
+                            ? "text-gray-400"
+                            : hasFiles
+                              ? "text-orange-500"
+                              : isOptional
+                                ? "text-gray-400"
+                                : "text-orange-500"
+                        )}
+                      >
+                        {section.isUploading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : hasFiles ? (
+                          "Cambiar"
+                        ) : (
+                          "Subir"
+                        )}
+                      </button>
+                    </div>
 
                     {/* Error */}
                     {section.error && (
-                      <p className="text-sm text-red-500 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
+                      <p className="mt-2 text-xs text-red-500 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
                         {section.error}
                       </p>
                     )}
                   </div>
-                );
-              }
-            )}
-
-            {/* Vehicle Capacity */}
-            <div className="space-y-2">
-              <Label>Capacidad del vehículo *</Label>
-              <Select
-                value={vehicleCapacity?.toString()}
-                onValueChange={(v) => setVehicleCapacity(Number(v))}
-              >
-                <SelectTrigger className="h-12" data-testid="vehicle-capacity">
-                  <SelectValue placeholder="Selecciona capacidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  {VEHICLE_CAPACITIES.map((cap) => (
-                    <SelectItem key={cap.value} value={cap.value.toString()}>
-                      {cap.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Global Error */}
-          {globalError && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <p className="text-sm">{globalError}</p>
-            </div>
+                </div>
+              );
+            }
           )}
         </div>
+
+        {/* Info box */}
+        <div className="mt-5 bg-orange-50 border border-orange-100 rounded-xl p-4">
+          <div className="flex gap-3">
+            <Info className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <div>
+              <div className="text-sm font-semibold text-orange-600 mb-1">
+                Documentos seguros
+              </div>
+              <div className="text-xs text-gray-600 leading-relaxed">
+                Tus documentos están protegidos y solo serán revisados por nuestro
+                equipo de verificación.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Global Error */}
+        {globalError && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm">{globalError}</p>
+          </div>
+        )}
       </div>
 
       {/* Navigation Buttons */}
@@ -389,7 +419,12 @@ export function DocumentUpload({ userId }: { userId: string }) {
             type="button"
             onClick={validateAndSubmit}
             disabled={isSubmitting || !isComplete}
-            className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-xl"
+            className={cn(
+              "flex-1 h-12 font-medium rounded-xl",
+              isComplete
+                ? "bg-orange-500 hover:bg-orange-600 text-white"
+                : "bg-gray-200 text-gray-500"
+            )}
             data-testid="next-button"
           >
             {isSubmitting ? (

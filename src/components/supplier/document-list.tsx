@@ -27,8 +27,9 @@ interface DocumentListProps {
 // Document type icons
 const DOCUMENT_ICONS: Record<DocumentType, string> = {
   cedula: "🪪",
-  permiso_sanitario: "📋",
+  licencia_conducir: "🪪",
   vehiculo: "🚛",
+  permiso_sanitario: "📋",
   certificacion: "📜",
 };
 
@@ -44,7 +45,7 @@ export function DocumentList({ documents, onDocumentUpdated }: DocumentListProps
     return acc;
   }, {} as Record<string, ProviderDocument>);
 
-  const documentTypes: DocumentType[] = ["cedula", "permiso_sanitario", "vehiculo", "certificacion"];
+  const documentTypes: DocumentType[] = ["cedula", "licencia_conducir", "vehiculo", "permiso_sanitario", "certificacion"];
 
   return (
     <>

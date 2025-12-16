@@ -75,10 +75,17 @@ export async function submitProviderRegistration(
       name: data.name,
       phone: data.phone,
       email: user.email,
+      rut: data.rut,
+      avatar_url: data.avatarUrl || null,
       verification_status: "pending",
       bank_name: data.bankName,
       bank_account: `${data.accountType}|${data.accountNumber}|${data.rut}`,
       is_available: false, // Not available until approved
+      // Vehicle info (Step 3 - UX alignment)
+      vehicle_type: data.vehicleType,
+      vehicle_capacity: data.vehicleCapacity,
+      working_hours: data.workingHours || null,
+      working_days: data.workingDays || null,
     };
 
     if (existingProfile) {
@@ -107,7 +114,7 @@ export async function submitProviderRegistration(
     console.log("[Provider Registration] Profile created/updated for user:", user.id);
 
     // 2. Create provider_documents records
-    const documentTypes = ["cedula", "permiso_sanitario", "vehiculo", "certificacion"] as const;
+    const documentTypes = ["cedula", "licencia_conducir", "vehiculo", "permiso_sanitario", "certificacion"] as const;
     const documentRecords: {
       provider_id: string;
       type: string;

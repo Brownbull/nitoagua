@@ -21,6 +21,8 @@
     "seed:mockup:empty": "npx ts-node scripts/local/seed-ui-mockups.ts --empty",
     "seed:mockup:clean": "npx ts-node scripts/local/seed-ui-mockups.ts --clean",
     "seed:prod:users": "npx ts-node scripts/production/seed-production-test-users.ts",
+    "seed:provider2": "npx ts-node scripts/production/seed-provider2-test-user.ts --local",
+    "seed:provider2:reset": "npx ts-node scripts/production/seed-provider2-test-user.ts --local --reset",
     "cleanup:prod": "npx ts-node scripts/production/cleanup-production-test-data.ts",
     "cleanup:prod:confirm": "npx ts-node scripts/production/cleanup-production-test-data.ts --confirm",
     "email:dev": "email dev --dir emails --port 3006",

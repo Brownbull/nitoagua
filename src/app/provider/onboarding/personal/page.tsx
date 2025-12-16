@@ -14,6 +14,7 @@ export default async function PersonalInfoPage() {
   }
 
   // Check if user already has a provider profile
+  // Note: rut and avatar_url columns added in migration 20251215220000
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, verification_status, name, phone")
@@ -37,9 +38,12 @@ export default async function PersonalInfoPage() {
       initialData={{
         name: profile?.name || userName,
         phone: profile?.phone || "",
+        // rut and avatarUrl loaded from localStorage if available
+        // (columns added in migration 20251215220000)
       }}
       userEmail={user.email}
       userName={userName}
+      userId={user.id}
     />
   );
 }
