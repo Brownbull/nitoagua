@@ -1100,12 +1100,12 @@ The following epics implement the V2 architecture where providers submit offers 
 | Epic | Title | Stories | User Value |
 |------|-------|---------|------------|
 | 6 | Admin Operations Panel | 8 | Provider verification, offer settings, settlement tracking, operations |
-| 7 | Provider Onboarding | 6 | Self-registration, document upload, verification flow, deployment |
+| 7 | Provider Onboarding | 11 | Self-registration, document upload, verification flow, UX alignment |
 | 8 | Provider Offer System | 7 | Browse requests, submit offers, track offer status, earnings visibility |
 | 9 | Consumer Offer Selection | 5 | View multiple offers, select preferred provider, offer countdown |
 | 10 | Consumer UX Enhancements | 5 | Map pinpoint, negative states, payment options, improved messaging |
 
-**Total Post-MVP:** 5 Epics, 31 Stories
+**Total Post-MVP:** 5 Epics, 36 Stories
 
 **Implementation Order:** Epics are numbered by dependency order (6→7→8→9→10). Start with Epic 6 and proceed sequentially.
 
@@ -1773,6 +1773,203 @@ So that **the provider registration flow is live and working for new water provi
 - Branching strategy: develop → staging → main
 - Storage bucket may need manual creation in Supabase Dashboard
 
+**Status:** DONE - Deployed 2025-12-15
+
+---
+
+### Story 7.7: UX Alignment - Personal Information Screen
+
+As a **provider registering on the platform**,
+I want **the personal information step to match the UX mockups**,
+So that **the onboarding experience is consistent with the approved design**.
+
+**Acceptance Criteria:**
+
+**Given** a provider is on the personal information step
+**When** the form loads
+**Then** they see (per mockup 13.2):
+- "Paso 1 de 4" header with 4-segment progress bar (not 6 steps)
+- Profile photo upload circle with camera icon and "+ Agregar foto de perfil" link
+- Name field (pre-filled from Google if available)
+- **RUT field** with validation (currently missing - should be on this screen)
+- Phone field with +56 prefix
+- Google account linked indicator showing email
+
+**And** the progress bar shows 4 steps total:
+1. Información personal
+2. Documentos
+3. Tu vehículo
+4. Cuenta bancaria
+
+**Prerequisites:** Story 7.6 (deployed)
+
+**Technical Notes:**
+- Move RUT from bank step to personal info step
+- Add profile photo upload to Supabase Storage
+- Simplify progress indicator from 6 to 4 steps
+- Reorder steps: Personal → Documents → Vehicle → Bank
+
+**Mockup Reference:** `docs/ux-mockups/01-consolidated-provider-flow.html` Section 13.2
+
+---
+
+### Story 7.8: UX Alignment - Document Upload Screen
+
+As a **provider uploading documents**,
+I want **the document step to match the UX mockups**,
+So that **I see the correct document requirements per the approved design**.
+
+**Acceptance Criteria:**
+
+**Given** a provider is on the documents step
+**When** the form loads
+**Then** they see (per mockup 13.3):
+- "Paso 2 de 4" header with progress bar
+- Document list with icons and status:
+  - **Cédula de identidad** (required) - ID card icon
+  - **Licencia de conducir** (required if motorized vehicle) - license icon
+  - **Fotos del vehículo** (required) - vehicle icon
+  - **Permiso sanitario** (optional - dashed border) - document icon
+- Each document shows: Upload status (✓ Subido / Pendiente), "Cambiar" or "Subir" button
+- Info box: "Documentos seguros - Tus documentos están protegidos..."
+- Disabled continue button until required docs uploaded
+
+**Changes from current implementation:**
+- Add "Licencia de conducir" document type
+- Make "Permiso sanitario" optional (currently required)
+- Update document card styling to match mockup
+
+**Prerequisites:** Story 7.7
+
+**Technical Notes:**
+- Add `licencia_conducir` to document types enum
+- Update REQUIRED_DOCUMENTS and OPTIONAL_DOCUMENTS arrays
+- Update document upload UI to match mockup styling
+- Migration to add new document type
+
+**Mockup Reference:** `docs/ux-mockups/01-consolidated-provider-flow.html` Section 13.3
+
+---
+
+### Story 7.9: UX Alignment - Vehicle Information Screen
+
+As a **provider configuring their vehicle**,
+I want **a dedicated vehicle information step matching the UX mockups**,
+So that **I can specify my vehicle type, capacity, and availability**.
+
+**Acceptance Criteria:**
+
+**Given** a provider is on the vehicle step
+**When** the form loads
+**Then** they see (per mockup 13.4):
+- "Paso 3 de 4" header with progress bar
+- "Tu vehículo" title
+- Vehicle type selection with visual cards:
+  - 🏍️ Moto - "Hasta 100L por viaje"
+  - 🚗 Auto - "Hasta 300L por viaje"
+  - 🛻 Camioneta - "Hasta 1000L por viaje"
+- Selected card has orange border and checkmark
+- Capacity input field: "Capacidad de carga (litros)"
+- Working hours dropdown: "Horas disponible por día" (4-6, 6-8, 8-10, 10+)
+- Working days buttons: Lun-Dom (toggle selection)
+
+**Changes from current implementation:**
+- Add vehicle type selection with visual cards
+- Add working hours dropdown
+- Add working days selection
+- Replace simple capacity dropdown with free text + vehicle type
+
+**Prerequisites:** Story 7.8
+
+**Technical Notes:**
+- Add `vehicle_type` column to profiles (enum: 'moto', 'auto', 'camioneta')
+- Add `working_hours` column (enum: '4-6', '6-8', '8-10', '10+')
+- Add `working_days` column (array of days)
+- Create vehicle type cards component
+- Migration for new columns
+
+**Mockup Reference:** `docs/ux-mockups/01-consolidated-provider-flow.html` Section 13.4
+
+---
+
+### Story 7.10: UX Alignment - Bank Account Screen
+
+As a **provider configuring bank account**,
+I want **the bank step to match the UX mockups**,
+So that **the account type selection uses buttons instead of dropdown**.
+
+**Acceptance Criteria:**
+
+**Given** a provider is on the bank account step
+**When** the form loads
+**Then** they see (per mockup 13.5):
+- "Paso 4 de 4" header with progress bar
+- "Cuenta bancaria" title
+- Description: "Ingresa los datos de la cuenta donde recibirás tus ganancias"
+- Bank dropdown selector
+- **Account type as two buttons** (not dropdown):
+  - "Cuenta Vista" button (highlighted when selected)
+  - "Cuenta Corriente" button
+- Account number input
+- RUT field (pre-filled if entered in personal info, disabled)
+- Info box: "Transferencias seguras - Las transferencias se procesan en 1-2 días hábiles"
+- "Completar registro" button
+
+**Changes from current implementation:**
+- Change account type from dropdown to button selection
+- Pre-fill RUT from personal info step (if we move RUT to step 1)
+- Update button text from "Siguiente" to "Completar registro"
+
+**Prerequisites:** Story 7.9
+
+**Technical Notes:**
+- Update bank form component with toggle buttons
+- Pre-populate RUT from earlier step
+- Update submit button text
+
+**Mockup Reference:** `docs/ux-mockups/01-consolidated-provider-flow.html` Section 13.5
+
+---
+
+### Story 7.11: UX Alignment Deployment & Verification
+
+As a **developer**,
+I want **to deploy all UX alignment changes and verify production matches mockups**,
+So that **the provider onboarding flow matches the approved UX design**.
+
+**Acceptance Criteria:**
+
+**Given** Stories 7.7-7.10 are complete
+**When** deployment workflow is executed
+**Then**:
+- All changes committed to develop branch
+- Develop merged to staging with preview verification
+- Staging merged to main with production deployment
+- E2E tests pass for updated onboarding flow
+
+**And** production verification confirms UX alignment:
+- Personal info screen matches mockup 13.2 (photo upload, RUT, 4-step progress)
+- Document screen matches mockup 13.3 (license required, permiso optional)
+- Vehicle screen matches mockup 13.4 (type cards, hours, days)
+- Bank screen matches mockup 13.5 (button selection, pre-filled RUT)
+
+**And** E2E testing with test user:
+- Reset provider2 test user: `npm run seed:provider2:reset`
+- Complete full onboarding flow
+- Verify all steps render correctly
+- Screenshot comparison with mockups
+- Admin approval flow works
+
+**And** no regression in existing flows
+
+**Prerequisites:** Stories 7.7, 7.8, 7.9, 7.10
+
+**Technical Notes:**
+- Run E2E tests: `npm run test:e2e -- provider-registration`
+- Use Playwright for screenshot comparison
+- Production URL: https://nitoagua.vercel.app/provider/onboarding
+- Document any remaining discrepancies for future stories
+
 ---
 
 ## Epic 8: Provider Offer System
@@ -2412,12 +2609,12 @@ So that **I can trust the platform based on real information**.
 | 4 | User Accounts & Profiles | 5 | MVP |
 | 5 | Notifications & Communication | 3 | MVP |
 | 6 | Admin Operations Panel | 8 | V2 |
-| 7 | Provider Onboarding | 5 | V2 |
+| 7 | Provider Onboarding | 11 | V2 |
 | 8 | Provider Offer System | 7 | V2 |
 | 9 | Consumer Offer Selection | 5 | V2 |
 | 10 | Consumer UX Enhancements | 5 | V2 |
 
-**Total:** 10 Epics, 56 Stories (26 MVP + 30 V2)
+**Total:** 10 Epics, 61 Stories (26 MVP + 35 V2)
 
 ### V2 Implementation Order
 

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
-  Phone,
   MapPin,
   FileCheck,
   Building2,
@@ -13,6 +12,7 @@ import {
   Check,
   AlertCircle,
   Pencil,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressIndicator } from "./progress-indicator";
@@ -20,9 +20,14 @@ import {
   COMUNAS,
   CHILEAN_BANKS,
   ACCOUNT_TYPES,
-  VEHICLE_CAPACITIES,
+  VEHICLE_TYPES,
+  WORKING_HOURS,
+  WORKING_DAYS,
   DOCUMENT_LABELS,
   type DocumentType,
+  type VehicleType,
+  type WorkingHours,
+  type WorkingDay,
 } from "@/lib/validations/provider-registration";
 import { submitProviderRegistration } from "@/lib/actions/provider-registration";
 import { cn } from "@/lib/utils";
@@ -30,18 +35,22 @@ import { cn } from "@/lib/utils";
 interface ReviewData {
   name?: string;
   phone?: string;
+  rut?: string;
   comunaIds?: string[];
+  vehicleType?: VehicleType;
   vehicleCapacity?: number;
+  workingHours?: WorkingHours;
+  availableDays?: WorkingDay[];
   documents?: {
     cedula?: string[];
-    permiso_sanitario?: string[];
+    licencia_conducir?: string[];
     vehiculo?: string[];
+    permiso_sanitario?: string[];
     certificacion?: string[];
   };
   bankName?: string;
   accountType?: string;
   accountNumber?: string;
-  rut?: string;
 }
 
 export function ReviewSummary() {
@@ -71,18 +80,23 @@ export function ReviewSummary() {
       const result = await submitProviderRegistration({
         name: data.name || "",
         phone: data.phone || "",
+        rut: data.rut || "",
         comunaIds: data.comunaIds || [],
-        vehicleCapacity: data.vehicleCapacity || 0,
+        // Vehicle info (Step 3)
+        vehicleType: data.vehicleType || "auto",
+        vehicleCapacity: data.vehicleCapacity || 300,
+        workingHours: data.workingHours,
+        workingDays: data.availableDays,
         documents: {
           cedula: data.documents?.cedula || [],
-          permiso_sanitario: data.documents?.permiso_sanitario || [],
+          licencia_conducir: data.documents?.licencia_conducir || [],
           vehiculo: data.documents?.vehiculo || [],
+          permiso_sanitario: data.documents?.permiso_sanitario,
           certificacion: data.documents?.certificacion,
         },
         bankName: data.bankName || "",
         accountType: data.accountType || "",
         accountNumber: data.accountNumber || "",
-        rut: data.rut || "",
       });
 
       if (!result.success) {
@@ -120,9 +134,21 @@ export function ReviewSummary() {
   const accountTypeLabel = ACCOUNT_TYPES.find(
     (t) => t.value === data.accountType
   )?.label;
-  const vehicleCapacityLabel = VEHICLE_CAPACITIES.find(
-    (v) => v.value === data.vehicleCapacity
+
+  // Vehicle info display values
+  const vehicleTypeInfo = VEHICLE_TYPES.find((v) => v.id === data.vehicleType);
+  const vehicleTypeLabel = vehicleTypeInfo
+    ? `${vehicleTypeInfo.emoji} ${vehicleTypeInfo.label}`
+    : undefined;
+  const vehicleCapacityLabel = data.vehicleCapacity
+    ? `${data.vehicleCapacity.toLocaleString()}L`
+    : undefined;
+  const workingHoursLabel = WORKING_HOURS.find(
+    (h) => h.value === data.workingHours
   )?.label;
+  const workingDaysLabels = (data.availableDays || [])
+    .map((d) => WORKING_DAYS.find((day) => day.id === d)?.label)
+    .filter(Boolean);
 
   const documentCount = Object.values(data.documents || {}).reduce(
     (acc, arr) => acc + (arr?.length || 0),
@@ -130,108 +156,125 @@ export function ReviewSummary() {
   );
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-64px)]">
-      <ProgressIndicator currentStep={6} totalSteps={6} />
+    <div className="flex flex-col min-h-screen bg-white">
+      {/* Header with gradient */}
+      <div
+        className="px-5 pt-4 pb-4"
+        style={{
+          background: "linear-gradient(180deg, rgba(254, 215, 170, 0.5) 0%, white 100%)",
+        }}
+      >
+        {/* Step 6 of 6: Personal → Documentos → Vehículo → Áreas → Banco → Revisión */}
+        <ProgressIndicator currentStep={6} showBackButton={true} onBack={() => router.push("/provider/onboarding/bank")} />
 
-      <div className="flex-1 px-4 py-6">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
-            Revisa tu Solicitud
-          </h1>
-          <p className="text-gray-600 text-sm mb-6">
-            Verifica que toda la información esté correcta antes de enviar
-          </p>
+        <h1 className="text-2xl font-bold text-gray-900 mt-4">Revisa tu Solicitud</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Verifica que toda la información esté correcta antes de enviar
+        </p>
+      </div>
 
-          <div className="space-y-4">
-            {/* Personal Info Section */}
-            <SectionCard
-              icon={User}
-              title="Información Personal"
-              onEdit={() => handleEdit("personal")}
-            >
-              <InfoRow label="Nombre" value={data.name} />
-              <InfoRow label="Teléfono" value={data.phone} />
-            </SectionCard>
+      <div className="flex-1 px-5 py-4 overflow-y-auto">
+        <div className="space-y-3">
+          {/* Personal Info Section */}
+          <SectionCard
+            icon={User}
+            title="Información Personal"
+            onEdit={() => handleEdit("personal")}
+          >
+            <InfoRow label="Nombre" value={data.name} />
+            <InfoRow label="RUT" value={data.rut} />
+            <InfoRow label="Teléfono" value={data.phone} />
+          </SectionCard>
 
-            {/* Service Areas Section */}
-            <SectionCard
-              icon={MapPin}
-              title="Áreas de Servicio"
-              onEdit={() => handleEdit("areas")}
-            >
-              <InfoRow
-                label="Comunas"
-                value={comunaNames.join(", ") || "No seleccionadas"}
-              />
-            </SectionCard>
+          {/* Service Areas Section */}
+          <SectionCard
+            icon={MapPin}
+            title="Áreas de Servicio"
+            onEdit={() => handleEdit("areas")}
+          >
+            <InfoRow
+              label="Comunas"
+              value={comunaNames.join(", ") || "No seleccionadas"}
+            />
+          </SectionCard>
 
-            {/* Documents Section */}
-            <SectionCard
-              icon={FileCheck}
-              title="Documentos"
-              onEdit={() => handleEdit("documents")}
-            >
-              {(["cedula", "permiso_sanitario", "vehiculo", "certificacion"] as DocumentType[]).map(
-                (type) => {
-                  const files = data.documents?.[type] || [];
-                  return (
-                    <InfoRow
-                      key={type}
-                      label={DOCUMENT_LABELS[type]}
-                      value={
-                        files.length > 0 ? (
-                          <span className="flex items-center gap-1 text-green-600">
-                            <Check className="w-4 h-4" />
-                            {files.length} archivo{files.length !== 1 ? "s" : ""}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">No subido</span>
-                        )
-                      }
-                    />
-                  );
-                }
-              )}
-              <InfoRow
-                label="Capacidad vehículo"
-                value={vehicleCapacityLabel || "No seleccionada"}
-              />
-            </SectionCard>
+          {/* Documents Section */}
+          <SectionCard
+            icon={FileCheck}
+            title="Documentos"
+            onEdit={() => handleEdit("documents")}
+          >
+            {(["cedula", "licencia_conducir", "vehiculo", "permiso_sanitario"] as DocumentType[]).map(
+              (type) => {
+                const files = data.documents?.[type] || [];
+                return (
+                  <InfoRow
+                    key={type}
+                    label={DOCUMENT_LABELS[type]}
+                    value={
+                      files.length > 0 ? (
+                        <span className="flex items-center gap-1 text-green-600">
+                          <Check className="w-4 h-4" />
+                          {files.length} archivo{files.length !== 1 ? "s" : ""}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">No subido</span>
+                      )
+                    }
+                  />
+                );
+              }
+            )}
+          </SectionCard>
 
-            {/* Bank Info Section */}
-            <SectionCard
-              icon={Building2}
-              title="Información Bancaria"
-              onEdit={() => handleEdit("bank")}
-            >
-              <InfoRow label="Banco" value={bankLabel} />
-              <InfoRow label="Tipo de cuenta" value={accountTypeLabel} />
-              <InfoRow
-                label="Número de cuenta"
-                value={
-                  data.accountNumber
-                    ? `****${data.accountNumber.slice(-4)}`
-                    : undefined
-                }
-              />
-              <InfoRow label="RUT" value={data.rut} />
-            </SectionCard>
-          </div>
+          {/* Vehicle Section */}
+          <SectionCard
+            icon={Truck}
+            title="Tu Vehículo"
+            onEdit={() => handleEdit("vehicle")}
+          >
+            <InfoRow label="Tipo de vehículo" value={vehicleTypeLabel} />
+            <InfoRow label="Capacidad" value={vehicleCapacityLabel} />
+            <InfoRow label="Horas disponibles" value={workingHoursLabel} />
+            <InfoRow
+              label="Días disponibles"
+              value={workingDaysLabels.length > 0 ? workingDaysLabels.join(", ") : undefined}
+            />
+          </SectionCard>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <p className="text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Terms */}
-          <p className="mt-6 text-xs text-gray-500 text-center">
-            Al enviar tu solicitud, aceptas los términos y condiciones de
-            nitoagua y autorizas la verificación de tus documentos.
-          </p>
+          {/* Bank Info Section */}
+          <SectionCard
+            icon={Building2}
+            title="Información Bancaria"
+            onEdit={() => handleEdit("bank")}
+          >
+            <InfoRow label="Banco" value={bankLabel} />
+            <InfoRow label="Tipo de cuenta" value={accountTypeLabel} />
+            <InfoRow
+              label="Número de cuenta"
+              value={
+                data.accountNumber
+                  ? `****${data.accountNumber.slice(-4)}`
+                  : undefined
+              }
+            />
+            <InfoRow label="RUT" value={data.rut} />
+          </SectionCard>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Terms */}
+        <p className="mt-6 text-xs text-gray-500 text-center">
+          Al enviar tu solicitud, aceptas los términos y condiciones de
+          nitoagua y autorizas la verificación de tus documentos.
+        </p>
       </div>
 
       {/* Navigation Buttons */}

@@ -7,10 +7,14 @@
  * the complete provider onboarding flow.
  *
  * Usage:
+ *   # Create user (if doesn't exist):
  *   SUPABASE_URL=https://xxx.supabase.co SUPABASE_SERVICE_KEY=xxx npx ts-node scripts/production/seed-provider2-test-user.ts
  *
- *   Or with --local flag:
+ *   # With --local flag (uses .env.local):
  *   npx ts-node scripts/production/seed-provider2-test-user.ts --local
+ *
+ *   # Reset user for re-testing onboarding (deletes profile, documents, service areas):
+ *   npx ts-node scripts/production/seed-provider2-test-user.ts --local --reset
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -18,6 +22,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 const isLocal = process.argv.includes("--local");
+const isReset = process.argv.includes("--reset");
 
 // Load .env.local manually (only for local mode)
 function loadEnvFile() {
@@ -60,8 +65,10 @@ const PROVIDER2_USER = {
 };
 
 async function main() {
+  const mode = isReset ? "RESET" : "CREATE/CHECK";
   console.log("\n🌱 Provider2 Test User Seed Script");
   console.log(`   URL: ${SUPABASE_URL}`);
+  console.log(`   Mode: ${mode}`);
   console.log("   Purpose: Test provider onboarding flow\n");
 
   const supabase = createClient(SUPABASE_URL!, SERVICE_ROLE_KEY!, {
@@ -89,8 +96,49 @@ async function main() {
     if (profile) {
       console.log(`   Current role: ${profile.role}`);
       console.log(`   Verification: ${profile.verification_status}`);
-      console.log("\n   To reset for testing, delete their profile:");
-      console.log(`   DELETE FROM profiles WHERE id = '${existingUser.id}';`);
+
+      if (isReset) {
+        // Reset mode: delete all provider data
+        console.log("\n🔄 Resetting user for onboarding...");
+
+        // Delete provider documents
+        const { error: docsError } = await supabase
+          .from("provider_documents")
+          .delete()
+          .eq("provider_id", existingUser.id);
+        if (docsError) {
+          console.log(`   ⚠ Could not delete documents: ${docsError.message}`);
+        } else {
+          console.log(`   ✓ Deleted provider documents`);
+        }
+
+        // Delete provider service areas
+        const { error: areasError } = await supabase
+          .from("provider_service_areas")
+          .delete()
+          .eq("provider_id", existingUser.id);
+        if (areasError) {
+          console.log(`   ⚠ Could not delete service areas: ${areasError.message}`);
+        } else {
+          console.log(`   ✓ Deleted service areas`);
+        }
+
+        // Delete profile
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .delete()
+          .eq("id", existingUser.id);
+        if (profileError) {
+          console.log(`   ⚠ Could not delete profile: ${profileError.message}`);
+        } else {
+          console.log(`   ✓ Deleted profile`);
+        }
+
+        console.log("\n✅ User reset complete - ready for onboarding!");
+      } else {
+        console.log("\n   To reset for testing, run with --reset flag:");
+        console.log(`   npx ts-node scripts/production/seed-provider2-test-user.ts --local --reset`);
+      }
     } else {
       console.log(`   ✓ No profile exists - ready for onboarding!`);
     }

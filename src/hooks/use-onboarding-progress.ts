@@ -14,20 +14,30 @@ interface OnboardingProgress {
 }
 
 const INITIAL_DATA: PartialRegistrationData = {
+  // Step 1: Personal info
   name: "",
   phone: "",
+  rut: "",
+  avatarUrl: undefined,
+  // Step 4: Service areas
   comunaIds: [],
+  // Step 3: Vehicle (per UX mockup Section 13.4)
+  vehicleType: undefined,
   vehicleCapacity: undefined,
+  workingHours: undefined,
+  workingDays: undefined,
+  // Step 2: Documents
   documents: {
     cedula: [],
-    permiso_sanitario: [],
+    licencia_conducir: [],
     vehiculo: [],
+    permiso_sanitario: [],
     certificacion: [],
   },
+  // Step 5: Bank info
   bankName: "",
   accountType: "",
   accountNumber: "",
-  rut: "",
 };
 
 export function useOnboardingProgress() {

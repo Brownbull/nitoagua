@@ -1,0 +1,163 @@
+<story-context id="7-7-ux-alignment-personal-information" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>7-7</storyId>
+    <title>UX Alignment - Personal Information Screen</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic7/7-7-ux-alignment-personal-information.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>provider registering on the platform</asA>
+    <iWant>the personal information step to match the UX mockups</iWant>
+    <soThat>the onboarding experience is consistent with the approved design</soThat>
+    <tasks>
+      <task id="1">Update Progress Indicator - Change from 6-step to 4-step, add "Paso X de 4" header</task>
+      <task id="2">Add Profile Photo Upload - Camera icon, storage bucket, localStorage persistence</task>
+      <task id="3">Move RUT Field - Add to personal info form with validation</task>
+      <task id="4">Update Bank Step - Pre-fill or remove RUT from bank step</task>
+      <task id="5">Update E2E Tests - New step order, photo upload, RUT tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC7.7.1">Progress indicator shows "Paso 1 de 4" with 4-segment progress bar</criterion>
+    <criterion id="AC7.7.2">Profile photo upload circle with camera icon is displayed</criterion>
+    <criterion id="AC7.7.3">"+ Agregar foto de perfil" link triggers upload dialog</criterion>
+    <criterion id="AC7.7.4">Name field is pre-filled from Google profile if available</criterion>
+    <criterion id="AC7.7.5">RUT field with Chilean format validation (XX.XXX.XXX-X) is present</criterion>
+    <criterion id="AC7.7.6">Phone field with +56 prefix and Chilean validation</criterion>
+    <criterion id="AC7.7.7">Google account linked indicator shows user's email</criterion>
+    <criterion id="AC7.7.8">Progress bar shows 4 steps: Personal → Documentos → Vehículo → Banco</criterion>
+    <criterion id="AC7.7.9">Profile photo uploaded to Supabase Storage bucket `profile-photos`</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/ux-mockups/01-consolidated-provider-flow.html</path>
+        <title>Provider Onboarding UX Mockups</title>
+        <section>Section 13.2 - Personal Information</section>
+        <snippet>Shows "Paso 1 de 4" header, profile photo circle with camera icon, name, RUT, phone fields with +56 prefix, Google account linked indicator</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic7/tech-spec.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Component Structure / Validation Schemas</section>
+        <snippet>Defines personalInfoSchema with name and phone validation. RUT validation exists in bankInfoSchema with validateRut function</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/provider/onboarding/progress-indicator.tsx</path>
+        <kind>component</kind>
+        <symbol>ProgressIndicator</symbol>
+        <lines>1-84</lines>
+        <reason>Current 6-step progress indicator - needs conversion to 4-step with "Paso X de 4" header</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/provider/onboarding/personal-form.tsx</path>
+        <kind>component</kind>
+        <symbol>PersonalForm</symbol>
+        <lines>1-172</lines>
+        <reason>Current form with name/phone - needs RUT field and profile photo upload</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/validations/provider-registration.ts</path>
+        <kind>validation</kind>
+        <symbol>personalInfoSchema, validateRut, formatRut</symbol>
+        <lines>1-216</lines>
+        <reason>Contains validation schemas and RUT validation function (currently in bankInfoSchema)</reason>
+      </artifact>
+      <artifact>
+        <path>src/hooks/use-onboarding-progress.ts</path>
+        <kind>hook</kind>
+        <symbol>useOnboardingProgress</symbol>
+        <reason>Manages localStorage persistence - needs update for new fields (rut, avatarUrl)</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/provider/onboarding/bank-form.tsx</path>
+        <kind>component</kind>
+        <symbol>BankForm</symbol>
+        <reason>Contains RUT field that should be pre-filled or removed after moving to personal info</reason>
+      </artifact>
+      <artifact>
+        <path>tests/e2e/provider-registration.spec.ts</path>
+        <kind>test</kind>
+        <symbol>Provider Registration E2E Tests</symbol>
+        <reason>Needs updates for new step order and new fields (RUT, photo)</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.x</version>
+        <reason>Supabase Storage for profile photo upload</reason>
+      </node>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.x</version>
+        <reason>Form handling in PersonalForm</reason>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^3.x</version>
+        <reason>Validation schemas</reason>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.x</version>
+        <reason>Icons including Camera for photo upload</reason>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use existing validateRut function from provider-registration.ts</constraint>
+    <constraint>Use existing formatRut function for RUT input formatting</constraint>
+    <constraint>Profile photos stored in Supabase Storage bucket `profile-photos`</constraint>
+    <constraint>Maintain orange theme (#f97316) for provider onboarding</constraint>
+    <constraint>Keep mobile-first responsive design</constraint>
+    <constraint>Step order: Personal (1) → Documentos (2) → Vehículo (3) → Banco (4)</constraint>
+    <constraint>RUT format: XX.XXX.XXX-X with checksum validation</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>PersonalInfoInput (extended)</name>
+      <kind>TypeScript interface</kind>
+      <signature>{ name: string; phone: string; rut: string; avatarUrl?: string; }</signature>
+      <path>src/lib/validations/provider-registration.ts</path>
+    </interface>
+    <interface>
+      <name>Supabase Storage Upload</name>
+      <kind>API</kind>
+      <signature>supabase.storage.from('profile-photos').upload(path, file)</signature>
+      <path>src/lib/supabase/client.ts</path>
+    </interface>
+    <interface>
+      <name>ProgressIndicator Props</name>
+      <kind>Component Props</kind>
+      <signature>{ currentStep: number; totalSteps: number; showStepLabel?: boolean; }</signature>
+      <path>src/components/provider/onboarding/progress-indicator.tsx</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>E2E tests using Playwright. Component tests follow existing patterns in tests/e2e/. Use data-testid attributes for selectors. Mock Supabase storage for upload tests.</standards>
+    <locations>
+      <location>tests/e2e/provider-registration.spec.ts</location>
+      <location>tests/e2e/provider-*.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea criterionId="AC7.7.1">Test progress indicator shows "Paso 1 de 4" text and 4 segments</idea>
+      <idea criterionId="AC7.7.2">Test profile photo placeholder with camera icon is visible</idea>
+      <idea criterionId="AC7.7.3">Test clicking photo placeholder opens file picker</idea>
+      <idea criterionId="AC7.7.5">Test RUT validation with valid/invalid RUT formats</idea>
+      <idea criterionId="AC7.7.5">Test RUT auto-formatting as user types</idea>
+      <idea criterionId="AC7.7.8">Test navigation through 4 steps in correct order</idea>
+    </ideas>
+  </tests>
+</story-context>
