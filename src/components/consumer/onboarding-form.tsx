@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,10 +24,26 @@ import {
   type ConsumerOnboardingInput,
 } from "@/lib/validations/consumer-profile";
 import { createConsumerProfile } from "@/lib/actions/consumer-profile";
+import { createClient } from "@/lib/supabase/client";
 
 export function ConsumerOnboardingForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  // Handle cancel - sign out and go to home
+  const handleCancel = async () => {
+    setIsCancelling(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      console.error("[Consumer Onboarding] Cancel error:", error);
+      setIsCancelling(false);
+    }
+  };
 
   const form = useForm<ConsumerOnboardingInput>({
     resolver: zodResolver(consumerOnboardingSchema),
@@ -148,7 +164,7 @@ export function ConsumerOnboardingForm() {
         <Button
           type="submit"
           className="w-full h-12 text-base bg-[#0077B6] hover:bg-[#006699]"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isCancelling}
           data-testid="consumer-submit-button"
         >
           {isSubmitting ? (
@@ -158,6 +174,28 @@ export function ConsumerOnboardingForm() {
             </>
           ) : (
             "Crear cuenta"
+          )}
+        </Button>
+
+        {/* Cancel button - signs out and returns to home */}
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full h-10 text-gray-500 hover:text-gray-700"
+          onClick={handleCancel}
+          disabled={isSubmitting || isCancelling}
+          data-testid="consumer-cancel-button"
+        >
+          {isCancelling ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Cancelando...
+            </>
+          ) : (
+            <>
+              <X className="mr-2 h-4 w-4" />
+              Cancelar
+            </>
           )}
         </Button>
       </form>
