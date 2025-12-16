@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ProgressIndicator } from "./progress-indicator";
 import { ProfilePhotoUpload } from "./profile-photo-upload";
+import { createClient } from "@/lib/supabase/client";
 import {
   personalInfoSchema,
   type PersonalInfoInput,
@@ -37,9 +38,28 @@ export function PersonalForm({
 }: PersonalFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     initialData?.avatarUrl || null
   );
+
+  // Handle cancel/back - sign out and go to home
+  const handleCancel = async () => {
+    setIsCancelling(true);
+    try {
+      // Clear localStorage progress
+      localStorage.removeItem("nitoagua_provider_onboarding");
+      // Sign out the user
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      // Redirect to home
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      console.error("[Onboarding] Cancel error:", error);
+      setIsCancelling(false);
+    }
+  };
 
   const {
     register,
@@ -140,7 +160,7 @@ export function PersonalForm({
         {/* Step 1 of 6: Personal → Documentos → Vehículo → Áreas → Banco → Revisión */}
         <ProgressIndicator
           currentStep={1}
-          onBack={() => router.push("/")}
+          onBack={handleCancel}
         />
 
         <h1 className="text-2xl font-bold text-gray-900 mt-4">
