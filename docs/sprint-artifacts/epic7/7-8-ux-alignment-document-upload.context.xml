@@ -1,0 +1,138 @@
+<story-context id="7-8-ux-alignment-document-upload" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>7-8</storyId>
+    <title>UX Alignment - Document Upload Screen</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic7/7-8-ux-alignment-document-upload.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>provider uploading documents</asA>
+    <iWant>the document step to match the UX mockups</iWant>
+    <soThat>I see the correct document requirements per the approved design</soThat>
+    <tasks>
+      <task id="1">Add License Document Type - Add `licencia_conducir` to enum</task>
+      <task id="2">Make Permiso Sanitario Optional - Move to OPTIONAL_DOCUMENTS</task>
+      <task id="3">Update Document Cards Styling - Icons, status badges, dashed border for optional</task>
+      <task id="4">Update Progress Indicator - Show "Paso 2 de 4"</task>
+      <task id="5">Update Info Box - Security messaging</task>
+      <task id="6">Update E2E Tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC7.8.1">Progress shows "Paso 2 de 4" with document step active</criterion>
+    <criterion id="AC7.8.2">Document list shows 4 types: Cédula (required), Licencia (required), Vehículo (required), Permiso sanitario (optional)</criterion>
+    <criterion id="AC7.8.3">Each document shows upload status (✓ Subido / Pendiente)</criterion>
+    <criterion id="AC7.8.4">Each document shows "Cambiar" or "Subir" button based on status</criterion>
+    <criterion id="AC7.8.5">Optional documents have dashed border styling</criterion>
+    <criterion id="AC7.8.6">Info box: "Documentos seguros - Tus documentos están protegidos..."</criterion>
+    <criterion id="AC7.8.7">Continue button disabled until required docs uploaded</criterion>
+    <criterion id="AC7.8.8">Continue button enabled when optional docs skipped</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/ux-mockups/01-consolidated-provider-flow.html</path>
+        <title>Provider Onboarding UX Mockups</title>
+        <section>Section 13.3 - Document Upload</section>
+        <snippet>Shows document cards with icons, status badges, Cédula, Licencia, Vehículo as required, Permiso sanitario optional with dashed border</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic7/tech-spec.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Database Tables / Document Upload</section>
+        <snippet>provider_documents table with type enum: cedula, licencia, permiso_sanitario, certificacion, vehiculo. Storage in provider-documents bucket.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/provider/onboarding/document-upload.tsx</path>
+        <kind>component</kind>
+        <symbol>DocumentUpload</symbol>
+        <reason>Current document upload component - needs styling updates and license document type</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/validations/provider-registration.ts</path>
+        <kind>validation</kind>
+        <symbol>documentTypesSchema, REQUIRED_DOCUMENTS, OPTIONAL_DOCUMENTS</symbol>
+        <lines>51-68</lines>
+        <reason>Document types enum and required/optional arrays - add licencia_conducir, move permiso_sanitario</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/provider/onboarding/documents/page.tsx</path>
+        <kind>page</kind>
+        <symbol>DocumentsPage</symbol>
+        <reason>Documents step page - update progress step number from 4 to 2</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/provider/onboarding/progress-indicator.tsx</path>
+        <kind>component</kind>
+        <symbol>ProgressIndicator</symbol>
+        <reason>Progress indicator - use updated 4-step version from Story 7-7</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.x</version>
+        <reason>Document upload to provider-documents bucket</reason>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>^0.x</version>
+        <reason>Document type icons (CreditCard, Car, FileText, Shield)</reason>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Requires Story 7-7 for progress indicator updates</constraint>
+    <constraint>Keep existing document upload/storage logic</constraint>
+    <constraint>New document type requires database enum update (migration)</constraint>
+    <constraint>Maintain provider-documents bucket RLS policies</constraint>
+    <constraint>Document types: cedula, licencia_conducir, vehiculo (required), permiso_sanitario, certificacion (optional)</constraint>
+    <constraint>This is now step 2 of 4 (was step 4 of 6)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>DocumentType (extended)</name>
+      <kind>TypeScript enum</kind>
+      <signature>type DocumentType = 'cedula' | 'licencia_conducir' | 'permiso_sanitario' | 'vehiculo' | 'certificacion'</signature>
+      <path>src/lib/validations/provider-registration.ts</path>
+    </interface>
+    <interface>
+      <name>REQUIRED_DOCUMENTS (updated)</name>
+      <kind>Constant</kind>
+      <signature>['cedula', 'licencia_conducir', 'vehiculo']</signature>
+      <path>src/lib/validations/provider-registration.ts</path>
+    </interface>
+    <interface>
+      <name>OPTIONAL_DOCUMENTS (updated)</name>
+      <kind>Constant</kind>
+      <signature>['permiso_sanitario', 'certificacion']</signature>
+      <path>src/lib/validations/provider-registration.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>E2E tests using Playwright. Test document upload with mock files. Verify required vs optional styling.</standards>
+    <locations>
+      <location>tests/e2e/provider-registration.spec.ts</location>
+      <location>tests/e2e/provider-document-management.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea criterionId="AC7.8.1">Test "Paso 2 de 4" displayed on documents step</idea>
+      <idea criterionId="AC7.8.2">Test all 4 document types visible with correct icons</idea>
+      <idea criterionId="AC7.8.3">Test status badge shows "Pendiente" initially, "✓ Subido" after upload</idea>
+      <idea criterionId="AC7.8.5">Test permiso sanitario has dashed border (optional styling)</idea>
+      <idea criterionId="AC7.8.7">Test continue button disabled when required docs missing</idea>
+      <idea criterionId="AC7.8.8">Test continue button enabled when all required docs uploaded (optional skipped)</idea>
+    </ideas>
+  </tests>
+</story-context>

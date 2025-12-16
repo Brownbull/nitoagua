@@ -1,82 +1,71 @@
 "use client";
 
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ProgressIndicatorProps {
   currentStep: number;
-  totalSteps: number;
+  totalSteps?: number;
+  showBackButton?: boolean;
+  onBack?: () => void;
 }
 
-const STEP_LABELS = [
-  "Inicio",
-  "Datos",
-  "Áreas",
-  "Documentos",
-  "Banco",
-  "Revisar",
-];
-
+/**
+ * 6-step progress indicator for provider onboarding
+ * Steps: Personal (1) → Documentos (2) → Vehículo (3) → Áreas (4) → Banco (5) → Revisión (6)
+ */
 export function ProgressIndicator({
   currentStep,
-  totalSteps,
+  totalSteps = 6,
+  showBackButton = true,
+  onBack,
 }: ProgressIndicatorProps) {
+  const router = useRouter();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      router.back();
+    }
+  };
+
   return (
-    <div className="w-full px-4 py-4">
-      {/* Progress bar */}
-      <div className="relative">
-        {/* Background line */}
-        <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200" />
-        {/* Progress line */}
-        <div
-          className="absolute top-4 left-0 h-0.5 bg-orange-500 transition-all duration-300"
-          style={{
-            width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%`,
-          }}
-        />
+    <div className="w-full">
+      {/* Header with back button and step text */}
+      <div className="flex items-center gap-3 mb-4">
+        {showBackButton && (
+          <button
+            onClick={handleBack}
+            className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 hover:bg-gray-200 transition-colors"
+            aria-label="Volver"
+            data-testid="progress-back-button"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
+        <span className="text-base font-semibold text-gray-700" data-testid="step-indicator">
+          Paso {currentStep} de {totalSteps}
+        </span>
+      </div>
 
-        {/* Steps */}
-        <div className="relative flex justify-between">
-          {Array.from({ length: totalSteps }, (_, i) => {
-            const stepNumber = i + 1;
-            const isCompleted = stepNumber < currentStep;
-            const isCurrent = stepNumber === currentStep;
+      {/* 6-segment progress bar */}
+      <div className="flex gap-2" data-testid="progress-bar">
+        {Array.from({ length: totalSteps }, (_, i) => {
+          const stepNumber = i + 1;
+          const isActive = stepNumber <= currentStep;
 
-            return (
-              <div
-                key={stepNumber}
-                className="flex flex-col items-center"
-              >
-                {/* Circle */}
-                <div
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
-                    isCompleted && "bg-orange-500 text-white",
-                    isCurrent && "bg-orange-500 text-white ring-4 ring-orange-100",
-                    !isCompleted && !isCurrent && "bg-gray-200 text-gray-500"
-                  )}
-                >
-                  {isCompleted ? (
-                    <Check className="w-4 h-4" />
-                  ) : (
-                    stepNumber
-                  )}
-                </div>
-                {/* Label */}
-                <span
-                  className={cn(
-                    "mt-2 text-xs",
-                    isCurrent && "text-orange-600 font-medium",
-                    isCompleted && "text-gray-600",
-                    !isCompleted && !isCurrent && "text-gray-400"
-                  )}
-                >
-                  {STEP_LABELS[i]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+          return (
+            <div
+              key={stepNumber}
+              className={`flex-1 h-1 rounded-sm transition-colors ${
+                isActive ? "bg-orange-500" : "bg-gray-200"
+              }`}
+              data-testid={`progress-segment-${stepNumber}`}
+              aria-label={`Paso ${stepNumber}${isActive ? " completado" : ""}`}
+            />
+          );
+        })}
       </div>
     </div>
   );

@@ -1,0 +1,133 @@
+<story-context id="7-10-ux-alignment-bank-account" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>7-10</storyId>
+    <title>UX Alignment - Bank Account Screen</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic7/7-10-ux-alignment-bank-account.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>provider configuring bank account</asA>
+    <iWant>the bank step to match the UX mockups</iWant>
+    <soThat>the account type selection uses buttons instead of dropdown</soThat>
+    <tasks>
+      <task id="1">Replace Account Type Dropdown - Create toggle buttons component</task>
+      <task id="2">Pre-fill RUT from Personal Info - Read from localStorage</task>
+      <task id="3">Update Info Box - Security messaging</task>
+      <task id="4">Update Submit Button - "Completar registro"</task>
+      <task id="5">Update Progress Indicator - Show "Paso 4 de 4"</task>
+      <task id="6">Update E2E Tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC7.10.1">Progress shows "Paso 4 de 4" with bank step active</criterion>
+    <criterion id="AC7.10.2">"Cuenta bancaria" title displayed</criterion>
+    <criterion id="AC7.10.3">Description: "Ingresa los datos de la cuenta donde recibirás tus ganancias"</criterion>
+    <criterion id="AC7.10.4">Bank dropdown selector (unchanged)</criterion>
+    <criterion id="AC7.10.5">Account type as two toggle buttons: "Cuenta Vista" / "Cuenta Corriente"</criterion>
+    <criterion id="AC7.10.6">Account number input (unchanged)</criterion>
+    <criterion id="AC7.10.7">RUT field pre-filled from personal info step</criterion>
+    <criterion id="AC7.10.8">RUT field is disabled/read-only with hint "La cuenta debe estar a tu nombre"</criterion>
+    <criterion id="AC7.10.9">Info box: "Transferencias seguras - Las transferencias se procesan en 1-2 días hábiles"</criterion>
+    <criterion id="AC7.10.10">Submit button text: "Completar registro"</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/ux-mockups/01-consolidated-provider-flow.html</path>
+        <title>Provider Onboarding UX Mockups</title>
+        <section>Section 13.5 - Bank Account Setup</section>
+        <snippet>Shows bank dropdown, account type toggle buttons (Cuenta Vista/Corriente), account number, pre-filled disabled RUT, "Completar registro" button</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic7/tech-spec.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Validation Schemas / UI/UX Considerations</section>
+        <snippet>bankInfoSchema with bank_name, account_type, account_number, rut. CHILEAN_BANKS and ACCOUNT_TYPES constants</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/provider/onboarding/bank-form.tsx</path>
+        <kind>component</kind>
+        <symbol>BankForm</symbol>
+        <reason>Current bank form - needs account type toggle buttons instead of dropdown</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/validations/provider-registration.ts</path>
+        <kind>validation</kind>
+        <symbol>bankInfoSchema, ACCOUNT_TYPES, CHILEAN_BANKS</symbol>
+        <lines>86-119</lines>
+        <reason>Bank validation schema and constants</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/provider/onboarding/bank/page.tsx</path>
+        <kind>page</kind>
+        <symbol>BankPage</symbol>
+        <reason>Bank step page - update progress step number from 5 to 4</reason>
+      </artifact>
+      <artifact>
+        <path>src/hooks/use-onboarding-progress.ts</path>
+        <kind>hook</kind>
+        <symbol>useOnboardingProgress</symbol>
+        <reason>Read RUT from localStorage (set in step 1)</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.x</version>
+        <reason>Form handling</reason>
+      </node>
+      <node>
+        <package>@radix-ui/react-toggle-group</package>
+        <version>^1.x</version>
+        <reason>Toggle button group for account type (or custom component)</reason>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Requires Story 7-7 (RUT collected in personal info step)</constraint>
+    <constraint>Requires Story 7-9 (vehicle step is step 3)</constraint>
+    <constraint>RUT must be pre-filled and read-only (validated in step 1)</constraint>
+    <constraint>Only 2 account types now: Cuenta Vista, Cuenta Corriente (removed Ahorro)</constraint>
+    <constraint>This is step 4 of 4 (was step 5 of 6)</constraint>
+    <constraint>Submit navigates to review step (not directly to pending)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>AccountType (simplified)</name>
+      <kind>TypeScript enum</kind>
+      <signature>type AccountType = 'vista' | 'corriente'</signature>
+      <path>src/lib/validations/provider-registration.ts</path>
+    </interface>
+    <interface>
+      <name>AccountTypeToggle Props</name>
+      <kind>Component Props</kind>
+      <signature>{ value: AccountType; onChange: (value: AccountType) => void; }</signature>
+      <path>src/components/provider/onboarding/account-type-toggle.tsx</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>E2E tests using Playwright. Test toggle button selection, RUT pre-fill from localStorage.</standards>
+    <locations>
+      <location>tests/e2e/provider-registration.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea criterionId="AC7.10.1">Test "Paso 4 de 4" displayed on bank step</idea>
+      <idea criterionId="AC7.10.5">Test two toggle buttons visible for account type</idea>
+      <idea criterionId="AC7.10.5">Test clicking toggle button switches selection</idea>
+      <idea criterionId="AC7.10.7">Test RUT field is pre-filled from step 1 data</idea>
+      <idea criterionId="AC7.10.8">Test RUT field is disabled/read-only</idea>
+      <idea criterionId="AC7.10.10">Test submit button says "Completar registro"</idea>
+    </ideas>
+  </tests>
+</story-context>

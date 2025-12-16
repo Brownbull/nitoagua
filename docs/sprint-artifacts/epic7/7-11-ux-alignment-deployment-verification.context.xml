@@ -1,0 +1,129 @@
+<story-context id="7-11-ux-alignment-deployment-verification" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>7-11</storyId>
+    <title>UX Alignment Deployment &amp; Verification</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic7/7-11-ux-alignment-deployment-verification.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to deploy all UX alignment changes and verify production matches mockups</iWant>
+    <soThat>the provider onboarding flow matches the approved UX design</soThat>
+    <tasks>
+      <task id="1">Pre-deployment Checks - Lint, build, E2E tests</task>
+      <task id="2">Git Operations - Commit to develop</task>
+      <task id="3">Staging Deployment - Merge to staging, verify preview</task>
+      <task id="4">Production Deployment - Merge to main, verify build</task>
+      <task id="5">Production Verification - Test with provider2 user</task>
+      <task id="6">E2E Test Execution - Run full suite</task>
+      <task id="7">Regression Testing - Consumer, supplier, admin flows</task>
+      <task id="8">Documentation - Update story, sprint-status</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC7.11.1">All UX alignment changes committed to develop branch</criterion>
+    <criterion id="AC7.11.2">Develop merged to staging with preview verification</criterion>
+    <criterion id="AC7.11.3">Staging merged to main with production deployment</criterion>
+    <criterion id="AC7.11.4">E2E tests pass for updated onboarding flow</criterion>
+    <criterion id="AC7.11.5">Build succeeds with no lint errors</criterion>
+    <criterion id="AC7.11.6">Personal info screen matches mockup 13.2 (photo, RUT, 4-step)</criterion>
+    <criterion id="AC7.11.7">Document screen matches mockup 13.3 (license, optional permiso)</criterion>
+    <criterion id="AC7.11.8">Vehicle screen matches mockup 13.4 (type cards, hours, days)</criterion>
+    <criterion id="AC7.11.9">Bank screen matches mockup 13.5 (toggle buttons, pre-filled RUT)</criterion>
+    <criterion id="AC7.11.10">Reset provider2 user: npm run seed:provider2:reset</criterion>
+    <criterion id="AC7.11.11">Complete full onboarding flow with test data</criterion>
+    <criterion id="AC7.11.12">All E2E tests pass in provider-registration.spec.ts</criterion>
+    <criterion id="AC7.11.13">Screenshot comparison with mockups documented</criterion>
+    <criterion id="AC7.11.14">Admin approval flow works for new registration</criterion>
+    <criterion id="AC7.11.15">Consumer request flow works (regression)</criterion>
+    <criterion id="AC7.11.16">Supplier dashboard works (regression)</criterion>
+    <criterion id="AC7.11.17">Existing provider login works (regression)</criterion>
+    <criterion id="AC7.11.18">Admin panel accessible (regression)</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/ux-mockups/01-consolidated-provider-flow.html</path>
+        <title>Provider Onboarding UX Mockups</title>
+        <section>Sections 13.2-13.5</section>
+        <snippet>Reference mockups for Personal Info (13.2), Documents (13.3), Vehicle (13.4), Bank (13.5)</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/sprint-status.yaml</path>
+        <title>Sprint Status Tracking</title>
+        <section>Epic 7</section>
+        <snippet>Track status of stories 7-7 through 7-11</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>scripts/production/seed-provider2-test-user.ts</path>
+        <kind>script</kind>
+        <symbol>seed:provider2:reset</symbol>
+        <reason>Reset provider2 test user for onboarding testing</reason>
+      </artifact>
+      <artifact>
+        <path>tests/e2e/provider-registration.spec.ts</path>
+        <kind>test</kind>
+        <symbol>Provider Registration E2E Tests</symbol>
+        <reason>Full E2E test suite for onboarding flow</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@playwright/test</package>
+        <version>^1.x</version>
+        <reason>E2E testing</reason>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Requires Stories 7-7, 7-8, 7-9, 7-10 completed</constraint>
+    <constraint>Branching strategy: develop → staging → main</constraint>
+    <constraint>Production URL: https://nitoagua.vercel.app</constraint>
+    <constraint>Test credentials: provider2@nitoagua.cl / provider2.123</constraint>
+    <constraint>All migrations must be applied to production database</constraint>
+    <constraint>No breaking changes to existing consumer/supplier flows</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>npm run seed:provider2:reset</name>
+      <kind>npm script</kind>
+      <signature>npx ts-node scripts/production/seed-provider2-test-user.ts --local --reset</signature>
+      <path>package.json</path>
+    </interface>
+    <interface>
+      <name>npm run test:e2e</name>
+      <kind>npm script</kind>
+      <signature>npx playwright test</signature>
+      <path>package.json</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Full E2E suite execution. Manual verification against mockups. Screenshot documentation.</standards>
+    <locations>
+      <location>tests/e2e/provider-registration.spec.ts</location>
+      <location>tests/e2e/provider-*.spec.ts</location>
+      <location>tests/e2e/consumer-*.spec.ts</location>
+      <location>tests/e2e/admin-*.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea criterionId="AC7.11.4">Run full provider-registration.spec.ts suite</idea>
+      <idea criterionId="AC7.11.6">Screenshot personal info step and compare to mockup 13.2</idea>
+      <idea criterionId="AC7.11.7">Screenshot documents step and compare to mockup 13.3</idea>
+      <idea criterionId="AC7.11.8">Screenshot vehicle step and compare to mockup 13.4</idea>
+      <idea criterionId="AC7.11.9">Screenshot bank step and compare to mockup 13.5</idea>
+      <idea criterionId="AC7.11.15">Run consumer-home.spec.ts for regression</idea>
+      <idea criterionId="AC7.11.18">Test admin login and dashboard access</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,150 @@
+<story-context id="7-9-ux-alignment-vehicle-information" v="1.0">
+  <metadata>
+    <epicId>7</epicId>
+    <storyId>7-9</storyId>
+    <title>UX Alignment - Vehicle Information Screen</title>
+    <status>ready-for-dev</status>
+    <generatedAt>2025-12-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/epic7/7-9-ux-alignment-vehicle-information.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>provider configuring their vehicle</asA>
+    <iWant>a dedicated vehicle information step matching the UX mockups</iWant>
+    <soThat>I can specify my vehicle type, capacity, and availability</soThat>
+    <tasks>
+      <task id="1">Create Vehicle Info Page - New route /provider/onboarding/vehicle</task>
+      <task id="2">Create Vehicle Type Cards Component - Moto, Auto, Camioneta with emojis</task>
+      <task id="3">Add Working Hours Dropdown - 4-6, 6-8, 8-10, 10+ hours</task>
+      <task id="4">Add Working Days Selector - Lun-Dom toggle buttons</task>
+      <task id="5">Database Migration - Add vehicle_type, vehicle_capacity, working_hours, working_days columns</task>
+      <task id="6">Update Validation Schema</task>
+      <task id="7">Update Registration Action</task>
+      <task id="8">Update E2E Tests</task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC7.9.1">Progress shows "Paso 3 de 4" with vehicle step active</criterion>
+    <criterion id="AC7.9.2">"Tu vehículo" title displayed</criterion>
+    <criterion id="AC7.9.3">Vehicle type cards: 🏍️ Moto "Hasta 100L", 🚗 Auto "Hasta 300L", 🛻 Camioneta "Hasta 1000L"</criterion>
+    <criterion id="AC7.9.4">Selected card has orange border and checkmark</criterion>
+    <criterion id="AC7.9.5">Capacity input: "Capacidad de carga (litros)" - free text number</criterion>
+    <criterion id="AC7.9.6">Working hours dropdown: 4-6, 6-8, 8-10, 10+ horas</criterion>
+    <criterion id="AC7.9.7">Working days buttons (Lun-Dom) with toggle selection</criterion>
+    <criterion id="AC7.9.8">At least one vehicle type must be selected</criterion>
+    <criterion id="AC7.9.9">At least one working day must be selected</criterion>
+    <criterion id="AC7.9.10">All values persisted in localStorage during onboarding</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/ux-mockups/01-consolidated-provider-flow.html</path>
+        <title>Provider Onboarding UX Mockups</title>
+        <section>Section 13.4 - Vehicle Information</section>
+        <snippet>Shows vehicle type cards with emojis, capacity input, working hours dropdown, working days toggle buttons Lun-Dom</snippet>
+      </doc>
+      <doc>
+        <path>docs/sprint-artifacts/epic7/tech-spec.md</path>
+        <title>Epic 7 Technical Specification</title>
+        <section>Database Tables / Validation Schemas</section>
+        <snippet>Profiles table with vehicle-related fields. VEHICLE_CAPACITIES constant exists but needs replacement with vehicle types</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/validations/provider-registration.ts</path>
+        <kind>validation</kind>
+        <symbol>vehicleInfoSchema, VEHICLE_CAPACITIES</symbol>
+        <lines>70-84</lines>
+        <reason>Current vehicle validation - needs complete rewrite for type cards and availability</reason>
+      </artifact>
+      <artifact>
+        <path>src/app/provider/onboarding/areas/page.tsx</path>
+        <kind>page</kind>
+        <symbol>AreasPage</symbol>
+        <reason>Currently step 3 - will need navigation update to go to vehicle step</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/actions/provider-registration.ts</path>
+        <kind>server-action</kind>
+        <symbol>submitProviderRegistration</symbol>
+        <reason>Registration action - needs update to include new vehicle fields</reason>
+      </artifact>
+      <artifact>
+        <path>src/hooks/use-onboarding-progress.ts</path>
+        <kind>hook</kind>
+        <symbol>useOnboardingProgress</symbol>
+        <reason>LocalStorage persistence - add vehicle type, working hours, working days</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>react-hook-form</package>
+        <version>^7.x</version>
+        <reason>Form handling for vehicle info</reason>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^3.x</version>
+        <reason>Validation schemas</reason>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Requires Story 7-8 (documents is now step 2)</constraint>
+    <constraint>New database columns require migration</constraint>
+    <constraint>Vehicle types: moto, auto, camioneta</constraint>
+    <constraint>Working hours: 4-6, 6-8, 8-10, 10+ (enum)</constraint>
+    <constraint>Working days: lun, mar, mie, jue, vie, sab, dom (array)</constraint>
+    <constraint>This is step 3 of 4 (new step replacing areas)</constraint>
+    <constraint>Service areas step removed from onboarding flow (moved to post-approval settings)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>VehicleType</name>
+      <kind>TypeScript enum</kind>
+      <signature>type VehicleType = 'moto' | 'auto' | 'camioneta'</signature>
+      <path>src/lib/validations/provider-registration.ts</path>
+    </interface>
+    <interface>
+      <name>WorkingHours</name>
+      <kind>TypeScript enum</kind>
+      <signature>type WorkingHours = '4-6' | '6-8' | '8-10' | '10+'</signature>
+      <path>src/lib/validations/provider-registration.ts</path>
+    </interface>
+    <interface>
+      <name>WorkingDay</name>
+      <kind>TypeScript enum</kind>
+      <signature>type WorkingDay = 'lun' | 'mar' | 'mie' | 'jue' | 'vie' | 'sab' | 'dom'</signature>
+      <path>src/lib/validations/provider-registration.ts</path>
+    </interface>
+    <interface>
+      <name>vehicleInfoSchema (new)</name>
+      <kind>Zod schema</kind>
+      <signature>{ vehicleType: VehicleType, vehicleCapacity: number, workingHours: WorkingHours, workingDays: WorkingDay[] }</signature>
+      <path>src/lib/validations/provider-registration.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>E2E tests using Playwright. Test card selection, multi-select days, form validation.</standards>
+    <locations>
+      <location>tests/e2e/provider-registration.spec.ts</location>
+    </locations>
+    <ideas>
+      <idea criterionId="AC7.9.1">Test "Paso 3 de 4" displayed on vehicle step</idea>
+      <idea criterionId="AC7.9.3">Test all 3 vehicle cards visible with emojis and capacity hints</idea>
+      <idea criterionId="AC7.9.4">Test clicking card selects it with orange border</idea>
+      <idea criterionId="AC7.9.6">Test working hours dropdown has 4 options</idea>
+      <idea criterionId="AC7.9.7">Test day buttons toggle on/off</idea>
+      <idea criterionId="AC7.9.8">Test validation error if no vehicle type selected</idea>
+      <idea criterionId="AC7.9.9">Test validation error if no working days selected</idea>
+      <idea criterionId="AC7.9.10">Test values persist in localStorage after navigation</idea>
+    </ideas>
+  </tests>
+</story-context>
