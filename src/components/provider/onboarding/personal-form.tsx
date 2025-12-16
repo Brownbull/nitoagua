@@ -140,7 +140,7 @@ export function PersonalForm({
         {/* Step 1 of 6: Personal → Documentos → Vehículo → Áreas → Banco → Revisión */}
         <ProgressIndicator
           currentStep={1}
-          onBack={() => router.push("/provider/onboarding")}
+          onBack={() => router.push("/")}
         />
 
         <h1 className="text-2xl font-bold text-gray-900 mt-4">
