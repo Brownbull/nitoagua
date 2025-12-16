@@ -2,9 +2,12 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Droplets, User } from "lucide-react";
-import { StatsHeader, DashboardTabs } from "@/components/supplier";
+import { Droplets, User, FileText, MapPin, AlertTriangle } from "lucide-react";
+import { StatsHeader, DashboardTabs, AvailabilityToggleWrapper } from "@/components/supplier";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { getExpiringDocuments } from "@/lib/actions/provider-documents";
 
 export const metadata: Metadata = {
   title: "Panel de Proveedor - nitoagua",
@@ -113,6 +116,11 @@ export default async function SupplierDashboardPage() {
   // Fetch dashboard data
   const dashboardData = await fetchDashboardData(user!.id);
 
+  // Check for expiring documents (only for approved providers)
+  const expiringDocs = profile?.verification_status === "approved"
+    ? await getExpiringDocuments()
+    : { documents: [] };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -135,9 +143,64 @@ export default async function SupplierDashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-4">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
-          Panel de Proveedor
-        </h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Panel de Proveedor
+          </h1>
+        </div>
+
+        {/* Expiring Documents Warning */}
+        {expiringDocs.documents.length > 0 && (
+          <Alert className="mb-4 border-orange-200 bg-orange-50">
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="flex items-center justify-between">
+              <span className="text-orange-800">
+                <span className="font-medium">
+                  {expiringDocs.documents.length === 1
+                    ? "Tienes 1 documento que requiere atención"
+                    : `Tienes ${expiringDocs.documents.length} documentos que requieren atención`}
+                </span>
+              </span>
+              <Link href="/dashboard/documents">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                  data-testid="view-expiring-docs"
+                >
+                  Ver documentos
+                </Button>
+              </Link>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Availability Toggle - Prominent position */}
+        {profile?.verification_status === "approved" && (
+          <div className="mb-6">
+            <AvailabilityToggleWrapper
+              initialValue={profile.is_available ?? false}
+            />
+          </div>
+        )}
+
+        {/* Quick Links for approved providers */}
+        {profile?.verification_status === "approved" && (
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+            <Link href="/dashboard/documents" data-testid="documents-link">
+              <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap">
+                <FileText className="w-4 h-4" />
+                Mis Documentos
+              </Button>
+            </Link>
+            <Link href="/dashboard/settings/areas" data-testid="service-areas-link">
+              <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap">
+                <MapPin className="w-4 h-4" />
+                Áreas de Servicio
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Stats Header */}
         <div className="mb-6">

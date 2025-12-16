@@ -224,6 +224,26 @@ async function seedUser(supabase: any, userType: string, userData: any) {
       console.log(`   ✓ Added to admin_allowed_emails`);
     }
   }
+
+  // Add service areas for supplier
+  if (userData.profile.role === "supplier" && userData.profile.verification_status === "approved") {
+    // Delete existing service areas first
+    await supabase
+      .from("provider_service_areas")
+      .delete()
+      .eq("provider_id", userId);
+
+    // Add default service area (villarrica)
+    const { error: serviceAreaError } = await supabase
+      .from("provider_service_areas")
+      .insert({ provider_id: userId, comuna_id: "villarrica" });
+
+    if (serviceAreaError) {
+      console.error(`   ✗ Failed to add service area: ${serviceAreaError.message}`);
+    } else {
+      console.log(`   ✓ Added service area: villarrica`);
+    }
+  }
 }
 
 main().catch((error) => {

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { sendProviderVerificationNotification } from "@/lib/email";
 
 export type VerificationDecision = "approved" | "rejected" | "more_info_needed";
 
@@ -111,8 +112,28 @@ export async function verifyProvider(
         (input.reason ? ` - Reason: ${input.reason}` : "")
     );
 
-    // TODO: In future stories, send notification to provider
-    // - Story 6.3 AC6.3.9: Action triggers notification to applicant
+    // Send email notification to provider (non-blocking)
+    // Fetch provider details for the email
+    const { data: provider } = await adminClient
+      .from("profiles")
+      .select("name, email")
+      .eq("id", input.providerId)
+      .single();
+
+    if (provider?.email) {
+      // Fire and forget - don't await, don't block the response
+      sendProviderVerificationNotification({
+        email: provider.email,
+        providerName: provider.name || "Proveedor",
+        status: input.decision,
+        rejectionReason: input.reason,
+        missingDocuments: input.missingDocs,
+      }).catch((err) => {
+        console.error("[VERIFICATION] Email notification failed:", err);
+      });
+    } else {
+      console.warn("[VERIFICATION] Cannot send notification - no email for provider:", input.providerId);
+    }
 
     // Revalidate the verification pages
     revalidatePath("/admin/verification");

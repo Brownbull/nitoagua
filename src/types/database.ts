@@ -327,6 +327,7 @@ export type Database = {
           uploaded_at: string | null
           verified_at: string | null
           verified_by: string | null
+          expires_at: string | null
         }
         Insert: {
           id?: string
@@ -337,6 +338,7 @@ export type Database = {
           uploaded_at?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          expires_at?: string | null
         }
         Update: {
           id?: string
@@ -347,6 +349,7 @@ export type Database = {
           uploaded_at?: string | null
           verified_at?: string | null
           verified_by?: string | null
+          expires_at?: string | null
         }
         Relationships: [
           {
@@ -364,6 +367,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      provider_service_areas: {
+        Row: {
+          provider_id: string
+          comuna_id: string
+        }
+        Insert: {
+          provider_id: string
+          comuna_id: string
+        }
+        Update: {
+          provider_id?: string
+          comuna_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_service_areas_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_service_areas_comuna_id_fkey"
+            columns: ["comuna_id"]
+            isOneToOne: false
+            referencedRelation: "comunas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunas: {
+        Row: {
+          id: string
+          name: string
+          region: string
+          active: boolean
+        }
+        Insert: {
+          id: string
+          name: string
+          region: string
+          active?: boolean
+        }
+        Update: {
+          id?: string
+          name?: string
+          region?: string
+          active?: boolean
+        }
+        Relationships: []
       }
       water_requests: {
         Row: {
