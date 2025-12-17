@@ -97,3 +97,46 @@ REMOTE_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 | Database | `postgres` |
 | Username | `postgres` |
 | Password | `postgres` |
+
+## Git Branching Strategy
+
+```
+feature → develop → staging → main
+```
+
+| Branch | Purpose | URL |
+|--------|---------|-----|
+| `main` | Production | https://nitoagua.vercel.app |
+| `staging` | Pre-production testing | https://nitoagua-git-staging-khujtaai.vercel.app |
+| `develop` | Development integration | https://nitoagua-git-develop-khujtaai.vercel.app |
+
+### Merge Flow (after code review approval)
+
+1. Merge `develop` → `staging` (verify preview)
+2. Merge `staging` → `main` (production deploy)
+3. Delete feature branches after successful merge
+
+## BMAD Suite
+
+The project uses BMAD (Business Method for Agile Development) located in `_bmad/`.
+
+### Key Workflows
+
+| Workflow | Command | Purpose |
+|----------|---------|---------|
+| Sprint Status | `/bmad:bmm:workflows:sprint-status` | Check current sprint progress |
+| Create Story | `/bmad:bmm:workflows:create-story` | Draft next story from epics |
+| Dev Story | `/bmad:bmm:workflows:dev-story` | Implement a story |
+| Code Review | `/bmad:bmm:workflows:code-review` | Adversarial code review |
+
+### Sprint Tracking
+
+- **Sprint Status:** `docs/sprint-artifacts/sprint-status.yaml`
+- **Stories:** `docs/sprint-artifacts/epic{N}/`
+
+### Agent Customization
+
+Project-specific settings in `_bmad/_config/agents/bmm-dev.customize.yaml`:
+- Branching strategy memories
+- Deployment URL references
+- Merge workflow prompts
