@@ -213,3 +213,270 @@ export const ALL_SEEDED_REQUESTS = [
  * All seeded profiles as an array
  */
 export const ALL_SEEDED_PROFILES = [TEST_SUPPLIER, TEST_CONSUMER];
+
+// =============================================================================
+// OFFER TEST DATA (run `npm run seed:offers` to seed)
+// =============================================================================
+
+/**
+ * Offer test data constants for E2E testing of Stories 8-3, 8-4
+ * These match the data seeded by scripts/local/seed-offer-tests.ts
+ */
+export const OFFER_TEST_DATA = {
+  /**
+   * Requests created for offer testing
+   */
+  requests: {
+    pendingWithActiveOffer: {
+      id: "77777777-7777-7777-7777-777777777771",
+      tracking_token: "offer-test-pending-1",
+      status: "pending" as const,
+      guest_name: "Cliente Pendiente 1",
+      comuna_name: "Santiago",
+      amount: 1000,
+    },
+    pendingWithActiveOfferUrgent: {
+      id: "77777777-7777-7777-7777-777777777772",
+      tracking_token: "offer-test-pending-2",
+      status: "pending" as const,
+      guest_name: "Cliente Pendiente 2",
+      comuna_name: "Las Condes",
+      amount: 5000,
+      is_urgent: true,
+    },
+    pendingWithCancelledOffer: {
+      id: "77777777-7777-7777-7777-777777777773",
+      tracking_token: "offer-test-pending-3",
+      status: "pending" as const,
+      guest_name: "Cliente Pendiente 3",
+      comuna_name: "Providencia",
+      amount: 10000,
+    },
+    acceptedWithOffer: {
+      id: "77777777-7777-7777-7777-777777777774",
+      tracking_token: "offer-test-accepted",
+      status: "accepted" as const,
+      guest_name: "Cliente Aceptado",
+      comuna_name: "Vitacura",
+      amount: 1000,
+    },
+  },
+
+  /**
+   * Offers created for testing withdrawal and history
+   */
+  offers: {
+    /** Active offer #1 - can be withdrawn (Story 8-4 AC8.4.1-8.4.3) */
+    activeOffer1: {
+      id: "88888888-8888-8888-8888-888888888881",
+      request_id: "77777777-7777-7777-7777-777777777771",
+      status: "active" as const,
+    },
+    /** Active offer #2 - can be withdrawn (urgent request) */
+    activeOffer2: {
+      id: "88888888-8888-8888-8888-888888888882",
+      request_id: "77777777-7777-7777-7777-777777777772",
+      status: "active" as const,
+    },
+    /** Cancelled offer - for re-submission testing (Story 8-4 AC8.4.5) */
+    cancelledOffer: {
+      id: "88888888-8888-8888-8888-888888888883",
+      request_id: "77777777-7777-7777-7777-777777777773",
+      status: "cancelled" as const,
+    },
+    /** Accepted offer - for "Ver Entrega" button testing */
+    acceptedOffer: {
+      id: "88888888-8888-8888-8888-888888888884",
+      request_id: "77777777-7777-7777-7777-777777777774",
+      status: "accepted" as const,
+    },
+    /** Expired offer - for history section */
+    expiredOffer: {
+      id: "88888888-8888-8888-8888-888888888885",
+      request_id: "77777777-7777-7777-7777-777777777771",
+      status: "expired" as const,
+    },
+  },
+
+  /** Service areas configured for the test provider */
+  serviceAreas: ["Santiago", "Las Condes", "Providencia", "Vitacura"],
+} as const;
+
+/**
+ * Use this to check if offer test data is seeded
+ */
+export const OFFER_TEST_OFFER_IDS = [
+  OFFER_TEST_DATA.offers.activeOffer1.id,
+  OFFER_TEST_DATA.offers.activeOffer2.id,
+  OFFER_TEST_DATA.offers.cancelledOffer.id,
+  OFFER_TEST_DATA.offers.acceptedOffer.id,
+  OFFER_TEST_DATA.offers.expiredOffer.id,
+];
+
+export const OFFER_TEST_REQUEST_IDS = [
+  OFFER_TEST_DATA.requests.pendingWithActiveOffer.id,
+  OFFER_TEST_DATA.requests.pendingWithActiveOfferUrgent.id,
+  OFFER_TEST_DATA.requests.pendingWithCancelledOffer.id,
+  OFFER_TEST_DATA.requests.acceptedWithOffer.id,
+];
+
+// =============================================================================
+// EARNINGS TEST DATA (run `npm run seed:earnings` to seed)
+// =============================================================================
+
+/**
+ * Earnings test data constants for E2E testing of Story 8-6
+ * These match the data seeded by scripts/local/seed-earnings-tests.ts
+ *
+ * Price tiers (from getPrice function):
+ * - 100L  -> $5,000 CLP
+ * - 1000L -> $20,000 CLP
+ * - 5000L -> $75,000 CLP
+ * - 10000L -> $140,000 CLP
+ */
+export const EARNINGS_TEST_DATA = {
+  /**
+   * Delivered requests for earnings calculations
+   */
+  requests: {
+    // Today's deliveries (3 requests)
+    today: [
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0001",
+        tracking_token: "earnings-test-today-1",
+        guest_name: "María García",
+        amount: 1000, // $20,000
+        price: 20000,
+      },
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0002",
+        tracking_token: "earnings-test-today-2",
+        guest_name: "Carlos Ruiz",
+        amount: 100, // $5,000
+        price: 5000,
+      },
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0003",
+        tracking_token: "earnings-test-today-3",
+        guest_name: "Ana Martínez",
+        amount: 5000, // $75,000
+        price: 75000,
+      },
+    ],
+    // This week's additional deliveries (4 more, not including today)
+    thisWeekAdditional: [
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0004",
+        tracking_token: "earnings-test-week-1",
+        guest_name: "Pedro Soto",
+        amount: 1000, // $20,000
+        price: 20000,
+      },
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0005",
+        tracking_token: "earnings-test-week-2",
+        guest_name: "Laura Vega",
+        amount: 100, // $5,000
+        price: 5000,
+      },
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0006",
+        tracking_token: "earnings-test-week-3",
+        guest_name: "Diego Fernández",
+        amount: 10000, // $140,000
+        price: 140000,
+      },
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0007",
+        tracking_token: "earnings-test-week-4",
+        guest_name: "Sofía Muñoz",
+        amount: 5000, // $75,000
+        price: 75000,
+      },
+    ],
+    // This month's additional deliveries (3 more, older than 7 days)
+    thisMonthAdditional: [
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0008",
+        tracking_token: "earnings-test-month-1",
+        guest_name: "Roberto Díaz",
+        amount: 1000, // $20,000
+        price: 20000,
+      },
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0009",
+        tracking_token: "earnings-test-month-2",
+        guest_name: "Carmen López",
+        amount: 5000, // $75,000
+        price: 75000,
+      },
+      {
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeee0010",
+        tracking_token: "earnings-test-month-3",
+        guest_name: "Felipe Rojas",
+        amount: 1000, // $20,000
+        price: 20000,
+      },
+    ],
+  },
+
+  /**
+   * Expected totals for verification (assuming 15% commission)
+   * Note: Actual values depend on when deliveries fall within period boundaries
+   */
+  expectedTotals: {
+    // These are approximate - actual values depend on current date
+    today: {
+      deliveries: 3,
+      grossIncome: 100000, // $20,000 + $5,000 + $75,000
+      commission: 15000, // 15% of $100,000
+      netEarnings: 85000,
+    },
+    thisWeek: {
+      deliveries: 7, // 3 today + 4 this week
+      grossIncome: 340000,
+      commission: 51000,
+      netEarnings: 289000,
+    },
+    thisMonth: {
+      deliveries: 10, // all 10 deliveries
+      grossIncome: 455000,
+      commission: 68250,
+      netEarnings: 386750,
+    },
+  },
+
+  /**
+   * Commission ledger entries for pending commission display
+   */
+  ledger: {
+    owed: [
+      { id: "eeee0001-0001-0001-0001-000000000001", amount: 3000 },
+      { id: "eeee0001-0001-0001-0001-000000000002", amount: 11250 },
+      { id: "eeee0001-0001-0001-0001-000000000003", amount: 3000 },
+    ],
+    paid: [
+      { id: "eeee0001-0001-0001-0001-000000000004", amount: 5000 },
+    ],
+    totalOwed: 17250,
+    totalPaid: 5000,
+    pending: 12250, // This should show the "Pagar" button
+  },
+} as const;
+
+/**
+ * All earnings test request IDs for cleanup/verification
+ */
+export const EARNINGS_TEST_REQUEST_IDS = [
+  ...EARNINGS_TEST_DATA.requests.today.map((r) => r.id),
+  ...EARNINGS_TEST_DATA.requests.thisWeekAdditional.map((r) => r.id),
+  ...EARNINGS_TEST_DATA.requests.thisMonthAdditional.map((r) => r.id),
+];
+
+/**
+ * All earnings test ledger IDs for cleanup/verification
+ */
+export const EARNINGS_TEST_LEDGER_IDS = [
+  ...EARNINGS_TEST_DATA.ledger.owed.map((e) => e.id),
+  ...EARNINGS_TEST_DATA.ledger.paid.map((e) => e.id),
+];

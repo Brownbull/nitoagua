@@ -257,6 +257,10 @@ test("API returns expected response", async ({ request }) => {
 - [Debugging Flaky Tests](https://playwright.dev/docs/test-retries#debugging-flaky-tests)
 - [WebKit Known Issues](https://github.com/microsoft/playwright/issues?q=is%3Aissue+webkit)
 
+## Related Documentation
+
+- [Test Data Seeding Guide](../testing/test-data-seeding-guide.md) - How to seed test data for E2E tests
+
 ---
 
 *Last updated: 2025-12-07 (prep-5-5 story)*

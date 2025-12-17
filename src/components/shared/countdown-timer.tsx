@@ -1,0 +1,150 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  formatCountdown,
+  isWarningState,
+  isCriticalState,
+} from "@/lib/utils/countdown";
+
+// Re-export formatCountdown for backward compatibility
+export { formatCountdown } from "@/lib/utils/countdown";
+
+interface CountdownTimerProps {
+  /**
+   * The timestamp when the countdown expires (ISO string or Date)
+   */
+  expiresAt: string | Date;
+  /**
+   * Callback when countdown reaches zero
+   */
+  onExpire?: () => void;
+  /**
+   * Show "Expira en" prefix before the timer
+   * @default true
+   */
+  showPrefix?: boolean;
+  /**
+   * Show clock icon before the timer
+   * @default true
+   */
+  showIcon?: boolean;
+  /**
+   * Additional CSS classes
+   */
+  className?: string;
+  /**
+   * CSS classes for when timer is in warning state (< 5 minutes)
+   */
+  warningClassName?: string;
+  /**
+   * CSS classes for when timer is in critical state (< 1 minute)
+   */
+  criticalClassName?: string;
+}
+
+/**
+ * Hook for countdown timer with drift correction
+ * Per Dev Notes: Uses server time for validation, client for display
+ * NFR5: Countdown timer accuracy ±1 second
+ */
+export function useCountdown(expiresAt: string | Date): number {
+  const [remaining, setRemaining] = useState<number>(0);
+  const targetTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    // Parse expiration timestamp
+    const expiresAtDate = typeof expiresAt === "string" ? new Date(expiresAt) : expiresAt;
+    targetTimeRef.current = expiresAtDate.getTime();
+
+    // Calculate initial remaining time with drift correction
+    const updateRemaining = () => {
+      const now = Date.now();
+      const diff = targetTimeRef.current - now;
+      setRemaining(Math.max(0, diff));
+    };
+
+    // Initial calculation
+    updateRemaining();
+
+    // Update every second
+    const interval = setInterval(updateRemaining, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiresAt]);
+
+  return remaining;
+}
+
+/**
+ * Countdown Timer Component
+ * AC: 8.3.3 - Display countdown in "Expira en 25:30" format
+ * AC: 8.3.2 - Show time remaining countdown for pending offers
+ * NFR5: ±1 second accuracy with drift correction
+ */
+export function CountdownTimer({
+  expiresAt,
+  onExpire,
+  showPrefix = true,
+  showIcon = true,
+  className,
+  warningClassName = "text-orange-600",
+  criticalClassName = "text-red-600 font-semibold",
+}: CountdownTimerProps) {
+  const remaining = useCountdown(expiresAt);
+  const hasExpiredRef = useRef(false);
+
+  // Trigger onExpire callback when timer reaches zero
+  useEffect(() => {
+    if (remaining === 0 && !hasExpiredRef.current && onExpire) {
+      hasExpiredRef.current = true;
+      onExpire();
+    }
+  }, [remaining, onExpire]);
+
+  // Reset expired flag if expiresAt changes (e.g., new offer)
+  useEffect(() => {
+    hasExpiredRef.current = false;
+  }, [expiresAt]);
+
+  const isExpired = remaining === 0;
+  const isWarning = isWarningState(remaining);
+  const isCritical = isCriticalState(remaining);
+
+  const timeString = formatCountdown(remaining);
+
+  // Determine style based on state
+  let stateClassName = "";
+  if (isCritical) {
+    stateClassName = criticalClassName;
+  } else if (isWarning) {
+    stateClassName = warningClassName;
+  }
+
+  if (isExpired) {
+    return (
+      <span className={cn("text-gray-500 text-sm", className)} data-testid="countdown-expired">
+        Expirada
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={cn("flex items-center gap-1 text-sm", stateClassName, className)}
+      data-testid="countdown-timer"
+      aria-live="polite"
+      aria-label={`Expira en ${timeString}`}
+    >
+      {showIcon && <Clock className="h-3.5 w-3.5" aria-hidden="true" />}
+      {showPrefix && <span>Expira en</span>}
+      <span className="tabular-nums font-medium" data-testid="countdown-value">
+        {timeString}
+      </span>
+    </span>
+  );
+}
+
+export default CountdownTimer;
