@@ -68,3 +68,6 @@ docs/design-references/tailwind_templates
 docs/ux-mockups
 .vercel
 .env*.local
+
+# Personal CV documentation (private)
+docs/startup/cv-system/

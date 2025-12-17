@@ -1,4 +1,4 @@
-# generated: 2025-12-01
+# generated: 2025-12-16
 # project: nitoagua
 # project_key: nitoagua
 # tracking_system: file-system
@@ -30,7 +30,7 @@
 # - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
 # - RECOMMENDED: Run test-design workflow after Epic 1, before Epic 2
 
-generated: 2025-12-01
+generated: 2025-12-16
 project: nitoagua
 project_key: nitoagua
 tracking_system: file-system
@@ -92,8 +92,7 @@ development_status:
   prep-5-retrospective: completed  # Quick retro 2025-12-07
 
   # Epic 5: Notifications & Communication
-  # BLOCKED: Complete prep-5 sprint first
-  epic-5: contexted  # Started 2025-12-07
+  epic-5: contexted
   5-1-email-notification-setup-with-resend: done  # Completed via prep-5-4 spike - 2025-12-07
   5-2-guest-email-notifications: done  # APPROVED - Senior Dev Review passed 2025-12-08
   5-3-in-app-notifications-for-registered-users: done  # APPROVED - Re-implemented and merged 2025-12-08
@@ -102,7 +101,7 @@ development_status:
 
   # =============================================
   # V2 POST-MVP EPICS (Consumer-Choice Offer Model)
-  # Reordered by dependency: Admin → Onboarding → Offers → Selection → UX
+  # Reordered by dependency: Admin -> Onboarding -> Offers -> Selection -> UX
   # =============================================
 
   # Epic 6: Admin Operations Panel (FIRST V2 EPIC - no dependencies)
@@ -126,19 +125,65 @@ development_status:
   7-3-service-area-configuration: done  # APPROVED - Senior Dev Review passed 2025-12-15
   7-4-provider-availability-toggle: done  # APPROVED - Senior Dev Review passed 2025-12-15
   7-5-provider-document-management: done  # APPROVED - Senior Dev Review passed 2025-12-15
-  7-6-epic-deployment-and-verification: done  # DEPLOYED to production 2025-12-15 - All verified ✅
+  7-6-epic-deployment-and-verification: done  # DEPLOYED to production 2025-12-15 - All verified
   # UX Alignment Stories - Align implementation with mockups (Section 13.2-13.5)
   7-7-ux-alignment-personal-information: done  # APPROVED 2025-12-16 - Final systematic review passed, all 9 ACs verified
   7-8-ux-alignment-document-upload: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 8 ACs verified
   7-9-ux-alignment-vehicle-information: done  # APPROVED 2025-12-16 - Re-review passed after AC7.9.9 fix
   7-10-ux-alignment-bank-account: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 10 ACs verified
-  7-11-ux-alignment-deployment-verification: review  # DEPLOYED 2025-12-16 - All UX alignment verified
+  7-11-ux-alignment-deployment-verification: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 18 ACs verified
+  epic-7-retrospective: optional  # Epic 7 complete - Provider Onboarding with UX alignment
 
   # Epic 8: Provider Offer System (depends on Epic 7 for approved providers)
-  epic-8: backlog
+  epic-8: contexted  # Tech spec created 2025-12-16
+  8-1-provider-request-browser: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 6 ACs verified
+  8-2-submit-offer-on-request: done  # APPROVED 2025-12-16 - Re-review passed, all action items addressed
+  8-3-providers-active-offers-list: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 5 ACs verified
+  8-4-withdraw-pending-offer: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 5 ACs verified
+  8-5-offer-acceptance-notification: done  # APPROVED 2025-12-17 - All 7 tasks complete, 10 E2E tests passing
+  8-6-earnings-dashboard: review  # Completed 2025-12-17 - 26 unit tests, 21 E2E tests passing
+  8-7-cash-commission-settlement: ready-for-dev  # Context generated 2025-12-16
+  8-8-epic-deployment-and-verification: ready-for-dev  # Story drafted 2025-12-16
+  8-9-provider-settings-page: review  # Completed 2025-12-17 - 13 E2E tests passing, all ACs implemented
+  8-10-provider-map-view: drafted  # NEW 2025-12-16 - Map view for requests (P3 - nice-to-have)
+  epic-8-retrospective: optional
 
-  # Epic 9: Consumer Offer Selection (depends on Epic 8 offers system)
-  epic-9: backlog
+  # Epic 9: CORFO Semilla Application (PARALLEL TRACK - no code dependencies)
+  # Type: Business Development
+  # Timeline: CRITICAL - Deadline December 18, 2025 15:00 hrs Chile
+  # NOTE: All output documents must be in Spanish (Chilean)
+  epic-9: contexted  # Stories drafted 2025-12-16
+  9-1-national-scalability-narrative: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 6 ACs verified
+  9-2-innovation-differentiation-brief: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 7 ACs verified
+  9-3-team-capabilities-profile: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 8 ACs verified
+  9-4-video-pitch-script-production: review  # Script created - video recording is user task
+  9-5-application-form-completion: drafted  # Dec 17 - Fill CORFO form (all Spanish)
+  9-6-application-review-submission: drafted  # Dec 17 evening - CRITICAL submit before Dec 18 15:00
+  9-7-post-submission-documentation: drafted  # Dec 18 - Archive all materials
+  9-8-market-research: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 8 ACs verified
+  epic-9-retrospective: optional
 
-  # Epic 10: Consumer UX Enhancements (depends on Epic 9 consumer flow)
+  # Testing & Quality (Tech Debt Sprint)
+  # =====================================
+  # Purpose: Fix E2E testing gaps discovered during Epic 8 testing
+  # Priority: HIGH - Tests passing silently with broken DB
+  testing-1-e2e-reliability: in-progress  # E2E tests should fail on DB errors
+  testing-2-local-schema-sync: drafted  # Fix local Supabase schema mismatch
+
+  # Epic 10: Consumer Offer Selection (depends on Epic 8 offers system)
   epic-10: backlog
+  10-1-offer-list-view-for-consumers: backlog
+  10-2-select-provider-offer: backlog
+  10-3-offer-countdown-timer-consumer-view: backlog
+  10-4-request-timeout-notification: backlog
+  10-5-request-status-with-offer-context: backlog
+  epic-10-retrospective: optional
+
+  # Epic 11: Consumer UX Enhancements (depends on Epic 10 consumer flow)
+  epic-11: backlog
+  11-1-map-location-pinpoint: backlog
+  11-2-payment-method-selection: backlog
+  11-3-negative-status-states: backlog
+  11-4-urgency-pricing-display: backlog
+  11-5-remove-fake-social-proof: backlog
+  epic-11-retrospective: optional

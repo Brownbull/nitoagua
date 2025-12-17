@@ -77,3 +77,38 @@ This project uses two Supabase client patterns:
 - Any intentional server-side operation where RLS would block legitimate access
 
 **Security Note:** The `SERVICE_ROLE_KEY` used by admin client is only available server-side and never exposed to the browser.
+
+## Testing
+
+### E2E Testing with Playwright
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run with UI mode
+npm run test:e2e:ui
+```
+
+### Test Data Seeding
+
+The project includes a comprehensive test data seeding system for E2E tests and development.
+
+**Quick start:**
+```bash
+# Start local Supabase
+npx supabase start
+
+# Seed test users and data
+npm run seed:local
+npm run seed:test
+
+# Run E2E tests
+NEXT_PUBLIC_DEV_LOGIN=true npm run test:e2e
+```
+
+**See [Test Data Seeding Guide](docs/testing/test-data-seeding-guide.md) for:**
+- All available seed scripts and scenarios
+- How to add new test scenarios
+- Test fixtures and constants
+- Troubleshooting tips
