@@ -40,18 +40,21 @@ test('example', async ({ page, log, recurse, interceptNetworkCall, networkErrorM
 
 ### 1. Structured Logging
 
+The `log` fixture is a function that takes `{ level, message }`:
+
 ```typescript
 test('consumer accepts offer', async ({ page, log }) => {
-  await log.step('Navigate to offers');
+  await log({ level: 'step', message: 'Navigate to offers' });
   await page.goto('/consumer/offers');
 
-  await log.step('Select first offer');
+  await log({ level: 'step', message: 'Select first offer' });
   await page.click('[data-testid="offer-0"]');
 
-  await log.step('Confirm selection');
-  await page.click('[data-testid="confirm-button"]');
+  await log({ level: 'success', message: 'Offer selected successfully' });
 });
 ```
+
+Available levels: `info`, `step`, `success`, `warning`, `error`, `debug`
 
 Logs appear in Playwright HTML report with clear step markers.
 
@@ -128,7 +131,7 @@ import { test, expect } from '../support/fixtures/merged-fixtures';
 When touching existing tests, consider upgrading imports:
 
 1. Change import to merged-fixtures
-2. Add `log.step()` for key actions
+2. Add `log({ level: 'step', message: '...' })` for key actions
 3. Add `interceptNetworkCall` for API verification
 4. No other changes needed - tests work the same
 
@@ -143,8 +146,48 @@ These utilities integrate with BMAD TestArch workflows:
 | `testarch-test-review` | `/bmad:bmm:workflows:testarch-test-review` | Audit test quality |
 | `testarch-framework` | `/bmad:bmm:workflows:testarch-framework` | Initialize test architecture |
 
+## Test Credentials
+
+### Dev Login Users (NEXT_PUBLIC_DEV_LOGIN=true)
+
+When running locally with `NEXT_PUBLIC_DEV_LOGIN=true`, these accounts are available:
+
+| User Type | Email | Password | Use Case |
+|-----------|-------|----------|----------|
+| Admin | `admin@nitoagua.cl` | `admin.123` | Admin panel tests |
+| Provider | `supplier@nitoagua.cl` | `supplier.123` | Provider flow tests |
+
+### Seeded Test Users (npm run seed:test)
+
+Run `npm run seed:test` to create deterministic test data:
+
+| User Type | Email | Password | ID |
+|-----------|-------|----------|-----|
+| Test Supplier | `test-supplier@test.local` | `TestSupplier123!` | `11111111-1111-1111-1111-111111111111` |
+| Test Consumer | `test-consumer@test.local` | `TestConsumer123!` | `22222222-2222-2222-2222-222222222222` |
+
+### Seeded Test Data Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run seed:test` | Create base test users and requests |
+| `npm run seed:offers` | Create offer test data (Stories 8-3, 8-4) |
+| `npm run seed:earnings` | Create earnings test data (Story 8-6) |
+
+### Using Test Data in Tests
+
+```typescript
+import { TEST_SUPPLIER, TEST_CONSUMER, TRACKING_TOKENS } from '../fixtures/test-data';
+
+test('consumer views pending request', async ({ page }) => {
+  await page.goto(`/track/${TRACKING_TOKENS.consumerPending}`);
+  // Test with deterministic, seeded data
+});
+```
+
 ## Reference
 
 - Package: [@seontechnologies/playwright-utils](https://github.com/seontechnologies/playwright-utils)
 - BMAD Knowledge: `_bmad/bmm/testarch/knowledge/overview.md`
 - Merged Fixtures: `tests/support/fixtures/merged-fixtures.ts`
+- Test Data: `tests/fixtures/test-data.ts`

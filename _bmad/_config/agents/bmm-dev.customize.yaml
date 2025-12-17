@@ -33,6 +33,11 @@ memories:
   # Vercel Project Info
   - "Vercel Project ID: prj_q4in9uJXxOyMkzk73ZoDBJ4W3Oec"
   - "Vercel Team: Khujta AI (team_wThe9twpBygARrtUg9SrqCJu)"
+  # Testing Credentials
+  - "Dev login (NEXT_PUBLIC_DEV_LOGIN=true): admin@nitoagua.cl/admin.123, supplier@nitoagua.cl/supplier.123"
+  - "Seeded test users: test-supplier@test.local/TestSupplier123!, test-consumer@test.local/TestConsumer123!"
+  - "Seed scripts: npm run seed:test (base), seed:offers (offer tests), seed:earnings (earnings tests)"
+  - "Test data constants in tests/fixtures/test-data.ts - use for deterministic E2E tests"
 
 # Add custom menu items (appended to base menu)
 # Don't include * prefix or help/exit - auto-injected

@@ -31,34 +31,31 @@ export const test = mergeTests(
 
 export { expect } from '@playwright/test';
 
-/**
- * Available fixtures in tests:
- *
- * - userFactory: Create/cleanup test users
- * - log: Structured logging that appears in Playwright reports
- * - recurse: Poll for async conditions (like Cypress retry)
- * - interceptNetworkCall: Spy/stub network requests with auto JSON parsing
- * - networkErrorMonitor: Automatically fail tests on HTTP 4xx/5xx
- *
- * Usage:
- * ```typescript
- * import { test, expect } from '../support/fixtures/merged-fixtures';
- *
- * test('example with utilities', async ({ page, log, recurse, interceptNetworkCall }) => {
- *   await log.step('Navigate to offers page');
- *   await page.goto('/consumer/offers');
- *
- *   // Spy on API call
- *   const offersCall = interceptNetworkCall({ url: '**/api/offers' });
- *   await page.click('[data-testid="refresh"]');
- *   const { responseJson } = await offersCall;
- *
- *   // Poll until condition met
- *   await recurse(
- *     () => page.locator('[data-testid="offer-count"]').textContent(),
- *     (text) => parseInt(text || '0') > 0,
- *     { timeout: 10000, delay: 500 }
- *   );
- * });
- * ```
- */
+// Available fixtures in tests:
+//
+// - userFactory: Create/cleanup test users
+// - log: Structured logging - log({ level: 'step', message: 'text' })
+//   Levels: info, step, success, warning, error, debug
+// - recurse: Poll for async conditions (like Cypress retry)
+// - interceptNetworkCall: Spy/stub network requests with auto JSON parsing
+// - networkErrorMonitor: Automatically fail tests on HTTP 4xx/5xx
+//
+// Usage:
+//   import { test, expect } from '../support/fixtures/merged-fixtures';
+//
+//   test('example', async ({ page, log, recurse, interceptNetworkCall }) => {
+//     await log({ level: 'step', message: 'Navigate to offers page' });
+//     await page.goto('/consumer/offers');
+//
+//     // Spy on API call
+//     const offersCall = interceptNetworkCall({ urlPattern: /\/api\/offers/ });
+//     await page.click('[data-testid="refresh"]');
+//     const { responseJson } = await offersCall;
+//
+//     // Poll until condition met
+//     await recurse(
+//       () => page.locator('[data-testid="offer-count"]').textContent(),
+//       (text) => parseInt(text || '0') > 0,
+//       { timeout: 10000, delay: 500 }
+//     );
+//   });
