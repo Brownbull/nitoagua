@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       admin_allowed_emails: {
@@ -147,39 +122,60 @@ export type Database = {
           },
         ]
       }
-      notifications: {
+      comunas: {
         Row: {
+          active: boolean | null
           id: string
-          user_id: string
-          type: string
-          title: string
-          message: string
-          data: Json
-          read: boolean
-          created_at: string
-          read_at: string | null
+          name: string
+          region: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          type: string
-          title: string
-          message: string
-          data?: Json
-          read?: boolean
-          created_at?: string
-          read_at?: string | null
+          active?: boolean | null
+          id: string
+          name: string
+          region: string
         }
         Update: {
+          active?: boolean | null
           id?: string
-          user_id?: string
-          type?: string
-          title?: string
-          message?: string
-          data?: Json
-          read?: boolean
+          name?: string
+          region?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          message: string
+          read: boolean
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
           created_at?: string
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean
           read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -199,6 +195,7 @@ export type Database = {
           delivery_window_start: string
           expires_at: string
           id: string
+          message: string | null
           provider_id: string
           request_id: string
           status: string
@@ -210,6 +207,7 @@ export type Database = {
           delivery_window_start: string
           expires_at: string
           id?: string
+          message?: string | null
           provider_id: string
           request_id: string
           status?: string
@@ -221,6 +219,7 @@ export type Database = {
           delivery_window_start?: string
           expires_at?: string
           id?: string
+          message?: string | null
           provider_id?: string
           request_id?: string
           status?: string
@@ -265,7 +264,11 @@ export type Database = {
           special_instructions: string | null
           suspension_reason: string | null
           updated_at: string | null
+          vehicle_capacity: number | null
+          vehicle_type: string | null
           verification_status: string | null
+          working_days: string[] | null
+          working_hours: string | null
         }
         Insert: {
           address?: string | null
@@ -289,7 +292,11 @@ export type Database = {
           special_instructions?: string | null
           suspension_reason?: string | null
           updated_at?: string | null
+          vehicle_capacity?: number | null
+          vehicle_type?: string | null
           verification_status?: string | null
+          working_days?: string[] | null
+          working_hours?: string | null
         }
         Update: {
           address?: string | null
@@ -313,12 +320,17 @@ export type Database = {
           special_instructions?: string | null
           suspension_reason?: string | null
           updated_at?: string | null
+          vehicle_capacity?: number | null
+          vehicle_type?: string | null
           verification_status?: string | null
+          working_days?: string[] | null
+          working_hours?: string | null
         }
         Relationships: []
       }
       provider_documents: {
         Row: {
+          expires_at: string | null
           id: string
           original_filename: string | null
           provider_id: string
@@ -327,9 +339,9 @@ export type Database = {
           uploaded_at: string | null
           verified_at: string | null
           verified_by: string | null
-          expires_at: string | null
         }
         Insert: {
+          expires_at?: string | null
           id?: string
           original_filename?: string | null
           provider_id: string
@@ -338,9 +350,9 @@ export type Database = {
           uploaded_at?: string | null
           verified_at?: string | null
           verified_by?: string | null
-          expires_at?: string | null
         }
         Update: {
+          expires_at?: string | null
           id?: string
           original_filename?: string | null
           provider_id?: string
@@ -349,7 +361,6 @@ export type Database = {
           uploaded_at?: string | null
           verified_at?: string | null
           verified_by?: string | null
-          expires_at?: string | null
         }
         Relationships: [
           {
@@ -370,25 +381,18 @@ export type Database = {
       }
       provider_service_areas: {
         Row: {
-          provider_id: string
           comuna_id: string
+          provider_id: string
         }
         Insert: {
-          provider_id: string
           comuna_id: string
+          provider_id: string
         }
         Update: {
-          provider_id?: string
           comuna_id?: string
+          provider_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "provider_service_areas_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "provider_service_areas_comuna_id_fkey"
             columns: ["comuna_id"]
@@ -396,28 +400,14 @@ export type Database = {
             referencedRelation: "comunas"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "provider_service_areas_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
-      }
-      comunas: {
-        Row: {
-          id: string
-          name: string
-          region: string
-          active: boolean
-        }
-        Insert: {
-          id: string
-          name: string
-          region: string
-          active?: boolean
-        }
-        Update: {
-          id?: string
-          name?: string
-          region?: string
-          active?: boolean
-        }
-        Relationships: []
       }
       water_requests: {
         Row: {
@@ -427,6 +417,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          comuna_id: string | null
           consumer_id: string | null
           created_at: string | null
           decline_reason: string | null
@@ -451,6 +442,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          comuna_id?: string | null
           consumer_id?: string | null
           created_at?: string | null
           decline_reason?: string | null
@@ -475,6 +467,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          comuna_id?: string | null
           consumer_id?: string | null
           created_at?: string | null
           decline_reason?: string | null
@@ -498,6 +491,13 @@ export type Database = {
             columns: ["cancelled_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "water_requests_comuna_id_fkey"
+            columns: ["comuna_id"]
+            isOneToOne: false
+            referencedRelation: "comunas"
             referencedColumns: ["id"]
           },
           {
@@ -704,9 +704,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

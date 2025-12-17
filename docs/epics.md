@@ -1102,12 +1102,13 @@ The following epics implement the V2 architecture where providers submit offers 
 | 6 | Admin Operations Panel | 8 | Provider verification, offer settings, settlement tracking, operations |
 | 7 | Provider Onboarding | 11 | Self-registration, document upload, verification flow, UX alignment |
 | 8 | Provider Offer System | 7 | Browse requests, submit offers, track offer status, earnings visibility |
-| 9 | Consumer Offer Selection | 5 | View multiple offers, select preferred provider, offer countdown |
-| 10 | Consumer UX Enhancements | 5 | Map pinpoint, negative states, payment options, improved messaging |
+| 9 | CORFO Semilla Application | 7 | Funding application materials for startup grant |
+| 10 | Consumer Offer Selection | 5 | View multiple offers, select preferred provider, offer countdown |
+| 11 | Consumer UX Enhancements | 5 | Map pinpoint, negative states, payment options, improved messaging |
 
-**Total Post-MVP:** 5 Epics, 36 Stories
+**Total Post-MVP:** 6 Epics, 43 Stories
 
-**Implementation Order:** Epics are numbered by dependency order (6→7→8→9→10). Start with Epic 6 and proceed sequentially.
+**Implementation Order:** Epics are numbered by dependency order (6→7→8→10→11). Epic 9 (CORFO) runs in parallel - no code dependencies.
 
 ---
 
@@ -2154,10 +2155,10 @@ So that **I can prepare for the delivery**.
 
 **And** the offer moves to "Entregas Activas" section
 
-**Prerequisites:** Story 8.3, Story 9.2 (consumer selects offer)
+**Prerequisites:** Story 8.3, Story 10.2 (consumer selects offer)
 
 **Technical Notes:**
-- Create notification on offer acceptance (Story 9.2 transaction)
+- Create notification on offer acceptance (Story 10.2 transaction)
 - Email template: `offer-accepted.tsx`
 - In-app notification via `notifications` table
 
@@ -2240,7 +2241,307 @@ So that **I stay in good standing**.
 
 ---
 
-## Epic 9: Consumer Offer Selection
+### Story 8.8: Epic Deployment & Verification
+
+As a **developer**,
+I want **to deploy all Epic 8 changes through the git branching workflow and verify production**,
+So that **the provider offer system is live and working for verified providers**.
+
+**Acceptance Criteria:**
+
+**Given** all Epic 8 stories (8.1-8.7) are complete
+**When** deployment workflow is executed
+**Then**:
+- All changes committed to develop branch
+- Develop merged to staging with preview verification
+- Staging merged to main with production deployment
+- Feature branches deleted after successful merge to main
+- Production deployment succeeds (Vercel build passes)
+
+**And** provider offer system verification in production:
+- Request browser accessible at /provider/requests
+- Offer submission functional
+- Offers list shows countdown timers
+- Earnings dashboard loads with period selector
+- Commission settlement page accessible
+
+**And** regression testing confirms:
+- No regression in consumer flows
+- No regression in admin flows
+- No regression in existing provider flows
+
+**Prerequisites:** Stories 8.1-8.7
+
+**Technical Notes:**
+- Branching strategy: feature → develop → staging → main
+- Delete feature branches after successful merge to main
+- Production URL: https://nitoagua.vercel.app
+- Test with verified provider test user
+
+---
+
+## Epic 9: CORFO Semilla Application
+
+**Goal:** Prepare and submit a compelling application to CORFO Semilla Inicia 2025 to secure up to $15-17 million CLP in non-reembolsable startup funding.
+
+**User Value:** Funding enables accelerated development, validation, and market expansion beyond the initial pilot.
+
+**Type:** Business Development (non-code epic - runs parallel to technical development)
+
+**Timeline:** CRITICAL - Application deadline is December 18, 2025 at 15:00-16:00 hrs Chile time.
+
+**Dependencies:**
+- ClaveÚnica (confirmed available)
+- Access to CORFO portal: https://semillainicia.charly.io/spar/programs/27297
+- No code dependencies - can run in parallel with Epic 8
+
+---
+
+### Story 9.1: National Scalability Narrative
+
+As an **applicant**,
+I want **a compelling narrative that positions nitoagua as a nationally scalable solution**,
+So that **the application passes the scalability evaluation criteria (30% of score)**.
+
+**Acceptance Criteria:**
+
+**Given** CORFO requires national scalability (not local/regional projects)
+**When** the narrative is complete
+**Then** it includes:
+- Araucanía as **pilot region** for a nationally scalable platform
+- Data on water access challenges in other Chilean regions (Coquimbo, O'Higgins, Maule, Biobío, Los Ríos, Los Lagos)
+- Technology architecture that enables multi-region deployment
+- Potential international expansion to countries with similar water access challenges (Peru, Bolivia, rural areas of Argentina)
+- Market sizing for national opportunity (not just Araucanía)
+
+**And** the narrative explicitly addresses CORFO's rejection criteria for "local/regional scope" projects
+**And** language is in Spanish (Chilean)
+
+**Output:** `docs/startup/corfo/narrative-escalabilidad.md`
+
+**Research Required:**
+- INE data on rural water access by region
+- DGA (Dirección General de Aguas) reports on water scarcity
+- News articles on water truck (aguatero) demand in other regions
+
+---
+
+### Story 9.2: Innovation & Differentiation Brief
+
+As an **applicant**,
+I want **a clear articulation of nitoagua's innovation and differentiation**,
+So that **the application scores well on innovation criteria (40% of score)**.
+
+**Acceptance Criteria:**
+
+**Given** innovation is the highest-weighted evaluation criterion
+**When** the innovation brief is complete
+**Then** it includes:
+- Problem statement: Fragmented, manual, inefficient water delivery market
+- Solution: Digital platform connecting consumers with verified providers
+- Key innovations:
+  - Real-time request matching and offer system
+  - Price transparency and standardization
+  - Provider verification and quality assurance
+  - PWA accessibility (no app store barriers)
+  - Geolocation for accurate delivery
+- Competitive analysis: What exists today vs. nitoagua's approach
+- Product-market fit evidence or hypothesis
+
+**And** differentiators are concrete and verifiable (not vague claims)
+**And** language is in Spanish (Chilean)
+
+**Output:** `docs/startup/corfo/innovation-brief.md`
+
+---
+
+### Story 9.3: Team & Capabilities Profile
+
+As an **applicant**,
+I want **a compelling team profile highlighting relevant capabilities**,
+So that **the application scores well on team criteria (30% of score)**.
+
+**Acceptance Criteria:**
+
+**Given** team evaluation covers capabilities, leadership, and project management
+**When** the team profile is complete
+**Then** it includes:
+- Founder background (Gabe C) - relevant experience and skills
+- Technical capabilities demonstrated (working MVP at nitoagua.vercel.app)
+- Domain knowledge of the water delivery market
+- Leadership and execution capacity
+- Advisory network (if any)
+- Gap acknowledgment and plan to address (honest about what's needed)
+
+**And** profile emphasizes execution ability over just ideas
+**And** language is in Spanish (Chilean)
+
+**Output:** `docs/startup/corfo/team-profile.md`
+
+---
+
+### Story 9.4: Video Pitch Script & Production
+
+As an **applicant**,
+I want **a 40-second video that effectively communicates the project**,
+So that **I meet the mandatory video submission requirement**.
+
+**Acceptance Criteria:**
+
+**Given** CORFO requires a 40-second video covering product description and innovation
+**When** the video is complete
+**Then**:
+- Duration: Exactly 40 seconds (±2 seconds tolerance)
+- Content structure:
+  - Seconds 0-5: Hook - the problem
+  - Seconds 5-20: Solution - what nitoagua does
+  - Seconds 20-35: Innovation - why it's different/better
+  - Seconds 35-40: Call to action - scalability vision
+- Speaker: Gabe C (founder)
+- Quality: Clear audio, acceptable lighting (smartphone quality OK per CORFO)
+- Language: Spanish (Chilean)
+
+**Output:**
+- `docs/startup/corfo/video-script.md` (script with timing marks)
+- Video file uploaded to CORFO portal
+
+**Production Notes:**
+- Multiple takes recommended - select best one
+- Can be recorded on smartphone
+- No fancy editing required
+
+---
+
+### Story 9.5: Application Form Completion
+
+As an **applicant**,
+I want **the CORFO online form fully completed with all required information**,
+So that **the application is admissible for evaluation**.
+
+**Acceptance Criteria:**
+
+**Given** the CORFO form at https://semillainicia.charly.io/spar/programs/27297
+**When** the form is complete
+**Then** all sections are filled:
+- Personal information (Gabe C, ClaveÚnica verified)
+- Applicant type: Persona Natural
+- Business information (emprendimiento details)
+- Admissibility questions answered correctly
+- Innovation section (from Story 9.2)
+- Scalability section (from Story 9.1)
+- Team section (from Story 9.3)
+- Statistical data questions
+- Sworn declaration accepted
+
+**And** form is saved frequently during completion
+**And** video is uploaded (from Story 9.4)
+**And** form passes CORFO's validation checks
+
+**Output:** Saved application in CORFO portal (not yet submitted)
+
+**Notes:**
+- Use Google Chrome browser
+- Budget: Up to $15M (75% CORFO / 25% propio) OR $17M if women-led (85%/15%)
+- The 25% "aporte propio" is rendered during execution, not required upfront
+
+---
+
+### Story 9.6: Application Review & Submission
+
+As an **applicant**,
+I want **a thorough review and successful submission of the application**,
+So that **nitoagua is considered for CORFO Semilla funding**.
+
+**Acceptance Criteria:**
+
+**Given** all form sections and video are complete
+**When** final review is done
+**Then**:
+- All fields reviewed for completeness and accuracy
+- Narrative coherence verified across sections (no contradictions)
+- Video properly uploaded and playable
+- No sensitive/confidential information exposed inappropriately
+- Spelling and grammar checked (Spanish)
+
+**And** application is submitted before December 18, 2025 15:00 hrs
+**And** confirmation receipt is saved/screenshot taken
+**And** confirmation email is received from CORFO
+
+**Output:**
+- Submitted application
+- `docs/startup/corfo/submission-confirmation.md` (with timestamp, confirmation number)
+
+**CRITICAL:** Submit by December 17th to avoid last-minute technical issues. Platform may be congested on deadline day.
+
+---
+
+### Story 9.7: Post-Submission Documentation
+
+As an **applicant**,
+I want **all application materials archived and organized**,
+So that **I have reference for evaluation period (through March 2026) and future applications**.
+
+**Acceptance Criteria:**
+
+**Given** application is submitted
+**When** documentation is archived
+**Then** `docs/startup/corfo/` contains:
+- `narrative-escalabilidad.md` - scalability narrative
+- `innovation-brief.md` - innovation and differentiation
+- `team-profile.md` - team capabilities
+- `video-script.md` - video script with timing
+- `submission-confirmation.md` - proof of submission
+- `application-summary.md` - executive summary of what was submitted
+- `timeline.md` - key dates (submission, evaluation period, results March 6, 2026)
+
+**And** materials are ready for reference during potential interview phase
+**And** lessons learned documented for future funding applications
+
+**Output:** Complete `docs/startup/corfo/` folder
+
+---
+
+### Story 9.8: Market Research
+
+As an **applicant**,
+I want **comprehensive market research on the water truck (camión aljibe) market in Chile**,
+So that **the application demonstrates thorough market understanding and supports all other deliverables**.
+
+**Acceptance Criteria:**
+
+**Given** CORFO evaluates market understanding
+**When** market research is complete
+**Then** it includes:
+- Market size quantification (households using water trucks, annual market value)
+- Customer segments (rural permanent, seasonal, emergency)
+- Provider landscape (number of operators, types, how they find customers)
+- Competitive analysis (WhatsApp groups, Facebook, phone directories)
+- Pricing research (ranges by region, factors affecting price)
+- Regulatory environment (applicable regulations, municipal requirements)
+- Market trends (climate change impact, government spending, projections)
+
+**And** all data points cite sources
+**And** research supports claims in scalability narrative (9-1) and innovation brief (9-2)
+
+**Output:** `docs/startup/corfo/market-research.md` (Spanish)
+
+---
+
+### Epic 9 Execution Timeline
+
+| Date | Story | Priority |
+|------|-------|----------|
+| Dec 16 | 9.1, 9.2, 9.3, 9.8 (in parallel) | HIGH |
+| Dec 16-17 | 9.4 (video) | HIGH |
+| Dec 17 | 9.5 (form completion) | HIGH |
+| Dec 17 (evening) | 9.6 (review & submit) | CRITICAL |
+| Dec 18 | 9.7 (post-submission) | Medium |
+
+**Contact for questions:** semillainicia@corfo.cl | 600 586 8000
+
+---
+
+## Epic 10: Consumer Offer Selection
 
 **Goal:** Enable consumers to view and select from multiple provider offers on their water requests. Core feature of the Consumer-Choice Offer Model.
 
@@ -2254,7 +2555,7 @@ So that **I stay in good standing**.
 
 ---
 
-### Story 9.1: Offer List View for Consumers
+### Story 10.1: Offer List View for Consumers
 
 As a **consumer with a pending request**,
 I want **to view all offers submitted by providers**,
@@ -2296,7 +2597,7 @@ So that **I can compare options and choose the best fit for my needs**.
 
 ---
 
-### Story 9.2: Select Provider Offer
+### Story 10.2: Select Provider Offer
 
 As a **consumer viewing offers**,
 I want **to select my preferred provider's offer**,
@@ -2324,7 +2625,7 @@ So that **my water delivery is confirmed with that provider**.
 **And** provider is notified their offer was accepted
 **And** other providers are notified their offers expired (request filled)
 
-**Prerequisites:** Story 9.1
+**Prerequisites:** Story 10.1
 
 **Technical Notes:**
 - Create `src/lib/actions/offers.ts` with `selectOffer(offerId)` action
@@ -2334,7 +2635,7 @@ So that **my water delivery is confirmed with that provider**.
 
 ---
 
-### Story 9.3: Offer Countdown Timer (Consumer View)
+### Story 10.3: Offer Countdown Timer (Consumer View)
 
 As a **consumer viewing offers**,
 I want **to see how long each offer remains valid**,
@@ -2356,7 +2657,7 @@ So that **I know I need to decide before offers expire**.
 
 **And** countdown updates every second (client-side)
 
-**Prerequisites:** Story 9.1
+**Prerequisites:** Story 10.1
 
 **Technical Notes:**
 - Create `src/hooks/use-countdown.ts` hook
@@ -2366,7 +2667,7 @@ So that **I know I need to decide before offers expire**.
 
 ---
 
-### Story 9.4: Request Timeout Notification
+### Story 10.4: Request Timeout Notification
 
 As a **consumer whose request received no offers**,
 I want **to be notified when my request times out**,
@@ -2388,7 +2689,7 @@ So that **I know to try again or contact support**.
 - "Nueva Solicitud" button
 - "Contactar Soporte" link (WhatsApp)
 
-**Prerequisites:** Story 9.1, Story 5.1 (email notifications)
+**Prerequisites:** Story 10.1, Story 5.1 (email notifications)
 
 **Technical Notes:**
 - Create `src/app/api/cron/request-timeout/route.ts`
@@ -2398,7 +2699,7 @@ So that **I know to try again or contact support**.
 
 ---
 
-### Story 9.5: Request Status with Offer Context
+### Story 10.5: Request Status with Offer Context
 
 As a **consumer tracking their request**,
 I want **to see the selected provider's offer details on the status page**,
@@ -2420,7 +2721,7 @@ So that **I have the delivery information I agreed to**.
 - "Ver Ofertas" button linking to offers page
 - Count of current offers: "3 ofertas disponibles"
 
-**Prerequisites:** Story 9.2, Story 2.6
+**Prerequisites:** Story 10.2, Story 2.6
 
 **Technical Notes:**
 - Update `src/app/(consumer)/request/[id]/page.tsx`
@@ -2429,7 +2730,7 @@ So that **I have the delivery information I agreed to**.
 
 ---
 
-## Epic 10: Consumer UX Enhancements
+## Epic 11: Consumer UX Enhancements
 
 **Goal:** Address UX improvements identified during audit. Focus on location accuracy, negative states, payment options, and improved messaging.
 
@@ -2442,7 +2743,7 @@ So that **I have the delivery information I agreed to**.
 
 ---
 
-### Story 10.1: Map Location Pinpoint
+### Story 11.1: Map Location Pinpoint
 
 As a **consumer**,
 I want **to confirm my exact location on a map**,
@@ -2471,7 +2772,7 @@ So that **the provider can find me accurately**.
 
 ---
 
-### Story 10.2: Payment Method Selection
+### Story 11.2: Payment Method Selection
 
 As a **consumer**,
 I want **to choose how I'll pay**,
@@ -2500,7 +2801,7 @@ So that **I can use cash or bank transfer**.
 
 ---
 
-### Story 10.3: Negative Status States
+### Story 11.3: Negative Status States
 
 As a **consumer**,
 I want **to see clear explanations when my request fails**,
@@ -2529,7 +2830,7 @@ So that **I understand what happened and what to do next**.
 
 **And** each negative state includes support contact
 
-**Prerequisites:** Story 2.6, Story 9.4
+**Prerequisites:** Story 2.6, Story 10.4
 
 **Technical Notes:**
 - Add 'no_offers', 'cancelled', 'failed' to status enum
@@ -2538,7 +2839,7 @@ So that **I understand what happened and what to do next**.
 
 ---
 
-### Story 10.4: Urgency Pricing Display
+### Story 11.4: Urgency Pricing Display
 
 As a **consumer**,
 I want **to see urgency pricing impact clearly**,
@@ -2566,7 +2867,7 @@ So that **I can make informed decisions**.
 
 ---
 
-### Story 10.5: Remove Fake Social Proof
+### Story 11.5: Remove Fake Social Proof
 
 As a **consumer**,
 I want **to see authentic trust signals**,
@@ -2611,20 +2912,22 @@ So that **I can trust the platform based on real information**.
 | 6 | Admin Operations Panel | 8 | V2 |
 | 7 | Provider Onboarding | 11 | V2 |
 | 8 | Provider Offer System | 7 | V2 |
-| 9 | Consumer Offer Selection | 5 | V2 |
-| 10 | Consumer UX Enhancements | 5 | V2 |
+| 9 | CORFO Semilla Application | 7 | Business |
+| 10 | Consumer Offer Selection | 5 | V2 |
+| 11 | Consumer UX Enhancements | 5 | V2 |
 
-**Total:** 10 Epics, 61 Stories (26 MVP + 35 V2)
+**Total:** 11 Epics, 68 Stories (26 MVP + 42 V2/Business)
 
 ### V2 Implementation Order
 
-Epics 6-10 are numbered in dependency order. Implement sequentially:
+Epics 6-11 are numbered in dependency order. Implement sequentially:
 
 1. **Epic 6** - Admin Operations Panel (foundation for V2)
 2. **Epic 7** - Provider Onboarding (requires admin verification)
 3. **Epic 8** - Provider Offer System (requires verified providers)
-4. **Epic 9** - Consumer Offer Selection (requires offers to exist)
-5. **Epic 10** - Consumer UX Enhancements (polish layer)
+4. **Epic 9** - CORFO Semilla Application (parallel business track - no code dependencies)
+5. **Epic 10** - Consumer Offer Selection (requires offers to exist)
+6. **Epic 11** - Consumer UX Enhancements (polish layer)
 
 ### Key Dependencies
 
@@ -2635,13 +2938,15 @@ Epic 6.2 (Offer Config) ←─────────────────�
          │                                              │
          ├─→ Epic 8.2 (Submit Offer) ←── Epic 8.1       │
          │            │                                 │
-         │            └─→ Epic 9.1 (View Offers) ←──────┤
+         │            └─→ Epic 10.1 (View Offers) ←─────┤
          │                        │                     │
-         │                        └─→ Epic 9.2 (Select) │
+         │                        └─→ Epic 10.2 (Select)│
          │                                    │         │
          │                                    ├─→ Epic 8.5 (Acceptance Notification)
          │                                    │
-         └─→ Epic 6.7 (Expiration Cron) ─────→ Epic 9.3 (Countdown)
+         └─→ Epic 6.7 (Expiration Cron) ────→ Epic 10.3 (Countdown)
+
+Epic 9 (CORFO Semilla) runs in parallel - no technical dependencies
 
 Epic 7.1 (Provider Registration) ←── Epic 6.1
          │

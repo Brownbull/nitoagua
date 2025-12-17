@@ -33,7 +33,7 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
 
   // Click login
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/dashboard", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 15000 });
 }
 
 test.describe("Provider Document Management - Story 7-5", () => {
@@ -447,7 +447,7 @@ test.describe("Provider Document Management - Navigation", () => {
     await expect(backButton).toBeVisible();
 
     await backButton.click();
-    await page.waitForURL("**/dashboard", { timeout: 5000 });
+    await page.waitForURL("**/provider/requests", { timeout: 5000 });
   });
 
   test("documents page redirects unapproved providers", async ({ page }) => {

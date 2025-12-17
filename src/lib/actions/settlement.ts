@@ -3,11 +3,313 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 
 interface ActionResult<T = void> {
   success: boolean;
   error?: string;
   data?: T;
+}
+
+// Types for earnings dashboard
+export type EarningsPeriod = "today" | "week" | "month";
+
+export interface EarningsSummary {
+  period: EarningsPeriod;
+  total_deliveries: number;
+  gross_income: number;
+  commission_amount: number;
+  commission_percent: number;
+  net_earnings: number;
+  cash_received: number;
+  commission_pending: number;
+}
+
+export interface DeliveryRecord {
+  id: string;
+  date: string;
+  amount: number;
+  payment_method: "cash" | "transfer";
+  commission: number;
+  net: number;
+}
+
+/**
+ * Get date range for earnings period
+ * AC: 8.6.1 - Period selector: Hoy / Esta Semana / Este Mes
+ */
+function getPeriodRange(period: EarningsPeriod): { start: Date; end: Date } {
+  const now = new Date();
+  switch (period) {
+    case "today":
+      return { start: startOfDay(now), end: endOfDay(now) };
+    case "week":
+      return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
+    case "month":
+      return { start: startOfMonth(now), end: endOfMonth(now) };
+  }
+}
+
+/**
+ * Get earnings summary for current provider
+ * AC: 8.6.1 - Period selector filter
+ * AC: 8.6.2 - Summary cards: Total Entregas, Ingreso Bruto, Comisión (%), Ganancia Neta
+ * AC: 8.6.3 - Cash section: Efectivo Recibido, Comisión Pendiente
+ */
+export async function getEarningsSummary(
+  period: EarningsPeriod = "month"
+): Promise<ActionResult<EarningsSummary>> {
+  try {
+    const supabase = await createClient();
+
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return { success: false, error: "No autenticado" };
+    }
+
+    // Verify user is a provider
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, commission_override")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return { success: false, error: "No se pudo obtener el perfil" };
+    }
+
+    if (profile.role !== "supplier") {
+      return { success: false, error: "Esta funcionalidad es solo para proveedores" };
+    }
+
+    // Get commission percent from admin settings or provider override
+    const adminClient = createAdminClient();
+    let commissionPercent = 15; // Default
+
+    if (profile.commission_override !== null) {
+      commissionPercent = profile.commission_override;
+    } else {
+      const { data: commissionSetting } = await adminClient
+        .from("admin_settings")
+        .select("value")
+        .eq("key", "default_commission_percent")
+        .single();
+
+      if (commissionSetting?.value) {
+        commissionPercent = typeof commissionSetting.value === "object"
+          ? (commissionSetting.value as { value: number }).value
+          : commissionSetting.value as number;
+      }
+    }
+
+    // Get date range for period
+    const { start, end } = getPeriodRange(period);
+
+    // Query completed deliveries (requests with status 'delivered' where provider is supplier)
+    // These are requests where the offer was accepted and delivery completed
+    const { data: deliveries, error: deliveriesError } = await supabase
+      .from("water_requests")
+      .select(`
+        id,
+        amount,
+        delivered_at
+      `)
+      .eq("supplier_id", user.id)
+      .eq("status", "delivered")
+      .gte("delivered_at", start.toISOString())
+      .lte("delivered_at", end.toISOString());
+
+    if (deliveriesError) {
+      console.error("[Settlement] Error fetching deliveries:", deliveriesError);
+      return { success: false, error: "Error al cargar entregas" };
+    }
+
+    // Calculate gross income from deliveries
+    // For now, we use a simple amount-based pricing (should match offer settings)
+    const getPrice = (amount: number): number => {
+      if (amount <= 100) return 5000;
+      if (amount <= 1000) return 20000;
+      if (amount <= 5000) return 75000;
+      return 140000;
+    };
+
+    let grossIncome = 0;
+    let cashReceived = 0;
+    const totalDeliveries = deliveries?.length ?? 0;
+
+    // For now, assume all deliveries are cash (payment_method not yet tracked on requests)
+    // In a real implementation, we'd track payment_method on water_requests
+    for (const delivery of deliveries || []) {
+      const price = getPrice(delivery.amount);
+      grossIncome += price;
+      // Assume cash for now (will be enhanced when payment method is tracked)
+      cashReceived += price;
+    }
+
+    // Calculate commission
+    const commissionAmount = Math.round(grossIncome * (commissionPercent / 100));
+    const netEarnings = grossIncome - commissionAmount;
+
+    // Calculate commission pending from ledger
+    // Sum of commission_owed entries minus sum of commission_paid entries
+    const { data: ledgerEntries, error: ledgerError } = await supabase
+      .from("commission_ledger")
+      .select("type, amount")
+      .eq("provider_id", user.id);
+
+    if (ledgerError) {
+      console.error("[Settlement] Error fetching ledger:", ledgerError);
+      // Continue without ledger data - set pending to 0
+    }
+
+    let commissionOwed = 0;
+    let commissionPaid = 0;
+
+    for (const entry of ledgerEntries || []) {
+      if (entry.type === "commission_owed") {
+        commissionOwed += entry.amount;
+      } else if (entry.type === "commission_paid") {
+        commissionPaid += entry.amount;
+      }
+    }
+
+    const commissionPending = commissionOwed - commissionPaid;
+
+    return {
+      success: true,
+      data: {
+        period,
+        total_deliveries: totalDeliveries,
+        gross_income: grossIncome,
+        commission_amount: commissionAmount,
+        commission_percent: commissionPercent,
+        net_earnings: netEarnings,
+        cash_received: cashReceived,
+        commission_pending: Math.max(0, commissionPending),
+      },
+    };
+  } catch (err) {
+    console.error("[Settlement] Unexpected error in getEarningsSummary:", err);
+    return { success: false, error: "Error inesperado" };
+  }
+}
+
+/**
+ * Get delivery history for current provider
+ * AC: 8.6.5 - Delivery history list shows: date, amount, payment method, commission
+ */
+export async function getDeliveryHistory(
+  limit: number = 10,
+  offset: number = 0
+): Promise<ActionResult<{ records: DeliveryRecord[]; total: number }>> {
+  try {
+    const supabase = await createClient();
+
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return { success: false, error: "No autenticado" };
+    }
+
+    // Verify user is a provider
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, commission_override")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return { success: false, error: "No se pudo obtener el perfil" };
+    }
+
+    if (profile.role !== "supplier") {
+      return { success: false, error: "Esta funcionalidad es solo para proveedores" };
+    }
+
+    // Get commission percent
+    const adminClient = createAdminClient();
+    let commissionPercent = 15;
+
+    if (profile.commission_override !== null) {
+      commissionPercent = profile.commission_override;
+    } else {
+      const { data: commissionSetting } = await adminClient
+        .from("admin_settings")
+        .select("value")
+        .eq("key", "default_commission_percent")
+        .single();
+
+      if (commissionSetting?.value) {
+        commissionPercent = typeof commissionSetting.value === "object"
+          ? (commissionSetting.value as { value: number }).value
+          : commissionSetting.value as number;
+      }
+    }
+
+    // Get total count
+    const { count, error: countError } = await supabase
+      .from("water_requests")
+      .select("*", { count: "exact", head: true })
+      .eq("supplier_id", user.id)
+      .eq("status", "delivered");
+
+    if (countError) {
+      console.error("[Settlement] Error counting deliveries:", countError);
+    }
+
+    // Query completed deliveries
+    const { data: deliveries, error: deliveriesError } = await supabase
+      .from("water_requests")
+      .select(`
+        id,
+        amount,
+        delivered_at
+      `)
+      .eq("supplier_id", user.id)
+      .eq("status", "delivered")
+      .order("delivered_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (deliveriesError) {
+      console.error("[Settlement] Error fetching delivery history:", deliveriesError);
+      return { success: false, error: "Error al cargar historial" };
+    }
+
+    // Calculate price for each delivery
+    const getPrice = (amount: number): number => {
+      if (amount <= 100) return 5000;
+      if (amount <= 1000) return 20000;
+      if (amount <= 5000) return 75000;
+      return 140000;
+    };
+
+    const records: DeliveryRecord[] = (deliveries || []).map((d) => {
+      const price = getPrice(d.amount);
+      const commission = Math.round(price * (commissionPercent / 100));
+      return {
+        id: d.id,
+        date: d.delivered_at || "",
+        amount: price,
+        payment_method: "cash" as const, // Default to cash, will be enhanced
+        commission,
+        net: price - commission,
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        records,
+        total: count ?? 0,
+      },
+    };
+  } catch (err) {
+    console.error("[Settlement] Unexpected error in getDeliveryHistory:", err);
+    return { success: false, error: "Error inesperado" };
+  }
 }
 
 /**

@@ -69,7 +69,9 @@ export function DevLogin() {
 
         if (profile) {
           if (profile.role === "supplier") {
-            router.push("/dashboard");
+            // Redirect approved providers to new provider routes (Epic 8+)
+            // Legacy /dashboard is being phased out
+            router.push("/provider/requests");
           } else {
             router.push("/");
           }
