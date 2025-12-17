@@ -5,7 +5,7 @@
 | **Story ID** | 9-5 |
 | **Epic** | Epic 9: CORFO Semilla Application |
 | **Title** | Application Form Completion |
-| **Status** | drafted |
+| **Status** | done |
 | **Priority** | HIGH |
 | **Type** | Business Development |
 | **Deadline** | December 17, 2025 |
@@ -201,12 +201,35 @@ So that **the application is admissible for evaluation**.
 
 ## Definition of Done
 
-- [ ] All form sections completed
-- [ ] All text in Spanish
-- [ ] Video uploaded and verified
-- [ ] Form saved (not submitted yet)
-- [ ] Backup of responses saved locally
-- [ ] No validation errors from CORFO portal
+- [x] All form sections completed
+- [x] All text in Spanish
+- [x] Video uploaded and verified
+- [x] Form saved (not submitted yet) → **SUBMITTED 17/12/2025 16:01 CLST**
+- [x] Backup of responses saved locally
+- [x] No validation errors from CORFO portal
+
+---
+
+## Completion Notes
+
+**Submitted:** 17 de diciembre de 2025 a las 16:01 CLST
+**ID Postulación:** 861156
+**Estado:** ✅ Enviada
+
+### Backup Documents Created
+- `docs/startup/corfo/form-responses.md` - Sección Innovación (14 preguntas)
+- `docs/startup/corfo/form-responses-escalabilidad.md` - Sección Escalabilidad (22 preguntas)
+- `docs/startup/corfo/form-responses-equipo.md` - Sección Equipo (27 preguntas)
+- `docs/startup/corfo/form-responses-estadisticos.md` - Datos estadísticos (10 preguntas)
+- `docs/startup/corfo/plan-proteccion-ip.md` - Plan de protección de propiedad intelectual
+- `docs/startup/corfo/postulacion_20251217.pdf` - PDF de confirmación de envío
+
+### Key Information Submitted
+- **Video pitch:** https://www.youtube.com/shorts/_mIsnHVNklc
+- **MVP URL:** https://nitoagua.vercel.app
+- **Cluster:** Gestión hídrica y resiliencia climática
+- **ODS Principal:** Agua limpia y saneamiento (ODS 6)
+- **Región ejecución:** La Araucanía, Villarrica
 
 ---
 

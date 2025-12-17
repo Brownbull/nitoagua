@@ -5,7 +5,7 @@
 | **Story ID** | 9-6 |
 | **Epic** | Epic 9: CORFO Semilla Application |
 | **Title** | Application Review & Submission |
-| **Status** | drafted |
+| **Status** | done |
 | **Priority** | CRITICAL |
 | **Type** | Business Development |
 | **Deadline** | December 17, 2025 (evening) |
@@ -194,11 +194,39 @@ So that **nitoagua is considered for CORFO Semilla funding**.
 
 ## Definition of Done
 
-- [ ] Application submitted before December 18, 15:00 hrs
-- [ ] Confirmation number received
-- [ ] Confirmation screenshot saved
-- [ ] Confirmation email received (if sent by CORFO)
-- [ ] Submission documented in `submission-confirmation.md`
+- [x] Application submitted before December 18, 15:00 hrs
+- [x] Confirmation number received
+- [x] Confirmation screenshot saved
+- [x] Confirmation email received (if sent by CORFO)
+- [x] Submission documented in `submission-confirmation.md` → See `postulacion_20251217.pdf`
+
+---
+
+## Completion Notes
+
+### Submission Confirmation
+
+| Campo | Valor |
+|-------|-------|
+| **Estado** | ✅ Enviada |
+| **Fecha de envío** | 17/12/2025 16:01 CLST |
+| **ID Postulación** | 861156 |
+| **Proyecto** | nitoagua |
+| **Cluster** | Gestión hídrica y resiliencia climática |
+
+### Archivos de Confirmación
+- **PDF de confirmación:** `docs/startup/corfo/postulacion_20251217.pdf`
+- **Video pitch:** https://www.youtube.com/shorts/_mIsnHVNklc
+- **MVP URL:** https://nitoagua.vercel.app
+
+### Próximos Pasos (según CORFO)
+- **Evaluación:** 19 dic 2025 - 5 marzo 2026
+- **Resultados:** 6 marzo 2026
+- **Entrega del beneficio:** 1-30 mayo 2026
+
+### Contacto para Consultas
+- **Email:** semillainicia@corfo.cl
+- **Teléfono:** 600 586 8000
 
 ---
 
