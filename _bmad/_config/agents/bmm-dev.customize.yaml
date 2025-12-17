@@ -1,0 +1,52 @@
+# Agent Customization
+# Customize any section below - all are optional
+
+# Override agent name
+agent:
+  metadata:
+    name: ""
+
+# Replace entire persona (not merged)
+persona:
+  role: ""
+  identity: ""
+  communication_style: ""
+  principles: []
+
+# Add custom critical actions (appended after standard config loading)
+critical_actions:
+  - "When completing a story, verify changes are on develop branch before code review"
+  - "After story status → done, prompt user for git merge workflow: develop → staging → main"
+  - "Before any deployment story, confirm all prerequisite stories are merged to main"
+
+# Add persistent memories for the agent
+memories:
+  # Branching Strategy
+  - "Project uses git branching strategy: feature → develop → staging → main"
+  - "After code review approval, execute merge flow: develop → staging (verify preview) → main (production)"
+  - "Delete feature branches after successful merge to main"
+  # Deployment URLs
+  - "Production URL: https://nitoagua.vercel.app"
+  - "Staging URL: https://nitoagua-git-staging-khujtaai.vercel.app"
+  - "Development URL: https://nitoagua-git-develop-khujtaai.vercel.app"
+  - "Preview URLs follow pattern: nitoagua-git-{branch}-khujtaai.vercel.app"
+  # Vercel Project Info
+  - "Vercel Project ID: prj_q4in9uJXxOyMkzk73ZoDBJ4W3Oec"
+  - "Vercel Team: Khujta AI (team_wThe9twpBygARrtUg9SrqCJu)"
+
+# Add custom menu items (appended to base menu)
+# Don't include * prefix or help/exit - auto-injected
+menu: []
+# Example:
+# menu:
+#   - trigger: my-workflow
+#     workflow: "{project-root}/custom/my.yaml"
+#     description: My custom workflow
+
+# Add custom prompts (for action="#id" handlers)
+prompts: []
+# Example:
+# prompts:
+# - id: my-prompt
+#   content: |
+#     Prompt instructions here
