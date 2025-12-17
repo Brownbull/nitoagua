@@ -33,7 +33,7 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
   // The email and password should be pre-filled after clicking supplier button
   // Just click login
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/dashboard", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 15000 });
 }
 
 test.describe("Provider Service Area Configuration - Story 7-3", () => {
@@ -333,7 +333,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
       await expect(backButton).toBeVisible();
       await backButton.click();
 
-      await page.waitForURL("**/dashboard", { timeout: 5000 });
+      await page.waitForURL("**/provider/requests", { timeout: 5000 });
       expect(page.url()).toContain("/dashboard");
       expect(page.url()).not.toContain("/settings");
     });

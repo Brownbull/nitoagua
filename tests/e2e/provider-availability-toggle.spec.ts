@@ -33,7 +33,7 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
 
   // Click login
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/dashboard", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 15000 });
 }
 
 test.describe("Provider Availability Toggle - Story 7-4", () => {
@@ -298,7 +298,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
 
       // Reload page
       await page.reload();
-      await page.waitForURL("**/dashboard", { timeout: 10000 });
+      await page.waitForURL("**/provider/requests", { timeout: 10000 });
 
       // Verify state persists
       const newSwitchElement = page.getByTestId("availability-switch");
