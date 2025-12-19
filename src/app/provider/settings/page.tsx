@@ -9,7 +9,6 @@ import {
   MapPin,
   ChevronRight,
   BadgeCheck,
-  LogOut,
 } from "lucide-react";
 import { AvailabilityToggleWrapper } from "@/components/supplier";
 import { SignOutButton } from "./sign-out-button";
@@ -41,7 +40,7 @@ const settingsItems = [
     description: "Cuenta para transferencias",
   },
   {
-    href: "/dashboard/settings/areas",
+    href: "/provider/settings/areas",
     icon: MapPin,
     title: "Zonas de Servicio",
     description: "Comunas donde operas",
