@@ -7,6 +7,7 @@ import {
   startOfMonth,
   endOfMonth,
 } from "date-fns";
+import { getDeliveryPrice } from "../../src/lib/utils/commission";
 
 /**
  * Unit tests for earnings dashboard utilities
@@ -136,36 +137,31 @@ describe("EarningsSummary types", () => {
   });
 });
 
-describe("Price calculation logic", () => {
-  // Matches the getPrice function pattern used in settlement.ts
-  function getPrice(amount: number): number {
-    if (amount <= 100) return 5000;
-    if (amount <= 1000) return 20000;
-    if (amount <= 5000) return 75000;
-    return 140000;
-  }
+describe("Price calculation logic (using shared getDeliveryPrice)", () => {
+  // Uses the shared utility from src/lib/utils/commission.ts
+  // This ensures tests stay in sync with actual implementation
 
   it("calculates price for 100L", () => {
-    expect(getPrice(100)).toBe(5000);
-    expect(getPrice(50)).toBe(5000);
+    expect(getDeliveryPrice(100)).toBe(5000);
+    expect(getDeliveryPrice(50)).toBe(5000);
   });
 
   it("calculates price for 1000L", () => {
-    expect(getPrice(1000)).toBe(20000);
-    expect(getPrice(500)).toBe(20000);
-    expect(getPrice(101)).toBe(20000);
+    expect(getDeliveryPrice(1000)).toBe(20000);
+    expect(getDeliveryPrice(500)).toBe(20000);
+    expect(getDeliveryPrice(101)).toBe(20000);
   });
 
   it("calculates price for 5000L", () => {
-    expect(getPrice(5000)).toBe(75000);
-    expect(getPrice(2500)).toBe(75000);
-    expect(getPrice(1001)).toBe(75000);
+    expect(getDeliveryPrice(5000)).toBe(75000);
+    expect(getDeliveryPrice(2500)).toBe(75000);
+    expect(getDeliveryPrice(1001)).toBe(75000);
   });
 
   it("calculates price for 10000L", () => {
-    expect(getPrice(10000)).toBe(140000);
-    expect(getPrice(7500)).toBe(140000);
-    expect(getPrice(5001)).toBe(140000);
+    expect(getDeliveryPrice(10000)).toBe(140000);
+    expect(getDeliveryPrice(7500)).toBe(140000);
+    expect(getDeliveryPrice(5001)).toBe(140000);
   });
 });
 

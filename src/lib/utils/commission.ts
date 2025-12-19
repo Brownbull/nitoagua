@@ -46,6 +46,26 @@ export function formatLiters(liters: number): string {
 }
 
 /**
+ * Get price in CLP for a water delivery based on amount in liters
+ * Single source of truth for delivery pricing
+ *
+ * Price tiers:
+ * - Up to 100L: $5,000 CLP
+ * - Up to 1,000L: $20,000 CLP
+ * - Up to 5,000L: $75,000 CLP
+ * - Over 5,000L: $140,000 CLP
+ *
+ * @param amountLiters - Amount in liters
+ * @returns Price in CLP (integer, no decimals)
+ */
+export function getDeliveryPrice(amountLiters: number): number {
+  if (amountLiters <= 100) return 5000;
+  if (amountLiters <= 1000) return 20000;
+  if (amountLiters <= 5000) return 75000;
+  return 140000;
+}
+
+/**
  * Calculate and format earnings preview for offer form
  * AC: 8.2.3 - "Ganarás: $XX,XXX (después de X% comisión)"
  */

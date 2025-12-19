@@ -99,8 +99,12 @@ export function EarningsDashboardClient({ initialSummary, initialHistory, initia
         ))}
       </div>
 
-      {/* Loading overlay */}
-      <div className={cn("transition-opacity space-y-4", isPending && "opacity-50")}>
+      {/* Loading overlay with accessibility */}
+      <div
+        className={cn("transition-opacity space-y-4", isPending && "opacity-50")}
+        aria-busy={isPending}
+        aria-live="polite"
+      >
         {/* Hero Summary Card - AC: 8.6.2 */}
         <HeroSummaryCard summary={summary} period={period} />
 
@@ -248,6 +252,8 @@ function DeliveryHistoryList({
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
           Actividad reciente
         </h3>
+        {/* TODO: Implement /provider/earnings/history page for full history view
+            Currently hidden to avoid 404. Re-enable when history page is created.
         {history.total > history.records.length && (
           <Link
             href="/provider/earnings/history"
@@ -256,6 +262,7 @@ function DeliveryHistoryList({
             Ver todo
           </Link>
         )}
+        */}
       </div>
 
       <div className="space-y-1.5">
