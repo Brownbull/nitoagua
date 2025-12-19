@@ -143,9 +143,9 @@ development_status:
   8-5-offer-acceptance-notification: done  # APPROVED 2025-12-17 - All 7 tasks complete, 10 E2E tests passing
   8-6-earnings-dashboard: done  # APPROVED 2025-12-19 - Atlas code review passed, 7 fixes applied
   8-7-cash-commission-settlement: done  # APPROVED 2025-12-19 - Atlas code review passed, 2 doc fixes applied
-  8-8-epic-deployment-and-verification: ready-for-dev  # Story drafted 2025-12-16
-  8-9-provider-settings-page: review  # Completed 2025-12-17 - 13 E2E tests passing, all ACs implemented
-  8-10-provider-map-view: drafted  # NEW 2025-12-16 - Map view for requests (P3 - nice-to-have)
+  8-8-epic-deployment-and-verification: done  # Story drafted 2025-12-16
+  8-9-provider-settings-page: done  # APPROVED 2025-12-19 - Atlas code review passed, seed data fix, 34 E2E tests passing
+  8-10-provider-map-view: done  # APPROVED 2025-12-19 - Atlas code review passed, 5 issues fixed, 12 E2E tests passing
   epic-8-retrospective: optional
 
   # Epic 9: CORFO Semilla Application (PARALLEL TRACK - no code dependencies)
