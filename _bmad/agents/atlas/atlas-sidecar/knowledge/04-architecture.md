@@ -136,70 +136,24 @@ export async function requireAdmin() { /* ... */ }
 
 ---
 
-## Code Review Learnings
+## Code Review Learnings (Epic 8)
 
-### Story 8-6: Earnings Dashboard (2025-12-19)
+| Story | Key Patterns | Location |
+|-------|--------------|----------|
+| 8-6 | `getDeliveryPrice()` centralized pricing | `src/lib/utils/commission.ts` |
+| 8-6 | `aria-busy`/`aria-live` for loading states | Period selectors |
+| 8-7 | Storage bucket with folder-based RLS | `commission-receipts` bucket |
+| 8-9 | `hideBackButton` prop for component reuse | ServiceAreaSettings |
+| 8-9 | Settings page layout standard | `max-w-lg mx-auto px-4 py-6` |
+| 8-10 | `dynamic()` import for SSR bypass | Leaflet map wrapper |
+| 8-10 | Full-screen page layout override | `usePathname()` conditional |
 
-**Patterns Adopted:**
-- `getDeliveryPrice()`: Centralized pricing utility in `src/lib/utils/commission.ts`
-- Accessibility: `aria-busy` and `aria-live` for loading states in period selectors
+### Storage Bucket: commission-receipts
 
-**Technical Decisions:**
-- Payment method tracking: Deferred (TODO documented, defaults to cash)
-- History pagination: Link hidden until `/provider/earnings/history` route implemented
-
-**Coverage Notes:**
-- 26 unit tests, 21+ E2E tests
-- Gap: payment_method accuracy for AC8.6.3 (Efectivo Recibido)
-
-## Storage Bucket: commission-receipts (Story 8-7)
-
-Commission payment receipt storage with folder-based RLS:
-- Bucket: `commission-receipts` (private, 5MB limit)
-- Allowed types: image/jpeg, image/png, image/webp, application/pdf
-- Path pattern: `{provider_id}/{timestamp}-receipt.{ext}`
-- RLS: Providers can upload/view own, admins can view all
-
-Server actions:
-- `getPlatformBankDetails()` - Fetch bank account details from admin_settings
-- `getPendingWithdrawal()` - Check for existing pending withdrawal
-- `submitCommissionPayment(amount, receiptPath)` - Create withdrawal request
-- `getReceiptUrl(receiptPath)` - Get signed URL for admin viewing
-
-### Story 8-9: Provider Settings Page (2025-12-19)
-
-**Patterns Adopted:**
-- `hideBackButton` prop: Added to ServiceAreaSettings component for reuse in different layouts
-- Consistent settings page layout: `max-w-lg`, `px-4 py-6`, white bg, `text-gray-900` headers
-- View-only MVP pattern: Read-only detail pages with "contact support" note for edits
-
-**Component Reuse:**
-- AvailabilityToggleWrapper from Epic 7 reused in settings page
-- ServiceAreaSettings component extended with `hideBackButton` prop for page-level back button
-
-**Layout Standards (Provider Settings Pages):**
-```
-- Container: max-w-lg mx-auto px-4 py-6
-- Header: text-2xl font-bold text-gray-900 mb-6
-- Back button: Top of page, inline-flex items-center text-gray-600
-- Cards: bg-white rounded-xl p-4 shadow-sm border border-gray-100
-```
-
-### Story 8-10: Provider Map View (2025-12-19)
-
-**Patterns Adopted:**
-- `dynamic()` import for Leaflet: SSR-incompatible libraries wrapped with `next/dynamic` using `ssr: false`
-- Full-screen map pattern: Hide layout header conditionally using `usePathname()` in client layout
-- Provider location: Browser geolocation with graceful degradation (permission denied = no-op)
-
-**Technical Decisions:**
-- **Map Library**: Leaflet + OpenStreetMap (free, no API key required) instead of Google Maps
-- **Layout Override**: Map page hides provider header via conditional render in `layout.tsx` (matches UX mockup Section 7)
-- **Disabled Features**: "Cercanos" filter disabled with tooltip "Próximamente" for future implementation
-
-**Coverage Notes:**
-- 12 E2E tests covering: page access, back navigation, auth redirect, filter chips, empty state, location button, FAB navigation
-- Gap: Marker tap → preview card not tested with real seeded data (conditional check pattern used)
+- **Bucket:** `commission-receipts` (private, 5MB, images + PDF)
+- **Path:** `{provider_id}/{timestamp}-receipt.{ext}`
+- **RLS:** Providers upload/view own, admins view all
+- **Actions:** `getPlatformBankDetails()`, `submitCommissionPayment()`, `getReceiptUrl()`
 
 ---
 

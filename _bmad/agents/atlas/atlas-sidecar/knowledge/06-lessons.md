@@ -14,6 +14,7 @@
 | **Tab preservation via `?from=` param** | Maintains context on navigation | 3-4 |
 | **Per-test seeding pattern** | Deterministic, isolated tests | Epic 8 |
 | **Admin client for RLS bypass** | Clean separation of concerns | 2-7, 3-1 |
+| **Server component + admin client for guest access** | Guest token pages need RLS bypass on server | 10-1 |
 | **Google OAuth only** | Simpler auth, no password management | ADR-004 |
 
 ## What Failed
@@ -69,25 +70,36 @@
 | **Optimistic UI (Set tracking)** | See 04-architecture.md | 3-5 |
 | **Tab Preservation (?from= param)** | See 04-architecture.md | 3-4 |
 | **Centralized pricing utility** | `src/lib/utils/commission.ts` | 8-6 |
-| **Loading state accessibility** | `earnings-dashboard-client.tsx` | 8-6 |
-| **File upload with preview** | `withdraw-client.tsx` | 8-7 |
-| **Storage bucket with folder-based RLS** | `commission-receipts` bucket | 8-7 |
 | **Dynamic import for SSR bypass** | `map-wrapper.tsx` | 8-10 |
 | **Full-screen page layout override** | `provider/layout.tsx` | 8-10 |
 
-### From Story 8-9 Code Review (2025-12-19)
+---
 
-> "Seed scripts should reference the COMUNAS constant directly or at least document which source of truth they follow. Tests passed silently because UI showed '4 comunas activas' but none matched the displayed buttons."
+## Epic 8 Retrospective (2025-12-19)
 
-> "When adding props like `hideBackButton` to shared components, the wrapper page should handle navigation - don't duplicate back buttons."
+**Delivered:** 10 stories, ~160 E2E tests, ~95 unit tests
 
-### From Story 8-10 Code Review (2025-12-19)
+### Key Wins
 
-> "Z-index stacking contexts are tricky - child elements' z-index values only compete within their stacking context. When the map container had `z-0`, the back button's `z-[1000]` couldn't override the layout header at `z-10`."
+- Atlas code reviews caught real issues (DRY violations, seed mismatches, z-index bugs)
+- Per-test seeding scales well at 160+ tests
+- Supabase Realtime + 30s polling fallback is reliable and free
+- Leaflet + OpenStreetMap works well with `dynamic()` import
 
-> "For full-screen overlay pages like maps, hide parent layout elements conditionally rather than fighting z-index battles. Use `usePathname()` in client layouts to detect page context."
+### Code Review Lessons (Epic 8)
 
-> "Disabled features should be clearly marked - use `disabled` + `cursor-not-allowed` + `title='Próximamente'` for planned-but-not-implemented UI elements."
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| Seed data mismatch | Scripts hardcoded IDs vs constants | Reference source constants |
+| Z-index battles | Stacking contexts | Hide parent layout via `usePathname()` |
+| Duplicate back buttons | Prop not passed to component | `hideBackButton` prop pattern |
+| Disabled features unclear | No visual indicator | `disabled` + `cursor-not-allowed` + tooltip |
+
+### Process Adopted
+
+- **@health tests first** - Database health checks run before E2E suite
+- **Tech spec before stories** - Run `atlas-epic-tech-context` workflow
+- **Full-screen pages** - Hide parent layout via `usePathname()` conditional
 
 ---
 

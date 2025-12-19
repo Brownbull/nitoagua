@@ -480,3 +480,72 @@ export const EARNINGS_TEST_LEDGER_IDS = [
   ...EARNINGS_TEST_DATA.ledger.owed.map((e) => e.id),
   ...EARNINGS_TEST_DATA.ledger.paid.map((e) => e.id),
 ];
+
+// =============================================================================
+// CONSUMER-FACING OFFERS (Story 10-1) - run `npm run seed:offers` to seed
+// =============================================================================
+
+/**
+ * Consumer-facing offer test data for Story 10-1
+ * These offers are seeded for SEEDED_PENDING_REQUEST to test:
+ * - AC10.1.2: Offer card display (provider name, delivery window, price, countdown)
+ * - AC10.1.3: Offers sorted by delivery window (soonest first)
+ */
+export const CONSUMER_OFFERS_TEST_DATA = {
+  /**
+   * Secondary and tertiary test providers created by seed:offers
+   */
+  providers: {
+    secondary: {
+      email: "aguatero2@nitoagua.local",
+      name: "Pedro Aguatero",
+    },
+    tertiary: {
+      email: "aguatero3@nitoagua.local",
+      name: "María Cisterna",
+    },
+  },
+
+  /**
+   * Consumer-facing offers for SEEDED_PENDING_REQUEST
+   * Sorted by delivery_window_start (earliest first)
+   */
+  offers: {
+    /** Earliest delivery - should appear first in sorted list */
+    earliest: {
+      id: "cccccccc-cccc-cccc-cccc-cccccccccc01",
+      request_id: SEEDED_PENDING_REQUEST.id,
+      providerName: "Pedro Aguatero",
+      status: "active" as const,
+    },
+    /** Medium delivery time - should appear second */
+    medium: {
+      id: "cccccccc-cccc-cccc-cccc-cccccccccc02",
+      request_id: SEEDED_PENDING_REQUEST.id,
+      providerName: "María Cisterna",
+      status: "active" as const,
+    },
+    /** Latest delivery - should appear last (from dev provider) */
+    latest: {
+      id: "cccccccc-cccc-cccc-cccc-cccccccccc03",
+      request_id: SEEDED_PENDING_REQUEST.id,
+      providerName: "Supplier Test", // Dev provider name
+      status: "active" as const,
+    },
+  },
+
+  /** Total number of offers for SEEDED_PENDING_REQUEST */
+  totalOffers: 3,
+
+  /** Expected sort order (by provider name for verification) */
+  expectedSortOrder: ["Pedro Aguatero", "María Cisterna", "Supplier Test"],
+} as const;
+
+/**
+ * All consumer-facing offer IDs for verification/cleanup
+ */
+export const CONSUMER_OFFERS_IDS = [
+  CONSUMER_OFFERS_TEST_DATA.offers.earliest.id,
+  CONSUMER_OFFERS_TEST_DATA.offers.medium.id,
+  CONSUMER_OFFERS_TEST_DATA.offers.latest.id,
+];

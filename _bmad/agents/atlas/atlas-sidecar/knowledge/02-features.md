@@ -105,60 +105,24 @@ nitoagua provides features for three user types: Consumers, Providers (aguateros
 | Epic 6 | 6.1-6.10 | Admin panel |
 | Epic 7 | 7.1-7.11 | Provider onboarding |
 | Epic 8 | 8.1-8.10 | Offer system |
+| Epic 10 | 10.1-10.5 | Consumer offer selection |
+| Epic 11 | 11.1-11.4 | Full workflow validation (all personas) |
+| Epic 12 | 12.1-12.5 | Consumer UX enhancements (backlog) |
 
 ---
 
-## Story Creation Log
+## Recent Story Implementations
 
-### testing-2-local-schema-sync - 2025-12-18
+| Story | Date | Key Outcome | Pattern Added |
+|-------|------|-------------|---------------|
+| testing-2-local-schema-sync | 2025-12-18 | `verify:local-db` + `seed:dev-login` scripts | Database health checks |
+| 8-10-provider-map-view | 2025-12-19 | `/provider/map` with Leaflet/OSM | Dynamic import for SSR bypass |
+| Epic 10 tech-spec | 2025-12-19 | Consumer offer selection design | `select_offer()` atomic function |
+| Epic 10 stories created | 2025-12-19 | 5 stories ready-for-dev (10-1 to 10-5) | Consumer-side offer selection flow |
+| Epic 11 created | 2025-12-19 | 4 stories (11-1 to 11-4) - 102 ACs total | Cross-persona validation, multi-context tests |
+| 10-1-offer-list-view | 2025-12-19 | Consumer offers page with realtime + guest access | Server component + admin client for guest token access |
 
-**Summary:** Local Supabase Schema Synchronization - Fix missing tables and RLS policies in local development environment
-
-**User Value:** Enable reliable local development and testing for all provider/admin features
-
-**Workflow Touchpoints:**
-- Provider Operations Flow
-- Admin Verification Flow
-- E2E Testing Workflow
-- Developer Onboarding
-
-**Source:** docs/sprint-artifacts/testing/testing-2-local-schema-sync.md
-
-**Implementation Outcome (2025-12-18):**
-- Created `npm run verify:local-db` script to check all required tables
-- Created `npm run seed:dev-login` to seed dev login users locally
-- Created `docs/startup/run_app.local.md` with troubleshooting guide
-- All 11 required tables verified working
-- Database health E2E tests passing (4/4)
-
----
-
-### 8-10-provider-map-view - 2025-12-19
-
-**Summary:** Provider Map View - Geographic visualization of available water requests
-
-**User Value:** Providers can browse requests on a map to plan efficient delivery routes
-
-**Workflow Touchpoints:**
-- Provider Offer Flow (new entry point via FAB)
-- Provider Dashboard Navigation (FAB button links to /provider/map)
-- Request Detail Flow (marker tap → preview card → detail page)
-
-**Atlas Enhancements Applied:**
-- 4 additional ACs from workflow chain analysis (AC8.10.8-11)
-- Workflow impact documentation added to story
-- Testing implications documented
-
-**Implementation Outcome (2025-12-19):**
-- Created `/provider/map` route with Leaflet/OpenStreetMap integration
-- Implemented request markers with offer counts (orange circles)
-- Provider location marker with geolocation (blue pulsing dot)
-- Request preview card on marker tap with navigation to detail
-- Empty state when no requests have coordinates
-- 12 E2E tests passing covering all key scenarios
-- Pattern: Dynamic import via client wrapper to avoid SSR issues with Leaflet
-
-**Source:** docs/sprint-artifacts/epic8/8-10-provider-map-view.md
+> Full story details in `docs/sprint-artifacts/` - Atlas tracks patterns, not full implementations.
 
 ---
 

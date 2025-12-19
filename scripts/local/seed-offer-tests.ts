@@ -6,6 +6,7 @@
  * Seeds the database with data specifically for testing offer-related flows:
  * - Story 8-3: Provider's Active Offers List
  * - Story 8-4: Withdraw Pending Offer
+ * - Story 10-1: Consumer Offer List View (consumer-facing offers)
  *
  * Creates:
  * - An approved provider with service areas configured
@@ -13,6 +14,7 @@
  * - Active offers (pending) that can be withdrawn
  * - Cancelled offers (for re-submission testing)
  * - Accepted offers (for "Ver Entrega" button testing)
+ * - Consumer-facing offers on seeded pending requests (for Story 10-1 tests)
  *
  * Usage:
  *   npm run seed:offers         # Seed offer test data
@@ -197,6 +199,66 @@ const OFFER_TEST_OFFERS = [
   },
 ];
 
+// =============================================================================
+// CONSUMER-FACING OFFERS (Story 10-1)
+// =============================================================================
+
+// Secondary test provider for consumer-facing tests (multiple offers from different providers)
+const SECONDARY_PROVIDER = {
+  id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  email: "aguatero2@nitoagua.local",
+  name: "Pedro Aguatero",
+  phone: "+56912345002",
+};
+
+const TERTIARY_PROVIDER = {
+  id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+  email: "aguatero3@nitoagua.local",
+  name: "María Cisterna",
+  phone: "+56912345003",
+};
+
+// Consumer-facing offers for SEEDED_PENDING_REQUEST (id: 33333333-3333-3333-3333-333333333333)
+// These are used by consumer-offers.spec.ts tests (Story 10-1)
+const CONSUMER_FACING_OFFERS = [
+  // Offer 1: Earliest delivery (should appear first in sorted list)
+  {
+    id: "cccccccc-cccc-cccc-cccc-cccccccccc01",
+    request_id: "33333333-3333-3333-3333-333333333333", // SEEDED_PENDING_REQUEST.id
+    provider_id: SECONDARY_PROVIDER.id,
+    status: "active",
+    delivery_window_start: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(), // 1 hour from now
+    delivery_window_end: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+    expires_at: new Date(Date.now() + 45 * 60 * 1000).toISOString(), // 45 min from now
+    message: "Puedo llegar muy pronto",
+    created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 min ago
+  },
+  // Offer 2: Medium delivery time (should appear second)
+  {
+    id: "cccccccc-cccc-cccc-cccc-cccccccccc02",
+    request_id: "33333333-3333-3333-3333-333333333333", // SEEDED_PENDING_REQUEST.id
+    provider_id: TERTIARY_PROVIDER.id,
+    status: "active",
+    delivery_window_start: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), // 3 hours from now
+    delivery_window_end: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(), // 5 hours from now
+    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 60 min from now
+    message: "Tengo disponibilidad esta tarde",
+    created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 min ago
+  },
+  // Offer 3: Latest delivery time (should appear last) - from dev provider
+  {
+    id: "cccccccc-cccc-cccc-cccc-cccccccccc03",
+    request_id: "33333333-3333-3333-3333-333333333333", // SEEDED_PENDING_REQUEST.id
+    provider_id: null, // Will be mapped to dev provider
+    status: "active",
+    delivery_window_start: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(), // 5 hours from now
+    delivery_window_end: new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString(), // 7 hours from now
+    expires_at: new Date(Date.now() + 90 * 60 * 1000).toISOString(), // 90 min from now
+    message: "Disponible en la tarde-noche",
+    created_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 min ago
+  },
+];
+
 // Service areas for the provider - using comuna IDs (not display names)
 // These must match the comuna_id values used in OFFER_TEST_REQUESTS
 // AND match the COMUNAS constant in src/lib/validations/provider-registration.ts
@@ -238,6 +300,9 @@ async function main() {
       await ensureProviderServiceAreas(supabase, providerId);
       await seedOfferTestRequests(supabase, providerId);
       await seedOfferTestOffers(supabase, providerId);
+      // Consumer-facing offers (Story 10-1)
+      await ensureConsumerFacingProviders(supabase);
+      await seedConsumerFacingOffers(supabase, providerId);
       await verifyOfferTestData(supabase);
     }
 
@@ -411,10 +476,133 @@ async function seedOfferTestOffers(supabase: any, providerId: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function ensureConsumerFacingProviders(supabase: any) {
+  console.log("\n👥 Setting up consumer-facing test providers...");
+
+  // Create secondary and tertiary providers for consumer-facing offers
+  for (const provider of [SECONDARY_PROVIDER, TERTIARY_PROVIDER]) {
+    // Check if user exists
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const existingUser = existingUsers?.users?.find((u: any) => u.email === provider.email);
+
+    let userId = provider.id;
+
+    if (!existingUser) {
+      // Create auth user with specific ID
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email: provider.email,
+        password: "TestProvider123!",
+        email_confirm: true,
+        user_metadata: { name: provider.name },
+      });
+
+      if (createError) {
+        console.warn(`  ⚠ Failed to create ${provider.email}: ${createError.message}`);
+        continue;
+      }
+
+      userId = newUser.user.id;
+      console.log(`  ✓ Created auth user: ${provider.email} (ID: ${userId})`);
+    } else {
+      userId = existingUser.id;
+      console.log(`  ✓ Found existing user: ${provider.email} (ID: ${userId})`);
+    }
+
+    // Upsert profile as verified provider
+    const { error: profileError } = await supabase.from("profiles").upsert(
+      {
+        id: userId,
+        name: provider.name,
+        phone: provider.phone,
+        role: "supplier",
+        verification_status: "approved",
+        is_available: true,
+      },
+      { onConflict: "id" }
+    );
+
+    if (profileError) {
+      console.warn(`  ⚠ Failed to update profile for ${provider.email}: ${profileError.message}`);
+    } else {
+      console.log(`  ✓ Provider profile verified: ${provider.name}`);
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function seedConsumerFacingOffers(supabase: any, devProviderId: string) {
+  console.log("\n🛒 Seeding consumer-facing offers (Story 10-1)...");
+
+  // Get actual provider IDs (may differ from constants if users were created fresh)
+  const { data: existingUsers } = await supabase.auth.admin.listUsers();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const secondaryUser = existingUsers?.users?.find((u: any) => u.email === SECONDARY_PROVIDER.email);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tertiaryUser = existingUsers?.users?.find((u: any) => u.email === TERTIARY_PROVIDER.email);
+
+  const secondaryProviderId = secondaryUser?.id || SECONDARY_PROVIDER.id;
+  const tertiaryProviderId = tertiaryUser?.id || TERTIARY_PROVIDER.id;
+
+  // Map offers to actual provider IDs
+  const offersToSeed = CONSUMER_FACING_OFFERS.map((offer) => {
+    let providerId = offer.provider_id;
+    if (providerId === SECONDARY_PROVIDER.id) {
+      providerId = secondaryProviderId;
+    } else if (providerId === TERTIARY_PROVIDER.id) {
+      providerId = tertiaryProviderId;
+    } else if (providerId === null) {
+      providerId = devProviderId;
+    }
+    return {
+      ...offer,
+      provider_id: providerId,
+    };
+  });
+
+  // Delete existing offers for the consumer-facing request
+  await supabase
+    .from("offers")
+    .delete()
+    .eq("request_id", "33333333-3333-3333-3333-333333333333");
+
+  // Insert new offers
+  const { error } = await supabase.from("offers").upsert(offersToSeed, { onConflict: "id" });
+
+  if (error) {
+    throw new Error(`Failed to seed consumer-facing offers: ${error.message}`);
+  }
+
+  console.log(`  ✓ Seeded ${offersToSeed.length} consumer-facing offers for SEEDED_PENDING_REQUEST`);
+  for (const offer of offersToSeed) {
+    const providerName =
+      offer.provider_id === devProviderId
+        ? "Dev Provider"
+        : offer.provider_id === secondaryProviderId
+        ? SECONDARY_PROVIDER.name
+        : TERTIARY_PROVIDER.name;
+    console.log(`    - [${offer.status}] ${providerName}: ${offer.message}`);
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function cleanOfferTestData(supabase: any) {
   console.log("\n🗑️  Cleaning offer test data...");
 
-  // Delete offers first (foreign key to water_requests)
+  // Delete consumer-facing offers (Story 10-1)
+  const consumerOfferIds = CONSUMER_FACING_OFFERS.map((o) => o.id);
+  const { error: consumerOfferError, count: consumerOfferCount } = await supabase
+    .from("offers")
+    .delete({ count: "exact" })
+    .in("id", consumerOfferIds);
+
+  if (consumerOfferError) {
+    console.error(`  ✗ Failed to delete consumer-facing offers: ${consumerOfferError.message}`);
+  } else {
+    console.log(`  ✓ Deleted ${consumerOfferCount || 0} consumer-facing offers`);
+  }
+
+  // Delete provider-facing offers first (foreign key to water_requests)
   const offerIds = OFFER_TEST_OFFERS.map((o) => o.id);
   const { error: offerError, count: offerCount } = await supabase
     .from("offers")
@@ -483,11 +671,24 @@ async function verifyOfferTestData(supabase: any) {
     .in("id", OFFER_TEST_OFFERS.map((o) => o.id))
     .eq("status", "expired");
 
-  console.log(`  ✓ Offers by status:`);
+  console.log(`  ✓ Provider-facing offers by status:`);
   console.log(`    - Active (can withdraw): ${activeOffers?.length || 0}`);
   console.log(`    - Cancelled (can re-submit): ${cancelledOffers?.length || 0}`);
   console.log(`    - Accepted (Ver Entrega): ${acceptedOffers?.length || 0}`);
   console.log(`    - Expired (history): ${expiredOffers?.length || 0}`);
+
+  // Check consumer-facing offers (Story 10-1)
+  const { data: consumerOffers } = await supabase
+    .from("offers")
+    .select("id, status, provider_id, profiles:provider_id(name)")
+    .eq("request_id", "33333333-3333-3333-3333-333333333333")
+    .eq("status", "active");
+
+  console.log(`  ✓ Consumer-facing offers (SEEDED_PENDING_REQUEST): ${consumerOffers?.length || 0}`);
+  for (const offer of consumerOffers || []) {
+    const profile = offer.profiles as { name?: string } | null;
+    console.log(`    - ${profile?.name || "Unknown"}`);
+  }
 
   // Check provider service areas
   const { data: existingUsers } = await supabase.auth.admin.listUsers();

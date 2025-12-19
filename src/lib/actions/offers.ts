@@ -1232,3 +1232,219 @@ export async function notifyProviderOfferAccepted(
     emailSent,
   };
 }
+
+// =============================================================================
+// CONSUMER OFFER SELECTION (Story 10-2)
+// =============================================================================
+
+/**
+ * Result type for selectOffer action
+ */
+export interface SelectOfferResult {
+  success: boolean;
+  error?: string;
+  requestId?: string;
+  providerName?: string;
+}
+
+/**
+ * Consumer selects a provider's offer (Consumer action - Story 10-2)
+ *
+ * This action uses the atomic select_offer database function to:
+ * - AC10.2.4: Update selected offer to 'accepted' with accepted_at timestamp
+ * - AC10.2.5: Update request to 'accepted' with provider_id assigned
+ * - AC10.2.6: Mark all other active offers on request as 'request_filled'
+ * - AC10.2.9: Notify selected provider (in-app + email)
+ * - AC10.2.10: Notify other providers (in-app only)
+ *
+ * @param offerId - The offer ID to select
+ * @param trackingToken - Optional tracking token for guest consumers
+ */
+export async function selectOffer(
+  offerId: string,
+  trackingToken?: string
+): Promise<SelectOfferResult> {
+  const supabase = await createClient();
+  const adminClient = createAdminClient();
+
+  // Get current user (may be null for guests)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Fetch the offer with request info to validate ownership
+  const { data: offer, error: offerError } = await adminClient
+    .from("offers")
+    .select(
+      `
+      id,
+      provider_id,
+      request_id,
+      status,
+      delivery_window_start,
+      delivery_window_end,
+      profiles:provider_id (
+        name,
+        email
+      ),
+      water_requests!offers_request_id_fkey (
+        id,
+        consumer_id,
+        tracking_token,
+        status,
+        amount
+      )
+    `
+    )
+    .eq("id", offerId)
+    .single();
+
+  if (offerError || !offer) {
+    console.error("[SelectOffer] Error fetching offer:", offerError);
+    return {
+      success: false,
+      error: "Oferta no encontrada",
+    };
+  }
+
+  const request = offer.water_requests as unknown as {
+    id: string;
+    consumer_id: string | null;
+    tracking_token: string | null;
+    status: string;
+    amount: number;
+  };
+
+  const provider = offer.profiles as unknown as {
+    name: string;
+    email: string | null;
+  };
+
+  // AC10.2.3: Validate consumer owns the request
+  // For registered users: consumer_id must match
+  // For guests: tracking_token must match (AC10.2.6 - Guest Consumer Support)
+  const isOwner =
+    (user && request.consumer_id === user.id) ||
+    (trackingToken && request.tracking_token === trackingToken);
+
+  if (!isOwner) {
+    return {
+      success: false,
+      error: "No tienes permiso para seleccionar ofertas en esta solicitud",
+    };
+  }
+
+  // Call the atomic database function
+  // AC10.2.3, 10.2.4, 10.2.5, 10.2.6: Atomic transaction
+  // Note: Using type assertion since the function was just created and types aren't regenerated yet
+  const { data: result, error: rpcError } = await (adminClient.rpc as Function)(
+    "select_offer",
+    {
+      p_offer_id: offerId,
+      p_request_id: request.id,
+    }
+  );
+
+  if (rpcError) {
+    console.error("[SelectOffer] RPC error:", rpcError);
+    return {
+      success: false,
+      error: "Error al procesar la selección. Por favor, intenta de nuevo.",
+    };
+  }
+
+  // Check result from database function
+  const dbResult = result as {
+    success: boolean;
+    error?: string;
+    provider_id?: string;
+    cancelled_offers?: number;
+  };
+
+  if (!dbResult.success) {
+    return {
+      success: false,
+      error: dbResult.error || "Error al seleccionar la oferta",
+    };
+  }
+
+  // AC10.2.9: Notify selected provider (in-app + email)
+  // Fire and forget - don't block the response
+  notifyProviderOfferAccepted(offerId, offer.provider_id).catch((err) => {
+    console.error("[SelectOffer] Failed to notify selected provider:", err);
+  });
+
+  // AC10.2.10: Notify other providers whose offers were cancelled
+  if (dbResult.cancelled_offers && dbResult.cancelled_offers > 0) {
+    notifyOtherProvidersOfferCancelled(request.id, offerId).catch((err) => {
+      console.error("[SelectOffer] Failed to notify other providers:", err);
+    });
+  }
+
+  // Revalidate paths
+  revalidatePath(`/request/${request.id}`);
+  revalidatePath(`/request/${request.id}/offers`);
+  revalidatePath(`/track/${request.tracking_token}`);
+  revalidatePath("/provider/offers");
+
+  console.log(
+    `[SelectOffer] Consumer selected offer ${offerId} for request ${request.id}`
+  );
+
+  return {
+    success: true,
+    requestId: request.id,
+    providerName: provider?.name || "Repartidor",
+  };
+}
+
+/**
+ * Notify other providers that their offers were cancelled (request was filled)
+ * AC10.2.10: In-app notification only for cancelled offers
+ */
+async function notifyOtherProvidersOfferCancelled(
+  requestId: string,
+  acceptedOfferId: string
+): Promise<void> {
+  const adminClient = createAdminClient();
+
+  // Get all other providers who had offers on this request
+  const { data: cancelledOffers, error } = await adminClient
+    .from("offers")
+    .select("id, provider_id")
+    .eq("request_id", requestId)
+    .eq("status", "request_filled")
+    .neq("id", acceptedOfferId);
+
+  if (error || !cancelledOffers || cancelledOffers.length === 0) {
+    return;
+  }
+
+  // Create in-app notifications for each provider
+  const notifications = cancelledOffers.map((offer) => ({
+    user_id: offer.provider_id,
+    type: "offer_request_filled",
+    title: "Solicitud asignada",
+    message: "La solicitud ya fue asignada a otro repartidor",
+    data: {
+      offer_id: offer.id,
+      request_id: requestId,
+    },
+    read: false,
+  }));
+
+  const { error: insertError } = await adminClient
+    .from("notifications")
+    .insert(notifications);
+
+  if (insertError) {
+    console.error(
+      "[SelectOffer] Error creating cancellation notifications:",
+      insertError
+    );
+  } else {
+    console.log(
+      `[SelectOffer] Notified ${notifications.length} providers of request_filled`
+    );
+  }
+}
