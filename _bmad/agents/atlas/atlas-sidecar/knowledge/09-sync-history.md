@@ -16,6 +16,10 @@
 | 2025-12-18 | 06-lessons | Epic 3 retro, Epic 8 retro | Initial sync - what worked/failed |
 | 2025-12-18 | 07-process | run_app.local.md | Initial sync - branching, deployment |
 | 2025-12-18 | 08-workflow-chains | architecture.md, prd.md | Initial sync - user journeys |
+| 2025-12-19 | 04-architecture | Story 8-6 code review | Added pricing tiers, code review learnings |
+| 2025-12-19 | 06-lessons | Story 8-6 code review | Added DRY, default mismatch lessons; centralized utility pattern |
+| 2025-12-19 | 04-architecture | Story 8-7 code review | Added commission-receipts storage bucket pattern |
+| 2025-12-19 | 06-lessons | Story 8-7 code review | Added file upload pattern, folder-based RLS reference |
 
 ## Documents Tracked
 

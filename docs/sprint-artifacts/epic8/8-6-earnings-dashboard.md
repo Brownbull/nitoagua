@@ -5,7 +5,7 @@
 | **Story ID** | 8-6 |
 | **Epic** | Epic 8: Provider Offer System |
 | **Title** | Earnings Dashboard |
-| **Status** | review |
+| **Status** | done |
 | **Priority** | P1 (High) |
 | **Points** | 4 |
 | **Sprint** | TBD |
@@ -109,7 +109,7 @@ Providers need visibility into their earnings from completed deliveries. This da
 ### Architecture Alignment
 
 Per tech spec:
-- Page: `src/app/(provider)/earnings/page.tsx`
+- Page: `src/app/provider/earnings/page.tsx`
 - Actions: `src/lib/actions/settlement.ts`
 
 ### Commission Ledger Schema
@@ -199,16 +199,31 @@ N/A
 - Provider nav already had /provider/earnings link from previous story
 - All 26 unit tests pass, all 21 E2E tests pass
 
+### Code Review Fixes (2025-12-19)
+
+Atlas-enhanced code review identified and fixed the following issues:
+
+1. **DRY Violation Fixed**: Extracted duplicate `getPrice()` function to shared `getDeliveryPrice()` utility in `src/lib/utils/commission.ts`
+2. **Default Commission Fixed**: Updated default from 15% to 10% per Atlas Section 4 architecture documentation
+3. **Payment Method TODO**: Added clear TODO documentation for payment_method tracking limitation (AC8.6.3 accuracy)
+4. **Path Documentation Fixed**: Corrected architecture path from `(provider)` route group to actual `provider` path
+5. **History Link Hidden**: Commented out "Ver todo" link to non-existent `/provider/earnings/history` route
+6. **Accessibility Improved**: Added `aria-busy` and `aria-live` attributes to loading overlay
+7. **Test Import Fixed**: Updated unit tests to use shared `getDeliveryPrice()` utility
+
 ### File List
 
 **New Files:**
 - `src/app/provider/earnings/page.tsx` - Server component page
 - `src/app/provider/earnings/earnings-dashboard-client.tsx` - Client component with period selector and all UI
 - `tests/e2e/provider-earnings.spec.ts` - E2E tests (21 tests)
+- `tests/e2e/provider-earnings-seeded.spec.ts` - E2E tests with seeded data
 - `tests/unit/earnings-summary.test.ts` - Unit tests (26 tests)
+- `scripts/local/seed-earnings-tests.ts` - Earnings test data seeding script
 
 **Modified Files:**
 - `src/lib/actions/settlement.ts` - Added getEarningsSummary and getDeliveryHistory functions
+- `src/lib/utils/commission.ts` - Added getDeliveryPrice() shared utility (code review fix)
 
 ---
 
@@ -218,3 +233,4 @@ N/A
 |------|--------|--------|
 | 2025-12-16 | Story drafted from tech spec and epics | Claude |
 | 2025-12-17 | Story implemented - all tasks complete | Claude Opus 4.5 |
+| 2025-12-19 | Atlas code review fixes - DRY, commission default, accessibility | Claude Opus 4.5 |

@@ -24,6 +24,8 @@
 | **Complex table-based layouts** | Accessibility issues, poor mobile UX | Use card-based designs |
 | **WebKit test flakiness** | Browser-specific timing issues | Focus on Chromium, accept some flakiness |
 | **Mixed auth strategies (email + OAuth)** | Complexity without benefit | Pick one auth method early |
+| **Hardcoded defaults mismatched docs** | Code used 15% commission when docs said 10% | Always check Atlas Section 4 for constants |
+| **Duplicate utility functions** | Same `getPrice()` in 2 places in same file | Extract to shared utility immediately |
 
 ## Hard-Won Wisdom
 
@@ -56,6 +58,8 @@
 5. **Tab preservation with query params** - User context survives navigation
 6. **Card-based dashboards** - Works on mobile, scannable on desktop
 7. **Per-test seeding** - Deterministic, isolated, debuggable
+8. **Centralize pricing/commission utilities** - Single source of truth in `src/lib/utils/commission.ts`
+9. **Add aria-busy/aria-live for loading states** - Accessibility for period selectors, data refreshes
 
 ## Code Pattern References
 
@@ -63,7 +67,11 @@
 |---------|----------|-------|
 | **Optimistic UI (Set tracking)** | See 04-architecture.md | 3-5 |
 | **Tab Preservation (?from= param)** | See 04-architecture.md | 3-4 |
+| **Centralized pricing utility** | `src/lib/utils/commission.ts` | 8-6 |
+| **Loading state accessibility** | `earnings-dashboard-client.tsx` | 8-6 |
+| **File upload with preview** | `withdraw-client.tsx` | 8-7 |
+| **Storage bucket with folder-based RLS** | `commission-receipts` bucket | 8-7 |
 
 ---
 
-*Last verified: 2025-12-18 | Sources: Epic 3, Epic 8 retrospectives*
+*Last verified: 2025-12-19 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6 and 8-7 implementations*
