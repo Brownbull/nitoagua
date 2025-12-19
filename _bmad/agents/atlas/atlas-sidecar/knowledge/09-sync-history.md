@@ -3,29 +3,54 @@
 > Section 9 of Atlas Memory
 > Tracks all knowledge synchronizations
 
-## Sync Log
+## Sync Log (by Epoch)
 
-| Date | Section | Documents Synced | Notes |
-|------|---------|-----------------|-------|
-| 2025-12-18 | 01-purpose | prd.md, architecture.md | Initial sync - mission, market, principles |
-| 2025-12-18 | 02-features | prd.md, architecture.md, epics.md | Initial sync - feature inventory |
-| 2025-12-18 | 03-personas | ux-design-specification.md, prd.md | Initial sync - Doña María, Don Pedro |
-| 2025-12-18 | 04-architecture | architecture.md | Initial sync - tech stack, ADRs, patterns |
-| 2025-12-18 | 05-testing | run_app.local.md, testing docs | Initial sync - E2E patterns, seeds |
-| 2025-12-18 | 05-testing | Story Testing-1 | Added E2E reliability patterns (health checks, error detection, seed verification) |
-| 2025-12-18 | 06-lessons | Epic 3 retro, Epic 8 retro | Initial sync - what worked/failed |
-| 2025-12-18 | 07-process | run_app.local.md | Initial sync - branching, deployment |
-| 2025-12-18 | 08-workflow-chains | architecture.md, prd.md | Initial sync - user journeys |
-| 2025-12-19 | 04-architecture | Story 8-6 code review | Added pricing tiers, code review learnings |
-| 2025-12-19 | 06-lessons | Story 8-6 code review | Added DRY, default mismatch lessons; centralized utility pattern |
-| 2025-12-19 | 04-architecture | Story 8-7 code review | Added commission-receipts storage bucket pattern |
-| 2025-12-19 | 06-lessons | Story 8-7 code review | Added file upload pattern, folder-based RLS reference |
-| 2025-12-19 | 07-process | Stories 8-6 & 8-7 deployment | Deployed to production - earnings dashboard + commission settlement |
-| 2025-12-19 | 04-architecture | Story 8-9 code review | Added settings page layout standards, hideBackButton pattern |
-| 2025-12-19 | 06-lessons | Story 8-9 code review | Added seed data mismatch lesson - use source constants |
-| 2025-12-19 | 02-features | Story 8-10 creation | Added story creation record with workflow touchpoints |
-| 2025-12-19 | 04-architecture | Story 8-10 code review | Added Leaflet/OSM tech stack, dynamic import pattern, full-screen layout override |
-| 2025-12-19 | 06-lessons | Story 8-10 code review | Added z-index stacking context lesson, full-screen page pattern, disabled feature UX |
+### 2025-12-18: Initial Sync
+All 9 sections initialized from PRD, architecture.md, UX spec, epics.md, retrospectives.
+
+### 2025-12-19: Epic 8 Code Reviews
+- **04-architecture**: Pricing tiers, storage bucket, settings layout, Leaflet/OSM, dynamic import
+- **06-lessons**: DRY violations, seed mismatches, z-index battles, disabled feature UX
+- **07-process**: Deployments (Testing-2, Testing-3), process updates (seed constants, tech spec first)
+- **02-features**: Story creation records (testing-2, 8-10)
+
+### 2025-12-19: Memory Optimization (v2)
+Consolidated verbose entries into tables. Token count: ~9,850 → ~8,450.
+
+### 2025-12-19: Epic 10 Tech Spec
+- **Tech Spec Created:** `docs/sprint-artifacts/tech-spec-epic-10.md`
+- **Key Patterns:** Atomic `select_offer()` function, consumer realtime hooks, 30s polling fallback
+- **New Status:** `no_offers` added to request status enum for timeout handling
+- **Story Order:** 10-1 → 10-3 → 10-2 → 10-5 → 10-4 (recommended)
+
+### 2025-12-19: Epic 10 Stories Created (Atlas-Enhanced)
+- **Stories Created:** 5 stories (10-1 to 10-5) with Atlas workflow analysis
+- **Workflow Chain Analysis:** All stories analyzed against V2 Consumer Request flow
+- **Push Alerts Generated:**
+  - 10-1: Consumer offer list view - creates downstream dependency for 10-2
+  - 10-2: Offer selection - affects Provider Offer Flow and Settlement Workflow
+  - 10-4: Request timeout - adds `no_offers` terminal state to workflow
+- **Files Created:**
+  - `docs/sprint-artifacts/epic10/10-1-offer-list-view-for-consumers.md`
+  - `docs/sprint-artifacts/epic10/10-2-select-provider-offer.md`
+  - `docs/sprint-artifacts/epic10/10-3-offer-countdown-timer-consumer-view.md`
+  - `docs/sprint-artifacts/epic10/10-4-request-timeout-notification.md`
+  - `docs/sprint-artifacts/epic10/10-5-request-status-with-offer-context.md`
+- **Sprint Status Updated:** All 5 stories marked `ready-for-dev`
+
+### 2025-12-19: Epic 11 Created (Atlas Gap Analysis)
+- **Gap Identified:** No end-to-end workflow validation across all three personas
+- **Push Alert Triggered:** Epic 10 completes V2 model but no integration tests exist
+- **Epic 11 Created:** 4 stories validating complete platform functionality
+- **Stories Created:**
+  - `docs/sprint-artifacts/epic11/11-1-consumer-full-workflow-validation.md` - 22 ACs, all consumer features
+  - `docs/sprint-artifacts/epic11/11-2-provider-full-workflow-validation.md` - 32 ACs, all provider features
+  - `docs/sprint-artifacts/epic11/11-3-admin-full-workflow-validation.md` - 30 ACs, all admin features
+  - `docs/sprint-artifacts/epic11/11-4-cross-persona-integration-tests.md` - 18 ACs, THE critical full workflow test
+- **Key Pattern:** Multi-browser-context tests for cross-persona validation
+- **Total ACs:** 102 acceptance criteria covering entire platform
+- **Sprint Status Updated:** All 4 Epic 11 stories marked `ready-for-dev`
+- **NOTE:** Renamed from "Testing Epic" to "Epic 11" for consistency. Consumer UX Epic shifted to Epic 12.
 
 ## Documents Tracked
 
