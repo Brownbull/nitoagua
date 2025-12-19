@@ -216,9 +216,79 @@ Each test must:
 2. Clean up after itself (or rely on transaction rollback)
 3. Not depend on other tests' state
 
+### Local Database Verification (Testing-2)
+
+> Added 2025-12-18 from Story Testing-2: Local Supabase Schema Synchronization
+
+**Problem Solved:** Tests could pass when tables were completely missing because the test framework didn't verify schema.
+
+**Pattern:** Run verification script before E2E tests.
+
+```bash
+# Verify all required tables exist
+npm run verify:local-db
+
+# Expected output:
+# 🔍 Local Database Verification
+#    URL: http://127.0.0.1:55326
+#    ✅ profiles (200 OK)
+#    ✅ water_requests (200 OK)
+#    ✅ admin_settings (200 OK)
+#    [... all tables ...]
+# ✅ All required tables exist!
+```
+
+**Required Tables:**
+- `profiles`, `water_requests` (core)
+- `admin_settings`, `admin_allowed_emails` (admin)
+- `provider_documents`, `commission_ledger`, `withdrawal_requests` (settlement)
+- `offers`, `notifications` (provider operations)
+- `comunas`, `provider_service_areas` (onboarding)
+
+**Common Fixes:**
+```bash
+# Full database reset (destroys all local data)
+npx supabase db reset
+
+# Re-seed dev login users
+npm run seed:dev-login
+
+# Re-seed test data
+npm run seed:test
+npm run seed:mockup
+```
+
+**Note:** The `deliveries` and `platform_settings` tables don't exist - the app uses `water_requests.status='delivered'` for tracking deliveries (not a separate table).
+
+### Code Review Lessons (Testing-2)
+
+> Added 2025-12-18 from Code Review of Testing-2
+
+**Issues Discovered and Fixed:**
+
+1. **Use FK IDs not display names in seed data**
+   - Problem: `seed-offer-tests.ts` logged `comuna_name` which showed `undefined`
+   - Fix: Use `comuna_id` (the actual FK column) in console output and queries
+   - Pattern: When seeding FK relationships, always use the ID column not display columns
+
+2. **Admin allowlist requires `added_by` field**
+   - Problem: `admin_allowed_emails` table has NOT NULL constraint on `added_by`
+   - Fix: Use `added_by: userId` (admin's own ID) for bootstrap seeding
+   - Pattern: Check table constraints before writing upsert operations
+
+3. **Keep REQUIRED_TABLES in sync**
+   - Problem: `verify-local-db.ts` and `database-health.spec.ts` had different table lists
+   - Fix: Added comment "Keep in sync with..." and unified the lists
+   - Pattern: Single source of truth for schema requirements, or explicit cross-references
+
+4. **Connection health check before table checks**
+   - Problem: Script gave confusing errors when Supabase wasn't running
+   - Fix: Added early health check with clear "npx supabase start" guidance
+   - Pattern: Fail fast with actionable error messages
+
 ---
 
 ## Sync Notes
 
 Last testing sync: 2025-12-18
-Sources: run_app.local.md, docs/sprint-artifacts/testing/, Story Testing-1, Story Testing-1B
+Sources: run_app.local.md, docs/sprint-artifacts/testing/, Story Testing-1, Story Testing-1B, Story Testing-2
