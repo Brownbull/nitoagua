@@ -120,6 +120,8 @@ npm run test:e2e
 
 | Story | Date | Key Changes |
 |-------|------|-------------|
+| 10-2 | 2025-12-19 | Consumer offer selection with atomic DB function, confirmation modal, 14 E2E tests |
+| 10-1 | 2025-12-19 | Consumer offer list view with realtime updates, 26 E2E tests |
 | Testing-3 | 2025-12-19 | Merged Playwright fixtures, persona validation tests |
 | Testing-2 | 2025-12-18 | `verify:local-db`, `seed:dev-login`, local dev guide |
 

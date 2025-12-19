@@ -174,8 +174,8 @@ development_status:
 
   # Epic 10: Consumer Offer Selection (depends on Epic 8 offers system)
   epic-10: contexted  # Tech spec created 2025-12-19
-  10-1-offer-list-view-for-consumers: done  # APPROVED 2025-12-19 - Atlas code review passed, 5 fixes applied, 26 E2E tests passing
-  10-2-select-provider-offer: done  # APPROVED 2025-12-19 - Atlas code review passed, security fix + 3 integration tests added
+  10-1-offer-list-view-for-consumers: deployed  # DEPLOYED 2025-12-19 - Production release, 26 E2E tests
+  10-2-select-provider-offer: deployed  # DEPLOYED 2025-12-19 - Production release, security fix applied, 14 E2E tests
   10-3-offer-countdown-timer-consumer-view: ready-for-dev  # Story created 2025-12-19
   10-4-request-timeout-notification: ready-for-dev  # Story created 2025-12-19
   10-5-request-status-with-offer-context: ready-for-dev  # Story created 2025-12-19
