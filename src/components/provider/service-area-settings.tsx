@@ -25,9 +25,10 @@ import { cn } from "@/lib/utils";
 interface ServiceAreaSettingsProps {
   initialAreas: string[];
   backUrl?: string;
+  hideBackButton?: boolean;
 }
 
-export function ServiceAreaSettings({ initialAreas, backUrl = "/provider/settings" }: ServiceAreaSettingsProps) {
+export function ServiceAreaSettings({ initialAreas, backUrl = "/provider/settings", hideBackButton = false }: ServiceAreaSettingsProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState<string[]>(initialAreas);
@@ -242,22 +243,27 @@ export function ServiceAreaSettings({ initialAreas, backUrl = "/provider/setting
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleBack}
-          className="flex-1 h-12 rounded-xl"
-          data-testid="back-button"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Volver
-        </Button>
+      <div className={cn("flex gap-3 pt-4", hideBackButton && "justify-end")}>
+        {!hideBackButton && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleBack}
+            className="flex-1 h-12 rounded-xl"
+            data-testid="back-button"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Volver
+          </Button>
+        )}
         <Button
           type="button"
           onClick={() => handleSave()}
           disabled={isSubmitting || !hasChanges}
-          className="flex-1 h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-xl disabled:opacity-50"
+          className={cn(
+            "h-12 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-xl disabled:opacity-50",
+            hideBackButton ? "w-full" : "flex-1"
+          )}
           data-testid="save-button"
         >
           {isSubmitting ? (

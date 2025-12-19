@@ -52,7 +52,9 @@ const CONFIG = useProduction ? PROD_CONFIG : LOCAL_CONFIG;
 const DEV_PROVIDER_EMAIL = "supplier@nitoagua.cl";
 
 // Water requests for offer testing (pending requests the provider can see)
-// NOTE: comuna_id references comunas.id (e.g., "santiago", "las-condes") - NOT the display name
+// NOTE: comuna_id references comunas.id - must match COMUNAS constant in provider-registration.ts
+// Using Villarrica-area comunas (target market): villarrica, pucon, lican-ray, curarrehue, freire
+// COORDINATES: Real lat/lng for map testing in Story 8-10
 const OFFER_TEST_REQUESTS = [
   {
     id: "77777777-7777-7777-7777-777777777771",
@@ -61,13 +63,15 @@ const OFFER_TEST_REQUESTS = [
     guest_phone: "+56987651001",
     guest_name: "Cliente Pendiente 1",
     guest_email: "cliente1@test.local",
-    address: "Av. Test 100, Santiago",
-    comuna_id: "santiago", // FK to comunas.id
+    address: "Av. Pedro de Valdivia 100, Villarrica",
+    comuna_id: "villarrica", // FK to comunas.id - matches COMUNAS constant
     amount: 1000,
     special_instructions: "Para test de ofertas - activa",
     is_urgent: false,
     consumer_id: null,
     supplier_id: null,
+    latitude: -39.2768, // Villarrica center
+    longitude: -72.2274,
     created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 min ago
   },
   {
@@ -77,13 +81,15 @@ const OFFER_TEST_REQUESTS = [
     guest_phone: "+56987651002",
     guest_name: "Cliente Pendiente 2",
     guest_email: "cliente2@test.local",
-    address: "Calle Urgente 200, Las Condes",
-    comuna_id: "las-condes", // FK to comunas.id
+    address: "Camino a Caburgua 200, Pucón",
+    comuna_id: "pucon", // FK to comunas.id - matches COMUNAS constant
     amount: 5000,
     special_instructions: "Urgente - para test",
     is_urgent: true,
     consumer_id: null,
     supplier_id: null,
+    latitude: -39.2823, // Pucón center
+    longitude: -71.9545,
     created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 min ago
   },
   {
@@ -93,13 +99,15 @@ const OFFER_TEST_REQUESTS = [
     guest_phone: "+56987651003",
     guest_name: "Cliente Pendiente 3",
     guest_email: "cliente3@test.local",
-    address: "Parcela 50, Providencia",
-    comuna_id: "providencia", // FK to comunas.id
+    address: "Parcela 50, Licán Ray",
+    comuna_id: "lican-ray", // FK to comunas.id - matches COMUNAS constant
     amount: 10000,
     special_instructions: "Para reenvío de oferta",
     is_urgent: false,
     consumer_id: null,
     supplier_id: null,
+    latitude: -39.4989, // Licán Ray - south of Villarrica
+    longitude: -72.1194,
     created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hour ago
   },
   {
@@ -109,13 +117,15 @@ const OFFER_TEST_REQUESTS = [
     guest_phone: "+56987651004",
     guest_name: "Cliente Aceptado",
     guest_email: "cliente4@test.local",
-    address: "Av. Entrega 400, Vitacura",
-    comuna_id: "vitacura", // FK to comunas.id
+    address: "Camino Internacional, Curarrehue",
+    comuna_id: "curarrehue", // FK to comunas.id - matches COMUNAS constant
     amount: 1000,
     special_instructions: "Entrega confirmada",
     is_urgent: false,
     consumer_id: null,
     supplier_id: null, // Will be set to provider ID
+    latitude: -39.3578, // Curarrehue - east toward Argentina border
+    longitude: -71.5874,
     delivery_window: "14:00 - 16:00",
     accepted_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
@@ -189,14 +199,17 @@ const OFFER_TEST_OFFERS = [
 
 // Service areas for the provider - using comuna IDs (not display names)
 // These must match the comuna_id values used in OFFER_TEST_REQUESTS
-const PROVIDER_SERVICE_AREA_IDS = ["santiago", "las-condes", "providencia", "vitacura"];
+// AND match the COMUNAS constant in src/lib/validations/provider-registration.ts
+const PROVIDER_SERVICE_AREA_IDS = ["villarrica", "pucon", "lican-ray", "curarrehue"];
 
 // Map of id -> display name for creating comunas if needed
+// These are the Villarrica-area comunas from the COMUNAS constant
 const TEST_COMUNAS = [
-  { id: "santiago", name: "Santiago", region: "Metropolitana" },
-  { id: "las-condes", name: "Las Condes", region: "Metropolitana" },
-  { id: "providencia", name: "Providencia", region: "Metropolitana" },
-  { id: "vitacura", name: "Vitacura", region: "Metropolitana" },
+  { id: "villarrica", name: "Villarrica", region: "Araucanía" },
+  { id: "pucon", name: "Pucón", region: "Araucanía" },
+  { id: "lican-ray", name: "Licán Ray", region: "Araucanía" },
+  { id: "curarrehue", name: "Curarrehue", region: "Araucanía" },
+  { id: "freire", name: "Freire", region: "Araucanía" },
 ];
 
 // =============================================================================
