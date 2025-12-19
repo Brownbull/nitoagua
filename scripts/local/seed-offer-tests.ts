@@ -48,13 +48,11 @@ const CONFIG = useProduction ? PROD_CONFIG : LOCAL_CONFIG;
 // OFFER TEST DATA CONSTANTS
 // =============================================================================
 
-// Use fixed UUIDs with offer-test prefix to avoid conflicts
-const OFFER_TEST_PREFIX = "offer-test";
-
 // The dev login test provider - use this for E2E tests
 const DEV_PROVIDER_EMAIL = "supplier@nitoagua.cl";
 
 // Water requests for offer testing (pending requests the provider can see)
+// NOTE: comuna_id references comunas.id (e.g., "santiago", "las-condes") - NOT the display name
 const OFFER_TEST_REQUESTS = [
   {
     id: "77777777-7777-7777-7777-777777777771",
@@ -64,7 +62,7 @@ const OFFER_TEST_REQUESTS = [
     guest_name: "Cliente Pendiente 1",
     guest_email: "cliente1@test.local",
     address: "Av. Test 100, Santiago",
-    comuna_name: "Santiago",
+    comuna_id: "santiago", // FK to comunas.id
     amount: 1000,
     special_instructions: "Para test de ofertas - activa",
     is_urgent: false,
@@ -80,7 +78,7 @@ const OFFER_TEST_REQUESTS = [
     guest_name: "Cliente Pendiente 2",
     guest_email: "cliente2@test.local",
     address: "Calle Urgente 200, Las Condes",
-    comuna_name: "Las Condes",
+    comuna_id: "las-condes", // FK to comunas.id
     amount: 5000,
     special_instructions: "Urgente - para test",
     is_urgent: true,
@@ -96,7 +94,7 @@ const OFFER_TEST_REQUESTS = [
     guest_name: "Cliente Pendiente 3",
     guest_email: "cliente3@test.local",
     address: "Parcela 50, Providencia",
-    comuna_name: "Providencia",
+    comuna_id: "providencia", // FK to comunas.id
     amount: 10000,
     special_instructions: "Para reenvío de oferta",
     is_urgent: false,
@@ -112,7 +110,7 @@ const OFFER_TEST_REQUESTS = [
     guest_name: "Cliente Aceptado",
     guest_email: "cliente4@test.local",
     address: "Av. Entrega 400, Vitacura",
-    comuna_name: "Vitacura",
+    comuna_id: "vitacura", // FK to comunas.id
     amount: 1000,
     special_instructions: "Entrega confirmada",
     is_urgent: false,
@@ -189,8 +187,17 @@ const OFFER_TEST_OFFERS = [
   },
 ];
 
-// Service areas for the provider - must match comuna_name in requests
-const PROVIDER_SERVICE_AREAS = ["Santiago", "Las Condes", "Providencia", "Vitacura"];
+// Service areas for the provider - using comuna IDs (not display names)
+// These must match the comuna_id values used in OFFER_TEST_REQUESTS
+const PROVIDER_SERVICE_AREA_IDS = ["santiago", "las-condes", "providencia", "vitacura"];
+
+// Map of id -> display name for creating comunas if needed
+const TEST_COMUNAS = [
+  { id: "santiago", name: "Santiago", region: "Metropolitana" },
+  { id: "las-condes", name: "Las Condes", region: "Metropolitana" },
+  { id: "providencia", name: "Providencia", region: "Metropolitana" },
+  { id: "vitacura", name: "Vitacura", region: "Metropolitana" },
+];
 
 // =============================================================================
 // SCRIPT LOGIC
@@ -268,11 +275,11 @@ async function getOrCreateTestProvider(supabase: any): Promise<string> {
 async function ensureProviderServiceAreas(supabase: any, providerId: string) {
   console.log("\n📍 Setting up provider service areas...");
 
-  // Get the comuna IDs for our service areas
+  // Check if our test comunas exist by ID
   const { data: comunas, error: comunaError } = await supabase
     .from("comunas")
     .select("id, name")
-    .in("name", PROVIDER_SERVICE_AREAS);
+    .in("id", PROVIDER_SERVICE_AREA_IDS);
 
   if (comunaError) {
     console.warn(`  ⚠ Failed to fetch comunas: ${comunaError.message}`);
@@ -280,28 +287,20 @@ async function ensureProviderServiceAreas(supabase: any, providerId: string) {
     return;
   }
 
-  if (!comunas || comunas.length === 0) {
-    console.warn("  ⚠ No comunas found. Creating test comunas...");
+  if (!comunas || comunas.length < PROVIDER_SERVICE_AREA_IDS.length) {
+    console.warn("  ⚠ Missing comunas. Creating test comunas...");
 
-    // Create test comunas if they don't exist
-    for (const areaName of PROVIDER_SERVICE_AREAS) {
+    // Create test comunas if they don't exist (using id as primary key)
+    for (const comuna of TEST_COMUNAS) {
       const { error: insertError } = await supabase
         .from("comunas")
-        .upsert({ name: areaName, region: "Metropolitana" }, { onConflict: "name" });
+        .upsert(comuna, { onConflict: "id" });
 
       if (insertError) {
-        console.warn(`  ⚠ Failed to create comuna ${areaName}: ${insertError.message}`);
+        console.warn(`  ⚠ Failed to create comuna ${comuna.id}: ${insertError.message}`);
+      } else {
+        console.log(`  ✓ Created comuna: ${comuna.name} (id: ${comuna.id})`);
       }
-    }
-
-    // Re-fetch comunas
-    const { data: newComunas } = await supabase
-      .from("comunas")
-      .select("id, name")
-      .in("name", PROVIDER_SERVICE_AREAS);
-
-    if (newComunas && newComunas.length > 0) {
-      console.log(`  ✓ Created ${newComunas.length} test comunas`);
     }
   }
 
@@ -309,7 +308,7 @@ async function ensureProviderServiceAreas(supabase: any, providerId: string) {
   const { data: finalComunas } = await supabase
     .from("comunas")
     .select("id, name")
-    .in("name", PROVIDER_SERVICE_AREAS);
+    .in("id", PROVIDER_SERVICE_AREA_IDS);
 
   if (finalComunas && finalComunas.length > 0) {
     // Delete existing service areas for this provider first
@@ -330,7 +329,7 @@ async function ensureProviderServiceAreas(supabase: any, providerId: string) {
     } else {
       console.log(`  ✓ Linked ${finalComunas.length} service areas to provider`);
       for (const c of finalComunas) {
-        console.log(`    - ${c.name}`);
+        console.log(`    - ${c.name} (${c.id})`);
       }
     }
   }
@@ -360,7 +359,7 @@ async function seedOfferTestRequests(supabase: any, providerId: string) {
 
   console.log(`  ✓ Seeded ${requestsToSeed.length} water requests`);
   for (const req of requestsToSeed) {
-    console.log(`    - [${req.status}${req.is_urgent ? " URGENT" : ""}] ${req.guest_name} - ${req.amount}L (${req.comuna_name})`);
+    console.log(`    - [${req.status}${req.is_urgent ? " URGENT" : ""}] ${req.guest_name} - ${req.amount}L (${req.comuna_id})`);
   }
 }
 
@@ -438,12 +437,12 @@ async function verifyOfferTestData(supabase: any) {
   // Check requests
   const { data: requests } = await supabase
     .from("water_requests")
-    .select("id, status, guest_name, amount, comuna_name")
+    .select("id, status, guest_name, amount, comuna_id")
     .like("tracking_token", "offer-test-%");
 
   console.log(`  ✓ Found ${requests?.length || 0} offer test requests:`);
   for (const req of requests || []) {
-    console.log(`    - [${req.status}] ${req.guest_name} - ${req.amount}L (${req.comuna_name})`);
+    console.log(`    - [${req.status}] ${req.guest_name} - ${req.amount}L (${req.comuna_id})`);
   }
 
   // Check offers by status

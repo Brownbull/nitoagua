@@ -118,6 +118,31 @@ Pending -> [Offers Received] -> Offer Accepted -> In Transit -> Delivered
 
 ---
 
+## Story Creation Log
+
+### testing-2-local-schema-sync - 2025-12-18
+
+**Summary:** Local Supabase Schema Synchronization - Fix missing tables and RLS policies in local development environment
+
+**User Value:** Enable reliable local development and testing for all provider/admin features
+
+**Workflow Touchpoints:**
+- Provider Operations Flow
+- Admin Verification Flow
+- E2E Testing Workflow
+- Developer Onboarding
+
+**Source:** docs/sprint-artifacts/testing/testing-2-local-schema-sync.md
+
+**Implementation Outcome (2025-12-18):**
+- Created `npm run verify:local-db` script to check all required tables
+- Created `npm run seed:dev-login` to seed dev login users locally
+- Created `docs/startup/run_app.local.md` with troubleshooting guide
+- All 11 required tables verified working
+- Database health E2E tests passing (4/4)
+
+---
+
 ## Sync Notes
 
 Last features sync: 2025-12-18
