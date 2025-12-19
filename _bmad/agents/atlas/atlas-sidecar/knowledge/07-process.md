@@ -113,6 +113,28 @@ npm run test:e2e
 
 ---
 
+## Deployment History
+
+### Testing-2 - 2025-12-18
+
+**Story:** testing-2-local-schema-sync
+**Final Environment:** Production
+**Production URL:** https://nitoagua.vercel.app
+
+**Changes Deployed:**
+- `npm run verify:local-db` - Database verification script for CI
+- `npm run seed:dev-login` - Dev login test user seeding
+- `docs/startup/run_app.local.md` - Comprehensive local development guide
+
+**Workflow Implications:**
+- Enables reliable local E2E testing
+- Unblocks Testing-3 (playwright-utils integration)
+- Improves developer onboarding experience
+
+**Deployment Path:** develop → staging → main
+
+---
+
 ## Sync Notes
 
 Last process sync: 2025-12-18
