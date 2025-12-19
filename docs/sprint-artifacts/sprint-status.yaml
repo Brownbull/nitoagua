@@ -146,7 +146,7 @@ development_status:
   8-8-epic-deployment-and-verification: done  # Story drafted 2025-12-16
   8-9-provider-settings-page: done  # APPROVED 2025-12-19 - Atlas code review passed, seed data fix, 34 E2E tests passing
   8-10-provider-map-view: done  # APPROVED 2025-12-19 - Atlas code review passed, 5 issues fixed, 12 E2E tests passing
-  epic-8-retrospective: optional
+  epic-8-retrospective: completed  # Atlas-enhanced retrospective completed 2025-12-19
 
   # Epic 9: CORFO Semilla Application (PARALLEL TRACK - no code dependencies)
   # Type: Business Development
@@ -173,19 +173,31 @@ development_status:
   testing-3-playwright-utils-integration: deployed  # DEPLOYED 2025-12-19 - Production release, merged fixtures + persona tests
 
   # Epic 10: Consumer Offer Selection (depends on Epic 8 offers system)
-  epic-10: backlog
-  10-1-offer-list-view-for-consumers: backlog
-  10-2-select-provider-offer: backlog
-  10-3-offer-countdown-timer-consumer-view: backlog
-  10-4-request-timeout-notification: backlog
-  10-5-request-status-with-offer-context: backlog
+  epic-10: contexted  # Tech spec created 2025-12-19
+  10-1-offer-list-view-for-consumers: done  # APPROVED 2025-12-19 - Atlas code review passed, 5 fixes applied, 26 E2E tests passing
+  10-2-select-provider-offer: done  # APPROVED 2025-12-19 - Atlas code review passed, security fix + 3 integration tests added
+  10-3-offer-countdown-timer-consumer-view: ready-for-dev  # Story created 2025-12-19
+  10-4-request-timeout-notification: ready-for-dev  # Story created 2025-12-19
+  10-5-request-status-with-offer-context: ready-for-dev  # Story created 2025-12-19
   epic-10-retrospective: optional
 
-  # Epic 11: Consumer UX Enhancements (depends on Epic 10 consumer flow)
-  epic-11: backlog
-  11-1-map-location-pinpoint: backlog
-  11-2-payment-method-selection: backlog
-  11-3-negative-status-states: backlog
-  11-4-urgency-pricing-display: backlog
-  11-5-remove-fake-social-proof: backlog
+  # Epic 11: Full Application Workflow Validation (Post-Epic 10)
+  # =============================================================
+  # Purpose: Validate complete workflows across all three personas
+  # Timing: Run after Epic 10 is complete
+  # Priority: CRITICAL - Proves platform works as cohesive whole
+  epic-11: contexted  # Tech spec created 2025-12-19
+  11-1-consumer-full-workflow-validation: ready-for-dev  # 22 ACs covering all consumer features
+  11-2-provider-full-workflow-validation: ready-for-dev  # 32 ACs covering all provider features
+  11-3-admin-full-workflow-validation: ready-for-dev  # 30 ACs covering all admin features
+  11-4-cross-persona-integration-tests: ready-for-dev  # 18 ACs - THE critical integration tests
   epic-11-retrospective: optional
+
+  # Epic 12: Consumer UX Enhancements (depends on Epic 10 consumer flow)
+  epic-12: backlog
+  12-1-map-location-pinpoint: backlog
+  12-2-payment-method-selection: backlog
+  12-3-negative-status-states: backlog
+  12-4-urgency-pricing-display: backlog
+  12-5-remove-fake-social-proof: backlog
+  epic-12-retrospective: optional

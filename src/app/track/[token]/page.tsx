@@ -11,7 +11,7 @@ import {
   maskAddress,
   formatPhone,
 } from "@/lib/utils/format";
-import { AlertTriangle, Phone, Droplets, MapPin, Calendar, Truck, XCircle, RotateCcw, Clock } from "lucide-react";
+import { AlertTriangle, Phone, Droplets, MapPin, Calendar, Truck, XCircle, RotateCcw, Clock, Eye } from "lucide-react";
 import Link from "next/link";
 
 interface TrackingPageProps {
@@ -150,15 +150,25 @@ function TrackingContent({ request, trackingToken }: TrackingContentProps) {
                   <Clock className="h-6 w-6 text-amber-600" aria-hidden="true" />
                 </div>
                 <p className="text-lg font-medium text-amber-800 mb-1">
-                  Esperando confirmación del aguatero
+                  Esperando ofertas de repartidores
                 </p>
                 <p className="text-sm text-amber-700">
-                  Te notificaremos cuando sea aceptada
+                  Te notificaremos cuando recibas ofertas
                 </p>
               </div>
             </CardContent>
-            {/* Cancel button for pending requests */}
-            <div className="px-6 pb-6">
+            {/* AC10.1.6: Ver Ofertas button for guest access with tracking token */}
+            <div className="px-6 pb-4 space-y-3">
+              <Button
+                asChild
+                className="w-full bg-[#0077B6] hover:bg-[#005f8f]"
+                data-testid="view-offers-button"
+              >
+                <Link href={`/request/${request.id}/offers?token=${trackingToken}`}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Ver Ofertas
+                </Link>
+              </Button>
               <CancelRequestButton requestId={request.id} trackingToken={trackingToken} />
             </div>
           </Card>

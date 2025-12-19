@@ -75,6 +75,9 @@ npm run test:e2e -- --grep "@seeded"
 | Supabase Realtime | 2025-12-11 | Zero cost, instant notifications |
 | Per-test seeding | 2025-12-15 | Deterministic test isolation |
 | BMAD workflow for stories | 2025-12-01 | Consistent story format |
+| Atlas-enhanced code reviews | 2025-12-19 | Catches issues before production |
+| Seed scripts reference constants | 2025-12-19 | Prevents data mismatches |
+| Tech spec before stories | 2025-12-19 | Ensures architectural alignment |
 
 ## Development Workflow
 
@@ -113,49 +116,25 @@ npm run test:e2e
 
 ---
 
-## Deployment History
+## Recent Deployments
 
-### Testing-2 - 2025-12-18
+| Story | Date | Key Changes |
+|-------|------|-------------|
+| Testing-3 | 2025-12-19 | Merged Playwright fixtures, persona validation tests |
+| Testing-2 | 2025-12-18 | `verify:local-db`, `seed:dev-login`, local dev guide |
 
-**Story:** testing-2-local-schema-sync
-**Final Environment:** Production
-**Production URL:** https://nitoagua.vercel.app
-
-**Changes Deployed:**
-- `npm run verify:local-db` - Database verification script for CI
-- `npm run seed:dev-login` - Dev login test user seeding
-- `docs/startup/run_app.local.md` - Comprehensive local development guide
-
-**Workflow Implications:**
-- Enables reliable local E2E testing
-- Unblocks Testing-3 (playwright-utils integration)
-- Improves developer onboarding experience
-
-**Deployment Path:** develop → staging → main
+> Full deployment details in `docs/sprint-artifacts/` - Atlas tracks patterns, not full logs.
 
 ---
 
-### Testing-3 - 2025-12-19
+## Process Updates (Epic 8 Retrospective)
 
-**Story:** testing-3-playwright-utils-integration
-**Final Environment:** Production
-**Production URL:** https://nitoagua.vercel.app
-
-**Changes Deployed:**
-- `tests/support/fixtures/merged-fixtures.ts` - Merged @seontechnologies/playwright-utils with project fixtures
-- `tests/e2e/consumer-home.spec.ts` - Migrated to use structured logging
-- `tests/e2e/persona-validation.spec.ts` - 13 tests covering all 3 personas (Dona Maria, Don Pedro, Admin)
-- `.gitignore` - Added Atlas internal files (backups/, memory-versions.yaml)
-
-**Workflow Implications:**
-- Enables structured logging in E2E tests for better debugging
-- Validates all 3 persona workflows with merged fixtures
-- Foundation for TestArch workflows in Epic 10+
-
-**Test Coverage:** 25 E2E tests pass (12 consumer-home + 13 persona-validation)
-
-**Deployment Path:** develop → staging → main
+| Practice | Adopted | Description |
+|----------|---------|-------------|
+| Seed constants | 2025-12-19 | Seed scripts MUST reference source constants (COMUNAS, etc.) |
+| Atlas code reviews | 2025-12-19 | Validate against Section 4/6 patterns, capture learnings |
+| Tech spec first | 2025-12-19 | Run `atlas-epic-tech-context` before drafting stories |
 
 ---
 
-*Last verified: 2025-12-19 | Sources: run_app.local.md, sprint-artifacts*
+*Last verified: 2025-12-19 | Sources: run_app.local.md, sprint-artifacts, Epic 8 Retrospective*

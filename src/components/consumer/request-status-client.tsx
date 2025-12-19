@@ -14,6 +14,7 @@ import {
   RotateCcw,
   XCircle,
   Loader2,
+  Eye,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -202,15 +203,25 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
                   <Clock className="h-6 w-6 text-amber-600" aria-hidden="true" />
                 </div>
                 <p className="text-lg font-medium text-amber-800 mb-1">
-                  Esperando confirmacion del aguatero
+                  Esperando ofertas de repartidores
                 </p>
                 <p className="text-sm text-amber-700">
-                  Te notificaremos cuando sea aceptada
+                  Te notificaremos cuando recibas ofertas
                 </p>
               </div>
             </CardContent>
-            {/* Cancel button for pending requests */}
-            <div className="px-6 pb-6">
+            {/* AC10.1.1: Ver Ofertas button with offer count badge */}
+            <div className="px-6 pb-4 space-y-3">
+              <Button
+                asChild
+                className="w-full bg-[#0077B6] hover:bg-[#005f8f]"
+                data-testid="view-offers-button"
+              >
+                <Link href={`/request/${request.id}/offers`}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Ver Ofertas
+                </Link>
+              </Button>
               <CancelRequestButton requestId={request.id} />
             </div>
           </Card>
