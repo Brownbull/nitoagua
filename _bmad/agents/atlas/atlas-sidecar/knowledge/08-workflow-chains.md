@@ -114,7 +114,4 @@
 
 ---
 
-## Sync Notes
-
-Last workflow chains sync: 2025-12-18
-Sources: docs/architecture.md (data flows), docs/prd.md (user stories)
+*Last verified: 2025-12-18 | Sources: architecture.md, prd.md*

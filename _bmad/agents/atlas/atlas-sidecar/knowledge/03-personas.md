@@ -128,7 +128,4 @@
 
 ---
 
-## Sync Notes
-
-Last personas sync: 2025-12-18
-Sources: ux-design-specification.md (lines 13-17, 78-84)
+*Last verified: 2025-12-18 | Sources: ux-design-specification.md, prd.md*

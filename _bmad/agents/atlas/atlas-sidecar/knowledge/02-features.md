@@ -79,19 +79,9 @@ nitoagua provides features for three user types: Consumers, Providers (aguateros
 | Large | 5,000L | Large household |
 | X-Large | 10,000L | Agricultural/commercial |
 
-## Request Status Flow (MVP)
+## Request Status Flow
 
-```
-Pending -> Accepted -> Delivered
-    |
-    v
-Cancelled (consumer, only if pending)
-```
-
-**V2 Extended Flow:**
-```
-Pending -> [Offers Received] -> Offer Accepted -> In Transit -> Delivered
-```
+> See 08-workflow-chains.md for detailed status flows and user journeys.
 
 ## Feature Dependencies
 
@@ -143,7 +133,4 @@ Pending -> [Offers Received] -> Offer Accepted -> In Transit -> Delivered
 
 ---
 
-## Sync Notes
-
-Last features sync: 2025-12-18
-Sources: prd.md (FR1-FR45), architecture.md (V2 spec), epics.md
+*Last verified: 2025-12-18 | Sources: prd.md, architecture.md, epics.md*

@@ -49,6 +49,7 @@
 - **Domain:** Logistics/Coordination (B2B2C marketplace)
 - **Complexity:** Low (no specialized regulatory requirements)
 - **MVP Scope:** Single supplier operation to validate core loop
+- **Tech Stack:** See 04-architecture.md for full details
 
 ## Success Criteria (MVP)
 
@@ -66,10 +67,4 @@
 
 ---
 
-## Sync Notes
-
-| Field | Source | Quote | Verified |
-|-------|--------|-------|----------|
-| Target Market | prd.md:11 | "rural Chile" | [x] |
-| Currency | architecture.md:675 | "CLP has no decimals" | [x] |
-| Mission | prd.md:11-14 | "water delivery coordination platform" | [x] |
+*Last verified: 2025-12-18 | Sources: prd.md, architecture.md*

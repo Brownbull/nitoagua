@@ -135,7 +135,4 @@ npm run test:e2e
 
 ---
 
-## Sync Notes
-
-Last process sync: 2025-12-18
-Sources: run_app.local.md, BMAD workflow documentation
+*Last verified: 2025-12-18 | Sources: run_app.local.md, sprint-artifacts*

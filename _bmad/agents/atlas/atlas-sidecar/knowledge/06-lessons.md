@@ -57,39 +57,13 @@
 6. **Card-based dashboards** - Works on mobile, scannable on desktop
 7. **Per-test seeding** - Deterministic, isolated, debuggable
 
-## Code Pattern Examples
+## Code Pattern References
 
-### Optimistic UI (from 3-5)
-```typescript
-const [pendingActions, setPendingActions] = useState<Set<string>>(new Set());
-
-const handleAction = async (id: string) => {
-  setPendingActions(prev => new Set([...prev, id]));
-  try {
-    await performAction(id);
-  } finally {
-    setPendingActions(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
-  }
-};
-```
-
-### Tab Preservation (from 3-4)
-```typescript
-// On navigation away
-router.push(`/details/${id}?from=pending`);
-
-// On return
-const from = searchParams.get('from');
-if (from) setActiveTab(from);
-```
+| Pattern | Location | Story |
+|---------|----------|-------|
+| **Optimistic UI (Set tracking)** | See 04-architecture.md | 3-5 |
+| **Tab Preservation (?from= param)** | See 04-architecture.md | 3-4 |
 
 ---
 
-## Sync Notes
-
-Last lessons sync: 2025-12-18
-Retrospectives reviewed: Epic 3, Epic 8
+*Last verified: 2025-12-18 | Sources: Epic 3, Epic 8 retrospectives*
