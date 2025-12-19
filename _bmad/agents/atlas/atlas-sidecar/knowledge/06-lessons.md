@@ -26,6 +26,7 @@
 | **Mixed auth strategies (email + OAuth)** | Complexity without benefit | Pick one auth method early |
 | **Hardcoded defaults mismatched docs** | Code used 15% commission when docs said 10% | Always check Atlas Section 4 for constants |
 | **Duplicate utility functions** | Same `getPrice()` in 2 places in same file | Extract to shared utility immediately |
+| **Seed data mismatched constants** | Seed used Santiago-area comunas, COMUNAS constant has Villarrica-area | Seed scripts should reference source constants, not hardcode IDs |
 
 ## Hard-Won Wisdom
 
@@ -71,7 +72,23 @@
 | **Loading state accessibility** | `earnings-dashboard-client.tsx` | 8-6 |
 | **File upload with preview** | `withdraw-client.tsx` | 8-7 |
 | **Storage bucket with folder-based RLS** | `commission-receipts` bucket | 8-7 |
+| **Dynamic import for SSR bypass** | `map-wrapper.tsx` | 8-10 |
+| **Full-screen page layout override** | `provider/layout.tsx` | 8-10 |
+
+### From Story 8-9 Code Review (2025-12-19)
+
+> "Seed scripts should reference the COMUNAS constant directly or at least document which source of truth they follow. Tests passed silently because UI showed '4 comunas activas' but none matched the displayed buttons."
+
+> "When adding props like `hideBackButton` to shared components, the wrapper page should handle navigation - don't duplicate back buttons."
+
+### From Story 8-10 Code Review (2025-12-19)
+
+> "Z-index stacking contexts are tricky - child elements' z-index values only compete within their stacking context. When the map container had `z-0`, the back button's `z-[1000]` couldn't override the layout header at `z-10`."
+
+> "For full-screen overlay pages like maps, hide parent layout elements conditionally rather than fighting z-index battles. Use `usePathname()` in client layouts to detect page context."
+
+> "Disabled features should be clearly marked - use `disabled` + `cursor-not-allowed` + `title='Próximamente'` for planned-but-not-implemented UI elements."
 
 ---
 
-*Last verified: 2025-12-19 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6 and 8-7 implementations*
+*Last verified: 2025-12-19 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10 implementations*

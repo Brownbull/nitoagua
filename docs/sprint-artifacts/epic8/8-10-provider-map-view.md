@@ -5,7 +5,7 @@
 | **Story ID** | 8-10 |
 | **Epic** | Epic 8: Provider Offer System |
 | **Title** | Provider Map View |
-| **Status** | drafted |
+| **Status** | done |
 | **Priority** | P3 (Low) |
 | **Points** | 5 |
 | **Sprint** | TBD |
@@ -39,116 +39,193 @@ This is a **nice-to-have** feature that enhances the provider experience but is 
 | AC8.10.5 | Preview card "Ver Detalles" links to request detail | Navigate to `/provider/requests/[id]` |
 | AC8.10.6 | Provider's current location shown (if permitted) | Browser geolocation API |
 | AC8.10.7 | Map centers on service area by default | Fallback to Villarrica region |
+| AC8.10.8 | FAB button in `provider-nav.tsx` links to `/provider/map` | Atlas: Navigation integration |
+| AC8.10.9 | Empty state when no requests have coordinates | "Ver lista" fallback button |
+| AC8.10.10 | Marker clustering when multiple requests are in close proximity | Optional: Enhance UX for dense areas |
+| AC8.10.11 | Map respects provider's configured service areas from Epic 7 | Filter requests by service_area |
 
 ---
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Map Page Setup** (AC: 8.10.1)
-  - [ ] Create `src/app/provider/map/page.tsx`
-  - [ ] Choose map library (Leaflet, Mapbox, or Google Maps)
-  - [ ] Set up map container with full-height layout
-  - [ ] Add loading state
+- [x] **Task 1: Map Page Setup** (AC: 8.10.1)
+  - [x] Create `src/app/provider/map/page.tsx`
+  - [x] Choose map library (Leaflet recommended - free, no API key)
+  - [x] Install `react-leaflet` and `leaflet` packages
+  - [x] Set up map container with full-height layout
+  - [x] Add loading state with spinner
 
-- [ ] **Task 2: Service Area Display** (AC: 8.10.2, 8.10.7)
-  - [ ] Fetch provider's service areas
-  - [ ] Get comuna boundaries/center points
-  - [ ] Center map on service area
-  - [ ] Optionally show service area boundaries
+- [x] **Task 2: Update Provider Navigation** (AC: 8.10.8)
+  - [x] Update `src/components/layout/provider-nav.tsx` (already done)
+  - [x] Change FAB button href to `/provider/map` (already done)
+  - [x] Ensure FAB styling matches mockup (orange circle, map pin icon)
 
-- [ ] **Task 3: Request Markers** (AC: 8.10.3)
-  - [ ] Fetch available requests (reuse from Story 8-1)
-  - [ ] Filter requests with coordinates
-  - [ ] Display markers for each request
-  - [ ] Style markers (color by urgency, size by amount)
+- [x] **Task 3: Service Area Display** (AC: 8.10.2, 8.10.7, 8.10.11)
+  - [x] Fetch provider's service areas from `provider_service_areas` table
+  - [x] Get comuna center coordinates (lookup table or API)
+  - [x] Center map on primary service area
+  - [x] Fallback to Villarrica region (-39.2768, -72.2274) if no areas
 
-- [ ] **Task 4: Request Preview Card** (AC: 8.10.4, 8.10.5)
-  - [ ] Create bottom sheet / card component
-  - [ ] Show on marker tap
-  - [ ] Display: amount, address, time since created
-  - [ ] "Ver Detalles" button links to detail page
-  - [ ] Close button / tap outside to dismiss
+- [x] **Task 4: Request Markers** (AC: 8.10.3, 8.10.10)
+  - [x] Fetch available requests using existing logic from Story 8-1
+  - [x] Filter requests that have valid `latitude` and `longitude`
+  - [x] Display markers for each request
+  - [x] Style markers: orange circles with count badges (per mockup)
+  - [ ] Optional: Implement marker clustering for dense areas (deferred)
 
-- [ ] **Task 5: Provider Location** (AC: 8.10.6)
-  - [ ] Request browser geolocation permission
-  - [ ] Show provider marker (different style)
-  - [ ] Handle permission denied gracefully
-  - [ ] Update location periodically (optional)
+- [x] **Task 5: Request Preview Card** (AC: 8.10.4, 8.10.5)
+  - [x] Create bottom card component (slides up on marker tap)
+  - [x] Show on marker tap: Pedido #, address, comuna, amount badge
+  - [x] "Ver detalle" button links to `/provider/requests/[id]`
+  - [x] "Hacer oferta" button links to offer submission
+  - [x] Close on tap outside or X button
 
-- [ ] **Task 6: E2E Tests**
-  - [ ] Test map page loads
-  - [ ] Test markers appear for requests
-  - [ ] Test marker tap shows preview
-  - [ ] Test navigation to request detail
+- [x] **Task 6: Provider Location** (AC: 8.10.6)
+  - [x] Request browser geolocation permission
+  - [x] Show provider marker (blue dot, different from request markers)
+  - [x] Handle permission denied gracefully (no marker, no error)
+  - [x] Add pulsing effect to show current location
+
+- [x] **Task 7: Empty State** (AC: 8.10.9)
+  - [x] Detect when no requests have coordinates
+  - [x] Show centered message: "No hay solicitudes con ubicación disponible"
+  - [x] Add "Ver lista" button linking to `/provider/requests`
+
+- [x] **Task 8: E2E Tests**
+  - [x] Test map page loads at `/provider/map`
+  - [x] Test markers appear for requests with coordinates
+  - [x] Test marker tap shows preview card
+  - [x] Test navigation to request detail page
+  - [x] Test FAB navigation from provider nav
+  - [x] Test empty state when no coordinates
+
+---
+
+## Atlas Workflow Analysis
+
+> 🗺️ This section was generated by Atlas workflow chain analysis
+
+### Affected Workflows
+
+- **Provider Offer Flow**: Map view adds a new entry point to the request browsing flow - providers can browse requests geographically instead of list-based
+- **Provider Dashboard Navigation**: FAB button in provider-nav requires update to link to `/provider/map`
+
+### Downstream Effects to Consider
+
+- Request detail page (`/provider/requests/[id]`) is the navigation target from map preview cards - already exists from Story 8-1
+- Geolocation data is optional in request form - many requests may not have coordinates, affecting map utility
+- Provider service areas from Epic 7 determine which requests are visible on map
+
+### Testing Implications
+
+- **Existing tests to verify:** `provider-request-browser.spec.ts` - ensure list view still works alongside map
+- **New scenarios to add:** Map page load, marker display, card preview, navigation to detail, empty states
+
+### Workflow Chain Visualization
+
+```
+[Provider Dashboard] → [FAB: Ver mapa] → [THIS STORY: Map View] → [Request Detail] → [Submit Offer]
+                    ↓
+             [Request List (8-1)]
+```
 
 ---
 
 ## Technical Notes
 
-### Map Library Options
+### Map Library Choice
 
-1. **Leaflet + OpenStreetMap** (Recommended)
-   - Free, no API key required
-   - Good for MVP
-   - `react-leaflet` package
+**Recommended: Leaflet + OpenStreetMap**
+- Free, no API key required
+- Good for MVP
+- Packages: `react-leaflet`, `leaflet`
+- Minimal bundle size impact
 
-2. **Google Maps**
-   - Better UX but requires API key and billing
-   - Consider for post-MVP
+```bash
+npm install react-leaflet leaflet @types/leaflet
+```
 
-3. **Mapbox**
-   - Good middle ground
-   - Free tier available
+**Alternative Options:**
+- Google Maps: Better UX but requires API key and billing
+- Mapbox: Good middle ground, free tier available
 
 ### Request Coordinates
 
-Note: Many requests may not have coordinates (geolocation is optional in the request form). The map will only show requests that have valid `latitude` and `longitude` values.
+Many requests may not have coordinates (geolocation is optional in the request form). The map will only show requests that have valid `latitude` and `longitude` values.
+
+```typescript
+// Filter requests with coordinates
+const mappableRequests = requests.filter(r => r.latitude && r.longitude);
+```
 
 ### Mockup Reference
 
 From `docs/ux-mockups/01-consolidated-provider-flow.html`, Section 7 (Mapa):
 - Full-screen map with gradient header overlay
-- Request markers with amount indicators
+- Back button (top-left, white rounded square)
+- Filter chips: "Todos (5)", "Cercanos"
+- Request markers: orange circles with offer count
 - Selected request shows bottom card preview
-- Card includes: pedido number, address, comuna, amount badge, "Ver Solicitud" button
-- Provider location shown with blue marker
+- Card includes: Pedido number, address, comuna, price, "Ver detalle" / "Hacer oferta" buttons
+- Provider location shown with blue marker with pulsing effect
 
 ### Fallback Behavior
 
 If no requests have coordinates:
 - Show empty map centered on service area
 - Display message: "No hay solicitudes con ubicación disponible"
-- Suggest using list view
+- Suggest using list view with "Ver lista" button
+
+### Villarrica Region Defaults
+
+```typescript
+const VILLARRICA_CENTER = {
+  lat: -39.2768,
+  lng: -72.2274
+};
+const DEFAULT_ZOOM = 12;
+```
 
 ---
 
 ## Dependencies
 
-- Story 8-1: Provider Request Browser (for request fetching logic)
-- Provider service areas from Epic 7
-- Browser Geolocation API (optional)
+- Story 8-1: Provider Request Browser (request fetching logic reuse)
+- Epic 7: Provider service areas configuration
+- Browser Geolocation API (optional enhancement)
 
 ---
 
 ## Out of Scope
 
-- Turn-by-turn navigation (use external maps app)
+- Turn-by-turn navigation (use external maps app via deep link)
 - Route optimization
-- Real-time location tracking
+- Real-time location tracking during delivery
 - Offline map tiles
+- Google Maps integration (use Leaflet/OSM for MVP)
 
 ---
 
 ## Definition of Done
 
-- [ ] Map page renders at `/provider/map`
-- [ ] Service area centered correctly
-- [ ] Request markers displayed
-- [ ] Marker tap shows preview card
-- [ ] Preview links to request detail
-- [ ] Works without geolocation permission
-- [ ] E2E tests pass
-- [ ] Code review approved
+- [x] Map page renders at `/provider/map`
+- [x] FAB in provider nav links to map page
+- [x] Service area centered correctly
+- [x] Request markers displayed for requests with coordinates
+- [x] Marker tap shows preview card
+- [x] Preview links to request detail
+- [x] Works without geolocation permission
+- [x] Empty state shows when no coordinates available
+- [x] E2E tests pass
+- [x] Code review approved
+
+---
+
+## References
+
+- [Source: docs/ux-mockups/01-consolidated-provider-flow.html#Section-7]
+- [Source: docs/architecture.md - Maps integration]
+- [Source: Atlas: 08-workflow-chains.md - Provider Offer Flow]
 
 ---
 
@@ -160,3 +237,50 @@ This story is marked as **P3 (Low priority)** because:
 3. Map implementation adds complexity and potential library dependencies
 
 Consider deferring to a future sprint if timeline is tight.
+
+---
+
+## Dev Agent Record
+
+### Agent Model Used
+
+Claude Opus 4.5 (claude-opus-4-5-20251101)
+
+### Debug Log References
+
+- No debug issues encountered
+
+### Completion Notes List
+
+1. **Map Library**: Installed `react-leaflet` and `leaflet` with `@types/leaflet` for TypeScript support
+2. **Architecture**: Created server action `src/lib/actions/map.ts` for data fetching, client wrapper for dynamic import to avoid SSR issues with Leaflet
+3. **FAB Navigation**: Already implemented in prior work - FAB links to `/provider/map`
+4. **Marker Clustering**: Deferred to future enhancement - basic markers work well for MVP
+5. **Provider Location**: Uses browser geolocation with graceful fallback if permission denied
+6. **Empty State**: Shows friendly message with link back to list view
+
+### File List
+
+**New Files:**
+- `src/app/provider/map/page.tsx` - Server component for map page
+- `src/app/provider/map/map-wrapper.tsx` - Client wrapper for dynamic import
+- `src/app/provider/map/map-client.tsx` - Main map component with Leaflet
+- `src/lib/actions/map.ts` - Server action for fetching map data
+- `tests/e2e/provider-map-view.spec.ts` - E2E tests for map functionality
+
+**Modified Files:**
+- `package.json` - Added `react-leaflet`, `leaflet`, `@types/leaflet` dependencies
+- `docs/sprint-artifacts/sprint-status.yaml` - Updated story status
+- `docs/sprint-artifacts/epic8/8-10-provider-map-view.md` - Updated task completion
+- `src/app/provider/layout.tsx` - Hide header on map page for full-screen experience
+
+### Code Review Fixes (2025-12-19)
+
+**Issues Fixed:**
+1. **HIGH**: Back button blocked by provider layout header - Fixed by hiding header on map page (matches UX mockup Section 7)
+2. **HIGH**: Invalid Tailwind z-index `z-1000` classes - Fixed to `z-[1000]` syntax
+3. **MEDIUM**: "Cercanos" filter button was no-op - Disabled with "Próximamente" tooltip
+4. **MEDIUM**: Missing aria-hidden on close button SVG - Added for accessibility
+5. **MEDIUM**: Inconsistent back button positioning - Both states now use `top-4`
+
+**Tests:** 12 passed (0 failed)
