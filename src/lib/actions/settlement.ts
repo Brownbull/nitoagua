@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { getDeliveryPrice, formatCLP } from "@/lib/utils/commission";
 
 interface ActionResult<T = void> {
   success: boolean;
@@ -85,8 +86,9 @@ export async function getEarningsSummary(
     }
 
     // Get commission percent from admin settings or provider override
+    // Atlas Section 4: Default commission is 10%
     const adminClient = createAdminClient();
-    let commissionPercent = 15; // Default
+    let commissionPercent = 10; // Default per architecture.md
 
     if (profile.commission_override !== null) {
       commissionPercent = profile.commission_override;
@@ -126,25 +128,21 @@ export async function getEarningsSummary(
       return { success: false, error: "Error al cargar entregas" };
     }
 
-    // Calculate gross income from deliveries
-    // For now, we use a simple amount-based pricing (should match offer settings)
-    const getPrice = (amount: number): number => {
-      if (amount <= 100) return 5000;
-      if (amount <= 1000) return 20000;
-      if (amount <= 5000) return 75000;
-      return 140000;
-    };
-
+    // Calculate gross income from deliveries using shared pricing utility
     let grossIncome = 0;
     let cashReceived = 0;
     const totalDeliveries = deliveries?.length ?? 0;
 
-    // For now, assume all deliveries are cash (payment_method not yet tracked on requests)
-    // In a real implementation, we'd track payment_method on water_requests
+    // TODO: Story 8.6 Limitation - payment_method is not yet tracked on water_requests table.
+    // Currently all deliveries are assumed to be cash payments.
+    // When payment_method column is added to water_requests, update this logic to:
+    // - Query payment_method from each delivery
+    // - Accurately split cash_received vs transfer amounts
+    // - This affects AC8.6.3 (Efectivo Recibido accuracy)
     for (const delivery of deliveries || []) {
-      const price = getPrice(delivery.amount);
+      const price = getDeliveryPrice(delivery.amount);
       grossIncome += price;
-      // Assume cash for now (will be enhanced when payment method is tracked)
+      // All deliveries counted as cash until payment_method tracking is implemented
       cashReceived += price;
     }
 
@@ -229,9 +227,9 @@ export async function getDeliveryHistory(
       return { success: false, error: "Esta funcionalidad es solo para proveedores" };
     }
 
-    // Get commission percent
+    // Get commission percent - Atlas Section 4: Default 10%
     const adminClient = createAdminClient();
-    let commissionPercent = 15;
+    let commissionPercent = 10;
 
     if (profile.commission_override !== null) {
       commissionPercent = profile.commission_override;
@@ -278,22 +276,16 @@ export async function getDeliveryHistory(
       return { success: false, error: "Error al cargar historial" };
     }
 
-    // Calculate price for each delivery
-    const getPrice = (amount: number): number => {
-      if (amount <= 100) return 5000;
-      if (amount <= 1000) return 20000;
-      if (amount <= 5000) return 75000;
-      return 140000;
-    };
-
+    // Calculate price for each delivery using shared pricing utility
+    // TODO: payment_method defaults to cash - see getEarningsSummary TODO for tracking limitation
     const records: DeliveryRecord[] = (deliveries || []).map((d) => {
-      const price = getPrice(d.amount);
+      const price = getDeliveryPrice(d.amount);
       const commission = Math.round(price * (commissionPercent / 100));
       return {
         id: d.id,
         date: d.delivered_at || "",
         amount: price,
-        payment_method: "cash" as const, // Default to cash, will be enhanced
+        payment_method: "cash" as const, // Default until payment_method tracking added
         commission,
         net: price - commission,
       };
@@ -550,7 +542,7 @@ export async function getReceiptUrl(
     const adminClient = createAdminClient();
 
     const { data, error } = await adminClient.storage
-      .from("receipts")
+      .from("commission-receipts")
       .createSignedUrl(receiptPath, 3600); // 1 hour expiry
 
     if (error) {
@@ -564,3 +556,270 @@ export async function getReceiptUrl(
     return { success: false, error: "Error inesperado" };
   }
 }
+
+// =============================================================================
+// PROVIDER SETTLEMENT ACTIONS (Story 8.7)
+// =============================================================================
+
+/**
+ * Platform bank details for commission settlement
+ * AC: 8.7.2 - Show bank details: Banco, Cuenta, Titular, RUT
+ */
+export interface PlatformBankDetails {
+  bank_name: string;
+  account_type: string;
+  account_number: string;
+  account_holder: string;
+  rut: string;
+}
+
+/**
+ * Pending withdrawal request for current provider
+ */
+export interface PendingWithdrawal {
+  id: string;
+  amount: number;
+  receipt_path: string | null;
+  status: string;
+  created_at: string;
+  rejection_reason: string | null;
+}
+
+/**
+ * Get platform bank details for settlement page
+ * AC: 8.7.2 - Display Banco, Tipo de Cuenta, Número de Cuenta, Titular, RUT
+ */
+export async function getPlatformBankDetails(): Promise<ActionResult<PlatformBankDetails>> {
+  try {
+    const supabase = await createClient();
+
+    // Verify user is authenticated
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { success: false, error: "No autenticado" };
+    }
+
+    const adminClient = createAdminClient();
+
+    // Fetch all bank-related settings
+    const { data: settings, error: settingsError } = await adminClient
+      .from("admin_settings")
+      .select("key, value")
+      .in("key", [
+        "platform_bank_name",
+        "platform_account_type",
+        "platform_account_number",
+        "platform_account_holder",
+        "platform_rut",
+      ]);
+
+    if (settingsError) {
+      console.error("[Settlement] Error fetching bank settings:", settingsError);
+      return { success: false, error: "Error al cargar datos bancarios" };
+    }
+
+    // Parse settings into bank details object
+    const settingsMap = new Map(
+      (settings || []).map(s => [s.key, (s.value as { value: string }).value])
+    );
+
+    const bankDetails: PlatformBankDetails = {
+      bank_name: settingsMap.get("platform_bank_name") || "No configurado",
+      account_type: settingsMap.get("platform_account_type") || "No configurado",
+      account_number: settingsMap.get("platform_account_number") || "No configurado",
+      account_holder: settingsMap.get("platform_account_holder") || "No configurado",
+      rut: settingsMap.get("platform_rut") || "No configurado",
+    };
+
+    return { success: true, data: bankDetails };
+  } catch (err) {
+    console.error("[Settlement] Unexpected error in getPlatformBankDetails:", err);
+    return { success: false, error: "Error inesperado" };
+  }
+}
+
+/**
+ * Get pending withdrawal request for current provider
+ * AC: 8.7.6 - Show pending verification status
+ */
+export async function getPendingWithdrawal(): Promise<ActionResult<PendingWithdrawal | null>> {
+  try {
+    const supabase = await createClient();
+
+    // Verify user is authenticated
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { success: false, error: "No autenticado" };
+    }
+
+    // Verify user is a provider
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile || profile.role !== "supplier") {
+      return { success: false, error: "Esta funcionalidad es solo para proveedores" };
+    }
+
+    // Check for pending withdrawal request
+    const { data: withdrawal, error: withdrawalError } = await supabase
+      .from("withdrawal_requests")
+      .select("id, amount, receipt_path, status, created_at, rejection_reason")
+      .eq("provider_id", user.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (withdrawalError) {
+      console.error("[Settlement] Error fetching pending withdrawal:", withdrawalError);
+      return { success: false, error: "Error al verificar estado de pago" };
+    }
+
+    if (!withdrawal) {
+      return { success: true, data: null };
+    }
+
+    // Map to PendingWithdrawal type with proper defaults
+    const pendingWithdrawal: PendingWithdrawal = {
+      id: withdrawal.id,
+      amount: withdrawal.amount,
+      receipt_path: withdrawal.receipt_path,
+      status: withdrawal.status || "pending",
+      created_at: withdrawal.created_at || new Date().toISOString(),
+      rejection_reason: withdrawal.rejection_reason,
+    };
+
+    return { success: true, data: pendingWithdrawal };
+  } catch (err) {
+    console.error("[Settlement] Unexpected error in getPendingWithdrawal:", err);
+    return { success: false, error: "Error inesperado" };
+  }
+}
+
+/**
+ * Submit commission payment with receipt
+ * AC: 8.7.4 - Create withdrawal_request with status 'pending'
+ * AC: 8.7.5 - Notify admin for verification
+ */
+export async function submitCommissionPayment(
+  amount: number,
+  receiptPath: string
+): Promise<ActionResult<{ requestId: string }>> {
+  try {
+    const supabase = await createClient();
+
+    // Verify user is authenticated
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { success: false, error: "No autenticado" };
+    }
+
+    // Verify user is a provider
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, name")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile || profile.role !== "supplier") {
+      return { success: false, error: "Esta funcionalidad es solo para proveedores" };
+    }
+
+    // Check for existing pending withdrawal
+    const { data: existingWithdrawal } = await supabase
+      .from("withdrawal_requests")
+      .select("id")
+      .eq("provider_id", user.id)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (existingWithdrawal) {
+      return { success: false, error: "Ya tienes un pago pendiente de verificación" };
+    }
+
+    // Validate amount matches pending commission
+    const summaryResult = await getEarningsSummary("month");
+    if (!summaryResult.success || !summaryResult.data) {
+      return { success: false, error: "Error al verificar comisión pendiente" };
+    }
+
+    const pendingCommission = summaryResult.data.commission_pending;
+    if (amount !== pendingCommission) {
+      return {
+        success: false,
+        error: `El monto debe ser exactamente ${formatCLP(pendingCommission)}`
+      };
+    }
+
+    if (pendingCommission <= 0) {
+      return { success: false, error: "No tienes comisión pendiente" };
+    }
+
+    // Create withdrawal request
+    const { data: withdrawal, error: insertError } = await supabase
+      .from("withdrawal_requests")
+      .insert({
+        provider_id: user.id,
+        amount: amount,
+        receipt_path: receiptPath,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !withdrawal) {
+      console.error("[Settlement] Error creating withdrawal request:", insertError);
+      return { success: false, error: "Error al registrar pago" };
+    }
+
+    // Notify admins (AC: 8.7.5)
+    const adminClient = createAdminClient();
+
+    // Get all admin emails
+    const { data: adminEmails } = await adminClient
+      .from("admin_allowed_emails")
+      .select("email");
+
+    // Get admin profile IDs
+    if (adminEmails && adminEmails.length > 0) {
+      const { data: adminProfiles } = await adminClient
+        .from("profiles")
+        .select("id")
+        .in("email", adminEmails.map(a => a.email));
+
+      // Create notifications for all admins
+      if (adminProfiles && adminProfiles.length > 0) {
+        const notifications = adminProfiles.map(admin => ({
+          user_id: admin.id,
+          type: "commission_payment_submitted",
+          title: "Nuevo pago de comisión",
+          message: `${profile.name || "Un proveedor"} envió un pago de ${formatCLP(amount)} para verificación`,
+          data: {
+            withdrawal_id: withdrawal.id,
+            provider_id: user.id,
+            amount: amount,
+          },
+        }));
+
+        await adminClient
+          .from("notifications")
+          .insert(notifications);
+      }
+    }
+
+    console.log(`[Settlement] Payment submitted: provider=${user.id}, amount=${amount}, request=${withdrawal.id}`);
+
+    revalidatePath("/provider/earnings");
+    revalidatePath("/provider/earnings/withdraw");
+    revalidatePath("/admin/settlement");
+
+    return { success: true, data: { requestId: withdrawal.id } };
+  } catch (err) {
+    console.error("[Settlement] Unexpected error in submitCommissionPayment:", err);
+    return { success: false, error: "Error inesperado al enviar pago" };
+  }
+}
+

@@ -124,6 +124,46 @@ export async function requireAdmin() { /* ... */ }
 - Provider override possible
 - Calculation: `Math.round(grossAmount * commissionPercent / 100)`
 
+### Pricing (Delivery)
+- Single source of truth: `getDeliveryPrice()` in `src/lib/utils/commission.ts`
+- Price tiers (CLP):
+  - Up to 100L: $5,000
+  - Up to 1,000L: $20,000
+  - Up to 5,000L: $75,000
+  - Over 5,000L: $140,000
+
 ---
 
-*Last verified: 2025-12-18 | Source: architecture.md*
+## Code Review Learnings
+
+### Story 8-6: Earnings Dashboard (2025-12-19)
+
+**Patterns Adopted:**
+- `getDeliveryPrice()`: Centralized pricing utility in `src/lib/utils/commission.ts`
+- Accessibility: `aria-busy` and `aria-live` for loading states in period selectors
+
+**Technical Decisions:**
+- Payment method tracking: Deferred (TODO documented, defaults to cash)
+- History pagination: Link hidden until `/provider/earnings/history` route implemented
+
+**Coverage Notes:**
+- 26 unit tests, 21+ E2E tests
+- Gap: payment_method accuracy for AC8.6.3 (Efectivo Recibido)
+
+## Storage Bucket: commission-receipts (Story 8-7)
+
+Commission payment receipt storage with folder-based RLS:
+- Bucket: `commission-receipts` (private, 5MB limit)
+- Allowed types: image/jpeg, image/png, image/webp, application/pdf
+- Path pattern: `{provider_id}/{timestamp}-receipt.{ext}`
+- RLS: Providers can upload/view own, admins can view all
+
+Server actions:
+- `getPlatformBankDetails()` - Fetch bank account details from admin_settings
+- `getPendingWithdrawal()` - Check for existing pending withdrawal
+- `submitCommissionPayment(amount, receiptPath)` - Create withdrawal request
+- `getReceiptUrl(receiptPath)` - Get signed URL for admin viewing
+
+---
+
+*Last verified: 2025-12-19 | Source: architecture.md, Story 8-6 and 8-7 code review*
