@@ -73,3 +73,7 @@ docs/ux-mockups
 docs/startup/cv-system/
 
 oldbmad/
+
+# Atlas internal files
+_bmad/agents/atlas/atlas-sidecar/backups/
+_bmad/agents/atlas/atlas-sidecar/memory-versions.yaml

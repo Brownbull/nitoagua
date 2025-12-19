@@ -97,104 +97,43 @@ npm run seed:test:clean && npm run seed:test
 
 ### Database Health Check
 
-**Problem Solved:** Tests were passing silently when database tables were missing or RLS blocked access.
+**Problem:** Tests passing silently when tables missing or RLS blocked access.
 
-**Pattern:** Run health check tests FIRST before other E2E tests.
+**Pattern:** Run `@health` tests FIRST before other E2E tests.
 
-```typescript
-// tests/e2e/database-health.spec.ts
-test.describe("Database Health Check @health", () => {
-  test("@health all required tables exist", async ({ request }) => {
-    for (const table of REQUIRED_TABLES) {
-      const response = await request.get(`${supabaseUrl}/rest/v1/${table}?limit=0`);
-      expect(response.status(), `Table ${table} should exist`).not.toBe(404);
-    }
-  });
-});
-```
+**Location:** `tests/e2e/database-health.spec.ts`
 
 **Command:** `npm run test:e2e -- --grep "@health"`
 
 ### Error Detection Fixture
 
-**Problem Solved:** Tests accepted "empty state OR data" which masked database errors as valid empty states.
+**Problem:** Tests accepted "empty state OR data" which masked database errors.
 
 **Pattern:** Check for error states BEFORE checking for content.
 
-```typescript
-// tests/fixtures/error-detection.ts
-export async function assertNoErrorState(page: Page): Promise<void> {
-  const errorIndicators = [
-    page.getByText(/Error:|Failed to|Something went wrong/i),
-    page.getByText(/No autenticado|permission denied/i),
-  ];
-  for (const indicator of errorIndicators) {
-    const isVisible = await indicator.first().isVisible().catch(() => false);
-    if (isVisible) {
-      throw new Error(`Error state detected in UI - tests should FAIL on errors`);
-    }
-  }
-}
-```
+**Location:** `tests/fixtures/error-detection.ts` - exports `assertNoErrorState(page)`
 
-**Usage in tests:**
-```typescript
-import { assertNoErrorState } from "../fixtures/error-detection";
-
-test("shows content or empty state", async ({ page }) => {
-  // FIRST: Check for error states - fail if any database errors present
-  await assertNoErrorState(page);
-
-  // THEN: Safe to check for content OR empty state
-  const hasContent = await page.getByTestId("content").isVisible().catch(() => false);
-  const hasEmpty = await page.getByTestId("empty-state").isVisible().catch(() => false);
-  expect(hasContent || hasEmpty).toBe(true);
-});
-```
+**Usage:** Import and call FIRST in any test that could show "empty state".
 
 ### Seed Script Verification
 
-**Problem Solved:** Seed scripts didn't verify data was actually created.
+**Problem:** Seed scripts didn't verify data was actually created.
 
-**Pattern:** Exit with error code if seeded data is missing.
-
-```typescript
-async function verifySeededData(supabase) {
-  const errors: string[] = [];
-  // ... verification checks ...
-  if (errors.length > 0) {
-    throw new Error("Seeded data verification failed. Tests cannot rely on this data.");
-  }
-}
-```
+**Pattern:** Exit with error code if seeded data is missing. All seed scripts include verification step.
 
 ### Unit-Style Test Files (Testing-1B)
 
-> Added 2025-12-18 from Story Testing-1B: Code Review Learning
+**Pattern:** Some test files contain unit-style tests (config checks, regex validation) with no page interactions.
 
-**Problem:** Some test files contain only unit-style tests (configuration checks, regex validation) with no page interactions that could mask database errors.
-
-**Pattern:** Document WHY `assertNoErrorState` is not needed rather than having unused imports that trigger lint warnings.
-
-```typescript
-import { test, expect } from "@playwright/test";
-// Note: assertNoErrorState not needed - this file contains unit-style tests only (no page interactions)
-// Import kept as documentation that the pattern was reviewed per Story Testing-1B
-```
-
-**Files using this pattern:**
-- `provider-verification-status.spec.ts` - Config/constant validation only
-- `provider-registration.spec.ts` - Mostly schema/validation tests
-
-**When to use `assertNoErrorState`:**
-- Tests that navigate to pages and check for UI content
-- Tests with `.isVisible().catch(() => false)` patterns
-- Tests that could show "empty state" when DB errors occur
-
-**When NOT needed:**
-- Pure unit tests checking constants/config objects
+**Rule:** `assertNoErrorState` NOT needed for:
+- Pure unit tests (constants/config)
 - Regex validation tests
-- Tests that only check redirects (auth guard tests)
+- Auth redirect tests
+
+**Rule:** `assertNoErrorState` NEEDED for:
+- Tests navigating to pages
+- Tests with `.isVisible().catch(() => false)` patterns
+- Tests that could show "empty state"
 
 ---
 
@@ -218,77 +157,97 @@ Each test must:
 
 ### Local Database Verification (Testing-2)
 
-> Added 2025-12-18 from Story Testing-2: Local Supabase Schema Synchronization
+**Problem:** Tests passing when tables completely missing.
 
-**Problem Solved:** Tests could pass when tables were completely missing because the test framework didn't verify schema.
+**Pattern:** Run `npm run verify:local-db` before E2E tests.
 
-**Pattern:** Run verification script before E2E tests.
-
-```bash
-# Verify all required tables exist
-npm run verify:local-db
-
-# Expected output:
-# 🔍 Local Database Verification
-#    URL: http://127.0.0.1:55326
-#    ✅ profiles (200 OK)
-#    ✅ water_requests (200 OK)
-#    ✅ admin_settings (200 OK)
-#    [... all tables ...]
-# ✅ All required tables exist!
-```
-
-**Required Tables:**
-- `profiles`, `water_requests` (core)
-- `admin_settings`, `admin_allowed_emails` (admin)
-- `provider_documents`, `commission_ledger`, `withdrawal_requests` (settlement)
-- `offers`, `notifications` (provider operations)
-- `comunas`, `provider_service_areas` (onboarding)
+**Required Tables:** profiles, water_requests, admin_settings, admin_allowed_emails, provider_documents, commission_ledger, withdrawal_requests, offers, notifications, comunas, provider_service_areas
 
 **Common Fixes:**
-```bash
-# Full database reset (destroys all local data)
-npx supabase db reset
+- `npx supabase db reset` - Full reset
+- `npm run seed:dev-login` - Re-seed dev users
+- `npm run seed:test` - Re-seed test data
 
-# Re-seed dev login users
-npm run seed:dev-login
-
-# Re-seed test data
-npm run seed:test
-npm run seed:mockup
-```
-
-**Note:** The `deliveries` and `platform_settings` tables don't exist - the app uses `water_requests.status='delivered'` for tracking deliveries (not a separate table).
+**Note:** No `deliveries` table - uses `water_requests.status='delivered'`.
 
 ### Code Review Lessons (Testing-2)
 
-> Added 2025-12-18 from Code Review of Testing-2
-
-**Issues Discovered and Fixed:**
-
-1. **Use FK IDs not display names in seed data**
-   - Problem: `seed-offer-tests.ts` logged `comuna_name` which showed `undefined`
-   - Fix: Use `comuna_id` (the actual FK column) in console output and queries
-   - Pattern: When seeding FK relationships, always use the ID column not display columns
-
-2. **Admin allowlist requires `added_by` field**
-   - Problem: `admin_allowed_emails` table has NOT NULL constraint on `added_by`
-   - Fix: Use `added_by: userId` (admin's own ID) for bootstrap seeding
-   - Pattern: Check table constraints before writing upsert operations
-
-3. **Keep REQUIRED_TABLES in sync**
-   - Problem: `verify-local-db.ts` and `database-health.spec.ts` had different table lists
-   - Fix: Added comment "Keep in sync with..." and unified the lists
-   - Pattern: Single source of truth for schema requirements, or explicit cross-references
-
-4. **Connection health check before table checks**
-   - Problem: Script gave confusing errors when Supabase wasn't running
-   - Fix: Added early health check with clear "npx supabase start" guidance
-   - Pattern: Fail fast with actionable error messages
+**Patterns learned:**
+1. **Use FK IDs not display names** in seed data (use `comuna_id`, not `comuna_name`)
+2. **Check table constraints** before upserts (e.g., `added_by` NOT NULL)
+3. **Single source of truth** for REQUIRED_TABLES lists
+4. **Fail fast** with actionable error messages (check connection before tables)
 
 ---
 
-## Sync Notes
+## Playwright Utils Integration (Testing-3)
 
-Last testing sync: 2025-12-18
-Sources: run_app.local.md, docs/sprint-artifacts/testing/, Story Testing-1, Story Testing-1B, Story Testing-2
+> Added 2025-12-18 from Story Testing-3: Playwright Utils Integration
+
+### Merged Fixtures Pattern
+
+**Purpose:** Combine `@seontechnologies/playwright-utils` with project fixtures for enhanced E2E capabilities.
+
+**Location:** `tests/support/fixtures/merged-fixtures.ts`
+
+**Available Fixtures:**
+
+| Fixture | Purpose |
+|---------|---------|
+| `log` | Structured logging in reports - `log({ level: 'step', message: '...' })` |
+| `recurse` | Polling for async conditions (like Cypress retry) |
+| `interceptNetworkCall` | Spy/stub network requests |
+| `networkErrorMonitor` | Auto-fail on HTTP 4xx/5xx |
+| `userFactory` | Create/cleanup test users (project fixture) |
+
+**Log Levels:** `info`, `step`, `success`, `warning`, `error`, `debug`
+
+### Migration Strategy
+
+**New tests (Epic 10+):** Use merged fixtures:
+```typescript
+import { test, expect } from '../support/fixtures/merged-fixtures';
+```
+
+**Existing tests:** Keep `@playwright/test` - no changes needed.
+
+**Gradual migration:** When touching existing tests, consider upgrading imports and adding `log()` calls.
+
+### Example Usage
+
+```typescript
+test('example', async ({ page, log }) => {
+  await log({ level: 'step', message: 'Navigate to page' });
+  await page.goto('/consumer/offers');
+
+  await log({ level: 'step', message: 'Verify content' });
+  await expect(page.locator('[data-testid="offer"]')).toBeVisible();
+
+  await log({ level: 'success', message: 'Test complete' });
+});
+```
+
+**Reference:** `docs/testing/playwright-utils-integration.md`
+
+### Persona Validation Tests
+
+**Purpose:** Verify playwright-utils integration across all three personas.
+
+**Location:** `tests/e2e/persona-validation.spec.ts`
+
+**Personas Tested:**
+- **Dona Maria (Consumer)**: Home screen, big button, Spanish interface, request form
+- **Don Pedro (Provider)**: Login page access, dev login detection, dashboard access
+- **Admin**: Login page, branding, security notices, dev login
+
+**Test Count:** 13 tests (11 pass, 2 skip when dev login unavailable)
+
+**Key Patterns:**
+- Use `log({ level: 'step', message: '...' })` for each test step
+- Use `log({ level: 'success', message: '...' })` at test completion
+- Use `log({ level: 'info', message: '...' })` for informational notes
+- Use `log({ level: 'warning', message: '...' })` before test.skip()
+
+---
+
+*Last verified: 2025-12-18 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3*

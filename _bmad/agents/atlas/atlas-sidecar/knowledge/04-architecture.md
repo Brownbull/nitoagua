@@ -126,7 +126,4 @@ export async function requireAdmin() { /* ... */ }
 
 ---
 
-## Sync Notes
-
-Last architecture sync: 2025-12-18
-Source: docs/architecture.md (V2 spec, 870 lines)
+*Last verified: 2025-12-18 | Source: architecture.md*

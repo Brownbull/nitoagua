@@ -1,24 +1,28 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/fixtures/merged-fixtures";
 
 test.describe("Consumer Home Screen", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, log }) => {
+    await log({ level: "step", message: "Navigate to home page" });
     await page.goto("/");
   });
 
   test("AC2-1-1 - displays big action button with correct dimensions", async ({
     page,
+    log,
   }) => {
+    await log({ level: "step", message: "Verify big action button is visible" });
     const button = page.getByTestId("big-action-button");
     await expect(button).toBeVisible();
 
-    // Verify the button has 200x200px dimensions
+    await log({ level: "step", message: "Verify button dimensions (200x200px)" });
     const boundingBox = await button.boundingBox();
     expect(boundingBox).not.toBeNull();
     expect(boundingBox!.width).toBe(200);
     expect(boundingBox!.height).toBe(200);
 
-    // Verify it contains "Solicitar Agua" text
+    await log({ level: "step", message: "Verify button contains 'Solicitar Agua' text" });
     await expect(button).toContainText("Solicitar Agua");
+    await log({ level: "success", message: "Big action button validated" });
   });
 
   test("AC2-1-2 - button has correct gradient and shadow styling", async ({
@@ -80,20 +84,23 @@ test.describe("Consumer Home Screen", () => {
 
   test("AC2-1-4 - clicking button navigates to /request page", async ({
     page,
+    log,
   }) => {
+    await log({ level: "step", message: "Click big action button" });
     const button = page.getByTestId("big-action-button");
     await button.click();
 
-    // Wait for navigation
+    await log({ level: "step", message: "Wait for navigation to /request" });
     await page.waitForURL("**/request");
 
-    // Verify we're on the request page
+    await log({ level: "step", message: "Verify URL contains /request" });
     expect(page.url()).toContain("/request");
 
-    // Verify request page content is displayed
+    await log({ level: "step", message: "Verify request page heading is visible" });
     await expect(
       page.getByRole("heading", { name: "Solicitar Agua" })
     ).toBeVisible();
+    await log({ level: "success", message: "Navigation to request page verified" });
   });
 
   test("AC2-1-5 - bottom navigation displays 3 items with correct labels", async ({
@@ -112,24 +119,25 @@ test.describe("Consumer Home Screen", () => {
     await expect(nav.getByText("Perfil")).toBeVisible();
   });
 
-  test("AC2-1-6 - all visible text is in Spanish", async ({ page }) => {
-    // Verify welcome message is in Spanish
+  test("AC2-1-6 - all visible text is in Spanish", async ({ page, log }) => {
+    await log({ level: "step", message: "Verify welcome message in Spanish" });
     await expect(
       page.getByRole("heading", { name: "Bienvenido a nitoagua" })
     ).toBeVisible();
 
-    // Verify button text is in Spanish
+    await log({ level: "step", message: "Verify button text in Spanish" });
     await expect(page.getByText("Solicitar Agua")).toBeVisible();
 
-    // Verify instruction text is in Spanish
+    await log({ level: "step", message: "Verify instruction text in Spanish" });
     await expect(
       page.getByText("Toca el botón para solicitar tu entrega de agua")
     ).toBeVisible();
 
-    // Verify nav labels are in Spanish
+    await log({ level: "step", message: "Verify nav labels in Spanish" });
     await expect(page.getByText("Inicio")).toBeVisible();
     await expect(page.getByText("Historial")).toBeVisible();
     await expect(page.getByText("Perfil")).toBeVisible();
+    await log({ level: "success", message: "All Spanish text verified" });
   });
 
   test("AC2-1-7 - touch targets are minimum 44x44px", async ({ page }) => {
