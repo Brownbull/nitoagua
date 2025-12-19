@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 test.describe("Admin Provider Verification Queue", () => {
   // Skip tests if dev login is not enabled
@@ -35,15 +36,22 @@ test.describe("Admin Provider Verification Queue", () => {
     // Page should load successfully
     await expect(page.getByText("Verificaciones")).toBeVisible();
 
+    // FIRST: Check for error states - fail if any database errors present
+    await assertNoErrorState(page);
+
     // Queue or empty state should be visible
     const queue = page.getByTestId("verification-queue");
     const emptyQueue = page.getByTestId("empty-queue");
 
     // Either queue with applications or empty state should show
+    // This is now safe because we checked for errors first
     const hasQueue = await queue.isVisible().catch(() => false);
     const hasEmptyState = await emptyQueue.isVisible().catch(() => false);
 
-    expect(hasQueue || hasEmptyState).toBe(true);
+    expect(
+      hasQueue || hasEmptyState,
+      "Expected either 'verification-queue' or 'empty-queue' to be visible"
+    ).toBe(true);
   });
 
   test("AC6.3.2 - Queue shows count of pending applications in subtitle", async ({

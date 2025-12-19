@@ -128,6 +128,7 @@ The project uses BMAD (Business Method for Agile Development) located in `_bmad/
 | Create Story | `/bmad:bmm:workflows:create-story` | Draft next story from epics |
 | Dev Story | `/bmad:bmm:workflows:dev-story` | Implement a story |
 | Code Review | `/bmad:bmm:workflows:code-review` | Adversarial code review |
+| Deploy Story | `/bmad:bmm:workflows:deploy-story` | Deploy through branch pipeline |
 
 ### Sprint Tracking
 

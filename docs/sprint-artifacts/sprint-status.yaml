@@ -167,7 +167,8 @@ development_status:
   # =====================================
   # Purpose: Fix E2E testing gaps discovered during Epic 8 testing
   # Priority: HIGH - Tests passing silently with broken DB
-  testing-1-e2e-reliability: in-progress  # E2E tests should fail on DB errors
+  testing-1-e2e-reliability: done  # APPROVED 2025-12-18 - Atlas-enhanced code review passed, patterns fed to Atlas memory
+  testing-1b-remaining-test-updates: ready-for-dev  # NEW 2025-12-18 - Update 9 remaining provider test files with error detection
   testing-2-local-schema-sync: drafted  # Fix local Supabase schema mismatch
   testing-3-playwright-utils-integration: ready-for-dev  # Integrate @seontechnologies/playwright-utils - Foundation for Epic 10 TestArch
 

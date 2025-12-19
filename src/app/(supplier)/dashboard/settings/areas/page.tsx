@@ -58,7 +58,7 @@ export default async function ServiceAreasSettingsPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-4">
-        <ServiceAreaSettings initialAreas={currentAreas} />
+        <ServiceAreaSettings initialAreas={currentAreas} backUrl="/provider/settings" />
       </main>
     </div>
   );

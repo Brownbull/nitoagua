@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Provider Offer Submission - Story 8-2
@@ -247,12 +248,19 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       // Check if empty state or offers list
       const hasEmptyState = await page.getByText("No tienes ofertas").isVisible().catch(() => false);
       const hasOffers = await page.getByText(/Pendientes|Aceptadas/).isVisible().catch(() => false);
 
       // Should show one or the other
-      expect(hasEmptyState || hasOffers).toBe(true);
+      // This is now safe because we checked for errors first
+      expect(
+        hasEmptyState || hasOffers,
+        "Expected either 'No tienes ofertas' empty state or offers list to be visible"
+      ).toBe(true);
 
       if (hasEmptyState) {
         await expect(page.getByRole("link", { name: /Ver Solicitudes/ })).toBeVisible();
