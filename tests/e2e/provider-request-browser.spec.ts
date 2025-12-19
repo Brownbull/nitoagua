@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Provider Request Browser - Story 8-1
@@ -12,6 +13,9 @@ import { test, expect } from "@playwright/test";
  * - AC8.1.6: Unavailable provider sees empty state with toggle prompt
  *
  * Requires: NEXT_PUBLIC_DEV_LOGIN=true and seeded supplier@nitoagua.cl user
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
  */
 
 // Skip tests if dev login is not enabled
@@ -144,6 +148,9 @@ test.describe("Provider Request Browser - Story 8-1", () => {
       await page.goto("/provider/requests");
       await page.waitForTimeout(2000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       // Check if there are requests or empty state
       const requestList = page.getByTestId("request-list");
       const emptyState = page.getByTestId("empty-requests-state");
@@ -152,7 +159,11 @@ test.describe("Provider Request Browser - Story 8-1", () => {
       const isEmpty = await emptyState.isVisible().catch(() => false);
 
       // Either we see requests or empty state - both are valid
-      expect(hasRequests || isEmpty).toBe(true);
+      // This is now safe because we checked for errors first
+      expect(
+        hasRequests || isEmpty,
+        "Expected either 'request-list' or 'empty-requests-state' to be visible"
+      ).toBe(true);
 
       if (hasRequests) {
         // If there are requests, verify card elements
@@ -298,12 +309,18 @@ test.describe("Provider Request Browser - Integration Tests", () => {
     // Verify page loads correctly
     await expect(page.getByText("Solicitudes Disponibles")).toBeVisible({ timeout: 10000 });
 
-    // Check for either requests or empty state
+    // FIRST: Check for error states - fail if any database errors present
     await page.waitForTimeout(2000);
+    await assertNoErrorState(page);
+
+    // Check for either requests or empty state
     const hasContent = await page.getByTestId("request-list").isVisible().catch(() => false) ||
                        await page.getByTestId("empty-requests-state").isVisible().catch(() => false);
 
-    expect(hasContent).toBe(true);
+    expect(
+      hasContent,
+      "Expected either 'request-list' or 'empty-requests-state' to be visible"
+    ).toBe(true);
   });
 
   test("request browser maintains state after navigation", async ({ page }) => {

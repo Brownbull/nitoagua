@@ -6,9 +6,13 @@
  *
  * Test tags:
  * - @settings - Provider settings tests
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
  */
 
 import { test, expect, Page } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 // Check if dev login is enabled
 const devLoginEnabled = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
@@ -67,6 +71,9 @@ test.describe("Provider Settings Page @settings", () => {
       await loginAsSupplier(page);
       await page.goto("/provider/settings");
       await page.waitForTimeout(1000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       // Verified badge should be visible (if provider is approved)
       const verifiedBadge = page.getByTestId("verified-badge");
@@ -155,6 +162,9 @@ test.describe("Provider Settings Page @settings", () => {
       await loginAsSupplier(page);
       await page.goto("/provider/settings");
       await page.waitForTimeout(1000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       // Check if availability section is visible (only for approved providers)
       const availabilitySection = page.getByTestId("availability-section");

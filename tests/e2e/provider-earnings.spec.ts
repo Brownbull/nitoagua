@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Provider Earnings Dashboard - Story 8-6
@@ -11,6 +12,9 @@ import { test, expect } from "@playwright/test";
  * - AC8.6.5: Delivery history list (date, amount, payment method, commission)
  *
  * Requires: NEXT_PUBLIC_DEV_LOGIN=true and seeded supplier@nitoagua.cl user
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
  */
 
 // Skip tests if dev login is not enabled
@@ -43,14 +47,18 @@ test.describe("Provider Earnings Dashboard - Story 8-6", () => {
       await page.goto("/provider/earnings");
       await page.waitForTimeout(3000);
 
-      // Without auth, page should show error or redirect to login
-      // The page loads but getEarningsSummary returns error for unauthenticated users
-      const hasError = await page.getByText("No autenticado").isVisible().catch(() => false);
+      // Without auth, page should redirect to login
+      // The middleware should redirect unauthenticated users
       const hasRedirected = page.url().includes("/login");
       const hasAuthError = await page.locator("text=/autenticado|login/i").isVisible().catch(() => false);
 
-      // Page should indicate auth is required somehow
-      expect(hasError || hasRedirected || hasAuthError).toBe(true);
+      // Page should indicate auth is required - redirect OR auth message
+      // This test is specifically checking that unauthenticated access is blocked,
+      // so "no autenticado" messages are expected (not errors to fail on)
+      expect(
+        hasRedirected || hasAuthError,
+        "Expected redirect to login or auth message for unauthenticated access"
+      ).toBe(true);
     });
 
     test("authenticated provider can access earnings page", async ({ page }) => {
@@ -272,12 +280,19 @@ test.describe("Provider Earnings Dashboard - Story 8-6", () => {
       await page.goto("/provider/earnings");
       await page.waitForTimeout(2000);
 
-      // Should show history section (either with entries or empty state)
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
+      // THEN: Check for expected states (content OR empty - both valid)
       const hasHistory = await page.getByText("Actividad reciente").isVisible().catch(() => false);
       const hasEmptyState = await page.getByText("No hay entregas en este periodo").isVisible().catch(() => false);
 
       // Either history section or empty state should be visible
-      expect(hasHistory || hasEmptyState).toBe(true);
+      // This pattern is now safe because we checked for errors first
+      expect(
+        hasHistory || hasEmptyState,
+        "Expected either 'Actividad reciente' or 'No hay entregas en este periodo' to be visible"
+      ).toBe(true);
     });
 
     test("delivery entries show payment method badge", async ({ page }) => {
@@ -322,17 +337,24 @@ test.describe("Provider Earnings Dashboard - Story 8-6", () => {
       await page.goto("/provider/earnings");
       await page.waitForTimeout(2000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       // Page should load without errors
       await expect(page.getByRole("heading", { name: "Mis Ganancias" })).toBeVisible();
 
       // Summary cards should show values (zero or non-zero)
-      // Check for any of the key elements that indicate page rendered correctly
+      // Check for key elements that indicate page rendered correctly
       const hasDeliveryCount = await page.getByText("Entregas").isVisible().catch(() => false);
       const hasEmptyState = await page.getByText("No hay entregas en este periodo").isVisible().catch(() => false);
       const hasHistory = await page.getByText("Actividad reciente").isVisible().catch(() => false);
 
       // Page rendered correctly if any of these elements are visible
-      expect(hasDeliveryCount || hasEmptyState || hasHistory).toBe(true);
+      // This is now safe because we checked for errors first
+      expect(
+        hasDeliveryCount || hasEmptyState || hasHistory,
+        "Expected page to show 'Entregas', 'No hay entregas', or 'Actividad reciente'"
+      ).toBe(true);
     });
   });
 

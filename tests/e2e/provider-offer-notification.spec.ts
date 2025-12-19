@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Provider Offer Acceptance Notification - Story 8-5
@@ -12,6 +13,9 @@ import { test, expect } from "@playwright/test";
  * Note: Email notification (AC8.5.2) tested via unit tests since it requires Resend API
  *
  * Requires: NEXT_PUBLIC_DEV_LOGIN=true and seeded supplier@nitoagua.cl user
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
  */
 
 // Skip tests if dev login is not enabled
@@ -87,14 +91,8 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
 
-      // Check if page loaded successfully (no error) or has error state
-      const hasError = await page.getByText("Error al cargar ofertas").isVisible().catch(() => false);
-
-      if (hasError) {
-        // If there's an error, the test passes - not testing error handling here
-        console.log("Offers page showed error state - likely no offers or RLS issue");
-        return;
-      }
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       // If no error, check for section headers
       const hasAcceptedSection = await page.getByTestId("section-accepted").isVisible().catch(() => false);
@@ -111,6 +109,9 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
 
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       const acceptedSection = page.getByTestId("section-accepted");
       const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
@@ -163,6 +164,9 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       const acceptedSection = page.getByTestId("section-accepted");
       const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
 
@@ -188,6 +192,9 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
 
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       const acceptedSection = page.getByTestId("section-accepted");
       const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
