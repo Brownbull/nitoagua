@@ -606,9 +606,17 @@ export async function createOffer(
       };
     }
 
+    // Check for RLS policy violation (most common issue)
+    if (insertError.code === "42501") {
+      return {
+        success: false,
+        error: "No tienes permiso para crear ofertas. Verifica que tu cuenta esté verificada.",
+      };
+    }
+
     return {
       success: false,
-      error: "Error al crear la oferta",
+      error: `Error al crear la oferta: ${insertError.message || insertError.code}`,
     };
   }
 

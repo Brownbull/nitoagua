@@ -151,7 +151,14 @@ test.describe("Provider Settings Page @settings", () => {
 
       // Click service areas item using data-testid
       await page.getByTestId("settings-item-zonas-de-servicio").click();
-      await page.waitForURL("**/dashboard/settings/areas");
+      await page.waitForURL("**/provider/settings/areas");
+
+      // Verify page loaded with consistent design
+      await expect(page.getByRole("heading", { name: "Zonas de Servicio" })).toBeVisible();
+
+      // Back button should go to settings
+      await page.getByTestId("back-to-settings").click();
+      await page.waitForURL("**/provider/settings");
     });
   });
 

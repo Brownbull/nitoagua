@@ -5,7 +5,7 @@
 | **Story ID** | 8-9 |
 | **Epic** | Epic 8: Provider Offer System |
 | **Title** | Provider Settings Page |
-| **Status** | review |
+| **Status** | done |
 | **Priority** | P2 (Medium) |
 | **Points** | 3 |
 | **Sprint** | TBD |
@@ -52,7 +52,7 @@ The provider bottom navigation includes an "Ajustes" (Settings) tab that needs a
   - [x] "Información Personal" → `/provider/settings/personal`
   - [x] "Vehículo" → `/provider/settings/vehicle`
   - [x] "Datos Bancarios" → `/provider/settings/bank`
-  - [x] "Zonas de Servicio" → `/dashboard/settings/areas` (existing)
+  - [x] "Zonas de Servicio" → `/provider/settings/areas` (consistent design)
   - [x] Style with icons matching mockup (User, Truck, CreditCard, MapPin)
 
 - [x] **Task 3: Availability Toggle** (AC: 8.9.4)
@@ -79,6 +79,15 @@ The provider bottom navigation includes an "Ajustes" (Settings) tab that needs a
 - [x] **Task 7: Dev Login Redirect Update**
   - [x] Updated dev-login to redirect suppliers to `/provider/requests` instead of old `/dashboard`
 
+- [x] **Task 8: Design Consistency Fixes** (Post-Review)
+  - [x] Created `/provider/settings/areas/page.tsx` with consistent design
+  - [x] Updated link from `/dashboard/settings/areas` to `/provider/settings/areas`
+  - [x] Updated ServiceAreaSettings component to support `hideBackButton` prop
+  - [x] Aligned page header style (h1 with gray-900, white bg)
+  - [x] Aligned back button position (top, inline with "Volver" text)
+  - [x] Aligned max-width (max-w-lg like other settings pages)
+  - [x] Updated E2E tests to reflect new URL paths
+
 ---
 
 ## Technical Notes
@@ -92,7 +101,7 @@ The provider bottom navigation includes an "Ajustes" (Settings) tab that needs a
 │   ├── Información Personal → /provider/settings/personal
 │   ├── Vehículo → /provider/settings/vehicle
 │   ├── Datos Bancarios → /provider/settings/bank
-│   └── Zonas de Servicio → /dashboard/settings/areas
+│   └── Zonas de Servicio → /provider/settings/areas
 ├── Availability Toggle
 └── Cerrar Sesión Button
 ```
@@ -132,12 +141,76 @@ From `docs/ux-mockups/01-consolidated-provider-flow.html`, Section 6 (Settings):
 
 ---
 
+## File List
+
+| Action | File |
+|--------|------|
+| Modified | `src/app/provider/settings/page.tsx` - Updated areas link |
+| Created | `src/app/provider/settings/areas/page.tsx` - New consistent areas page |
+| Modified | `src/components/provider/service-area-settings.tsx` - Added hideBackButton prop |
+| Modified | `tests/e2e/provider-settings.spec.ts` - Updated areas navigation test |
+| Modified | `tests/e2e/provider-service-areas.spec.ts` - Updated URLs and back button tests |
+
+---
+
+## Dev Agent Record
+
+### Debug Log
+
+*Task 8 (Design Consistency Fixes):*
+- Analyzed existing settings pages for design inconsistencies
+- Found `/dashboard/settings/areas` page with blue header (bg-[#0077B6]) vs white header on other settings pages
+- Found back button at bottom of page vs top on other settings pages
+- Found max-w-4xl layout vs max-w-lg on other settings pages
+- Created new `/provider/settings/areas` page with consistent design
+- Updated ServiceAreaSettings component with `hideBackButton` prop
+
+### Completion Notes
+
+**Design Consistency Fixes Completed:**
+1. Created new `/provider/settings/areas/page.tsx` matching other settings page design:
+   - White background with gray-900 text header
+   - Back button at top with "Volver" text
+   - max-w-lg container width
+   - Consistent px-4 py-6 padding
+2. Updated settings menu link to use new consistent route
+3. Added `hideBackButton` prop to ServiceAreaSettings component to avoid duplicate back buttons
+4. Updated E2E tests to reflect new URL paths and back button location
+
+All 13 provider settings E2E tests passing.
+
+### Atlas-Enhanced Code Review (2025-12-19)
+
+**Review Findings:**
+- 1 HIGH: Test data mismatch (seed data used Santiago-area comunas instead of Villarrica-area)
+- 1 MEDIUM: Unused import (LogOut in page.tsx)
+- 1 LOW: Pattern observation noted
+
+**Fixes Applied:**
+1. Removed unused `LogOut` import from `src/app/provider/settings/page.tsx`
+2. Updated `scripts/local/seed-offer-tests.ts` to use Villarrica-area comunas matching COMUNAS constant
+   - Changed comuna_id values: santiago→villarrica, las-condes→pucon, providencia→lican-ray, vitacura→curarrehue
+   - Updated PROVIDER_SERVICE_AREA_IDS and TEST_COMUNAS to match
+3. Re-seeded test data with `npm run seed:offers`
+
+**Test Results:**
+- 34/34 E2E tests passing (13 settings + 21 service areas)
+- All Acceptance Criteria verified implemented
+
+**Atlas Validation:**
+- Architecture compliance: PASSED (Next.js 15 patterns, Server Actions, Supabase client)
+- Pattern compliance: PASSED (Spanish UI, shadcn/ui, mobile-first)
+- Workflow chain impact: None (settings page is isolated)
+
+---
+
 ## Definition of Done
 
 - [x] Settings page renders at `/provider/settings`
 - [x] Profile information displayed correctly
 - [x] All menu items navigate to correct pages
+- [x] All settings sub-pages have consistent design
 - [x] Availability toggle works (for approved providers)
 - [x] Sign out redirects to home
-- [x] E2E tests pass (13 tests)
-- [ ] Code review approved
+- [x] E2E tests pass (34 tests - 13 settings + 21 service areas)
+- [x] Code review approved (Atlas-enhanced 2025-12-19)

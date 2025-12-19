@@ -133,4 +133,33 @@ nitoagua provides features for three user types: Consumers, Providers (aguateros
 
 ---
 
-*Last verified: 2025-12-18 | Sources: prd.md, architecture.md, epics.md*
+### 8-10-provider-map-view - 2025-12-19
+
+**Summary:** Provider Map View - Geographic visualization of available water requests
+
+**User Value:** Providers can browse requests on a map to plan efficient delivery routes
+
+**Workflow Touchpoints:**
+- Provider Offer Flow (new entry point via FAB)
+- Provider Dashboard Navigation (FAB button links to /provider/map)
+- Request Detail Flow (marker tap → preview card → detail page)
+
+**Atlas Enhancements Applied:**
+- 4 additional ACs from workflow chain analysis (AC8.10.8-11)
+- Workflow impact documentation added to story
+- Testing implications documented
+
+**Implementation Outcome (2025-12-19):**
+- Created `/provider/map` route with Leaflet/OpenStreetMap integration
+- Implemented request markers with offer counts (orange circles)
+- Provider location marker with geolocation (blue pulsing dot)
+- Request preview card on marker tap with navigation to detail
+- Empty state when no requests have coordinates
+- 12 E2E tests passing covering all key scenarios
+- Pattern: Dynamic import via client wrapper to avoid SSR issues with Leaflet
+
+**Source:** docs/sprint-artifacts/epic8/8-10-provider-map-view.md
+
+---
+
+*Last verified: 2025-12-19 | Sources: prd.md, architecture.md, epics.md*

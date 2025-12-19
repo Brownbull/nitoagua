@@ -46,7 +46,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
 
     test("settings page requires authentication", async ({ page }) => {
       await page.context().clearCookies();
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // Should redirect to login
       await page.waitForURL("**/login", { timeout: 10000 });
@@ -57,18 +57,15 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
       await loginAsSupplier(page);
 
       // Navigate to service areas settings
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
-      // Should see the settings page header
-      await expect(page.getByText("Áreas de Servicio")).toBeVisible();
-      await expect(
-        page.getByText("Configura las comunas donde realizas entregas")
-      ).toBeVisible();
+      // Should see the settings page header (consistent with other settings pages)
+      await expect(page.getByRole("heading", { name: "Zonas de Servicio" })).toBeVisible();
     });
 
     test("displays all available comunas with checkboxes", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // Check all 5 comunas are visible
       const comunas = ["Villarrica", "Pucón", "Licán Ray", "Curarrehue", "Freire"];
@@ -82,7 +79,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
       page,
     }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // At least one area should be selected (approved supplier has at least one)
       const selectedCount = page.locator('[aria-pressed="true"]');
@@ -96,7 +93,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
 
     test("displays 'Guardar cambios' button", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       const saveButton = page.getByTestId("save-button");
       await expect(saveButton).toBeVisible();
@@ -105,7 +102,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
 
     test("save button is disabled when no changes made", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       const saveButton = page.getByTestId("save-button");
       await expect(saveButton).toBeDisabled();
@@ -117,7 +114,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
 
     test("can select an unselected area", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // Wait for areas to load
       await page.waitForSelector('[data-testid^="comuna-"]', { timeout: 10000 });
@@ -159,7 +156,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
 
     test("shows 'Nuevo' indicator for newly added areas", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -177,7 +174,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
 
     test("shows changes summary when areas are added", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // Find an unselected area and click it
       const unselectedArea = page.locator('[aria-pressed="false"]').first();
@@ -199,7 +196,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
       page,
     }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // First, ensure we have multiple areas selected
       const selectedAreas = page.locator('[aria-pressed="true"]');
@@ -219,7 +216,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
       page,
     }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       const selectedAreas = page.locator('[aria-pressed="true"]');
       const selectedCount = await selectedAreas.count();
@@ -249,7 +246,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
 
     test("cannot remove the last remaining area", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // Get all selected areas
       const selectedAreas = page.locator('[aria-pressed="true"]');
@@ -277,7 +274,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
 
     test("last area shows 'Mínimo requerido' label", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // Get all selected areas
       const selectedAreas = page.locator('[aria-pressed="true"]');
@@ -296,7 +293,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
 
     test("save button is disabled when no areas selected", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
       // This should theoretically not happen due to UI guards,
       // but we can verify button stays disabled with 0 changes
@@ -335,17 +332,18 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
   test.describe("Navigation and Back Button", () => {
     test.skip(skipIfNoDevLogin, "Dev login required for supplier tests");
 
-    test("back button navigates to dashboard", async ({ page }) => {
+    test("back button navigates to settings page", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/settings/areas");
+      await page.goto("/provider/settings/areas");
 
-      const backButton = page.getByTestId("back-button");
+      // The back button is now at the top of the page (consistent with other settings pages)
+      const backButton = page.getByTestId("back-to-settings");
       await expect(backButton).toBeVisible();
       await backButton.click();
 
-      await page.waitForURL("**/provider/requests", { timeout: 5000 });
-      expect(page.url()).toContain("/dashboard");
-      expect(page.url()).not.toContain("/settings");
+      await page.waitForURL("**/provider/settings", { timeout: 5000 });
+      expect(page.url()).toContain("/provider/settings");
+      expect(page.url()).not.toContain("/areas");
     });
   });
 });
@@ -355,7 +353,7 @@ test.describe("Provider Service Area - Integration Tests", () => {
 
   test("can save changes and see success toast", async ({ page }) => {
     await loginAsSupplier(page);
-    await page.goto("/dashboard/settings/areas");
+    await page.goto("/provider/settings/areas");
 
     // FIRST: Check for error states - fail if any database errors present
     await assertNoErrorState(page);
@@ -380,7 +378,7 @@ test.describe("Provider Service Area - Integration Tests", () => {
 
   test("changes persist after page reload", async ({ page }) => {
     await loginAsSupplier(page);
-    await page.goto("/dashboard/settings/areas");
+    await page.goto("/provider/settings/areas");
 
     // Get initial state
     const initialSelectedCount = await page.locator('[aria-pressed="true"]').count();
