@@ -14,7 +14,7 @@
 | Auth | Supabase Auth | Google OAuth for all users |
 | Email | Resend + React Email | Developer-friendly templates |
 | Deployment | Vercel | Edge functions, auto HTTPS |
-| Maps | Google Maps API | Address lookup, geolocation |
+| Maps | Leaflet + OpenStreetMap | Free, no API key (provider map view) |
 
 ## System Boundaries
 
@@ -95,6 +95,8 @@ export async function requireAdmin() { /* ... */ }
 | shadcn/ui AlertDialog | 3-6 | Confirmation dialogs |
 | Optimistic UI | 3-5 | Set-based state tracking |
 | Tab Preservation | 3-4 | `?from=` query param |
+| Dynamic Import (SSR bypass) | 8-10 | `next/dynamic` with `ssr: false` for Leaflet |
+| Full-screen Page Override | 8-10 | Conditional header hide via `usePathname()` in layout |
 
 ### Naming Conventions
 
@@ -164,6 +166,41 @@ Server actions:
 - `submitCommissionPayment(amount, receiptPath)` - Create withdrawal request
 - `getReceiptUrl(receiptPath)` - Get signed URL for admin viewing
 
+### Story 8-9: Provider Settings Page (2025-12-19)
+
+**Patterns Adopted:**
+- `hideBackButton` prop: Added to ServiceAreaSettings component for reuse in different layouts
+- Consistent settings page layout: `max-w-lg`, `px-4 py-6`, white bg, `text-gray-900` headers
+- View-only MVP pattern: Read-only detail pages with "contact support" note for edits
+
+**Component Reuse:**
+- AvailabilityToggleWrapper from Epic 7 reused in settings page
+- ServiceAreaSettings component extended with `hideBackButton` prop for page-level back button
+
+**Layout Standards (Provider Settings Pages):**
+```
+- Container: max-w-lg mx-auto px-4 py-6
+- Header: text-2xl font-bold text-gray-900 mb-6
+- Back button: Top of page, inline-flex items-center text-gray-600
+- Cards: bg-white rounded-xl p-4 shadow-sm border border-gray-100
+```
+
+### Story 8-10: Provider Map View (2025-12-19)
+
+**Patterns Adopted:**
+- `dynamic()` import for Leaflet: SSR-incompatible libraries wrapped with `next/dynamic` using `ssr: false`
+- Full-screen map pattern: Hide layout header conditionally using `usePathname()` in client layout
+- Provider location: Browser geolocation with graceful degradation (permission denied = no-op)
+
+**Technical Decisions:**
+- **Map Library**: Leaflet + OpenStreetMap (free, no API key required) instead of Google Maps
+- **Layout Override**: Map page hides provider header via conditional render in `layout.tsx` (matches UX mockup Section 7)
+- **Disabled Features**: "Cercanos" filter disabled with tooltip "Próximamente" for future implementation
+
+**Coverage Notes:**
+- 12 E2E tests covering: page access, back navigation, auth redirect, filter chips, empty state, location button, FAB navigation
+- Gap: Marker tap → preview card not tested with real seeded data (conditional check pattern used)
+
 ---
 
-*Last verified: 2025-12-19 | Source: architecture.md, Story 8-6 and 8-7 code review*
+*Last verified: 2025-12-19 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10 code reviews*

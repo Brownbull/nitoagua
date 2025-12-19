@@ -21,6 +21,11 @@
 | 2025-12-19 | 04-architecture | Story 8-7 code review | Added commission-receipts storage bucket pattern |
 | 2025-12-19 | 06-lessons | Story 8-7 code review | Added file upload pattern, folder-based RLS reference |
 | 2025-12-19 | 07-process | Stories 8-6 & 8-7 deployment | Deployed to production - earnings dashboard + commission settlement |
+| 2025-12-19 | 04-architecture | Story 8-9 code review | Added settings page layout standards, hideBackButton pattern |
+| 2025-12-19 | 06-lessons | Story 8-9 code review | Added seed data mismatch lesson - use source constants |
+| 2025-12-19 | 02-features | Story 8-10 creation | Added story creation record with workflow touchpoints |
+| 2025-12-19 | 04-architecture | Story 8-10 code review | Added Leaflet/OSM tech stack, dynamic import pattern, full-screen layout override |
+| 2025-12-19 | 06-lessons | Story 8-10 code review | Added z-index stacking context lesson, full-screen page pattern, disabled feature UX |
 
 ## Documents Tracked
 
