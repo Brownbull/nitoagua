@@ -1,7 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Provider Document Management - Story 7-5
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
  *
  * Tests the document management functionality for approved providers:
  * - AC7.5.1: Document List Display - List shows all provider documents with status
@@ -79,6 +83,9 @@ test.describe("Provider Document Management - Story 7-5", () => {
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 10000 });
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       // Should see at least one document card (if provider has documents)
       // Note: This depends on seeded data having documents
       const documentCards = page.locator('[data-testid^="document-card-"]');
@@ -99,6 +106,9 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 10000 });
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       // Look for status badges
       const badges = page.locator('[data-testid^="document-card-"]').locator('.badge, [class*="Badge"]');
@@ -127,6 +137,9 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 10000 });
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       // Find a view button
       const viewButtons = page.locator('[data-testid^="view-"]');

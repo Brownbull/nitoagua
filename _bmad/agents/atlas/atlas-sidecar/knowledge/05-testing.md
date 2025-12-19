@@ -168,6 +168,36 @@ async function verifySeededData(supabase) {
 }
 ```
 
+### Unit-Style Test Files (Testing-1B)
+
+> Added 2025-12-18 from Story Testing-1B: Code Review Learning
+
+**Problem:** Some test files contain only unit-style tests (configuration checks, regex validation) with no page interactions that could mask database errors.
+
+**Pattern:** Document WHY `assertNoErrorState` is not needed rather than having unused imports that trigger lint warnings.
+
+```typescript
+import { test, expect } from "@playwright/test";
+// Note: assertNoErrorState not needed - this file contains unit-style tests only (no page interactions)
+// Import kept as documentation that the pattern was reviewed per Story Testing-1B
+```
+
+**Files using this pattern:**
+- `provider-verification-status.spec.ts` - Config/constant validation only
+- `provider-registration.spec.ts` - Mostly schema/validation tests
+
+**When to use `assertNoErrorState`:**
+- Tests that navigate to pages and check for UI content
+- Tests with `.isVisible().catch(() => false)` patterns
+- Tests that could show "empty state" when DB errors occur
+
+**When NOT needed:**
+- Pure unit tests checking constants/config objects
+- Regex validation tests
+- Tests that only check redirects (auth guard tests)
+
+---
+
 ## Known Issues
 
 ### WebKit Flakiness
@@ -191,4 +221,4 @@ Each test must:
 ## Sync Notes
 
 Last testing sync: 2025-12-18
-Sources: run_app.local.md, docs/sprint-artifacts/testing/, Story Testing-1
+Sources: run_app.local.md, docs/sprint-artifacts/testing/, Story Testing-1, Story Testing-1B

@@ -9,10 +9,14 @@
  * Test tags:
  * - @seeded - Requires seeded test data
  * - @earnings - Earnings dashboard tests
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
  */
 
 import { test, expect, Page } from "@playwright/test";
-import { EARNINGS_TEST_DATA } from "../fixtures/test-data";
+import { assertNoErrorState } from "../fixtures/error-detection";
+// Note: EARNINGS_TEST_DATA available in fixtures for future use when tests need specific amounts
 
 // Check if dev login is enabled
 const devLoginEnabled = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
@@ -39,12 +43,10 @@ async function loginAsSupplier(page: Page) {
   await page.waitForURL("**/provider/requests", { timeout: 15000 });
 }
 
-/**
- * Format CLP currency for comparison
- */
-function formatCLP(amount: number): string {
-  return "$" + amount.toLocaleString("es-CL");
-}
+// Note: formatCLP helper available if needed for amount comparisons
+// function formatCLP(amount: number): string {
+//   return "$" + amount.toLocaleString("es-CL");
+// }
 
 /**
  * Check if seeded data exists by looking for expected elements
@@ -75,6 +77,9 @@ test.describe("Provider Earnings Dashboard - Seeded Data @seeded @earnings", () 
       await loginAsSupplier(page);
       await page.goto("/provider/earnings");
       await page.waitForTimeout(2000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
     });
 
     test("displays seeded delivery count for month period", async ({ page }) => {
@@ -195,15 +200,15 @@ test.describe("Provider Earnings Dashboard - Seeded Data @seeded @earnings", () 
         return;
       }
 
-      // Get initial hero card text (month)
+      // Get hero card reference
       const heroCard = page.locator(".bg-gradient-to-br");
-      const initialText = await heroCard.textContent();
+      await expect(heroCard).toBeVisible();
 
       // Switch to "Hoy" period
       await page.getByRole("tab", { name: "Hoy" }).click();
       await page.waitForTimeout(1500);
 
-      // The data should change after switching period
+      // The hero card should still be visible after switching period
       const newText = await heroCard.textContent();
 
       // The hero card should update (either same or different based on seeded data dates)
@@ -257,6 +262,9 @@ test.describe("Provider Earnings Dashboard - Seeded Data @seeded @earnings", () 
       await page.goto("/provider/earnings");
       await page.waitForTimeout(2000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       const isSeeded = await isSeededDataPresent(page);
       if (!isSeeded) {
         test.skip(true, "Seeded earnings data not present. Run npm run seed:earnings first.");
@@ -283,6 +291,9 @@ test.describe("Provider Earnings Dashboard - Seeded Data @seeded @earnings", () 
       await loginAsSupplier(page);
       await page.goto("/provider/earnings");
       await page.waitForTimeout(2000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       const isSeeded = await isSeededDataPresent(page);
       if (!isSeeded) {
@@ -314,6 +325,9 @@ test.describe("Provider Earnings Dashboard - Seeded Data @seeded @earnings", () 
       await loginAsSupplier(page);
       await page.goto("/provider/earnings");
       await page.waitForTimeout(2000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       // If we filter to a very specific period with no data,
       // the UI should handle it gracefully

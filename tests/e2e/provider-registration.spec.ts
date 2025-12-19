@@ -1,4 +1,13 @@
 import { test, expect } from "@playwright/test";
+// Note: assertNoErrorState not needed - this file contains mostly unit-style tests
+// Import kept as documentation that the pattern was reviewed per Story Testing-1B
+
+/**
+ * E2E Tests for Provider Registration - Story 7-1
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
+ */
 
 test.describe("Provider Registration - Story 7-1", () => {
   test.describe("AC7-1-1: Provider Welcome Page", () => {

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Provider Service Area Configuration - Story 7-3
@@ -11,6 +12,9 @@ import { test, expect } from "@playwright/test";
  * - AC7.3.5: Pending Requests Warning - (UI test only, data setup complex)
  *
  * Requires: NEXT_PUBLIC_DEV_LOGIN=true and seeded supplier@nitoagua.cl user
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
  */
 
 // Skip tests if dev login is not enabled
@@ -118,6 +122,9 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
       // Wait for areas to load
       await page.waitForSelector('[data-testid^="comuna-"]', { timeout: 10000 });
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       // Get initial count of selected areas
       const initialSelectedCount = await page.locator('[aria-pressed="true"]').count();
 
@@ -153,6 +160,9 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
     test("shows 'Nuevo' indicator for newly added areas", async ({ page }) => {
       await loginAsSupplier(page);
       await page.goto("/dashboard/settings/areas");
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       // Find an unselected area and click it
       const unselectedArea = page.locator('[aria-pressed="false"]').first();
@@ -346,6 +356,9 @@ test.describe("Provider Service Area - Integration Tests", () => {
   test("can save changes and see success toast", async ({ page }) => {
     await loginAsSupplier(page);
     await page.goto("/dashboard/settings/areas");
+
+    // FIRST: Check for error states - fail if any database errors present
+    await assertNoErrorState(page);
 
     // Find an unselected area and select it
     const unselectedArea = page.locator('[aria-pressed="false"]').first();
