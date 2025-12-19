@@ -20,6 +20,7 @@
 | 2025-12-19 | 06-lessons | Story 8-6 code review | Added DRY, default mismatch lessons; centralized utility pattern |
 | 2025-12-19 | 04-architecture | Story 8-7 code review | Added commission-receipts storage bucket pattern |
 | 2025-12-19 | 06-lessons | Story 8-7 code review | Added file upload pattern, folder-based RLS reference |
+| 2025-12-19 | 07-process | Stories 8-6 & 8-7 deployment | Deployed to production - earnings dashboard + commission settlement |
 
 ## Documents Tracked
 
