@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Provider's Active Offers List - Story 8-3
@@ -199,12 +200,19 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await page.goto("/provider/offers");
       await page.waitForTimeout(3000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       // Should show either "En vivo" (connected) or "Offline" (polling fallback)
       const hasLiveIndicator = await page.getByText("En vivo").isVisible().catch(() => false);
       const hasOfflineIndicator = await page.getByText("Offline").isVisible().catch(() => false);
 
       // One of the indicators should be visible
-      expect(hasLiveIndicator || hasOfflineIndicator).toBe(true);
+      // This is now safe because we checked for errors first
+      expect(
+        hasLiveIndicator || hasOfflineIndicator,
+        "Expected either 'En vivo' or 'Offline' connection indicator to be visible"
+      ).toBe(true);
     });
 
     test("refresh button is available", async ({ page }) => {

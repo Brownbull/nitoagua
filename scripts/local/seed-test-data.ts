@@ -332,22 +332,59 @@ async function cleanTestData(supabase: any) {
 async function verifySeededData(supabase: any) {
   console.log("\n🔍 Verifying seeded data...");
 
-  const { count: profileCount } = await supabase
+  const errors: string[] = [];
+
+  // Verify profiles exist
+  const { count: profileCount, error: profileError } = await supabase
     .from("profiles")
     .select("*", { count: "exact", head: true })
     .in("phone", [TEST_SUPPLIER.profile.phone, TEST_CONSUMER.profile.phone]);
 
-  console.log(`  ✓ Found ${profileCount || 0} test profiles`);
+  if (profileError) {
+    errors.push(`Failed to query profiles: ${profileError.message}`);
+  } else if (!profileCount || profileCount < 2) {
+    errors.push(`Expected 2 test profiles, found ${profileCount || 0}`);
+  } else {
+    console.log(`  ✓ Found ${profileCount} test profiles`);
+  }
 
-  const { data: requests } = await supabase
+  // Verify requests exist with correct data
+  const { data: requests, error: requestError } = await supabase
     .from("water_requests")
     .select("id, status, tracking_token")
     .like("tracking_token", "seed-token-%");
 
-  console.log(`  ✓ Found ${requests?.length || 0} seeded requests:`);
-  for (const req of requests || []) {
-    console.log(`    - [${req.status}] ${req.tracking_token}`);
+  if (requestError) {
+    errors.push(`Failed to query requests: ${requestError.message}`);
+  } else if (!requests || requests.length < SEEDED_REQUESTS.length) {
+    errors.push(`Expected ${SEEDED_REQUESTS.length} seeded requests, found ${requests?.length || 0}`);
+  } else {
+    console.log(`  ✓ Found ${requests.length} seeded requests:`);
+    for (const req of requests) {
+      console.log(`    - [${req.status}] ${req.tracking_token}`);
+    }
+
+    // Verify each expected request exists
+    for (const expected of SEEDED_REQUESTS) {
+      const found = requests.find((r: { tracking_token: string }) => r.tracking_token === expected.tracking_token);
+      if (!found) {
+        errors.push(`Missing seeded request: ${expected.tracking_token}`);
+      } else if (found.status !== expected.status) {
+        errors.push(`Request ${expected.tracking_token} has status '${found.status}', expected '${expected.status}'`);
+      }
+    }
   }
+
+  // FAIL if any verification errors
+  if (errors.length > 0) {
+    console.error("\n❌ Verification FAILED:");
+    for (const error of errors) {
+      console.error(`   - ${error}`);
+    }
+    throw new Error("Seeded data verification failed. Tests cannot rely on this data.");
+  }
+
+  console.log("\n✅ All seeded data verified successfully!");
 }
 
 main();

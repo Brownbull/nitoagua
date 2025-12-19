@@ -73,6 +73,7 @@
     "@faker-js/faker": "^10.1.0",
     "@playwright/test": "^1.57.0",
     "@react-email/preview-server": "^5.0.5",
+    "@seontechnologies/playwright-utils": "^3.10.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

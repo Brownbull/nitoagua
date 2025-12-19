@@ -24,9 +24,10 @@ import { cn } from "@/lib/utils";
 
 interface ServiceAreaSettingsProps {
   initialAreas: string[];
+  backUrl?: string;
 }
 
-export function ServiceAreaSettings({ initialAreas }: ServiceAreaSettingsProps) {
+export function ServiceAreaSettings({ initialAreas, backUrl = "/provider/settings" }: ServiceAreaSettingsProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState<string[]>(initialAreas);
@@ -113,7 +114,7 @@ export function ServiceAreaSettings({ initialAreas }: ServiceAreaSettingsProps) 
   };
 
   const handleBack = () => {
-    router.push("/dashboard");
+    router.push(backUrl);
   };
 
   return (

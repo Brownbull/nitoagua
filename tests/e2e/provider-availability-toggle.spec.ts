@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Provider Availability Toggle - Story 7-4
@@ -12,6 +13,9 @@ import { test, expect } from "@playwright/test";
  * - AC7.4.6: Real-time Update - Consumer search respects availability
  *
  * Requires: NEXT_PUBLIC_DEV_LOGIN=true and seeded supplier@nitoagua.cl user
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
  */
 
 // Skip tests if dev login is not enabled
@@ -77,6 +81,9 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     test("toggle shows green styling when available", async ({ page }) => {
       await loginAsSupplier(page);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       const toggleContainer = page.getByTestId("availability-toggle-container");
       await expect(toggleContainer).toBeVisible();
 
@@ -97,6 +104,9 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
 
     test("toggle shows gray styling when unavailable", async ({ page }) => {
       await loginAsSupplier(page);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       const toggleContainer = page.getByTestId("availability-toggle-container");
       await expect(toggleContainer).toBeVisible();
@@ -188,6 +198,9 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     test("can toggle from ON to OFF", async ({ page }) => {
       await loginAsSupplier(page);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       const switchElement = page.getByTestId("availability-switch");
       const initialState = await switchElement.getAttribute("data-state");
 
@@ -219,6 +232,9 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
 
     test("shows success toast when turning OFF", async ({ page }) => {
       await loginAsSupplier(page);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       const switchElement = page.getByTestId("availability-switch");
       const initialState = await switchElement.getAttribute("data-state");

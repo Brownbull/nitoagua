@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Withdraw Pending Offer - Story 8-4
@@ -11,6 +12,9 @@ import { test, expect } from "@playwright/test";
  * - AC8.4.5: Provider can submit new offer on same request if still pending
  *
  * Requires: NEXT_PUBLIC_DEV_LOGIN=true and seeded test data
+ *
+ * IMPORTANT: Tests use explicit error detection to fail on DB issues.
+ * See Story Testing-1 for reliability improvements.
  */
 
 // Skip tests if dev login is not enabled
@@ -45,6 +49,9 @@ test.describe("Provider Withdraw Offer - Story 8-4", () => {
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       const pendingSection = page.getByTestId("section-pending");
       const hasPendingSection = await pendingSection.isVisible().catch(() => false);
 
@@ -71,6 +78,9 @@ test.describe("Provider Withdraw Offer - Story 8-4", () => {
 
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       const pendingSection = page.getByTestId("section-pending");
       const hasPendingSection = await pendingSection.isVisible().catch(() => false);
@@ -100,6 +110,9 @@ test.describe("Provider Withdraw Offer - Story 8-4", () => {
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       const pendingSection = page.getByTestId("section-pending");
       const hasPendingSection = await pendingSection.isVisible().catch(() => false);
 
@@ -127,6 +140,9 @@ test.describe("Provider Withdraw Offer - Story 8-4", () => {
 
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       const pendingSection = page.getByTestId("section-pending");
       const hasPendingSection = await pendingSection.isVisible().catch(() => false);
@@ -163,6 +179,9 @@ test.describe("Provider Withdraw Offer - Story 8-4", () => {
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       const pendingSection = page.getByTestId("section-pending");
       const hasPendingSection = await pendingSection.isVisible().catch(() => false);
 
@@ -193,6 +212,9 @@ test.describe("Provider Withdraw Offer - Story 8-4", () => {
 
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       const pendingSection = page.getByTestId("section-pending");
       const hasPendingSection = await pendingSection.isVisible().catch(() => false);
@@ -240,6 +262,9 @@ test.describe("Provider Withdraw Offer - Story 8-4", () => {
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
 
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
+
       const historySection = page.getByTestId("section-history");
       const hasHistorySection = await historySection.isVisible().catch(() => false);
 
@@ -270,6 +295,9 @@ test.describe("Provider Withdraw Offer - Story 8-4", () => {
 
       await page.goto("/provider/offers");
       await page.waitForTimeout(2000);
+
+      // FIRST: Check for error states - fail if any database errors present
+      await assertNoErrorState(page);
 
       const historySection = page.getByTestId("section-history");
       const hasHistorySection = await historySection.isVisible().catch(() => false);
@@ -308,6 +336,9 @@ test.describe("Provider Withdraw Offer - Integration", () => {
 
     await page.goto("/provider/offers");
     await page.waitForTimeout(2000);
+
+    // FIRST: Check for error states - fail if any database errors present
+    await assertNoErrorState(page);
 
     const pendingSection = page.getByTestId("section-pending");
     const hasPendingSection = await pendingSection.isVisible().catch(() => false);
