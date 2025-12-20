@@ -5,7 +5,7 @@
 | **Story ID** | 10-3 |
 | **Epic** | Epic 10: Consumer Offer Selection |
 | **Title** | Offer Countdown Timer (Consumer View) |
-| **Status** | ready-for-dev |
+| **Status** | review |
 | **Priority** | P1 (High) |
 | **Points** | 3 |
 | **Sprint** | TBD |
@@ -74,51 +74,51 @@ This story adds time urgency visibility to the offer selection experience. Provi
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Verify Existing Countdown Component** (AC: 10.3.1, 10.3.2, 10.3.7)
-  - [ ] Review `src/components/shared/countdown-timer.tsx` from Epic 8
-  - [ ] Verify it handles both < 1 hour and > 1 hour formats
-  - [ ] Confirm 1-second interval updates
-  - [ ] Identify any gaps for consumer use case
+- [x] **Task 1: Verify Existing Countdown Component** (AC: 10.3.1, 10.3.2, 10.3.7)
+  - [x] Review `src/components/shared/countdown-timer.tsx` from Epic 8
+  - [x] Verify it handles both < 1 hour and > 1 hour formats
+  - [x] Confirm 1-second interval updates
+  - [x] Identify any gaps for consumer use case
 
-- [ ] **Task 2: Add Urgency Styling Props** (AC: 10.3.3)
-  - [ ] Add `urgencyThresholds` prop to CountdownTimer (optional)
-  - [ ] Default thresholds: orange at 10 min, red at 5 min
-  - [ ] Implement color transitions based on time remaining
-  - [ ] Use Tailwind classes: `text-orange-500`, `text-red-500`
+- [x] **Task 2: Add Urgency Styling Props** (AC: 10.3.3)
+  - [x] Add `urgencyThresholds` prop to CountdownTimer (optional)
+  - [x] Default thresholds: orange at 10 min, red at 5 min
+  - [x] Implement color transitions based on time remaining
+  - [x] Use Tailwind classes: `text-orange-500`, `text-red-500`
 
-- [ ] **Task 3: Expired State Handling** (AC: 10.3.4, 10.3.5)
-  - [ ] Add `onExpire` callback prop to CountdownTimer
-  - [ ] When expired, trigger parent state update
-  - [ ] Display "Expirada" badge in OfferCard
-  - [ ] Gray out entire card with opacity
-  - [ ] Disable "Seleccionar" button
+- [x] **Task 3: Expired State Handling** (AC: 10.3.4, 10.3.5)
+  - [x] Add `onExpire` callback prop to CountdownTimer
+  - [x] When expired, trigger parent state update
+  - [x] Display "Expirada" badge in OfferCard
+  - [x] Gray out entire card with opacity
+  - [x] Disable "Seleccionar" button
 
-- [ ] **Task 4: Integrate into Offer Card** (AC: ALL)
-  - [ ] Import CountdownTimer in `offer-card.tsx`
-  - [ ] Pass `expires_at` from offer data
-  - [ ] Handle expired state with local state
-  - [ ] Pass expiredText="Expirada"
-  - [ ] Apply urgency colors to timer display
+- [x] **Task 4: Integrate into Offer Card** (AC: ALL)
+  - [x] Import CountdownTimer in `offer-card.tsx`
+  - [x] Pass `expires_at` from offer data
+  - [x] Handle expired state with local state
+  - [x] Pass expiredText="Expirada"
+  - [x] Apply urgency colors to timer display
 
-- [ ] **Task 5: List Sorting for Expired Offers** (AC: 10.3.6)
-  - [ ] Update OfferList to track expired offer IDs
-  - [ ] Sort: active offers by delivery window, then expired at bottom
-  - [ ] Apply visual fade (opacity-50) to expired offers
-  - [ ] Consider hiding expired offers after N seconds
+- [x] **Task 5: List Sorting for Expired Offers** (AC: 10.3.6)
+  - [x] Update OfferList to track expired offer IDs
+  - [x] Sort: active offers by delivery window, then expired at bottom
+  - [x] Apply visual fade (opacity-50) to expired offers
+  - [x] Consider hiding expired offers after N seconds
 
-- [ ] **Task 6: Timezone Handling** (AC: 10.3.1)
-  - [ ] Verify `expires_at` is stored as UTC
-  - [ ] Calculate remaining time from current UTC
-  - [ ] Display should be timezone-agnostic (countdown, not clock time)
+- [x] **Task 6: Timezone Handling** (AC: 10.3.1)
+  - [x] Verify `expires_at` is stored as UTC
+  - [x] Calculate remaining time from current UTC
+  - [x] Display should be timezone-agnostic (countdown, not clock time)
 
-- [ ] **Task 7: E2E Tests** (AC: ALL)
-  - [ ] Countdown displays correctly on offer card
-  - [ ] Timer updates visually (hard to test exact seconds)
-  - [ ] Orange color appears when < 10 min (mock time)
-  - [ ] Red color appears when < 5 min (mock time)
-  - [ ] Expired offer shows "Expirada" badge
-  - [ ] Expired offer has disabled button
-  - [ ] Expired offers sorted to bottom
+- [x] **Task 7: E2E Tests** (AC: ALL)
+  - [x] Countdown displays correctly on offer card
+  - [x] Timer updates visually (hard to test exact seconds)
+  - [x] Orange color appears when < 10 min (mock time)
+  - [x] Red color appears when < 5 min (mock time)
+  - [x] Expired offer shows "Expirada" badge
+  - [x] Expired offer has disabled button
+  - [x] Expired offers sorted to bottom
 
 ---
 
@@ -211,13 +211,29 @@ interface CountdownTimerProps {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- Unit tests: `npx vitest run tests/unit/countdown-timer.test.ts` - 33 tests passing
+- E2E tests: `npx playwright test tests/e2e/consumer-offer-countdown.spec.ts` - 12 tests passing
+
 ### Completion Notes List
 
+1. **Format Update (AC10.3.2)**: Changed > 1 hour format from "H:MM:SS" to "X h MM min" for better readability
+2. **Threshold Update (AC10.3.3)**: Updated warning threshold from 5 min to 10 min, critical from 1 min to 5 min
+3. **Exported Constants**: Added `COUNTDOWN_THRESHOLDS` export for unit testing and future configuration
+4. **Real-time Expiration (AC10.3.4)**: Added local state tracking in OfferCard with `onExpire` callback
+5. **List Sorting (AC10.3.6)**: Added `expiredDuringView` state in OfferList to sort expired offers to bottom dynamically
+
 ### File List
+
+- `src/lib/utils/countdown.ts` - Updated format and thresholds
+- `src/components/shared/countdown-timer.tsx` - Updated default colors
+- `src/components/consumer/offer-card.tsx` - Added onExpire prop and local expired state
+- `src/components/consumer/offer-list.tsx` - Added expired offer sorting
+- `tests/unit/countdown-timer.test.ts` - Updated tests for new thresholds/format
+- `tests/e2e/consumer-offer-countdown.spec.ts` - New E2E tests for countdown
 
 ---
 
@@ -226,3 +242,4 @@ interface CountdownTimerProps {
 | Date | Change | Author |
 |------|--------|--------|
 | 2025-12-19 | Story created with Atlas workflow analysis | Claude Opus 4.5 |
+| 2025-12-19 | All tasks completed, E2E and unit tests passing | Claude Opus 4.5 |

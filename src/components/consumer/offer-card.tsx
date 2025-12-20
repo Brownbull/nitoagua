@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,11 +17,16 @@ interface OfferCardProps {
   onSelect: (offerId: string) => void;
   isSelecting: boolean;
   disabled?: boolean;
+  /** Callback when offer expires during viewing - AC10.3.4 */
+  onExpire?: (offerId: string) => void;
 }
 
 /**
  * Offer Card Component for Consumer View
  * AC10.1.2: Each offer card shows: provider name, avatar, delivery window, price, expiration countdown, "Seleccionar" button
+ * AC10.3.3: Visual urgency indicator (orange < 10 min, red < 5 min)
+ * AC10.3.4: Real-time expiration handling with "Expirada" badge
+ * AC10.3.5: Disabled selection on expired offers
  *
  * Pattern follows Epic 8 OfferCard with consumer-specific adaptations
  */
@@ -30,10 +36,22 @@ export function OfferCard({
   onSelect,
   isSelecting,
   disabled = false,
+  onExpire,
 }: OfferCardProps) {
-  // Check if offer is expired
+  // Track local expired state for real-time updates - AC10.3.4
+  const [localExpired, setLocalExpired] = useState(false);
+
+  // Check if offer is expired (from server status OR local real-time detection)
   const isExpired =
-    offer.status === "expired" || new Date(offer.expires_at) < new Date();
+    offer.status === "expired" ||
+    new Date(offer.expires_at) < new Date() ||
+    localExpired;
+
+  // Handle expiration callback - AC10.3.4
+  const handleExpire = useCallback(() => {
+    setLocalExpired(true);
+    onExpire?.(offer.id);
+  }, [offer.id, onExpire]);
 
   // Calculate price based on request amount (single source of truth)
   const price = getDeliveryPrice(requestAmount);
@@ -93,13 +111,18 @@ export function OfferCard({
               </div>
             </div>
 
-            {/* Expired badge or Countdown */}
+            {/* Expired badge or Countdown - AC10.3.4, AC10.3.3 */}
             {isExpired ? (
-              <Badge className="bg-gray-100 text-gray-600">Expirada</Badge>
+              <Badge
+                className="bg-gray-100 text-gray-600"
+                data-testid="offer-expired-badge"
+              >
+                Expirada
+              </Badge>
             ) : (
               <CountdownTimer
                 expiresAt={offer.expires_at}
-                className="text-orange-600"
+                onExpire={handleExpire}
                 data-testid="offer-countdown"
               />
             )}
