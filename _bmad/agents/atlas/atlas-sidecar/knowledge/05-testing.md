@@ -250,4 +250,33 @@ test('example', async ({ page, log }) => {
 
 ---
 
-*Last verified: 2025-12-18 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3*
+## Chrome Extension E2E Test Records
+
+### E2E Test Record: 10-3 (Chrome Extension)
+
+**Date:** 2025-12-20
+**Story:** 10-3 - Offer Countdown Timer (Consumer View)
+**Pass Rate:** N/A (Skipped - no test data on production)
+
+**Coverage:**
+- AC10.3.1 - AC10.3.7: All SKIPPED
+
+**Personas Tested:**
+- Consumer (Doña María): Login verified, 0 scenarios executed
+
+**Patterns Established:**
+- Production lacks seed data for feature E2E tests
+- Chrome Extension E2E requires either local environment or real test data
+- Dev login mode works on production
+
+**Issues Found:**
+- None (tests not executed due to data constraint)
+
+**Checklist:** docs/testing/e2e-checklists/10-3-offer-countdown-timer.md
+
+**Lesson Learned:**
+> Chrome Extension E2E testing on production requires real test data or a staging environment with persistent seed data. For feature-specific tests like countdown timers, prefer running Playwright automated tests locally with `npm run seed:offers`.
+
+---
+
+*Last verified: 2025-12-20 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E*
