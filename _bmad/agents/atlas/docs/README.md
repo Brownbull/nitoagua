@@ -105,20 +105,77 @@ Atlas uses a sharded memory system for efficient token usage:
 
 ```
 atlas-sidecar/
-├── atlas-index.csv         # Index of knowledge fragments
+├── atlas-index.csv           # Index of knowledge fragments
 └── knowledge/
-    ├── 01-purpose.md       # App purpose & principles
-    ├── 02-features.md      # Feature inventory
-    ├── 03-personas.md      # User personas & goals
-    ├── 04-architecture.md  # Architectural decisions
-    ├── 05-testing.md       # Testing patterns
-    ├── 06-lessons.md       # Historical lessons
-    ├── 07-process.md       # Process & strategy
+    ├── 00-project-config.md  # Deployment URLs, test users, E2E config (PROTECTED)
+    ├── 01-purpose.md         # App purpose & principles
+    ├── 02-features.md        # Feature inventory
+    ├── 03-personas.md        # User personas & goals
+    ├── 04-architecture.md    # Architectural decisions
+    ├── 05-testing.md         # Testing patterns
+    ├── 06-lessons.md         # Historical lessons
+    ├── 07-process.md         # Process & strategy
     ├── 08-workflow-chains.md # Workflow dependencies
-    └── 09-sync-history.md  # Sync tracking
+    └── 09-sync-history.md    # Sync tracking (PROTECTED)
 ```
 
 Atlas consults the index first and loads only relevant fragments, keeping context usage minimal.
+
+### Protected Fragments
+
+Some fragments are marked **PROTECTED** and are never consolidated during memory optimization:
+
+- `00-project-config.md` - Runtime-critical (URLs, credentials, E2E config)
+- `09-sync-history.md` - Audit trail (sync timestamps, sources)
+
+## E2E Contract Requirements
+
+The `atlas-e2e` workflow requires specific memory structure to function. This is validated during `sync` operations.
+
+### Required Fields in 00-project-config.md
+
+| Field | Required | Purpose |
+|-------|----------|---------|
+| `base_url` | ✅ YES | Production/staging URL for testing |
+| `test_users` | ✅ YES | Array of {role, email, password} for each persona |
+| `e2e_output_path` | Optional | Where checklists are saved (default: docs/testing/e2e-checklists) |
+
+### Example Project Config
+
+```markdown
+## Deployment URLs
+
+| Environment | URL | Purpose |
+|-------------|-----|---------|
+| **Production** | https://myapp.vercel.app | Live application |
+| **Local** | http://localhost:3000 | Development |
+
+## Test Users
+
+| Role | Email | Password | Notes |
+|------|-------|----------|-------|
+| **Consumer** | consumer@test.com | test.123 | Standard user |
+| **Admin** | admin@test.com | admin.123 | Full access |
+```
+
+### Contract Validation
+
+When running `sync`, Atlas validates the E2E contract:
+
+```
+✅ E2E Contract Valid
+- base_url: https://myapp.vercel.app
+- test_users: 3 personas configured
+- e2e_output_path: docs/testing/e2e-checklists
+```
+
+If incomplete, you'll see:
+
+```
+⚠️ E2E Contract Incomplete
+Missing: test_users (no Admin persona)
+Atlas E2E workflows will fail until these are added.
+```
 
 ## Feeding Atlas
 
@@ -194,6 +251,7 @@ For Atlas to be effective, your project should have:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.3.0 | 2025-12-20 | Added E2E Contract, 00-project-config fragment, protected fragments |
 | 2.2.0 | 2024-12-18 | Added 13 Atlas-enhanced BMM workflow alternatives |
 | 2.1.0 | 2024-12-18 | Added sharded memory architecture |
 | 2.0.0 | 2024-12-18 | Enhanced workflow guide, export improvements |

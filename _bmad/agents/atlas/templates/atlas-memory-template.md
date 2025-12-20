@@ -8,6 +8,47 @@
 
 ---
 
+## 0. Project Configuration (E2E Contract)
+
+<!-- REQUIRED for atlas-e2e workflow. See E2E Contract Requirements below. -->
+
+### Deployment URLs
+
+| Environment | URL | Purpose |
+|-------------|-----|---------|
+| **Production** | _[YOUR_PROD_URL]_ | Live application |
+| **Staging** | _[YOUR_STAGING_URL]_ | Pre-production testing |
+| **Local** | http://localhost:3000 | Development |
+
+### Test Users (REQUIRED for E2E)
+
+<!-- Each persona must have test credentials for atlas-e2e to generate valid checklists -->
+
+| Role | Email | Password | Notes |
+|------|-------|----------|-------|
+| **[Persona 1]** | _email@example.com_ | _password_ | _Description_ |
+| **[Persona 2]** | _email@example.com_ | _password_ | _Description_ |
+| **[Admin]** | _admin@example.com_ | _password_ | Admin access |
+
+### E2E Testing Configuration
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| **Output Path** | docs/testing/e2e-checklists | Where checklists are saved |
+| **Execution Mode** | Chrome Extension | Manual testing via browser |
+
+### E2E Contract Requirements
+
+The atlas-e2e workflow requires these fields to be populated:
+
+- ✅ `base_url` - Production/staging URL for testing
+- ✅ `test_users` - At least one entry per active persona
+- ⚪ `e2e_output_path` - Optional (default: docs/testing/e2e-checklists)
+
+Run `sync` and verify these fields are populated before using atlas-e2e.
+
+---
+
 ## 1. App Purpose & Core Principles
 
 <!-- Synced from: PRD -->

@@ -54,6 +54,7 @@ agent:
 
         <sharded-memory-protocol>
         Knowledge is stored in separate files under atlas-sidecar/knowledge/:
+        - 00-project-config.md: Deployment URLs, test credentials, E2E config (PROTECTED)
         - 01-purpose.md: App mission, principles, target market, currency
         - 02-features.md: Feature inventory with intent and connections
         - 03-personas.md: User personas, goals, behaviors
@@ -68,6 +69,19 @@ agent:
         Always update 09-sync-history.md with sync timestamp and sources.
         </sharded-memory-protocol>
 
+        <e2e-contract-validation>
+        Atlas E2E workflows require 00-project-config.md with:
+        - base_url: Production/staging URL (REQUIRED)
+        - test_users: At least one {role, email, password} per persona (REQUIRED)
+        - e2e_output_path: Checklist output location (optional, defaults to docs/testing/e2e-checklists)
+
+        During sync, validate E2E contract:
+        1. Check if 00-project-config.md exists
+        2. Verify base_url is present and valid
+        3. Verify test_users has entries for Consumer, Provider, Admin
+        4. If incomplete, warn: "⚠️ E2E Contract incomplete - atlas-e2e workflow will fail"
+        </e2e-contract-validation>
+
         <process>
         1. Load 09-sync-history.md to check last sync status
         2. Identify source documents to check:
@@ -77,6 +91,8 @@ agent:
            - Epic and story files → 02-features.md, 08-workflow-chains.md
            - Retrospective notes → 06-lessons.md
            - Process/strategy documents → 07-process.md
+           - Deployment/env config → 00-project-config.md
+           - Seed scripts (scripts/local/seed-*.ts) → 00-project-config.md (test users)
         3. For CRITICAL FACTS (target market, users, currency), search explicitly:
            - Use grep/search for terms like "target", "market", "users", "currency"
            - QUOTE the exact text found
@@ -89,7 +105,8 @@ agent:
            - Conflicts or changes in direction
         7. VERIFICATION STEP: Present key facts with citations for user confirmation
         8. Update ONLY the relevant knowledge fragment file(s)
-        9. Update 09-sync-history.md with sync timestamp and sources checked
+        9. VALIDATE E2E CONTRACT: Check 00-project-config.md has required fields
+        10. Update 09-sync-history.md with sync timestamp and sources checked
         </process>
 
         <verification-checklist>
@@ -98,6 +115,11 @@ agent:
         - [ ] Primary currency (quote source) → 01-purpose.md
         - [ ] Target user persona (quote source) → 03-personas.md
         - [ ] Core value proposition (quote source) → 01-purpose.md
+
+        E2E Contract Validation (for atlas-e2e workflow):
+        - [ ] base_url present in 00-project-config.md
+        - [ ] test_users table has Consumer, Provider, Admin entries
+        - [ ] e2e_output_path defined (or will use default)
         </verification-checklist>
 
     - id: analyze-impact
@@ -188,6 +210,9 @@ agent:
 
         <fragment-selection>
         Consult atlas-index.csv and load ONLY relevant fragments:
+        - Deployment/URL questions → 00-project-config.md
+        - Test credentials/users questions → 00-project-config.md
+        - E2E testing setup → 00-project-config.md + 05-testing.md
         - Purpose questions → 01-purpose.md
         - Feature questions → 02-features.md
         - User/persona questions → 03-personas.md
@@ -319,6 +344,13 @@ agent:
         - PPS (Product/Project/System) intent
         Content in these categories should be synthesized carefully, preserving meaning.
         </protected-categories>
+
+        <protected-fragments>
+        These fragments are NEVER consolidated or merged during optimization:
+        - 00-project-config.md: Runtime-critical (URLs, credentials, E2E config)
+        - 09-sync-history.md: Audit trail (sync timestamps, sources)
+        These fragments contain operational data that must remain intact.
+        </protected-fragments>
 
         <pre-optimization>
         1. Load memory-versions.yaml (create if not exists)
