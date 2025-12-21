@@ -36,13 +36,21 @@ interface CountdownTimerProps {
    */
   className?: string;
   /**
-   * CSS classes for when timer is in warning state (< 5 minutes)
+   * CSS classes for when timer is in warning state (< 10 minutes)
+   * AC10.3.3: Orange when < 10 min
+   * @default "text-orange-500"
    */
   warningClassName?: string;
   /**
-   * CSS classes for when timer is in critical state (< 1 minute)
+   * CSS classes for when timer is in critical state (< 5 minutes)
+   * AC10.3.3: Red when < 5 min
+   * @default "text-red-500 font-semibold"
    */
   criticalClassName?: string;
+  /**
+   * Test ID for the component (passed through to DOM)
+   */
+  "data-testid"?: string;
 }
 
 /**
@@ -82,6 +90,7 @@ export function useCountdown(expiresAt: string | Date): number {
  * Countdown Timer Component
  * AC: 8.3.3 - Display countdown in "Expira en 25:30" format
  * AC: 8.3.2 - Show time remaining countdown for pending offers
+ * AC: 10.3.1, 10.3.2, 10.3.3 - Consumer urgency colors
  * NFR5: ±1 second accuracy with drift correction
  */
 export function CountdownTimer({
@@ -90,8 +99,9 @@ export function CountdownTimer({
   showPrefix = true,
   showIcon = true,
   className,
-  warningClassName = "text-orange-600",
-  criticalClassName = "text-red-600 font-semibold",
+  warningClassName = "text-orange-500",
+  criticalClassName = "text-red-500 font-semibold",
+  "data-testid": testId,
 }: CountdownTimerProps) {
   const remaining = useCountdown(expiresAt);
   const hasExpiredRef = useRef(false);
@@ -125,7 +135,12 @@ export function CountdownTimer({
 
   if (isExpired) {
     return (
-      <span className={cn("text-gray-500 text-sm", className)} data-testid="countdown-expired">
+      <span
+        className={cn("text-gray-500 text-sm", className)}
+        data-testid={testId || "countdown-expired"}
+        aria-live="polite"
+        aria-label="Oferta expirada"
+      >
         Expirada
       </span>
     );
@@ -134,7 +149,7 @@ export function CountdownTimer({
   return (
     <span
       className={cn("flex items-center gap-1 text-sm", stateClassName, className)}
-      data-testid="countdown-timer"
+      data-testid={testId || "countdown-timer"}
       aria-live="polite"
       aria-label={`Expira en ${timeString}`}
     >

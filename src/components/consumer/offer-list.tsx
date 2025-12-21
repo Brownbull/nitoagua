@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, Loader2 } from "lucide-react";
@@ -12,6 +13,20 @@ interface OfferListProps {
   loading?: boolean;
   onSelectOffer: (offerId: string) => void;
   selectingOfferId: string | null;
+}
+
+/**
+ * Check if an offer is expired (by status or timestamp)
+ */
+function isOfferExpired(
+  offer: ConsumerOffer,
+  expiredIds: Set<string>
+): boolean {
+  return (
+    offer.status === "expired" ||
+    new Date(offer.expires_at) < new Date() ||
+    expiredIds.has(offer.id)
+  );
 }
 
 /**
@@ -64,6 +79,7 @@ function LoadingState() {
  * AC10.1.1: Consumer sees "Ofertas Recibidas" section with count badge
  * AC10.1.3: Offers sorted by delivery window (soonest first) - handled by hook
  * AC10.1.5: Empty state with appropriate messaging
+ * AC10.3.6: Expired offers sorted to bottom with visual fade
  *
  * Pattern follows Epic 8 provider offer list patterns
  */
@@ -74,9 +90,41 @@ export function OfferList({
   onSelectOffer,
   selectingOfferId,
 }: OfferListProps) {
+  // Track offers that expired during viewing - AC10.3.4
+  const [expiredDuringView, setExpiredDuringView] = useState<Set<string>>(
+    new Set()
+  );
+
+  // Handle when an offer expires - AC10.3.4, AC10.3.6
+  const handleOfferExpire = useCallback((offerId: string) => {
+    setExpiredDuringView((prev) => {
+      const next = new Set(prev);
+      next.add(offerId);
+      return next;
+    });
+  }, []);
+
+  // Sort offers: active first (by delivery window), then expired - AC10.3.6
+  const sortedOffers = useMemo(() => {
+    return [...offers].sort((a, b) => {
+      const aExpired = isOfferExpired(a, expiredDuringView);
+      const bExpired = isOfferExpired(b, expiredDuringView);
+
+      // Expired offers go to bottom
+      if (aExpired && !bExpired) return 1;
+      if (!aExpired && bExpired) return -1;
+
+      // Within same group, sort by delivery window (soonest first)
+      return (
+        new Date(a.delivery_window_start).getTime() -
+        new Date(b.delivery_window_start).getTime()
+      );
+    });
+  }, [offers, expiredDuringView]);
+
   // Count active (non-expired) offers for badge
   const activeOfferCount = offers.filter(
-    (o) => o.status === "active" && new Date(o.expires_at) > new Date()
+    (o) => !isOfferExpired(o, expiredDuringView)
   ).length;
 
   if (loading) {
@@ -109,7 +157,7 @@ export function OfferList({
         <EmptyState />
       ) : (
         <div className="space-y-3" data-testid="offers-container">
-          {offers.map((offer) => (
+          {sortedOffers.map((offer) => (
             <OfferCard
               key={offer.id}
               offer={offer}
@@ -117,6 +165,7 @@ export function OfferList({
               onSelect={onSelectOffer}
               isSelecting={selectingOfferId === offer.id}
               disabled={selectingOfferId !== null}
+              onExpire={handleOfferExpire}
             />
           ))}
         </div>

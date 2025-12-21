@@ -181,3 +181,46 @@ When workflows complete:
 2. Load ONLY those fragment(s)
 3. Update with new insights
 4. Record sync in 09-sync-history.md
+
+## E2E Contract Requirements
+
+Atlas workflows (`atlas-e2e`, `atlas-ux-verify`) require specific memory structure to function.
+
+### Project Config Fragment (00-project-config.md)
+
+This fragment is **REQUIRED** for E2E testing workflows. It MUST contain:
+
+| Field | Required | Purpose |
+|-------|----------|---------|
+| `base_url` | ✅ YES | Production/staging URL for testing |
+| `test_users` | ✅ YES | Array of {role, email, password} for each persona |
+| `e2e_output_path` | Optional | Where checklists are saved (default: docs/testing/e2e-checklists) |
+| `persona_badges` | Optional | Badge/color mapping for personas |
+
+### Contract Validation During Sync
+
+When running `sync` command:
+1. Check if 00-project-config.md exists
+2. Validate required fields are present:
+   - base_url must be a valid URL
+   - test_users must have at least one entry per active persona
+3. If E2E contract incomplete, display warning:
+   ```
+   ⚠️ E2E Contract Incomplete
+   Missing: [list missing fields]
+   Atlas E2E workflows will fail until these are added.
+   ```
+
+### Loading Protocol for E2E
+
+Add to common loading patterns:
+- **E2E testing questions** → 00-project-config.md + 05-testing.md + 03-personas.md
+- **Deployment/URL questions** → 00-project-config.md
+- **Test credentials questions** → 00-project-config.md
+
+### Protected During Optimization
+
+The 00-project-config.md fragment is **PROTECTED** during memory optimization:
+- Never consolidate away or merge with other fragments
+- Credentials and URLs are runtime-critical
+- Always preserve complete structure
