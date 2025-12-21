@@ -5,7 +5,7 @@
 | **Story ID** | 10-5 |
 | **Epic** | Epic 10: Consumer Offer Selection |
 | **Title** | Request Status with Offer Context |
-| **Status** | done |
+| **Status** | deployed |
 | **Priority** | P1 (High) |
 | **Points** | 5 |
 | **Sprint** | TBD |
@@ -303,3 +303,4 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 | 2025-12-21 | Implementation complete, status → review | Claude Opus 4.5 |
 | 2025-12-21 | Bug fixes: countdown timer, select_offer function, page refresh, provider visibility; inline offers UX improvement | Claude Opus 4.5 |
 | 2025-12-21 | Code review: Added in_transit_at column migration, removed dead StatusTracker component, updated AC10.5.1 to match mockup labels, corrected file list | Claude Opus 4.5 |
+| 2025-12-21 | Deployed to production via develop → staging → main pipeline | Claude Opus 4.5 |
