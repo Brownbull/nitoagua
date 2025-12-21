@@ -129,4 +129,27 @@
 
 ---
 
-*Last verified: 2025-12-21 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4 implementations*
+### Story 10-5: Request Status with Offer Context
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **Dead component left in codebase** | Created new `timeline-tracker.tsx` but didn't delete old `status-tracker.tsx` | When replacing components, **delete the old one immediately** to avoid dead code |
+| **Missing database column** | Code referenced `in_transit_at` but no migration existed | When adding timestamp columns for status tracking, **create the migration first**, then update types, then update code |
+| **Story AC didn't match mockup implementation** | AC said "Solicitado → Aceptado" but mockups showed richer labels | **Update ACs after mockup alignment** - the mockups are the source of truth for UX |
+| **Story File List incomplete** | New components created weren't added to File List | During implementation, **update File List in real-time** as files are created |
+| **TypeScript types not regenerated** | Added column to migration but database.ts not updated | After adding columns, **always update `src/types/database.ts`** (or regenerate with `npx supabase gen types typescript`) |
+
+### Patterns Confirmed
+
+1. **Timeline component pattern**: Use 4-step timelines with contextual labels that change based on status (pending shows offer-focused steps, accepted+ shows delivery-focused steps)
+
+2. **Component extraction for reuse**: When building status pages, create:
+   - `TimelineTracker` - reusable timeline with steps
+   - `StatusCard` - status-specific styling with children slots
+   - `GradientHeader` - branded headers for key pages
+
+3. **Dead code elimination**: When a code review finds unused components, delete them immediately - they add confusion and maintenance burden
+
+---
+
+*Last verified: 2025-12-21 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5 implementations*

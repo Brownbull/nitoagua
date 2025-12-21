@@ -2,8 +2,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertTriangle, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { GradientHeader } from "@/components/consumer/gradient-header";
 import { OffersClient } from "./offers-client";
 
 interface OffersPageProps {
@@ -103,41 +104,21 @@ interface OffersContentProps {
 }
 
 function OffersContent({ request, isGuestAccess, trackingToken, initialOffers }: OffersContentProps) {
+  // Count active offers for badge
+  const activeOfferCount = initialOffers.filter(
+    (o) => o.status === "active" && new Date(o.expires_at) > new Date()
+  ).length;
+
   return (
-    <div className="py-6 px-4">
-      <div className="max-w-2xl mx-auto space-y-4">
-        {/* Back navigation */}
-        <Button variant="ghost" size="sm" asChild className="mb-2">
-          <Link
-            href={
-              isGuestAccess && trackingToken
-                ? `/track/${trackingToken}`
-                : `/request/${request.id}`
-            }
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Volver al estado
-          </Link>
-        </Button>
+    <main className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header with offer count badge */}
+      <GradientHeader
+        title="Elige tu repartidor"
+        badgeText={activeOfferCount > 0 ? `${activeOfferCount} oferta${activeOfferCount !== 1 ? 's' : ''}` : undefined}
+      />
 
-        {/* Request summary header */}
-        <div className="bg-white rounded-lg border p-4">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
-            Ofertas para tu solicitud
-          </h1>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <span>{request.amount.toLocaleString("es-CL")}L</span>
-            <span>•</span>
-            <span className="truncate max-w-[200px]">{request.address}</span>
-            {request.is_urgent && (
-              <>
-                <span>•</span>
-                <span className="text-red-600 font-medium">Urgente</span>
-              </>
-            )}
-          </div>
-        </div>
-
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-5 py-3 bg-gray-50">
         {/* Offers client component - handles realtime updates and selection */}
         <OffersClient
           requestId={request.id}
@@ -147,7 +128,7 @@ function OffersContent({ request, isGuestAccess, trackingToken, initialOffers }:
           trackingToken={trackingToken}
         />
       </div>
-    </div>
+    </main>
   );
 }
 

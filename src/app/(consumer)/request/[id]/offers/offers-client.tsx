@@ -2,11 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, WifiOff, RefreshCw } from "lucide-react";
 import { useConsumerOffers, ConsumerOffer } from "@/hooks/use-consumer-offers";
 import { OfferList } from "@/components/consumer/offer-list";
 import { OfferSelectionModal } from "@/components/consumer/offer-selection-modal";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { selectOffer } from "@/lib/actions/offers";
 
@@ -158,46 +156,7 @@ export function OffersClient({
   const isLoading = !isGuestAccess && loading && offers.length === 0;
 
   return (
-    <div className="space-y-4">
-      {/* Connection status indicator (only for authenticated users) */}
-      {!isGuestAccess && !isConnected && !loading && (
-        <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-          <WifiOff className="h-3 w-3" />
-          <span>Conexión en tiempo real limitada - actualizando cada 30s</span>
-        </div>
-      )}
-
-      {/* Guest refresh guidance (guest users don't have realtime) */}
-      {isGuestAccess && offers.length > 0 && (
-        <div className="flex items-center justify-between text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-          <span>Las ofertas pueden actualizarse</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs text-[#0077B6] hover:text-[#005f8f]"
-            onClick={() => window.location.reload()}
-          >
-            <RefreshCw className="h-3 w-3 mr-1" />
-            Actualizar
-          </Button>
-        </div>
-      )}
-
-      {/* Loading indicator */}
-      {isLoading && (
-        <div
-          className="flex items-center justify-center py-4"
-          aria-busy="true"
-          aria-live="polite"
-        >
-          <Loader2
-            className="h-5 w-5 animate-spin text-gray-400 mr-2"
-            aria-hidden="true"
-          />
-          <span className="text-sm text-gray-500">Cargando ofertas...</span>
-        </div>
-      )}
-
+    <div className="space-y-3">
       {/* Offer list component */}
       <OfferList
         offers={offers}
@@ -206,13 +165,6 @@ export function OffersClient({
         onSelectOffer={handleSelectOffer}
         selectingOfferId={selectingOfferId}
       />
-
-      {/* Realtime update indicator (only for authenticated users) */}
-      {!isGuestAccess && isConnected && (
-        <p className="text-center text-xs text-gray-400">
-          Actualización en tiempo real activa
-        </p>
-      )}
 
       {/* Confirmation Modal - AC10.2.1, AC10.2.2 */}
       <OfferSelectionModal

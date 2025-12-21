@@ -1,9 +1,8 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   type RequestInput,
   AMOUNT_OPTIONS,
@@ -12,89 +11,147 @@ import {
 
 interface RequestReviewProps {
   data: RequestInput;
-  onEdit: () => void;
+  onEditContact: () => void;
+  onEditAmount: () => void;
   onSubmit: () => void;
   loading?: boolean;
 }
 
 /**
  * RequestReview - Review screen component for water request
- * Displays all entered information before submission
- * Per Story 2-3 acceptance criteria
+ * Redesigned to match mockup (Section 4: Review Screen)
+ * Features:
+ * - Gradient card with amount and estimated price
+ * - Contact and location info cards with edit links
+ * - Disclaimer about next steps
+ * - Green "Confirmar Pedido" button
  */
 export function RequestReview({
   data,
-  onEdit,
+  onEditContact,
+  onEditAmount,
   onSubmit,
   loading = false,
 }: RequestReviewProps) {
   // Find the amount option to get label and price
   const amountOption = AMOUNT_OPTIONS.find((opt) => opt.value === data.amount);
-  const amountDisplay = amountOption
-    ? `${amountOption.label} - ${formatPrice(amountOption.price)}`
-    : data.amount;
+  const basePrice = amountOption?.price || 0;
+  const urgencyMultiplier = data.isUrgent ? 1.1 : 1;
+  const estimatedPrice = Math.round(basePrice * urgencyMultiplier);
+
+  // Format amount for display (e.g., "1.000 litros")
+  const formatAmount = (amount: string) => {
+    const numAmount = parseInt(amount, 10);
+    return numAmount.toLocaleString("es-CL") + " litros";
+  };
 
   return (
-    <div className="flex flex-col gap-6" data-testid="review-screen">
-      <Card>
-        <CardHeader>
-          <CardTitle>Revisa tu Solicitud</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Name */}
-          <div data-testid="review-name">
-            <p className="text-sm text-muted-foreground">Nombre</p>
-            <p className="font-medium">{data.name}</p>
-          </div>
+    <div className="flex flex-col gap-3" data-testid="review-screen">
+      {/* Amount Summary Card - Gradient - Compact */}
+      <div
+        className="rounded-xl p-4 text-white text-center"
+        style={{
+          background: "linear-gradient(135deg, #0077B6 0%, #03045E 100%)",
+        }}
+      >
+        <p className="text-[11px] opacity-80">Cantidad solicitada</p>
+        <p className="text-xl font-extrabold" data-testid="review-amount">
+          {formatAmount(data.amount)}
+        </p>
+        {data.isUrgent && (
+          <span className="inline-block mt-1 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-semibold rounded-full">
+            ⚡ Urgente (+10%)
+          </span>
+        )}
+        <div className="mt-2">
+          <span
+            className="inline-block px-3 py-1.5 bg-white/20 rounded-lg text-lg font-semibold"
+            data-testid="review-price"
+          >
+            ~{formatPrice(estimatedPrice)}
+          </span>
+        </div>
+        <p className="text-[10px] opacity-75 mt-1">
+          Precio estimado • Varía según ubicación
+        </p>
+        <button
+          type="button"
+          onClick={onEditAmount}
+          className="text-[11px] font-semibold text-white/90 hover:text-white mt-1 underline underline-offset-2"
+          data-testid="edit-amount-link"
+        >
+          Cambiar cantidad
+        </button>
+      </div>
 
-          {/* Phone */}
-          <div data-testid="review-phone">
-            <p className="text-sm text-muted-foreground">Teléfono</p>
-            <p className="font-medium">{data.phone}</p>
-          </div>
+      {/* Contact Info Card - Compact */}
+      <div className="bg-white rounded-xl p-3 border border-gray-200">
+        <div className="flex justify-between items-center mb-1.5">
+          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+            Contacto
+          </span>
+          <button
+            type="button"
+            onClick={onEditContact}
+            className="text-xs font-semibold text-[#0077B6] hover:text-[#005f8f]"
+            data-testid="edit-contact-link"
+          >
+            Editar
+          </button>
+        </div>
+        <p className="text-sm font-medium text-gray-900" data-testid="review-name">
+          {data.name}
+        </p>
+        <p className="text-xs text-gray-500" data-testid="review-phone">
+          {data.phone}
+        </p>
+        {data.email && (
+          <p className="text-xs text-gray-500" data-testid="review-email">
+            {data.email}
+          </p>
+        )}
+      </div>
 
-          {/* Email */}
-          <div data-testid="review-email">
-            <p className="text-sm text-muted-foreground">Email</p>
-            <p className="font-medium">{data.email}</p>
-          </div>
+      {/* Location Info Card - Compact */}
+      <div className="bg-white rounded-xl p-3 border border-gray-200">
+        <div className="flex justify-between items-center mb-1.5">
+          <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+            Entrega
+          </span>
+          <button
+            type="button"
+            onClick={onEditContact}
+            className="text-xs font-semibold text-[#0077B6] hover:text-[#005f8f]"
+            data-testid="edit-location-link"
+          >
+            Editar
+          </button>
+        </div>
+        <p className="text-sm font-medium text-gray-900" data-testid="review-address">
+          {data.address}
+        </p>
+        <p className="text-xs text-gray-500" data-testid="review-instructions">
+          {data.specialInstructions}
+        </p>
+      </div>
 
-          {/* Address */}
-          <div data-testid="review-address">
-            <p className="text-sm text-muted-foreground">Dirección</p>
-            <p className="font-medium">{data.address}</p>
-          </div>
+      {/* Disclaimer Box - Compact */}
+      <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <div className="text-xs text-amber-900">
+          <p className="font-semibold">Próximo paso</p>
+          <p className="text-amber-800">
+            Un proveedor te llamará para confirmar el precio y coordinar la entrega.
+          </p>
+        </div>
+      </div>
 
-          {/* Special Instructions */}
-          <div data-testid="review-instructions">
-            <p className="text-sm text-muted-foreground">
-              Instrucciones Especiales
-            </p>
-            <p className="font-medium">{data.specialInstructions}</p>
-          </div>
-
-          {/* Amount with Price */}
-          <div data-testid="review-amount">
-            <p className="text-sm text-muted-foreground">Cantidad de Agua</p>
-            <p className="font-medium text-lg">{amountDisplay}</p>
-          </div>
-
-          {/* Urgency Indicator */}
-          {data.isUrgent && (
-            <div data-testid="review-urgency">
-              <p className="text-sm text-muted-foreground">Prioridad</p>
-              <p className="font-medium text-amber-600">⚡ Urgente</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col gap-3">
+      {/* Submit Button - Green Success Style - Compact */}
+      <div className="mt-1">
         <Button
           onClick={onSubmit}
           disabled={loading}
-          className="min-h-[48px] w-full"
+          className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-lg"
           data-testid="submit-button"
         >
           {loading ? (
@@ -103,18 +160,15 @@ export function RequestReview({
               Enviando...
             </>
           ) : (
-            "Enviar Solicitud"
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Confirmar Pedido
+            </>
           )}
         </Button>
-        <Button
-          variant="secondary"
-          onClick={onEdit}
-          disabled={loading}
-          className="min-h-[48px] w-full"
-          data-testid="edit-button"
-        >
-          Editar
-        </Button>
+        <p className="text-center text-[10px] text-gray-500 mt-1.5">
+          Sin pago previo • Te llamamos primero
+        </p>
       </div>
     </div>
   );

@@ -83,21 +83,23 @@ test.describe("Request Status Tracking (Story 2-5)", () => {
   });
 
   test.describe("Component Structure Verification", () => {
-    test("error page uses Card component for styling", async ({ page }) => {
+    test("error page has proper mockup-aligned styling", async ({ page }) => {
       await page.goto("/track/test-invalid");
 
-      // Card component should be present
-      const card = page.locator('[data-slot="card"]');
-      await expect(card).toBeVisible();
+      // Error page should have gradient header and centered content
+      // New mockup design doesn't use Card component - uses centered layout with icon
+      const main = page.locator("main");
+      await expect(main).toBeVisible();
+      await expect(main).toHaveClass(/min-h-screen/);
     });
 
-    test("error page has centered layout", async ({ page }) => {
+    test("error page has flex column layout", async ({ page }) => {
       await page.goto("/track/test-layout");
 
-      // Main container should have flex and center classes
+      // Main container should have flex column layout (mockup design)
       const main = page.locator("main");
       await expect(main).toHaveClass(/flex/);
-      await expect(main).toHaveClass(/items-center/);
+      await expect(main).toHaveClass(/flex-col/);
     });
   });
 
@@ -277,7 +279,8 @@ test.describe("Integration Tests @seeded", () => {
       await page.goto(`/track/${TRACKING_TOKENS.accepted}`);
 
       // Seeded accepted request has delivery_window: "14:00 - 16:00"
-      await expect(page.getByText(/14:00/)).toBeVisible();
+      // Use data-testid to get the specific element (text appears in multiple places)
+      await expect(page.getByTestId("delivery-window")).toContainText(/14:00/);
     });
 
     test("shows clickable supplier phone", async ({ page }) => {

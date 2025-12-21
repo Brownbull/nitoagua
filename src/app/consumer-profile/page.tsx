@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Loader2, LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConsumerNav } from "@/components/layout/consumer-nav";
+import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { ConsumerProfileForm } from "@/components/consumer/profile-form";
 
 interface Profile {
@@ -14,6 +14,7 @@ interface Profile {
   phone: string;
   address: string | null;
   special_instructions: string | null;
+  comuna_id: string | null;
   role: string;
 }
 
@@ -28,7 +29,9 @@ export default function ProfilePage() {
     async function loadProfile() {
       const supabase = createClient();
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
         router.push("/login");
@@ -37,9 +40,10 @@ export default function ProfilePage() {
 
       setEmail(user.email ?? null);
 
+      // Fetch profile including comuna_id
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("name, phone, address, special_instructions, role")
+        .select("name, phone, address, special_instructions, comuna_id, role")
         .eq("id", user.id)
         .single();
 
@@ -80,26 +84,30 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 pb-20">
-      <div className="flex-1 p-4">
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">Mi Perfil</h1>
+      {/* Dashboard Header */}
+      <DashboardHeader
+        title="Mi Perfil"
+        subtitle="Tu cuenta"
+        userName={profile?.name}
+        showNotifications
+      />
 
-        <Card className="mb-4">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Información Personal</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {profile && (
-              <ConsumerProfileForm
-                initialData={profile}
-                email={email}
-              />
-            )}
-          </CardContent>
-        </Card>
+      {/* Content - Compact padding */}
+      <div className="flex-1 px-3 py-2">
+        {/* Profile Card */}
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-3">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">
+            Información Personal
+          </h2>
+          {profile && (
+            <ConsumerProfileForm initialData={profile} email={email} />
+          )}
+        </div>
 
+        {/* Logout Button */}
         <Button
           variant="outline"
-          className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+          className="w-full h-10 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl border-gray-200 text-sm"
           onClick={handleLogout}
           disabled={loggingOut}
         >

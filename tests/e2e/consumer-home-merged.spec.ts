@@ -4,9 +4,12 @@
  * This is a migration of consumer-home.spec.ts to demonstrate
  * @seontechnologies/playwright-utils integration.
  *
- * Changes from original:
- * - Import from merged-fixtures instead of @playwright/test
- * - Added log() calls for better report visibility
+ * Tests the mockup-aligned landing page with:
+ * - Gradient header with nitoagua logo
+ * - Hero section with CTA button
+ * - Benefits section
+ * - Trust indicators
+ * - Footer with login links
  *
  * Log fixture API: log({ level: 'step', message: 'text' })
  * Available levels: info, step, success, warning, error, debug
@@ -19,30 +22,18 @@ test.describe("Consumer Home Screen (Merged Fixtures)", () => {
     await page.goto("/");
   });
 
-  test("AC2-1-1 - displays big action button with correct dimensions", async ({
+  test("displays CTA button and navigates to request page", async ({
     page,
     log,
   }) => {
-    await log({ level: "step", message: "Locate big action button" });
-    const button = page.getByTestId("big-action-button");
+    await log({ level: "step", message: "Locate CTA button" });
+    const button = page.getByTestId("request-water-button");
     await expect(button).toBeVisible();
 
-    await log({ level: "step", message: "Verify button dimensions (200x200px)" });
-    const boundingBox = await button.boundingBox();
-    expect(boundingBox).not.toBeNull();
-    expect(boundingBox!.width).toBe(200);
-    expect(boundingBox!.height).toBe(200);
+    await log({ level: "step", message: "Verify button text" });
+    await expect(button).toContainText("Pedir Agua Ahora");
 
-    await log({ level: "success", message: "Button text verified" });
-    await expect(button).toContainText("Solicitar Agua");
-  });
-
-  test("AC2-1-4 - clicking button navigates to /request page", async ({
-    page,
-    log,
-  }) => {
-    await log({ level: "step", message: "Click big action button" });
-    const button = page.getByTestId("big-action-button");
+    await log({ level: "step", message: "Click CTA button" });
     await button.click();
 
     await log({ level: "step", message: "Wait for navigation to /request" });
@@ -50,27 +41,61 @@ test.describe("Consumer Home Screen (Merged Fixtures)", () => {
 
     await log({ level: "success", message: "Verify request page content" });
     expect(page.url()).toContain("/request");
+    // Mockup uses "Pedir Agua" as the title
     await expect(
-      page.getByRole("heading", { name: "Solicitar Agua" })
+      page.getByRole("heading", { name: "Pedir Agua" })
     ).toBeVisible();
   });
 
-  test("AC2-1-5 - bottom navigation displays 3 items", async ({
+  test("displays benefits section with 3 items", async ({
     page,
     log,
   }) => {
-    await log({ level: "step", message: "Locate consumer navigation" });
-    const nav = page.getByTestId("consumer-nav");
-    await expect(nav).toBeVisible();
+    await log({ level: "step", message: "Verify benefits section" });
 
-    await log({ level: "step", message: "Verify navigation has 3 links" });
-    const navLinks = nav.locator("a");
-    await expect(navLinks).toHaveCount(3);
+    await log({ level: "step", message: "Check 'Entrega rápida' benefit" });
+    await expect(page.getByText("Entrega rápida")).toBeVisible();
+    await expect(page.getByText("En menos de 24 horas")).toBeVisible();
 
-    await log({ level: "success", message: "Spanish labels verified" });
-    await expect(nav.getByText("Inicio")).toBeVisible();
-    await expect(nav.getByText("Historial")).toBeVisible();
-    await expect(nav.getByText("Perfil")).toBeVisible();
+    await log({ level: "step", message: "Check 'Proveedores verificados' benefit" });
+    await expect(page.getByText("Proveedores verificados")).toBeVisible();
+
+    await log({ level: "step", message: "Check 'Sin cuenta requerida' benefit" });
+    await expect(page.getByText("Sin cuenta requerida")).toBeVisible();
+
+    await log({ level: "success", message: "All benefits verified" });
+  });
+
+  test("displays login links for Consumer and Provider", async ({
+    page,
+    log,
+  }) => {
+    await log({ level: "step", message: "Locate login links in footer" });
+
+    await log({ level: "step", message: "Verify Consumer login link" });
+    const consumerLink = page.getByRole("link", { name: /Consumidor/i });
+    await expect(consumerLink).toBeVisible();
+    await expect(consumerLink).toHaveAttribute("href", "/login?role=consumer");
+
+    await log({ level: "step", message: "Verify Provider login link" });
+    const providerLink = page.getByRole("link", { name: /Proveedor/i });
+    await expect(providerLink).toBeVisible();
+    await expect(providerLink).toHaveAttribute("href", "/login?role=supplier");
+
+    await log({ level: "success", message: "Login links verified" });
+  });
+
+  test("displays admin access link", async ({
+    page,
+    log,
+  }) => {
+    await log({ level: "step", message: "Locate admin link" });
+    const adminLink = page.getByTestId("admin-access-link");
+    await expect(adminLink).toBeVisible();
+    await expect(adminLink).toHaveAttribute("href", "/admin");
+    await expect(adminLink).toContainText("Administración");
+
+    await log({ level: "success", message: "Admin link verified" });
   });
 });
 
@@ -84,7 +109,7 @@ test.describe("Network Monitoring Demo", () => {
     await page.goto("/");
 
     await log({ level: "step", message: "Verify page loaded successfully" });
-    await expect(page.getByTestId("big-action-button")).toBeVisible();
+    await expect(page.getByTestId("request-water-button")).toBeVisible();
 
     // If any API call returned 4xx/5xx, test would have failed automatically
     await log({ level: "success", message: "No API errors detected - test passes" });

@@ -30,27 +30,28 @@ test.describe("Persona: Dona Maria (Consumer)", () => {
       await log({ level: "step", message: "Navigate to home page" });
       await page.goto("/");
 
-      await log({ level: "step", message: "Verify welcome message visible" });
-      await expect(
-        page.getByRole("heading", { name: "Bienvenido a nitoagua" })
-      ).toBeVisible();
+      await log({ level: "step", message: "Verify hero section visible" });
+      // Mockup design uses hero section with "Agua potable" title
+      await expect(page.getByText("Agua potable")).toBeVisible();
+      await expect(page.getByText("directo a tu hogar")).toBeVisible();
 
       await log({
         level: "step",
-        message: "Verify big action button visible and prominent",
+        message: "Verify CTA button visible and prominent",
       });
-      const button = page.getByTestId("big-action-button");
+      const button = page.getByTestId("request-water-button");
       await expect(button).toBeVisible();
-      await expect(button).toContainText("Solicitar Agua");
+      await expect(button).toContainText("Pedir Agua Ahora");
 
       await log({
         level: "step",
-        message: "Verify button is large enough (200x200px minimum)",
+        message: "Verify button has adequate touch target",
       });
       const box = await button.boundingBox();
       expect(box).not.toBeNull();
+      // CTA button should be at least 44px tall and 200px wide
       expect(box!.width).toBeGreaterThanOrEqual(200);
-      expect(box!.height).toBeGreaterThanOrEqual(200);
+      expect(box!.height).toBeGreaterThanOrEqual(44);
 
       await log({
         level: "success",
@@ -58,23 +59,24 @@ test.describe("Persona: Dona Maria (Consumer)", () => {
       });
     });
 
-    test("can navigate to request form by clicking big button", async ({
+    test("can navigate to request form by clicking CTA button", async ({
       page,
       log,
     }) => {
       await log({ level: "step", message: "Navigate to home page" });
       await page.goto("/");
 
-      await log({ level: "step", message: "Click big action button" });
-      const button = page.getByTestId("big-action-button");
+      await log({ level: "step", message: "Click CTA button" });
+      const button = page.getByTestId("request-water-button");
       await button.click();
 
       await log({ level: "step", message: "Wait for navigation to /request" });
       await page.waitForURL("**/request", { timeout: 10000 });
 
       await log({ level: "step", message: "Verify request form heading" });
+      // Mockup uses "Pedir Agua" as the title
       await expect(
-        page.getByRole("heading", { name: "Solicitar Agua" })
+        page.getByRole("heading", { name: "Pedir Agua" })
       ).toBeVisible();
 
       await log({
@@ -89,19 +91,19 @@ test.describe("Persona: Dona Maria (Consumer)", () => {
 
       await log({
         level: "step",
-        message: "Verify navigation labels in Spanish",
+        message: "Verify hero section in Spanish",
       });
-      await expect(page.getByText("Inicio")).toBeVisible();
-      await expect(page.getByText("Historial")).toBeVisible();
-      await expect(page.getByText("Perfil")).toBeVisible();
+      await expect(page.getByText("Agua potable")).toBeVisible();
+      await expect(page.getByText("directo a tu hogar")).toBeVisible();
+      await expect(page.getByText("Pedir Agua Ahora")).toBeVisible();
 
       await log({
         level: "step",
-        message: "Verify instruction text in Spanish",
+        message: "Verify benefits in Spanish",
       });
-      await expect(
-        page.getByText("Toca el botón para solicitar tu entrega de agua")
-      ).toBeVisible();
+      await expect(page.getByText("Entrega rápida")).toBeVisible();
+      await expect(page.getByText("Proveedores verificados")).toBeVisible();
+      await expect(page.getByText("Sin cuenta requerida")).toBeVisible();
 
       await log({
         level: "success",
@@ -119,8 +121,9 @@ test.describe("Persona: Dona Maria (Consumer)", () => {
       await page.goto("/request");
 
       await log({ level: "step", message: "Verify form heading visible" });
+      // Mockup uses "Pedir Agua" as the title
       await expect(
-        page.getByRole("heading", { name: "Solicitar Agua" })
+        page.getByRole("heading", { name: "Pedir Agua" })
       ).toBeVisible();
 
       await log({ level: "step", message: "Verify address field exists" });

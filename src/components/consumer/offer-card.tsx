@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, User } from "lucide-react";
 import { format } from "date-fns";
@@ -19,16 +17,18 @@ interface OfferCardProps {
   disabled?: boolean;
   /** Callback when offer expires during viewing - AC10.3.4 */
   onExpire?: (offerId: string) => void;
+  /** Whether this is the best (first active) offer */
+  isBestOffer?: boolean;
+  /** Whether this is the first card (gets filled button) */
+  isFirstCard?: boolean;
 }
 
 /**
- * Offer Card Component for Consumer View
+ * Offer Card Component for Consumer View - Mockup aligned
  * AC10.1.2: Each offer card shows: provider name, avatar, delivery window, price, expiration countdown, "Seleccionar" button
  * AC10.3.3: Visual urgency indicator (orange < 10 min, red < 5 min)
  * AC10.3.4: Real-time expiration handling with "Expirada" badge
  * AC10.3.5: Disabled selection on expired offers
- *
- * Pattern follows Epic 8 OfferCard with consumer-specific adaptations
  */
 export function OfferCard({
   offer,
@@ -37,6 +37,8 @@ export function OfferCard({
   isSelecting,
   disabled = false,
   onExpire,
+  isBestOffer = false,
+  isFirstCard = false,
 }: OfferCardProps) {
   // Track local expired state for real-time updates - AC10.3.4
   const [localExpired, setLocalExpired] = useState(false);
@@ -63,7 +65,7 @@ export function OfferCard({
     { locale: es }
   )} - ${format(new Date(offer.delivery_window_end), "HH:mm", { locale: es })}`;
 
-  // Get provider initials for avatar fallback
+  // Get provider name and initials for avatar
   const providerName = offer.profiles?.name || "Repartidor";
   const initials = providerName
     .split(" ")
@@ -72,109 +74,107 @@ export function OfferCard({
     .toUpperCase()
     .slice(0, 2);
 
+  // Mock rating data (in real app this would come from the offer/profile)
+  // For now we use placeholder values to match the mockup
+  const rating = 4.8;
+  const deliveryCount = 127;
+
   return (
-    <Card
-      className={`transition-all ${isExpired ? "opacity-50" : ""}`}
+    <div
+      className={`bg-white rounded-2xl border ${
+        isFirstCard && !isExpired ? "border-[#0077B6] border-2" : "border-gray-200"
+      } p-4 transition-all ${isExpired ? "opacity-50" : ""}`}
       data-testid="consumer-offer-card"
     >
-      <CardContent className="pt-4">
-        <div className="flex flex-col gap-3">
-          {/* Header: Provider info + Countdown */}
-          <div className="flex items-center justify-between">
-            {/* Provider Avatar + Name */}
-            <div className="flex items-center gap-3">
-              {/* Avatar circle with initials */}
-              <div
-                className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0"
-                data-testid="provider-avatar"
-              >
-                {offer.profiles?.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={offer.profiles.avatar_url}
-                    alt={providerName}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-sm font-medium text-blue-600">
-                    {initials || <User className="h-5 w-5 text-blue-600" />}
-                  </span>
-                )}
-              </div>
-              <div>
-                <p
-                  className="font-medium text-gray-900"
-                  data-testid="provider-name"
-                >
-                  {providerName}
-                </p>
-              </div>
-            </div>
-
-            {/* Expired badge or Countdown - AC10.3.4, AC10.3.3 */}
-            {isExpired ? (
-              <Badge
-                className="bg-gray-100 text-gray-600"
-                data-testid="offer-expired-badge"
-              >
-                Expirada
-              </Badge>
-            ) : (
-              <CountdownTimer
-                expiresAt={offer.expires_at}
-                onExpire={handleExpire}
-                data-testid="offer-countdown"
+      {/* Top Row: Provider info + Price */}
+      <div className="flex items-start justify-between mb-4">
+        {/* Provider Avatar + Info */}
+        <div className="flex items-center gap-3">
+          {/* Avatar circle with initials */}
+          <div
+            className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center shrink-0"
+            data-testid="provider-avatar"
+          >
+            {offer.profiles?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={offer.profiles.avatar_url}
+                alt={providerName}
+                className="w-11 h-11 rounded-full object-cover"
               />
+            ) : (
+              <User className="h-5 w-5 text-gray-400" />
             )}
           </div>
-
-          {/* Delivery window and price row */}
-          <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-            {/* Delivery window */}
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-gray-500">Entrega</p>
-                <p
-                  className="text-sm font-medium text-gray-900"
-                  data-testid="delivery-window"
-                >
-                  {deliveryWindowText}
-                </p>
-              </div>
-            </div>
-
-            {/* Price */}
-            <div className="text-right">
-              <p className="text-xs text-gray-500">Precio</p>
-              <p
-                className="text-lg font-bold text-green-600"
-                data-testid="offer-price"
-              >
-                {formatCLP(price)}
-              </p>
-            </div>
-          </div>
-
-          {/* Optional message from provider */}
-          {offer.message && (
-            <p className="text-sm text-gray-600 italic bg-blue-50 rounded p-2">
-              &ldquo;{offer.message}&rdquo;
+          <div>
+            <p
+              className="font-semibold text-gray-900"
+              data-testid="provider-name"
+            >
+              {providerName}
             </p>
-          )}
-
-          {/* Select button - AC10.1.2 */}
-          <Button
-            onClick={() => onSelect(offer.id)}
-            disabled={isExpired || isSelecting || disabled}
-            className="w-full bg-[#0077B6] hover:bg-[#005f8f]"
-            data-testid="select-offer-button"
-          >
-            {isSelecting ? "Seleccionando..." : "Seleccionar"}
-          </Button>
+            <p className="text-xs text-gray-500">
+              {rating} • {deliveryCount} entregas
+            </p>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Price + Best offer badge */}
+        <div className="text-right">
+          <p
+            className="text-xl font-bold text-gray-900"
+            data-testid="offer-price"
+          >
+            {formatCLP(price)}
+          </p>
+          {isBestOffer && !isExpired && (
+            <span className="text-xs font-medium text-[#10B981]">Mejor precio</span>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Row: Delivery window + Countdown + Button */}
+      <div className="flex items-center justify-between">
+        {/* Delivery window */}
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-gray-400" />
+          <span
+            className="text-sm text-gray-600"
+            data-testid="delivery-window"
+          >
+            {deliveryWindowText}
+          </span>
+        </div>
+
+        {/* Countdown or Expired badge */}
+        {isExpired ? (
+          <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-1">
+            Expirada
+          </span>
+        ) : (
+          <CountdownTimer
+            expiresAt={offer.expires_at}
+            onExpire={handleExpire}
+            data-testid="offer-countdown"
+          />
+        )}
+      </div>
+
+      {/* Select Button */}
+      <Button
+        onClick={() => onSelect(offer.id)}
+        disabled={isExpired || isSelecting || disabled}
+        variant={isFirstCard && !isExpired ? "default" : "outline"}
+        className={`w-full mt-4 rounded-xl h-11 text-sm font-semibold ${
+          isFirstCard && !isExpired
+            ? "bg-[#0077B6] hover:bg-[#005f8f] text-white"
+            : "border-gray-200 text-gray-700 hover:bg-gray-50"
+        }`}
+        data-testid="select-offer-button"
+      >
+        {isSelecting ? "Seleccionando..." : "Seleccionar oferta"}
+      </Button>
+    </div>
   );
 }
 

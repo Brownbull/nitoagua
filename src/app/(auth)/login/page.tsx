@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { GoogleSignIn } from "@/components/auth/google-sign-in";
 import { DevLogin } from "@/components/auth/dev-login";
 import { LoginErrorHandler } from "@/components/auth/login-error-handler";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Truck } from "lucide-react";
 
 // Show dev login when explicitly enabled via env var
 const showDevLogin = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
@@ -56,53 +56,56 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <LoginErrorHandler />
       </Suspense>
 
-      <Card className="w-full">
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Iniciar sesión</CardTitle>
-          <CardDescription>
-            Ingresa con tu cuenta de Google para continuar
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <GoogleSignIn role={role} />
+      {/* Google Sign In Button - mockup styled */}
+      <div className="w-full max-w-[320px]">
+        <GoogleSignIn role={role} />
+      </div>
 
-          {/* Role switch link */}
-          <div className="mt-6 text-center">
-            {isSupplierLogin ? (
-              <Link
-                href="/login?role=consumer"
-                className="text-sm text-[#0077B6] hover:underline"
-                data-testid="switch-to-consumer-link"
-              >
-                ¿No eres proveedor? Registrarme como consumidor
-              </Link>
-            ) : (
-              <Link
-                href="/login?role=supplier"
-                className="text-sm text-[#0077B6] hover:underline"
-                data-testid="switch-to-supplier-link"
-              >
-                ¿Eres proveedor de agua? Registrarme como proveedor
-              </Link>
-            )}
-          </div>
+      {/* Terms text */}
+      <div className="mt-6 text-center max-w-[280px]">
+        <p className="text-[13px] text-gray-500 leading-relaxed">
+          Al continuar, aceptas nuestros{" "}
+          <a href="/terms" className="text-[#0077B6] font-medium hover:underline">
+            Términos de Servicio
+          </a>{" "}
+          y{" "}
+          <a href="/privacy" className="text-[#0077B6] font-medium hover:underline">
+            Política de Privacidad
+          </a>
+        </p>
+      </div>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
-            <p>
-              Al continuar, aceptas nuestros{" "}
-              <a href="/terms" className="text-[#0077B6] hover:underline">
-                Términos de Servicio
-              </a>{" "}
-              y{" "}
-              <a href="/privacy" className="text-[#0077B6] hover:underline">
-                Política de Privacidad
-              </a>
-            </p>
-          </div>
+      {/* Role switch section - at the bottom */}
+      <div className="mt-8 pt-6 border-t border-gray-100 w-full text-center">
+        {isSupplierLogin ? (
+          <Link
+            href="/login?role=consumer"
+            className="inline-flex items-center gap-2.5 px-5 py-3 bg-[#CAF0F8] text-[#0077B6] rounded-xl text-sm font-semibold hover:bg-[#b8e8f5] transition-colors"
+            data-testid="switch-to-consumer-link"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Soy consumidor
+          </Link>
+        ) : (
+          <Link
+            href="/login?role=supplier"
+            className="inline-flex items-center gap-2.5 px-5 py-3 bg-[#FED7AA] text-[#F97316] rounded-xl text-sm font-semibold hover:bg-[#fdc99a] transition-colors"
+            data-testid="switch-to-supplier-link"
+          >
+            <Truck className="w-5 h-5" />
+            Soy repartidor
+          </Link>
+        )}
+      </div>
 
-          {showDevLogin && <DevLogin />}
-        </CardContent>
-      </Card>
+      {showDevLogin && (
+        <div className="mt-6 w-full">
+          <DevLogin />
+        </div>
+      )}
     </>
   );
 }
