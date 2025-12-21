@@ -155,6 +155,23 @@ export async function requireAdmin() { /* ... */ }
 - **RLS:** Providers upload/view own, admins view all
 - **Actions:** `getPlatformBankDetails()`, `submitCommissionPayment()`, `getReceiptUrl()`
 
+## Code Review Learnings (Epic 10)
+
+| Story | Key Patterns | Location |
+|-------|--------------|----------|
+| 10-3 | `data-testid` prop passthrough pattern | `CountdownTimer` component |
+| 10-3 | `aria-live` on both active AND expired states | Accessibility for state transitions |
+| 10-3 | `COUNTDOWN_THRESHOLDS` exported constants | `src/lib/utils/countdown.ts` |
+| 10-3 | Urgency colors: orange (< 10 min), red (< 5 min) | Per AC10.3.3 |
+
+### CountdownTimer Component Pattern
+
+- **Location:** `src/components/shared/countdown-timer.tsx`
+- **Props:** `expiresAt`, `onExpire`, `showPrefix`, `showIcon`, `className`, `warningClassName`, `criticalClassName`, `data-testid`
+- **Accessibility:** `aria-live="polite"` on both active timer and expired state
+- **Format:** "MM:SS" when < 1 hour, "X h MM min" when > 1 hour
+- **Spanish copy:** "Expira en {time}", "Expirada"
+
 ---
 
-*Last verified: 2025-12-19 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10 code reviews*
+*Last verified: 2025-12-21 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3 code reviews*

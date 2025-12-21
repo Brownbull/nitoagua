@@ -47,6 +47,10 @@ interface CountdownTimerProps {
    * @default "text-red-500 font-semibold"
    */
   criticalClassName?: string;
+  /**
+   * Test ID for the component (passed through to DOM)
+   */
+  "data-testid"?: string;
 }
 
 /**
@@ -97,6 +101,7 @@ export function CountdownTimer({
   className,
   warningClassName = "text-orange-500",
   criticalClassName = "text-red-500 font-semibold",
+  "data-testid": testId,
 }: CountdownTimerProps) {
   const remaining = useCountdown(expiresAt);
   const hasExpiredRef = useRef(false);
@@ -130,7 +135,12 @@ export function CountdownTimer({
 
   if (isExpired) {
     return (
-      <span className={cn("text-gray-500 text-sm", className)} data-testid="countdown-expired">
+      <span
+        className={cn("text-gray-500 text-sm", className)}
+        data-testid={testId || "countdown-expired"}
+        aria-live="polite"
+        aria-label="Oferta expirada"
+      >
         Expirada
       </span>
     );
@@ -139,7 +149,7 @@ export function CountdownTimer({
   return (
     <span
       className={cn("flex items-center gap-1 text-sm", stateClassName, className)}
-      data-testid="countdown-timer"
+      data-testid={testId || "countdown-timer"}
       aria-live="polite"
       aria-label={`Expira en ${timeString}`}
     >

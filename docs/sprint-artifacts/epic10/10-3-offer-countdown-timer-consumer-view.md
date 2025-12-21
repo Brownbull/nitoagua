@@ -5,7 +5,7 @@
 | **Story ID** | 10-3 |
 | **Epic** | Epic 10: Consumer Offer Selection |
 | **Title** | Offer Countdown Timer (Consumer View) |
-| **Status** | review |
+| **Status** | done |
 | **Priority** | P1 (High) |
 | **Points** | 3 |
 | **Sprint** | TBD |
@@ -226,6 +226,11 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 4. **Real-time Expiration (AC10.3.4)**: Added local state tracking in OfferCard with `onExpire` callback
 5. **List Sorting (AC10.3.6)**: Added `expiredDuringView` state in OfferList to sort expired offers to bottom dynamically
 
+### Code Review Fixes (2025-12-21)
+
+1. **[MEDIUM] data-testid prop typing**: Added `data-testid` prop to CountdownTimerProps interface and passed through to DOM elements
+2. **[LOW] Accessibility fix**: Added `aria-live="polite"` and `aria-label="Oferta expirada"` to expired state for screen reader announcements
+
 ### File List
 
 - `src/lib/utils/countdown.ts` - Updated format and thresholds
@@ -243,3 +248,4 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 |------|--------|--------|
 | 2025-12-19 | Story created with Atlas workflow analysis | Claude Opus 4.5 |
 | 2025-12-19 | All tasks completed, E2E and unit tests passing | Claude Opus 4.5 |
+| 2025-12-21 | Atlas code review: Fixed data-testid prop typing, added aria-live to expired state | Claude Opus 4.5 |
