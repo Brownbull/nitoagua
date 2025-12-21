@@ -98,20 +98,28 @@ claude update
 
 ## Step 4: Copy Settings from WSL (Optional)
 
-To get your existing Claude Code settings:
+To get your existing Claude Code settings.
+
+**IMPORTANT: Run these commands in Windows PowerShell (not CMD, not Git Bash).**
+
+Open a new PowerShell window (Win+X → Windows PowerShell) and run:
 
 ```powershell
 # Create Claude directory
-mkdir $env:USERPROFILE\.claude -Force
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude"
 
 # Copy settings from WSL
-copy \\wsl.localhost\Ubuntu-24.04\home\khujta\.claude\settings.json $env:USERPROFILE\.claude\
+Copy-Item "\\wsl.localhost\Ubuntu-24.04\home\khujta\.claude\settings.json" "$env:USERPROFILE\.claude\" -Force
 
 # Copy plugins (optional)
-mkdir $env:USERPROFILE\.claude\plugins -Force
-copy \\wsl.localhost\Ubuntu-24.04\home\khujta\.claude\plugins\installed_plugins.json $env:USERPROFILE\.claude\plugins\
-copy \\wsl.localhost\Ubuntu-24.04\home\khujta\.claude\plugins\known_marketplaces.json $env:USERPROFILE\.claude\plugins\
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.claude\plugins"
+Copy-Item "\\wsl.localhost\Ubuntu-24.04\home\khujta\.claude\plugins\installed_plugins.json" "$env:USERPROFILE\.claude\plugins\" -Force
+Copy-Item "\\wsl.localhost\Ubuntu-24.04\home\khujta\.claude\plugins\known_marketplaces.json" "$env:USERPROFILE\.claude\plugins\" -Force
 ```
+
+**Note:** The VS Code terminal might default to CMD. Either:
+- Use `Ctrl+Shift+P` → "Terminal: Select Default Profile" → PowerShell
+- Or open a separate PowerShell window outside VS Code
 
 ---
 
