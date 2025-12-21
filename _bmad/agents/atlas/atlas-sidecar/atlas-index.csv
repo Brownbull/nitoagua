@@ -1,4 +1,5 @@
 id,section,name,description,tags,fragment_file
+project-config,0,Project Configuration,"Deployment URLs, test credentials, E2E testing config, API references","config,urls,credentials,e2e,deployment,testing",knowledge/00-project-config.md
 purpose,1,App Purpose & Core Principles,"Application mission statement, core principles, target market, value proposition","purpose,mission,principles,identity",knowledge/01-purpose.md
 features,2,Feature Inventory + Intent,"Feature catalog with intent, connections, and dependencies","features,inventory,capabilities",knowledge/02-features.md
 personas,3,User Personas & Goals,"User personas, goals, behaviors, pain points, and mental models","personas,users,ux,goals",knowledge/03-personas.md

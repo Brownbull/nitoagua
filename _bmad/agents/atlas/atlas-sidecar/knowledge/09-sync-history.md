@@ -52,6 +52,15 @@ Consolidated verbose entries into tables. Token count: ~9,850 → ~8,450.
 - **Sprint Status Updated:** All 4 Epic 11 stories marked `ready-for-dev`
 - **NOTE:** Renamed from "Testing Epic" to "Epic 11" for consistency. Consumer UX Epic shifted to Epic 12.
 
+### 2025-12-21: Story 10-3 Atlas Code Review
+- **Story Reviewed:** 10-3 Offer Countdown Timer (Consumer View)
+- **Issues Found:** 2 MEDIUM, 1 LOW (plus 2 HIGH git-related noted for process)
+- **Fixes Applied:**
+  1. Added `data-testid` prop typing to CountdownTimer component
+  2. Added `aria-live="polite"` to expired state for screen reader announcements
+- **Patterns Documented:** CountdownTimer component pattern added to Section 4
+- **Status:** Story marked `done`, sprint-status synced
+
 ## Documents Tracked
 
 | Document | Location | Last Checked |

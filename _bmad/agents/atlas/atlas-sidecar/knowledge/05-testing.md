@@ -250,4 +250,83 @@ test('example', async ({ page, log }) => {
 
 ---
 
-*Last verified: 2025-12-18 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3*
+## Chrome Extension vs Playwright: Decision Guide
+
+> Added 2025-12-21 after Chrome Extension E2E testing session
+
+### When to Use Chrome Extension E2E
+
+| Scenario | Why Chrome Extension |
+|----------|---------------------|
+| **Multi-persona workflows** | Natural multi-tab management, easy persona switching |
+| **Complex user journeys** | Human judgment for UI/UX validation |
+| **Exploratory testing** | Can adapt on the fly, notice unexpected issues |
+| **Visual verification** | Human eye catches layout/design issues |
+| **New feature validation** | Before investing in automation |
+| **Cross-persona timing** | Real-time observation of sync points |
+
+### When to Use Playwright Automated Tests
+
+| Scenario | Why Playwright |
+|----------|----------------|
+| **Regression testing** | Consistent, repeatable coverage |
+| **CI/CD integration** | Runs on every push/PR |
+| **Feature-specific tests** | Countdown timers, animations, state transitions |
+| **Race conditions** | Precise timing control impossible manually |
+| **Large test suites** | 100+ tests run in minutes, not hours |
+| **Data isolation** | Each test seeds and cleans up its own data |
+
+### Decision Matrix
+
+```
+Is this a NEW feature being validated for the first time?
+├── YES → Chrome Extension (exploratory, catch UX issues)
+└── NO → Already validated?
+    ├── YES → Playwright (regression, CI/CD)
+    └── NO → Is it multi-persona or complex timing?
+        ├── Multi-persona → Chrome Extension first, then Playwright
+        └── Timing-sensitive → Playwright (precise control)
+```
+
+### Data Considerations
+
+| Environment | Chrome Extension | Playwright |
+|-------------|------------------|------------|
+| **Local dev** | ✅ Can seed data | ✅ Seeds per-test |
+| **Staging** | ⚠️ May have stale data | ⚠️ Usually no seeding |
+| **Production** | ❌ No seed scripts | ❌ Never run automated |
+
+**Key Rule:** Always validate test data exists BEFORE generating Chrome Extension checklists. Use `step-03b-data-validation.md` in the atlas-e2e workflow.
+
+---
+
+## Chrome Extension E2E Test Records
+
+### E2E Test Record: 10-3 (Chrome Extension)
+
+**Date:** 2025-12-20
+**Story:** 10-3 - Offer Countdown Timer (Consumer View)
+**Pass Rate:** N/A (Skipped - no test data on production)
+
+**Coverage:**
+- AC10.3.1 - AC10.3.7: All SKIPPED
+
+**Personas Tested:**
+- Consumer (Doña María): Login verified, 0 scenarios executed
+
+**Patterns Established:**
+- Production lacks seed data for feature E2E tests
+- Chrome Extension E2E requires either local environment or real test data
+- Dev login mode works on production
+
+**Issues Found:**
+- None (tests not executed due to data constraint)
+
+**Checklist:** docs/testing/e2e-checklists/10-3-offer-countdown-timer.md
+
+**Lesson Learned:**
+> Chrome Extension E2E testing on production requires real test data or a staging environment with persistent seed data. For feature-specific tests like countdown timers, prefer running Playwright automated tests locally with `npm run seed:offers`.
+
+---
+
+*Last verified: 2025-12-20 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E*
