@@ -176,7 +176,7 @@ development_status:
   epic-10: contexted  # Tech spec created 2025-12-19
   10-1-offer-list-view-for-consumers: deployed  # DEPLOYED 2025-12-19 - Production release, 26 E2E tests
   10-2-select-provider-offer: deployed  # DEPLOYED 2025-12-19 - Production release, security fix applied, 14 E2E tests
-  10-3-offer-countdown-timer-consumer-view: done  # APPROVED 2025-12-21 - Atlas code review passed, 2 fixes applied, 12 E2E + 33 unit tests
+  10-3-offer-countdown-timer-consumer-view: deployed  # DEPLOYED 2025-12-21 - Production release, 2 code review fixes, 12 E2E + 33 unit tests  # APPROVED 2025-12-21 - Atlas code review passed, 2 fixes applied, 12 E2E + 33 unit tests
   10-4-request-timeout-notification: ready-for-dev  # Story created 2025-12-19
   10-5-request-status-with-offer-context: ready-for-dev  # Story created 2025-12-19
   10-6-pwa-settings-and-notifications: ready-for-dev  # Story created 2025-12-19 - PWA install/version + push notifications for all personas
