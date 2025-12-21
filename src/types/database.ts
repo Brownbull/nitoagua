@@ -244,9 +244,11 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          avatar_url: string | null
           bank_account: string | null
           bank_name: string | null
           commission_override: number | null
+          comuna_id: string | null
           created_at: string | null
           email: string | null
           id: string
@@ -272,9 +274,11 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          avatar_url?: string | null
           bank_account?: string | null
           bank_name?: string | null
           commission_override?: number | null
+          comuna_id?: string | null
           created_at?: string | null
           email?: string | null
           id: string
@@ -300,9 +304,11 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          avatar_url?: string | null
           bank_account?: string | null
           bank_name?: string | null
           commission_override?: number | null
+          comuna_id?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -326,7 +332,15 @@ export type Database = {
           working_days?: string[] | null
           working_hours?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_comuna_id_fkey"
+            columns: ["comuna_id"]
+            isOneToOne: false
+            referencedRelation: "comunas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       provider_documents: {
         Row: {
@@ -427,6 +441,7 @@ export type Database = {
           guest_name: string | null
           guest_phone: string
           id: string
+          in_transit_at: string | null
           is_urgent: boolean | null
           latitude: number | null
           longitude: number | null
@@ -453,6 +468,7 @@ export type Database = {
           guest_name?: string | null
           guest_phone: string
           id?: string
+          in_transit_at?: string | null
           is_urgent?: boolean | null
           latitude?: number | null
           longitude?: number | null
@@ -470,6 +486,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           comuna_id?: string | null
+          in_transit_at?: string | null
           consumer_id?: string | null
           created_at?: string | null
           decline_reason?: string | null

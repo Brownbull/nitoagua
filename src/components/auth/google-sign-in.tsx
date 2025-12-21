@@ -48,19 +48,19 @@ export function GoogleSignIn({ redirectTo = "/auth/callback", role = "consumer" 
 
   return (
     <div className="space-y-4">
-      <Button
+      {/* Mockup-styled Google button */}
+      <button
         type="button"
-        variant="outline"
-        className="w-full h-12 text-base font-medium border-gray-300 hover:bg-gray-50"
         onClick={handleGoogleSignIn}
         disabled={isLoading}
+        className="w-full px-6 py-4 bg-white border-2 border-gray-200 rounded-[14px] flex items-center justify-center gap-3 text-base font-semibold text-gray-700 shadow-sm hover:shadow-md hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         data-testid="google-sign-in-button"
       >
         {isLoading ? (
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          <Loader2 className="h-6 w-6 animate-spin" />
         ) : (
           <svg
-            className="mr-2 h-5 w-5"
+            className="h-6 w-6"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -83,7 +83,7 @@ export function GoogleSignIn({ redirectTo = "/auth/callback", role = "consumer" 
           </svg>
         )}
         Continuar con Google
-      </Button>
+      </button>
 
       {error && (
         <p className="text-sm text-red-600 text-center" role="alert">

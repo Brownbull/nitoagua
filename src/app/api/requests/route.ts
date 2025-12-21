@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
       is_urgent: data.isUrgent,
       latitude: data.latitude ?? null,
       longitude: data.longitude ?? null,
+      comuna_id: data.comunaId ?? null,
       tracking_token: trackingToken,
       status: "pending" as const,
       guest_name: data.name,

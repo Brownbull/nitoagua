@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { RequestForm } from "@/components/consumer/request-form";
+import { RequestHeader } from "@/components/consumer/request-header";
+import { RequestStep1Details, type Step1Data } from "@/components/consumer/request-step1-details";
+import { RequestStep3Amount, type Step3Data, type Step3Ref } from "@/components/consumer/request-step3-amount";
 import { RequestReview } from "@/components/consumer/request-review";
 import type { RequestInput } from "@/lib/validations/request";
 import {
@@ -19,27 +19,37 @@ import {
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * Request flow states:
+ * Request flow states (3-step wizard):
  * - loading: Loading user profile data
- * - form: User is filling out the request form
- * - review: User is reviewing their request before submission
+ * - step1: Contact + Location info (name, phone, email, comuna, address, instructions)
+ * - step2: Amount (water quantity, urgency)
+ * - step3: Review screen - verify all info before submission
  * - submitting: Request is being submitted to the server
  * - submitted: Request has been successfully submitted
  */
-type RequestState = "loading" | "form" | "review" | "submitting" | "submitted";
+type RequestState = "loading" | "step1" | "step2" | "step3" | "submitting" | "submitted";
 
 interface UserProfile {
   name: string;
   phone: string;
   address: string | null;
   special_instructions: string | null;
+  comuna_id: string | null;
+}
+
+// Step data types combined
+interface WizardData {
+  step1?: Step1Data;
+  step2?: Step3Data;
 }
 
 export default function RequestPage() {
   const router = useRouter();
   const [state, setState] = useState<RequestState>("loading");
-  const [formData, setFormData] = useState<RequestInput | null>(null);
+  const [wizardData, setWizardData] = useState<WizardData>({});
   const [profileData, setProfileData] = useState<Partial<RequestInput>>({});
+  const [step2Valid, setStep2Valid] = useState(false);
+  const step2Ref = useRef<Step3Ref>(null);
 
   // Load user profile on mount
   useEffect(() => {
@@ -51,10 +61,10 @@ export default function RequestPage() {
         // Get user email
         const email = user.email || "";
 
-        // Get profile data
+        // Get profile data including saved comuna
         const { data: profile } = await supabase
           .from("profiles")
-          .select("name, phone, address, special_instructions")
+          .select("name, phone, address, special_instructions, comuna_id")
           .eq("id", user.id)
           .single();
 
@@ -66,6 +76,7 @@ export default function RequestPage() {
             email: email,
             address: typedProfile.address || "",
             specialInstructions: typedProfile.special_instructions || "",
+            comunaId: typedProfile.comuna_id || undefined,
           });
         } else {
           // No profile but has email
@@ -73,7 +84,7 @@ export default function RequestPage() {
         }
       }
 
-      setState("form");
+      setState("step1");
     }
 
     loadProfile();
@@ -105,19 +116,73 @@ export default function RequestPage() {
     return cleanup;
   }, []);
 
-  // Handle form submission - transition to review state
-  const handleFormSubmit = async (data: RequestInput) => {
-    setFormData(data);
-    setState("review");
+  // Build complete form data from wizard steps
+  const buildFormData = (): RequestInput | null => {
+    const { step1, step2 } = wizardData;
+    if (!step1 || !step2) return null;
+
+    return {
+      name: step1.name,
+      phone: step1.phone,
+      email: step1.email,
+      address: step1.address,
+      specialInstructions: step1.specialInstructions,
+      latitude: step1.latitude,
+      longitude: step1.longitude,
+      comunaId: step1.comunaId,
+      amount: step2.amount,
+      isUrgent: step2.isUrgent,
+    };
   };
 
-  // Handle edit - return to form with preserved data
-  const handleEdit = () => {
-    setState("form");
+  // Step 1 handlers
+  const handleStep1Next = (data: Step1Data) => {
+    setWizardData(prev => ({ ...prev, step1: data }));
+    setState("step2");
+  };
+
+  // Step 2 handlers
+  const handleStep2Next = (data: Step3Data) => {
+    setWizardData(prev => ({ ...prev, step2: data }));
+    setState("step3");
+  };
+
+  const handleStep2Back = () => {
+    setState("step1");
+  };
+
+  // Handle step 2 "Siguiente" click from header
+  const handleStep2HeaderNext = useCallback(() => {
+    step2Ref.current?.submit();
+  }, []);
+
+  // Handle step 3 "Confirmar" click from header
+  const handleStep3HeaderSubmit = useCallback(() => {
+    handleSubmit();
+  }, []);
+
+  // Handle step 2 validity changes
+  const handleStep2ValidChange = useCallback((isValid: boolean) => {
+    setStep2Valid(isValid);
+  }, []);
+
+  // Step 3 (Review) handlers
+  const handleStep3Back = () => {
+    setState("step2");
+  };
+
+  // Handle edit from review - return to step 1
+  const handleEditContact = () => {
+    setState("step1");
+  };
+
+  const handleEditAmount = () => {
+    setState("step2");
   };
 
   // Handle final submission
   const handleSubmit = async () => {
+    const formData = buildFormData();
     if (!formData) return;
 
     // Check if online
@@ -155,7 +220,7 @@ export default function RequestPage() {
         router.push(`/request/${result.data.id}/confirmation`);
       } else {
         // API returned an error
-        setState("review");
+        setState("step3");
         toast.error(result.error?.message || "Error al enviar", {
           action: {
             label: "Reintentar",
@@ -170,13 +235,16 @@ export default function RequestPage() {
     } catch {
       // Network error - check if we're offline now
       if (!isOnline()) {
-        queueRequest(formData);
+        const formData = buildFormData();
+        if (formData) {
+          queueRequest(formData);
+        }
         toast.info("Solicitud guardada. Se enviará cuando tengas conexión.", {
           duration: 5000,
         });
         router.push("/");
       } else {
-        setState("review");
+        setState("step3");
         toast.error("Error al enviar la solicitud", {
           action: {
             label: "Reintentar",
@@ -194,59 +262,122 @@ export default function RequestPage() {
   // Loading state
   if (state === "loading") {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#0077B6]" />
       </div>
     );
   }
 
+  // Get step info based on state
+  const getStepInfo = () => {
+    switch (state) {
+      case "step1":
+        return {
+          step: 1,
+          title: "Pedir Agua",
+          subtitle: "Tus datos y dirección",
+          onBack: undefined,
+          onNext: undefined,
+          showNavButtons: false,
+          nextDisabled: false,
+          nextLabel: "Continuar",
+        };
+      case "step2":
+        return {
+          step: 2,
+          title: "¿Cuánta agua?",
+          subtitle: "Elige la cantidad",
+          onBack: handleStep2Back,
+          onNext: handleStep2HeaderNext,
+          showNavButtons: true,
+          nextDisabled: !step2Valid,
+          nextLabel: "Siguiente",
+        };
+      case "step3":
+      case "submitting":
+        return {
+          step: 3,
+          title: "Revisa tu pedido",
+          subtitle: "Confirma que todo esté bien",
+          onBack: handleStep3Back,
+          onNext: handleStep3HeaderSubmit,
+          showNavButtons: true,
+          nextDisabled: state === "submitting",
+          nextLabel: "Confirmar",
+          nextVariant: "success" as const,
+        };
+      default:
+        return {
+          step: 1,
+          title: "Pedir Agua",
+          subtitle: "Tus datos y dirección",
+          onBack: undefined,
+          onNext: undefined,
+          showNavButtons: false,
+          nextDisabled: false,
+          nextLabel: "Continuar",
+        };
+    }
+  };
+
+  const stepInfo = getStepInfo();
+
   return (
-    <div className="flex flex-col px-4 py-6">
-      {/* Header with back navigation */}
-      <div className="mb-6 flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          asChild={state === "form"}
-          onClick={state !== "form" ? handleEdit : undefined}
-          className="min-h-[44px] min-w-[44px]"
-          data-testid="back-button"
-        >
-          {state === "form" ? (
-            <Link href="/">
-              <ArrowLeft className="h-5 w-5" />
-              <span className="sr-only">Volver al inicio</span>
-            </Link>
-          ) : (
-            <>
-              <ArrowLeft className="h-5 w-5" />
-              <span className="sr-only">Volver al formulario</span>
-            </>
-          )}
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900">
-          {state === "form" ? "Solicitar Agua" : "Revisar Solicitud"}
-        </h1>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header with progress */}
+      <RequestHeader
+        title={stepInfo.title}
+        subtitle={stepInfo.subtitle}
+        step={stepInfo.step}
+        totalSteps={3}
+        onBack={stepInfo.onBack}
+        onNext={stepInfo.onNext}
+        backHref="/"
+        showNavButtons={stepInfo.showNavButtons}
+        nextDisabled={stepInfo.nextDisabled}
+        nextLabel={stepInfo.nextLabel}
+        nextVariant={stepInfo.nextVariant}
+      />
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-5 py-4 bg-gray-50">
+        {/* Step 1: Contact + Location */}
+        {state === "step1" && (
+          <RequestStep1Details
+            initialData={wizardData.step1 ?? {
+              name: profileData.name,
+              phone: profileData.phone,
+              email: profileData.email,
+              comunaId: profileData.comunaId,
+              address: profileData.address,
+              specialInstructions: profileData.specialInstructions,
+            }}
+            onNext={handleStep1Next}
+          />
+        )}
+
+        {/* Step 2: Amount */}
+        {state === "step2" && (
+          <RequestStep3Amount
+            ref={step2Ref}
+            initialData={wizardData.step2}
+            onNext={handleStep2Next}
+            onBack={handleStep2Back}
+            onValidChange={handleStep2ValidChange}
+          />
+        )}
+
+        {/* Step 3: Review */}
+        {(state === "step3" || state === "submitting") && (
+          <RequestReview
+            data={buildFormData()!}
+            onEditContact={handleEditContact}
+            onEditAmount={handleEditAmount}
+            onSubmit={handleSubmit}
+            loading={state === "submitting"}
+          />
+        )}
       </div>
-
-      {/* Form State */}
-      {state === "form" && (
-        <RequestForm
-          onSubmit={handleFormSubmit}
-          initialData={formData ?? profileData}
-          loading={false}
-        />
-      )}
-
-      {/* Review State */}
-      {(state === "review" || state === "submitting") && formData && (
-        <RequestReview
-          data={formData}
-          onEdit={handleEdit}
-          onSubmit={handleSubmit}
-          loading={state === "submitting"}
-        />
-      )}
     </div>
   );
 }

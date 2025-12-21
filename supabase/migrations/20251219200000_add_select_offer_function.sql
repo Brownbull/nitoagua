@@ -19,6 +19,7 @@ DECLARE
   v_offer_status TEXT;
   v_request_status TEXT;
   v_cancelled_count INT;
+  v_delivery_window TEXT;
 BEGIN
   -- AC10.2.4: Verify offer exists, is active, AND belongs to the specified request
   -- Security: Validate offer-request relationship to prevent cross-request attacks
@@ -89,12 +90,16 @@ BEGIN
   GET DIAGNOSTICS v_cancelled_count = ROW_COUNT;
 
   -- AC10.2.5: Update request with provider_id and delivery window
+  -- Format delivery window as "HH:mm - HH:mm" string (Chile timezone)
+  v_delivery_window := TO_CHAR(v_delivery_start AT TIME ZONE 'America/Santiago', 'HH24:MI') ||
+                       ' - ' ||
+                       TO_CHAR(v_delivery_end AT TIME ZONE 'America/Santiago', 'HH24:MI');
+
   UPDATE water_requests
   SET
     status = 'accepted',
     supplier_id = v_provider_id,
-    delivery_window_start = v_delivery_start,
-    delivery_window_end = v_delivery_end,
+    delivery_window = v_delivery_window,
     accepted_at = NOW()
   WHERE id = p_request_id
     AND status = 'pending';

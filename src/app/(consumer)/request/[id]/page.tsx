@@ -22,9 +22,11 @@ interface RequestWithSupplier {
   is_urgent: boolean;
   created_at: string | null;
   accepted_at: string | null;
+  in_transit_at: string | null;
   delivered_at: string | null;
   delivery_window: string | null;
   supplier_id: string | null;
+  active_offer_count?: number; // AC10.5.7: Offer count for pending requests
   profiles: {
     name: string;
     phone: string;
@@ -160,6 +162,7 @@ export default function RequestStatusPage() {
           is_urgent,
           created_at,
           accepted_at,
+          in_transit_at,
           delivered_at,
           delivery_window,
           supplier_id,
@@ -178,7 +181,21 @@ export default function RequestStatusPage() {
         return;
       }
 
-      setRequest(requestData as RequestWithSupplier);
+      // AC10.5.7: Get active offer count for pending requests
+      let activeOfferCount = 0;
+      if (requestData.status === "pending") {
+        const { count } = await supabase
+          .from("offers")
+          .select("*", { count: "exact", head: true })
+          .eq("request_id", id)
+          .eq("status", "active");
+        activeOfferCount = count ?? 0;
+      }
+
+      setRequest({
+        ...requestData,
+        active_offer_count: activeOfferCount,
+      } as RequestWithSupplier);
       setLoading(false);
     }
 

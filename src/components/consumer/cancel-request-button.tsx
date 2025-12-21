@@ -10,11 +10,13 @@ import { toast } from "sonner";
 interface CancelRequestButtonProps {
   requestId: string;
   trackingToken?: string;
+  variant?: "default" | "danger";
 }
 
 export function CancelRequestButton({
   requestId,
   trackingToken,
+  variant = "default",
 }: CancelRequestButtonProps) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -55,11 +57,15 @@ export function CancelRequestButton({
     }
   }
 
+  const buttonStyles = variant === "danger"
+    ? "w-full border-[#FCA5A5] text-[#DC2626] hover:bg-red-50 rounded-xl py-3.5 text-sm font-semibold"
+    : "w-full border-amber-300 text-amber-700 hover:bg-amber-100";
+
   return (
     <>
       <Button
         variant="outline"
-        className="w-full border-amber-300 text-amber-700 hover:bg-amber-100"
+        className={buttonStyles}
         onClick={() => setIsDialogOpen(true)}
       >
         <XCircle className="mr-2 h-4 w-4" />

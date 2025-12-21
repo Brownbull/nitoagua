@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ConsumerNav } from "@/components/layout/consumer-nav";
+import { ConsumerLayoutWrapper } from "@/components/layout/consumer-layout-wrapper";
 
 export const metadata: Metadata = {
   title: "nitoagua - Solicitar Agua",
@@ -11,10 +11,5 @@ export default function ConsumerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex flex-1 flex-col pb-16">{children}</main>
-      <ConsumerNav />
-    </div>
-  );
+  return <ConsumerLayoutWrapper>{children}</ConsumerLayoutWrapper>;
 }

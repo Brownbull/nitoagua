@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, Loader2 } from "lucide-react";
 import { OfferCard } from "./offer-card";
+import { formatCLP, getDeliveryPrice } from "@/lib/utils/commission";
 import type { ConsumerOffer } from "@/hooks/use-consumer-offers";
 
 interface OfferListProps {
@@ -30,35 +30,31 @@ function isOfferExpired(
 }
 
 /**
- * Empty State Component
+ * Empty State Component - Mockup aligned
  * AC10.1.5: "Esperando ofertas de repartidores..." with timeout notice
  */
 function EmptyState() {
   return (
-    <Card className="border-amber-200 bg-amber-50">
-      <CardContent className="pt-6">
-        <div className="flex flex-col items-center text-center">
-          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
-            <Clock className="h-6 w-6 text-amber-600 animate-pulse" aria-hidden="true" />
-          </div>
-          <p
-            className="text-lg font-medium text-amber-800 mb-1"
-            data-testid="empty-state-heading"
-          >
-            Esperando ofertas de repartidores...
-          </p>
-          <p className="text-sm text-amber-700 mb-3">
-            Tu solicitud fue enviada a los aguateros de la zona
-          </p>
-          <p
-            className="text-xs text-amber-600 bg-amber-100 rounded-lg px-3 py-2"
-            data-testid="timeout-notice"
-          >
-            Si no recibes ofertas en 4 horas, te notificaremos
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="bg-[#FEF3C7] rounded-2xl p-6 text-center">
+      <div className="w-14 h-14 rounded-full bg-[#FDE68A] flex items-center justify-center mx-auto mb-4">
+        <Clock className="h-7 w-7 text-[#B45309]" aria-hidden="true" />
+      </div>
+      <p
+        className="text-lg font-semibold text-[#92400E] mb-2"
+        data-testid="empty-state-heading"
+      >
+        Esperando ofertas de repartidores...
+      </p>
+      <p className="text-sm text-[#A16207] mb-4">
+        Tu solicitud fue enviada a los aguateros de la zona
+      </p>
+      <p
+        className="text-sm text-[#B45309] bg-[#FDE68A] rounded-xl px-4 py-2.5 inline-block"
+        data-testid="timeout-notice"
+      >
+        Si no recibes ofertas en 4 horas, te notificaremos
+      </p>
+    </div>
   );
 }
 
@@ -75,13 +71,36 @@ function LoadingState() {
 }
 
 /**
- * Offer List Component
+ * Summary Stats Component - Mockup design
+ * Shows active offer count and lowest price
+ */
+function SummaryStats({
+  activeCount,
+  lowestPrice,
+}: {
+  activeCount: number;
+  lowestPrice: number;
+}) {
+  return (
+    <div className="flex justify-center gap-12 py-4 mb-2">
+      <div className="text-center">
+        <p className="text-2xl font-bold text-gray-900">{activeCount}</p>
+        <p className="text-xs text-gray-500">Ofertas activas</p>
+      </div>
+      <div className="text-center">
+        <p className="text-2xl font-bold text-gray-900">{formatCLP(lowestPrice)}</p>
+        <p className="text-xs text-gray-500">Menor precio</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Offer List Component - Mockup aligned
  * AC10.1.1: Consumer sees "Ofertas Recibidas" section with count badge
  * AC10.1.3: Offers sorted by delivery window (soonest first) - handled by hook
  * AC10.1.5: Empty state with appropriate messaging
  * AC10.3.6: Expired offers sorted to bottom with visual fade
- *
- * Pattern follows Epic 8 provider offer list patterns
  */
 export function OfferList({
   offers,
@@ -122,54 +141,49 @@ export function OfferList({
     });
   }, [offers, expiredDuringView]);
 
-  // Count active (non-expired) offers for badge
+  // Count active (non-expired) offers
   const activeOfferCount = offers.filter(
     (o) => !isOfferExpired(o, expiredDuringView)
   ).length;
+
+  // Calculate lowest price from request amount
+  const lowestPrice = getDeliveryPrice(requestAmount);
+
+  // Find the best offer (first active one after sorting)
+  const bestOfferId = sortedOffers.find(
+    (o) => !isOfferExpired(o, expiredDuringView)
+  )?.id;
 
   if (loading) {
     return <LoadingState />;
   }
 
-  return (
-    <div className="space-y-4">
-      {/* Header with count badge - AC10.1.1 */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Ofertas Recibidas
-        </h2>
-        <Badge
-          className={`${
-            activeOfferCount > 0
-              ? "bg-green-100 text-green-800"
-              : "bg-gray-100 text-gray-600"
-          }`}
-          data-testid="offer-count-badge"
-        >
-          {activeOfferCount === 1
-            ? "1 oferta"
-            : `${activeOfferCount} ofertas`}
-        </Badge>
-      </div>
+  // Empty state
+  if (offers.length === 0) {
+    return <EmptyState />;
+  }
 
-      {/* Offer cards or empty state - AC10.1.5 */}
-      {offers.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="space-y-3" data-testid="offers-container">
-          {sortedOffers.map((offer) => (
-            <OfferCard
-              key={offer.id}
-              offer={offer}
-              requestAmount={requestAmount}
-              onSelect={onSelectOffer}
-              isSelecting={selectingOfferId === offer.id}
-              disabled={selectingOfferId !== null}
-              onExpire={handleOfferExpire}
-            />
-          ))}
-        </div>
-      )}
+  return (
+    <div className="space-y-3">
+      {/* Summary Stats - Mockup design */}
+      <SummaryStats activeCount={activeOfferCount} lowestPrice={lowestPrice} />
+
+      {/* Offer cards */}
+      <div className="space-y-3" data-testid="offers-container">
+        {sortedOffers.map((offer, index) => (
+          <OfferCard
+            key={offer.id}
+            offer={offer}
+            requestAmount={requestAmount}
+            onSelect={onSelectOffer}
+            isSelecting={selectingOfferId === offer.id}
+            disabled={selectingOfferId !== null}
+            onExpire={handleOfferExpire}
+            isBestOffer={offer.id === bestOfferId}
+            isFirstCard={index === 0 && !isOfferExpired(offer, expiredDuringView)}
+          />
+        ))}
+      </div>
     </div>
   );
 }

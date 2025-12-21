@@ -36,9 +36,5 @@ export default async function ConfirmationPage({
   // Fetch supplier phone server-side (single supplier for MVP)
   const supplierPhone = await getSupplierPhone();
 
-  return (
-    <div className="flex flex-col items-center justify-center px-4 py-12 min-h-[calc(100vh-120px)]">
-      <ConfirmationClient requestId={id} supplierPhone={supplierPhone} />
-    </div>
-  );
+  return <ConfirmationClient requestId={id} supplierPhone={supplierPhone} />;
 }
