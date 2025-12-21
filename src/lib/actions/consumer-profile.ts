@@ -12,6 +12,65 @@ interface ActionResult {
   error?: string;
 }
 
+export interface AvailableComuna {
+  id: string;
+  name: string;
+  region: string;
+}
+
+/**
+ * Get comunas that have at least one verified, available provider
+ * These are the only comunas where consumers can place requests
+ * Uses admin client to bypass RLS since this needs to read profile verification status
+ */
+export async function getAvailableComunas(): Promise<AvailableComuna[]> {
+  const supabase = createAdminClient();
+
+  // Get comunas that have at least one verified provider with service area
+  const { data, error } = await supabase
+    .from("comunas")
+    .select(`
+      id,
+      name,
+      region,
+      provider_service_areas!inner(
+        provider_id,
+        profiles!provider_service_areas_provider_id_fkey(
+          verification_status,
+          is_available
+        )
+      )
+    `)
+    .eq("active", true)
+    .order("name");
+
+  if (error) {
+    console.error("[CONSUMER-PROFILE] Error fetching comunas:", error);
+    return [];
+  }
+
+  // Filter to only comunas with at least one verified provider
+  const availableComunas = (data ?? [])
+    .filter((comuna) => {
+      const areas = comuna.provider_service_areas as Array<{
+        provider_id: string;
+        profiles: { verification_status: string; is_available: boolean } | null;
+      }>;
+      return areas.some(
+        (area) =>
+          area.profiles?.verification_status === "approved" &&
+          area.profiles?.is_available === true
+      );
+    })
+    .map((comuna) => ({
+      id: comuna.id,
+      name: comuna.name,
+      region: comuna.region,
+    }));
+
+  return availableComunas;
+}
+
 export async function createConsumerProfile(
   input: ConsumerOnboardingInput
 ): Promise<ActionResult> {
@@ -85,10 +144,11 @@ export async function createConsumerProfile(
   };
 }
 
-// Update profile input type (same as onboarding)
+// Update profile input type (same as onboarding + comuna)
 interface UpdateProfileInput {
   name: string;
   phone: string;
+  comunaId?: string;
   address: string;
   specialInstructions: string;
 }
@@ -132,6 +192,7 @@ export async function updateConsumerProfile(
     .update({
       name: data.name,
       phone: data.phone,
+      comuna_id: input.comunaId || null,
       address: data.address,
       special_instructions: data.specialInstructions,
       updated_at: new Date().toISOString(),

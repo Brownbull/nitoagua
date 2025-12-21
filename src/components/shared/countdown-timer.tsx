@@ -54,12 +54,22 @@ interface CountdownTimerProps {
 }
 
 /**
+ * Calculate initial remaining time (used for SSR-safe initialization)
+ */
+function calculateRemaining(expiresAt: string | Date): number {
+  const expiresAtDate = typeof expiresAt === "string" ? new Date(expiresAt) : expiresAt;
+  const diff = expiresAtDate.getTime() - Date.now();
+  return Math.max(0, diff);
+}
+
+/**
  * Hook for countdown timer with drift correction
  * Per Dev Notes: Uses server time for validation, client for display
  * NFR5: Countdown timer accuracy ±1 second
  */
 export function useCountdown(expiresAt: string | Date): number {
-  const [remaining, setRemaining] = useState<number>(0);
+  // Initialize with calculated value to prevent false expiration on first render
+  const [remaining, setRemaining] = useState<number>(() => calculateRemaining(expiresAt));
   const targetTimeRef = useRef<number>(0);
 
   useEffect(() => {
@@ -67,14 +77,14 @@ export function useCountdown(expiresAt: string | Date): number {
     const expiresAtDate = typeof expiresAt === "string" ? new Date(expiresAt) : expiresAt;
     targetTimeRef.current = expiresAtDate.getTime();
 
-    // Calculate initial remaining time with drift correction
+    // Calculate remaining time with drift correction
     const updateRemaining = () => {
       const now = Date.now();
       const diff = targetTimeRef.current - now;
       setRemaining(Math.max(0, diff));
     };
 
-    // Initial calculation
+    // Initial calculation (in case expiresAt changed)
     updateRemaining();
 
     // Update every second

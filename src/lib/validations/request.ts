@@ -5,7 +5,7 @@ import { z } from "zod";
  * Format: +56 followed by 9 digits
  * Example: +56912345678
  */
-const CHILEAN_PHONE_REGEX = /^\+56[0-9]{9}$/;
+export const CHILEAN_PHONE_REGEX = /^\+56[0-9]{9}$/;
 
 /**
  * Water request validation schema
@@ -21,7 +21,11 @@ export const requestSchema = z.object({
     .regex(CHILEAN_PHONE_REGEX, "Formato: +56912345678"),
   email: z
     .string()
-    .email("Email inválido"),
+    .refine(
+      (val) => val === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+      { message: "Email inválido" }
+    ),
+  comunaId: z.string().optional(),
   address: z
     .string()
     .min(5, "La dirección es requerida")

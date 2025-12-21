@@ -3,11 +3,17 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-import { Loader2, MapPin } from "lucide-react";
 import { z } from "zod";
+import { MapPin, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,59 +23,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { CHILEAN_PHONE_REGEX } from "@/lib/validations/request";
 import {
-  updateConsumerProfile,
   getAvailableComunas,
   type AvailableComuna,
 } from "@/lib/actions/consumer-profile";
 
-// Chilean phone format: +56 followed by 9 digits
-const chileanPhoneRegex = /^\+56[0-9]{9}$/;
-
-const consumerProfileSchema = z.object({
+const step1Schema = z.object({
   name: z
     .string()
-    .min(2, "El nombre debe tener al menos 2 caracteres")
-    .max(100, "El nombre no puede exceder 100 caracteres"),
-  phone: z
-    .string()
-    .regex(chileanPhoneRegex, "Formato inválido. Ejemplo: +56912345678"),
-  comunaId: z.string().optional(),
+    .min(2, "El nombre es requerido")
+    .max(100, "El nombre es demasiado largo"),
+  phone: z.string().regex(CHILEAN_PHONE_REGEX, "Formato: +56912345678"),
+  email: z.string().refine(
+    (val) => val === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+    { message: "Email inválido" }
+  ),
+  comunaId: z.string().min(1, "Selecciona una comuna"),
   address: z
     .string()
-    .min(5, "La dirección debe tener al menos 5 caracteres")
-    .max(200, "La dirección no puede exceder 200 caracteres"),
+    .min(5, "La dirección es requerida")
+    .max(200, "La dirección es demasiado larga"),
   specialInstructions: z
     .string()
-    .min(10, "Las instrucciones deben tener al menos 10 caracteres")
-    .max(500, "Las instrucciones no pueden exceder 500 caracteres"),
+    .min(1, "Las instrucciones son requeridas")
+    .max(500, "Las instrucciones son demasiado largas"),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
-type ConsumerProfileFormData = z.infer<typeof consumerProfileSchema>;
+export type Step1Data = z.infer<typeof step1Schema>;
 
-interface ConsumerProfileFormProps {
-  initialData: {
-    name: string;
-    phone: string;
-    address: string | null;
-    special_instructions: string | null;
-    comuna_id: string | null;
-  };
-  email: string | null;
+interface Step1Props {
+  initialData?: Partial<Step1Data>;
+  onNext: (data: Step1Data) => void;
 }
 
-export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function RequestStep1Details({ initialData, onNext }: Step1Props) {
   const [comunas, setComunas] = useState<AvailableComuna[]>([]);
   const [loadingComunas, setLoadingComunas] = useState(true);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  const form = useForm<Step1Data>({
+    resolver: zodResolver(step1Schema),
+    mode: "onSubmit",
+    defaultValues: {
+      name: initialData?.name ?? "",
+      phone: initialData?.phone ?? "",
+      email: initialData?.email ?? "",
+      comunaId: initialData?.comunaId ?? "",
+      address: initialData?.address ?? "",
+      specialInstructions: initialData?.specialInstructions ?? "",
+      latitude: initialData?.latitude,
+      longitude: initialData?.longitude,
+    },
+  });
 
   // Load available comunas on mount
   useEffect(() => {
@@ -81,55 +91,55 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
     loadComunas();
   }, []);
 
-  const form = useForm<ConsumerProfileFormData>({
-    resolver: zodResolver(consumerProfileSchema),
-    defaultValues: {
-      name: initialData.name || "",
-      phone: initialData.phone || "+56",
-      comunaId: initialData.comuna_id || "",
-      address: initialData.address || "",
-      specialInstructions: initialData.special_instructions || "",
-    },
-  });
+  const handleSubmit = (data: Step1Data) => {
+    onNext(data);
+  };
 
-  async function onSubmit(data: ConsumerProfileFormData) {
-    setIsSubmitting(true);
-
-    try {
-      const result = await updateConsumerProfile(data);
-
-      if (result.error) {
-        toast.error(result.error);
-        setIsSubmitting(false);
-        return;
-      }
-
-      toast.success("Perfil actualizado correctamente");
-      setIsSubmitting(false);
-    } catch {
-      toast.error("Error al actualizar el perfil. Intenta de nuevo.");
-      setIsSubmitting(false);
+  const handleGeolocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Tu navegador no soporta geolocalización");
+      return;
     }
-  }
+
+    setGettingLocation(true);
+    setLocationError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        form.setValue("latitude", position.coords.latitude);
+        form.setValue("longitude", position.coords.longitude);
+        setGettingLocation(false);
+      },
+      (error) => {
+        setGettingLocation(false);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            setLocationError("Permiso de ubicación denegado");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            setLocationError("Ubicación no disponible");
+            break;
+          case error.TIMEOUT:
+            setLocationError("Tiempo de espera agotado");
+            break;
+          default:
+            setLocationError("Error al obtener ubicación");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const hasLocation = form.watch("latitude") && form.watch("longitude");
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Contact Section */}
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        {/* Contact Info Section */}
         <div className="space-y-3">
           <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
             Información de contacto
           </h3>
-
-          {/* Email (read-only) */}
-          <div>
-            <Input
-              value={email || ""}
-              disabled
-              className="h-11 rounded-xl border-gray-200 bg-gray-50 text-sm text-gray-500"
-            />
-            <p className="text-[10px] text-gray-400 mt-1">El email no se puede modificar</p>
-          </div>
 
           {/* Name and Phone - side by side */}
           <div className="grid grid-cols-2 gap-3">
@@ -146,6 +156,7 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
                         "h-11 rounded-xl border-gray-200 text-sm placeholder:text-xs placeholder:text-gray-400",
                         fieldState.error && "border-red-400"
                       )}
+                      data-testid="name-input"
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
@@ -167,6 +178,7 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
                         "h-11 rounded-xl border-gray-200 text-sm placeholder:text-xs placeholder:text-gray-400",
                         fieldState.error && "border-red-400"
                       )}
+                      data-testid="phone-input"
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
@@ -174,6 +186,29 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
               )}
             />
           </div>
+
+          {/* Email - full width */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="tu@email.com (opcional)"
+                    className={cn(
+                      "h-11 rounded-xl border-gray-200 text-sm placeholder:text-xs placeholder:text-gray-400",
+                      fieldState.error && "border-red-400"
+                    )}
+                    data-testid="email-input"
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
         </div>
 
         {/* Location Section */}
@@ -200,13 +235,18 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
                         !field.value && "text-gray-400",
                         fieldState.error && "border-red-400"
                       )}
+                      data-testid="comuna-select"
                     >
                       <SelectValue placeholder={loadingComunas ? "Cargando..." : "Selecciona tu comuna"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {comunas.map((comuna) => (
-                      <SelectItem key={comuna.id} value={comuna.id}>
+                      <SelectItem
+                        key={comuna.id}
+                        value={comuna.id}
+                        data-testid={`comuna-option-${comuna.id}`}
+                      >
                         {comuna.name}
                       </SelectItem>
                     ))}
@@ -232,6 +272,7 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
                         "h-11 rounded-xl border-gray-200 text-sm placeholder:text-xs placeholder:text-gray-400",
                         fieldState.error && "border-red-400"
                       )}
+                      data-testid="address-input"
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
@@ -243,13 +284,29 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
               type="button"
               variant="outline"
               size="icon"
-              disabled
-              className="h-11 w-11 rounded-xl border-gray-200 shrink-0 opacity-50"
-              title="Usar mi ubicación (próximamente)"
+              onClick={handleGeolocation}
+              disabled={gettingLocation}
+              className={cn(
+                "h-11 w-11 rounded-xl border-gray-200 shrink-0",
+                hasLocation && "border-green-500 text-green-600 bg-green-50"
+              )}
+              data-testid="geolocation-button"
+              title="Usar mi ubicación"
             >
-              <MapPin className="h-4 w-4" />
+              {gettingLocation ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <MapPin className={cn("h-4 w-4", hasLocation && "fill-current")} />
+              )}
             </Button>
           </div>
+
+          {locationError && (
+            <p className="text-xs text-red-500">{locationError}</p>
+          )}
+          {hasLocation && (
+            <p className="text-xs text-green-600">Ubicación capturada</p>
+          )}
 
           {/* Special Instructions */}
           <FormField
@@ -265,6 +322,7 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
                       "min-h-[70px] rounded-xl border-gray-200 text-sm placeholder:text-xs placeholder:text-gray-400 resize-none",
                       fieldState.error && "border-red-400"
                     )}
+                    data-testid="instructions-input"
                   />
                 </FormControl>
                 <FormMessage className="text-xs" />
@@ -276,17 +334,10 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full h-11 bg-[#0077B6] hover:bg-[#005f8f] text-white rounded-xl text-sm font-semibold shadow-[0_4px_14px_rgba(0,119,182,0.3)]"
-          disabled={isSubmitting}
+          className="w-full h-12 bg-[#0077B6] hover:bg-[#005f8f] text-white rounded-xl text-base font-semibold shadow-[0_4px_14px_rgba(0,119,182,0.3)]"
+          data-testid="next-button"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Guardando...
-            </>
-          ) : (
-            "Guardar Cambios"
-          )}
+          Siguiente →
         </Button>
       </form>
     </Form>

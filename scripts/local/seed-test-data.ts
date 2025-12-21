@@ -58,8 +58,12 @@ const TEST_SUPPLIER = {
     price_5000l: 50000,
     price_10000l: 80000,
     is_available: true,
+    verification_status: "approved", // Required for comuna dropdown
   },
 };
+
+// Service areas for the test supplier (comunas where they deliver)
+const TEST_SUPPLIER_SERVICE_AREAS = ["villarrica", "pucon", "lican-ray"];
 
 const TEST_CONSUMER = {
   id: "22222222-2222-2222-2222-222222222222",
@@ -169,22 +173,14 @@ const SEEDED_REQUESTS = [
     supplier_id: null,
     cancelled_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
   },
-  // Story 10.4: Request that timed out without offers
-  {
-    id: "66666666-6666-6666-6666-666666666667",
-    tracking_token: "seed-token-no-offers",
-    status: "no_offers",
-    guest_phone: "+56966666667",
-    guest_name: "Guest No Offers",
-    guest_email: "nooffers@test.local",
-    address: "Calle Sin Ofertas 500, Villarrica, Chile",
-    amount: 1000,
-    special_instructions: "Request that timed out without offers",
-    is_urgent: false,
-    consumer_id: null,
-    supplier_id: null,
-    timed_out_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-  },
+  // Story 10.4: Request that timed out without offers (skipped if no_offers status unavailable)
+  // Uncomment when no_offers status is available in local db
+  // {
+  //   id: "66666666-6666-6666-6666-666666666667",
+  //   tracking_token: "seed-token-no-offers",
+  //   status: "no_offers",
+  //   ...
+  // },
 ];
 
 // =============================================================================
@@ -210,6 +206,7 @@ async function main() {
       await cleanTestData(supabase);
     } else {
       const userIds = await seedUsers(supabase);
+      await seedProviderServiceAreas(supabase, userIds.supplierActualId);
       await seedRequests(supabase, userIds);
       await verifySeededData(supabase);
     }
@@ -283,6 +280,36 @@ async function upsertTestUser(supabase: any, userData: typeof TEST_SUPPLIER | ty
 
   console.log(`  ✓ Created user ${userData.email} (ID: ${newUser.user.id})`);
   return newUser.user.id;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function seedProviderServiceAreas(supabase: any, supplierId: string) {
+  console.log("\n🗺️  Seeding provider service areas...");
+
+  // Delete existing service areas for this provider first
+  await supabase
+    .from("provider_service_areas")
+    .delete()
+    .eq("provider_id", supplierId);
+
+  // Insert service areas for test supplier
+  const serviceAreaRecords = TEST_SUPPLIER_SERVICE_AREAS.map((comunaId) => ({
+    provider_id: supplierId,
+    comuna_id: comunaId,
+  }));
+
+  const { error } = await supabase
+    .from("provider_service_areas")
+    .insert(serviceAreaRecords);
+
+  if (error) {
+    console.warn(`  ⚠ Failed to seed service areas: ${error.message}`);
+  } else {
+    console.log(`  ✓ Linked ${serviceAreaRecords.length} service areas to test supplier`);
+    for (const area of TEST_SUPPLIER_SERVICE_AREAS) {
+      console.log(`    - ${area}`);
+    }
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

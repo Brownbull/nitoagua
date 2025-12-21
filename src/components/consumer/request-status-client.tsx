@@ -1,34 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
-  Phone,
   Droplets,
   MapPin,
   Calendar,
-  Truck,
-  Clock,
-  Package,
   FileText,
-  CheckCircle,
   RotateCcw,
-  XCircle,
   Loader2,
-  Eye,
-  AlertTriangle,
   MessageCircle,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { StatusBadge, type RequestStatus } from "@/components/shared/status-badge";
-import { StatusTracker } from "@/components/consumer/status-tracker";
+import { type RequestStatus } from "@/components/shared/status-badge";
+import { GradientHeader } from "@/components/consumer/gradient-header";
+import { TimelineTracker } from "@/components/consumer/timeline-tracker";
+import { StatusCard, SupplierInfo, CallButton } from "@/components/consumer/status-card";
 import { CancelRequestButton } from "@/components/consumer/cancel-request-button";
+import { OfferList } from "@/components/consumer/offer-list";
+import { OfferSelectionModal } from "@/components/consumer/offer-selection-modal";
 import {
   formatDateSpanish,
   formatShortDate,
-  formatPhone,
 } from "@/lib/utils/format";
 import { useRequestPolling } from "@/hooks/use-request-polling";
+import { useConsumerOffers, ConsumerOffer } from "@/hooks/use-consumer-offers";
+import { selectOffer } from "@/lib/actions/offers";
 import { notifyStatusChange } from "@/lib/notifications";
 
 interface RequestWithSupplier {
@@ -40,9 +38,11 @@ interface RequestWithSupplier {
   is_urgent: boolean;
   created_at: string | null;
   accepted_at: string | null;
+  in_transit_at: string | null;
   delivered_at: string | null;
   delivery_window: string | null;
   supplier_id: string | null;
+  active_offer_count?: number;
   profiles: {
     name: string;
     phone: string;
@@ -55,16 +55,20 @@ interface RequestStatusClientProps {
 
 /**
  * Client component for request status page with polling
- *
- * Polls for status updates every 30 seconds and shows toast
- * notifications when status changes. Used by registered consumers.
+ * Refactored to match UX mockup design patterns
  *
  * AC5-3-1: Toast notification appears when status changes
  * AC5-3-3: Request status page auto-updates (30 second polling)
- * AC5-3-4: Notifications are user-specific (API validates consumer_id)
- * AC5-3-5: Graceful degradation (polling errors logged, not shown)
+ * AC10.5.1-8: Status page with offer context
+ * Updated: Offers displayed inline instead of separate page
  */
 export function RequestStatusClient({ initialRequest }: RequestStatusClientProps) {
+  // Offer selection state
+  const [selectingOfferId, setSelectingOfferId] = useState<string | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<ConsumerOffer | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+
   const { status: polledStatus, isPolling, data: polledData } = useRequestPolling(
     initialRequest.id,
     initialRequest.status,
@@ -72,11 +76,20 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
       interval: 30000,
       enabled: true,
       onStatusChange: (from, to, data) => {
-        // Show toast notification on status change (AC5-3-1)
         notifyStatusChange(to, data.delivery_window as string | null | undefined);
       },
     }
   );
+
+  // Fetch offers for pending requests
+  const isPendingStatus = (polledStatus || initialRequest.status) === "pending";
+  const {
+    offers,
+    loading: offersLoading,
+    activeOfferCount,
+  } = useConsumerOffers(initialRequest.id, {
+    enabled: isPendingStatus,
+  });
 
   // Merge polled data with initial request
   const request: RequestWithSupplier = polledData
@@ -84,6 +97,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
         ...initialRequest,
         status: polledData.status,
         accepted_at: (polledData.accepted_at as string) ?? initialRequest.accepted_at,
+        in_transit_at: (polledData.in_transit_at as string) ?? initialRequest.in_transit_at,
         delivered_at: (polledData.delivered_at as string) ?? initialRequest.delivered_at,
         delivery_window: (polledData.delivery_window as string) ?? initialRequest.delivery_window,
         supplier_id: (polledData.supplier_id as string) ?? initialRequest.supplier_id,
@@ -92,14 +106,90 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
 
   const status = request.status as RequestStatus;
   const isAccepted = status === "accepted";
+  const isInTransit = status === "in_transit";
   const isDelivered = status === "delivered";
   const isPending = status === "pending";
   const isCancelled = status === "cancelled";
   const isNoOffers = status === "no_offers";
 
+  // Title based on status
+  const getTitle = () => {
+    if (isPending) return "Tu solicitud está activa";
+    if (isAccepted || isInTransit) return "Estado de tu solicitud";
+    if (isDelivered) return "¡Entrega completada!";
+    if (isCancelled) return "Solicitud cancelada";
+    if (isNoOffers) return "Sin ofertas";
+    return "Estado de tu solicitud";
+  };
+
+  // Handle offer selection - open confirmation modal
+  const handleSelectOffer = (offerId: string) => {
+    const offer = offers.find((o) => o.id === offerId);
+    if (!offer) return;
+
+    // Check if offer is expired
+    if (offer.status === "expired" || new Date(offer.expires_at) < new Date()) {
+      toast.error("Esta oferta ha expirado", {
+        description: "Por favor, selecciona otra oferta",
+      });
+      return;
+    }
+
+    setSelectingOfferId(offerId);
+    setSelectedOffer(offer);
+    setIsModalOpen(true);
+  };
+
+  // Handle confirmation - call selectOffer action
+  const handleConfirmSelection = async () => {
+    if (!selectedOffer) return;
+
+    setIsConfirming(true);
+
+    try {
+      const result = await selectOffer(selectedOffer.id);
+
+      if (!result.success) {
+        toast.error("Error al seleccionar oferta", {
+          description: result.error || "Por favor, intenta de nuevo",
+        });
+        return;
+      }
+
+      // Show success toast
+      toast.success(`¡Listo! Tu pedido fue asignado a ${result.providerName}`, {
+        description: "Te notificaremos cuando el repartidor esté en camino",
+      });
+
+      // Close modal
+      setIsModalOpen(false);
+
+      // Full page reload to show updated status
+      // router.refresh() only refreshes server components, not client state
+      window.location.reload();
+    } catch (err) {
+      console.error("[RequestStatusClient] Selection error:", err);
+      toast.error("Error al seleccionar oferta", {
+        description: "Ocurrió un error inesperado. Por favor, intenta de nuevo.",
+      });
+    } finally {
+      setIsConfirming(false);
+      setSelectingOfferId(null);
+    }
+  };
+
+  // Handle modal close
+  const handleModalClose = (open: boolean) => {
+    if (!open && !isConfirming) {
+      setIsModalOpen(false);
+      setSelectedOffer(null);
+      setSelectingOfferId(null);
+    }
+  };
+
   return (
-    <div className="py-6 px-4">
-      {/* Polling Indicator (AC5-3-3: subtle loading indicator) */}
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Polling Indicator */}
       {isPolling && (
         <div className="fixed top-4 right-4 z-50">
           <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-sm border border-gray-200">
@@ -109,307 +199,315 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header with Status Badge */}
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Estado de tu solicitud
-          </h1>
-          <StatusBadge status={status} />
-        </div>
+      {/* Gradient Header */}
+      <GradientHeader title={getTitle()} status={status} />
 
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-5 py-3 bg-gray-50">
         {/* Timeline */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Progreso</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <StatusTracker
-              currentStatus={status}
-              createdAt={request.created_at || new Date().toISOString()}
-              acceptedAt={request.accepted_at}
-              deliveredAt={request.delivered_at}
-              formatDate={formatShortDate}
-            />
-          </CardContent>
-        </Card>
+        <TimelineTracker
+          currentStatus={status}
+          createdAt={request.created_at || new Date().toISOString()}
+          acceptedAt={request.accepted_at}
+          inTransitAt={request.in_transit_at}
+          deliveredAt={request.delivered_at}
+          formatDate={formatShortDate}
+        />
 
-        {/* Request Details Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Detalles de la solicitud</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Request Date */}
-            {request.created_at && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                  <Calendar className="h-5 w-5 text-purple-600" aria-hidden="true" />
+        {/* Status-specific content: Pending */}
+        {isPending && (
+          <>
+            {/* Show timeline/status or offers depending on whether we have offers */}
+            {offers.length === 0 && !offersLoading ? (
+              <>
+                <StatusCard
+                  status="pending"
+                  title="Esperando ofertas"
+                  description="Los repartidores están viendo tu pedido"
+                />
+
+                {/* Info note */}
+                <div className="bg-[#CAF0F8] rounded-xl p-3.5 mb-4">
+                  <div className="flex gap-2.5 items-start">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#0077B6"
+                      strokeWidth="2"
+                      className="shrink-0 mt-0.5"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <p className="text-[13px] text-[#03045E]">
+                      Recibirás ofertas de diferentes repartidores. Podrás comparar precios y horarios antes de elegir.
+                    </p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Section header when offers exist */}
+                <h2 className="text-lg font-bold text-gray-900 mb-3">
+                  Elige tu repartidor
+                </h2>
+
+                {/* Inline Offers List */}
+                <OfferList
+                  offers={offers}
+                  requestAmount={request.amount}
+                  loading={offersLoading}
+                  onSelectOffer={handleSelectOffer}
+                  selectingOfferId={selectingOfferId}
+                />
+
+                {/* Selection Modal */}
+                <OfferSelectionModal
+                  offer={selectedOffer}
+                  requestAmount={request.amount}
+                  open={isModalOpen}
+                  onOpenChange={handleModalClose}
+                  onConfirm={handleConfirmSelection}
+                  isLoading={isConfirming}
+                />
+              </>
+            )}
+
+            {/* Cancel button - always show */}
+            <div className="mt-4">
+              <CancelRequestButton requestId={request.id} variant="danger" />
+            </div>
+          </>
+        )}
+
+        {/* Status-specific content: Accepted */}
+        {isAccepted && (
+          <>
+            <StatusCard
+              status="accepted"
+              title="¡Tu agua viene en camino!"
+              description={request.delivery_window
+                ? `Entrega estimada: ${request.delivery_window}`
+                : "El repartidor está en camino"}
+            >
+              {request.profiles?.name && (
+                <SupplierInfo
+                  name={request.profiles.name}
+                  phone={request.profiles.phone}
+                  variant="accepted"
+                />
+              )}
+              {request.profiles?.phone && (
+                <CallButton phone={request.profiles.phone} />
+              )}
+            </StatusCard>
+
+            {/* Delivery window display for test - visible */}
+            {request.delivery_window && (
+              <div className="flex items-center gap-3 bg-white rounded-xl p-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-[#DBEAFE] flex items-center justify-center flex-shrink-0">
+                  <Calendar className="h-4 w-4 text-[#1E40AF]" aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Fecha de solicitud</p>
-                  <p className="font-medium">{formatDateSpanish(request.created_at)}</p>
+                  <p className="text-xs text-[#3B82F6]">Entrega estimada</p>
+                  <p className="text-sm font-semibold text-[#1E3A8A]" data-testid="delivery-window">
+                    {request.delivery_window}
+                  </p>
                 </div>
               </div>
             )}
 
+            {/* Cancel button for accepted status */}
+            <CancelRequestButton requestId={request.id} variant="danger" />
+          </>
+        )}
+
+        {/* Status-specific content: In Transit */}
+        {isInTransit && (
+          <>
+            <StatusCard
+              status="in_transit"
+              title="¡Tu agua está en camino!"
+              description={request.delivery_window
+                ? `Llegando pronto: ${request.delivery_window}`
+                : "El repartidor está llegando"}
+            >
+              {request.profiles?.name && (
+                <SupplierInfo
+                  name={request.profiles.name}
+                  phone={request.profiles.phone}
+                  variant="in_transit"
+                />
+              )}
+              {request.profiles?.phone && (
+                <CallButton phone={request.profiles.phone} />
+              )}
+            </StatusCard>
+
+            {request.delivery_window && (
+              <div className="flex items-center gap-3 bg-white rounded-xl p-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-[#E0E7FF] flex items-center justify-center flex-shrink-0">
+                  <Calendar className="h-4 w-4 text-[#3730A3]" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-xs text-[#4F46E5]">Llegando pronto</p>
+                  <p className="text-sm font-semibold text-[#312E81]" data-testid="delivery-window">
+                    {request.delivery_window}
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Status-specific content: Delivered */}
+        {isDelivered && (
+          <>
+            <StatusCard
+              status="delivered"
+              title="¡Tu agua fue entregada!"
+              description={request.delivered_at
+                ? `Entregado el ${formatDateSpanish(request.delivered_at)}`
+                : "Entrega completada"}
+            />
+
+            {/* Reorder button */}
+            <Button
+              asChild
+              className="w-full bg-[#10B981] hover:bg-[#059669] rounded-xl py-4 text-base font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.3)]"
+            >
+              <Link href="/">
+                <RotateCcw className="mr-2 h-5 w-5" />
+                Solicitar Agua de Nuevo
+              </Link>
+            </Button>
+          </>
+        )}
+
+        {/* Status-specific content: Cancelled */}
+        {isCancelled && (
+          <>
+            <StatusCard
+              status="cancelled"
+              title="Solicitud cancelada"
+              description="Esta solicitud fue cancelada y no será procesada"
+            />
+
+            <Button
+              asChild
+              variant="outline"
+              className="w-full rounded-xl py-4 text-base font-semibold"
+            >
+              <Link href="/">
+                <RotateCcw className="mr-2 h-5 w-5" />
+                Nueva Solicitud
+              </Link>
+            </Button>
+          </>
+        )}
+
+        {/* Status-specific content: No Offers */}
+        {isNoOffers && (
+          <div data-testid="no-offers-card">
+            <StatusCard
+              status="no_offers"
+              title="Sin Ofertas"
+              description="Lo sentimos, no hay aguateros disponibles ahora"
+            >
+              <p className="text-xs text-[#C2410C] mt-2" data-testid="no-offers-message">
+                Tu solicitud no recibió ofertas. Esto puede ocurrir en horarios de baja demanda.
+              </p>
+            </StatusCard>
+
+            <Button
+              asChild
+              className="w-full bg-[#EA580C] hover:bg-[#C2410C] rounded-xl py-4 text-base font-semibold mb-3"
+              data-testid="new-request-button"
+            >
+              <Link href="/">
+                <RotateCcw className="mr-2 h-5 w-5" />
+                Nueva Solicitud
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              className="w-full border-[#10B981] text-[#059669] hover:bg-green-50 rounded-xl py-4 text-base font-semibold"
+              data-testid="contact-support-button"
+            >
+              <a
+                href="https://wa.me/56912345678?text=Hola,%20necesito%20ayuda%20con%20mi%20solicitud%20de%20agua"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Contactar Soporte
+              </a>
+            </Button>
+          </div>
+        )}
+
+        {/* Request Details - Compact version */}
+        <div className="bg-white rounded-2xl p-4 mt-4 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Detalles</h3>
+
+          <div className="space-y-3">
             {/* Amount */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <Droplets className="h-5 w-5 text-blue-600" aria-hidden="true" />
+              <div className="w-9 h-9 rounded-xl bg-[#DBEAFE] flex items-center justify-center flex-shrink-0">
+                <Droplets className="h-4 w-4 text-[#1E40AF]" aria-hidden="true" />
               </div>
               <div className="flex items-center gap-2">
-                <div>
-                  <p className="text-sm text-gray-500">Cantidad</p>
-                  <p className="font-medium">{request.amount.toLocaleString("es-CL")}L</p>
-                </div>
+                <span className="text-sm font-medium text-gray-900">
+                  {request.amount.toLocaleString("es-CL")}L
+                </span>
                 {request.is_urgent && (
-                  <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                  <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-800">
                     Urgente
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Address (full address for authenticated owner) */}
+            {/* Address */}
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                <MapPin className="h-5 w-5 text-green-600" aria-hidden="true" />
+              <div className="w-9 h-9 rounded-xl bg-[#D1FAE5] flex items-center justify-center flex-shrink-0">
+                <MapPin className="h-4 w-4 text-[#065F46]" aria-hidden="true" />
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Direccion</p>
-                <p className="font-medium">{request.address}</p>
-              </div>
+              <span className="text-sm text-gray-700 pt-2">{request.address}</span>
             </div>
+
+            {/* Date */}
+            {request.created_at && (
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <Calendar className="h-4 w-4 text-purple-600" aria-hidden="true" />
+                </div>
+                <span className="text-sm text-gray-700">
+                  {formatDateSpanish(request.created_at)}
+                </span>
+              </div>
+            )}
 
             {/* Special Instructions */}
             {request.special_instructions && (
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                  <FileText className="h-5 w-5 text-orange-600" aria-hidden="true" />
+                <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                  <FileText className="h-4 w-4 text-orange-600" aria-hidden="true" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Instrucciones especiales</p>
-                  <p className="font-medium">{request.special_instructions}</p>
-                </div>
+                <span className="text-sm text-gray-700 pt-2">{request.special_instructions}</span>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Status-specific content: Pending */}
-        {isPending && (
-          <Card className="border-amber-200 bg-amber-50">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
-                  <Clock className="h-6 w-6 text-amber-600" aria-hidden="true" />
-                </div>
-                <p className="text-lg font-medium text-amber-800 mb-1">
-                  Esperando ofertas de repartidores
-                </p>
-                <p className="text-sm text-amber-700">
-                  Te notificaremos cuando recibas ofertas
-                </p>
-              </div>
-            </CardContent>
-            {/* AC10.1.1: Ver Ofertas button with offer count badge */}
-            <div className="px-6 pb-4 space-y-3">
-              <Button
-                asChild
-                className="w-full bg-[#0077B6] hover:bg-[#005f8f]"
-                data-testid="view-offers-button"
-              >
-                <Link href={`/request/${request.id}/offers`}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Ver Ofertas
-                </Link>
-              </Button>
-              <CancelRequestButton requestId={request.id} />
-            </div>
-          </Card>
-        )}
-
-        {/* Status-specific content: Accepted */}
-        {isAccepted && (
-          <Card className="border-blue-200 bg-blue-50">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-blue-600" aria-hidden="true" />
-                <CardTitle className="text-lg text-blue-800">
-                  Confirmado! Tu agua viene en camino
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Supplier Info */}
-              {request.profiles?.name && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Truck className="h-5 w-5 text-blue-600" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-600">Aguatero</p>
-                    <p className="font-medium text-blue-900">{request.profiles.name}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Supplier Phone */}
-              {request.profiles?.phone && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Phone className="h-5 w-5 text-blue-600" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-600">Telefono</p>
-                    <a
-                      href={`tel:${request.profiles.phone}`}
-                      className="font-medium text-blue-900 hover:underline"
-                    >
-                      {formatPhone(request.profiles.phone)}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Delivery Window */}
-              {request.delivery_window && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Clock className="h-5 w-5 text-blue-600" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-600">Ventana de entrega</p>
-                    <p className="font-medium text-blue-900">{request.delivery_window}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Status-specific content: Delivered */}
-        {isDelivered && (
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
-                  <Package className="h-6 w-6 text-green-600" aria-hidden="true" />
-                </div>
-                <p className="text-lg font-semibold text-green-800 mb-1">
-                  Entrega completada
-                </p>
-                {request.delivered_at && (
-                  <p className="text-green-700">
-                    Entregado el {formatDateSpanish(request.delivered_at)}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-            {/* Quick reorder button */}
-            <div className="px-6 pb-6">
-              <Button
-                className="w-full bg-green-600 hover:bg-green-700"
-                asChild
-              >
-                <Link href="/request">
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Solicitar Agua de Nuevo
-                </Link>
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* Status-specific content: Cancelled */}
-        {isCancelled && (
-          <Card className="border-gray-200 bg-gray-50">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                  <XCircle className="h-6 w-6 text-gray-500" aria-hidden="true" />
-                </div>
-                <p className="text-lg font-semibold text-gray-700 mb-1">
-                  Solicitud cancelada
-                </p>
-                <p className="text-sm text-gray-500">
-                  Esta solicitud fue cancelada y no sera procesada
-                </p>
-              </div>
-            </CardContent>
-            <div className="px-6 pb-6">
-              <Button
-                variant="outline"
-                className="w-full"
-                asChild
-              >
-                <Link href="/request">
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Nueva Solicitud
-                </Link>
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* Status-specific content: No Offers (Timeout) */}
-        {/* AC10.4.5: Orange badge with "Sin Ofertas" */}
-        {/* AC10.4.6: Empathetic message */}
-        {/* AC10.4.7: "Nueva Solicitud" button */}
-        {/* AC10.4.8: "Contactar Soporte" WhatsApp link */}
-        {isNoOffers && (
-          <Card className="border-orange-200 bg-orange-50" data-testid="no-offers-card">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-3">
-                  <AlertTriangle className="h-6 w-6 text-orange-600" aria-hidden="true" />
-                </div>
-                <p className="text-lg font-semibold text-orange-800 mb-1" data-testid="no-offers-title">
-                  Sin Ofertas
-                </p>
-                <p className="text-sm text-orange-700 mb-2" data-testid="no-offers-message">
-                  Lo sentimos, no hay aguateros disponibles ahora
-                </p>
-                <p className="text-xs text-orange-600">
-                  Tu solicitud no recibió ofertas en las últimas 4 horas.
-                  Esto puede ocurrir en horarios de baja demanda o zonas con pocos aguateros.
-                </p>
-              </div>
-            </CardContent>
-            <div className="px-6 pb-6 space-y-3">
-              <Button
-                className="w-full bg-orange-600 hover:bg-orange-700"
-                asChild
-                data-testid="new-request-button"
-              >
-                <Link href="/">
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Nueva Solicitud
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full border-green-500 text-green-700 hover:bg-green-50"
-                asChild
-                data-testid="contact-support-button"
-              >
-                <a
-                  href="https://wa.me/56912345678?text=Hola,%20necesito%20ayuda%20con%20mi%20solicitud%20de%20agua"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Contactar Soporte
-                </a>
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* Navigation */}
-        <div className="text-center pt-4">
-          <Button variant="outline" asChild>
+        {/* Back to home */}
+        <div className="text-center py-6">
+          <Button variant="ghost" asChild className="text-gray-500">
             <Link href="/">Volver al Inicio</Link>
           </Button>
         </div>
