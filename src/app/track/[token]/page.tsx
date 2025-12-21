@@ -11,7 +11,7 @@ import {
   maskAddress,
   formatPhone,
 } from "@/lib/utils/format";
-import { AlertTriangle, Phone, Droplets, MapPin, Calendar, Truck, XCircle, RotateCcw, Clock, Eye } from "lucide-react";
+import { AlertTriangle, Phone, Droplets, MapPin, Calendar, Truck, XCircle, RotateCcw, Clock, Eye, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 interface TrackingPageProps {
@@ -68,6 +68,7 @@ function TrackingContent({ request, trackingToken }: TrackingContentProps) {
   const isDelivered = status === "delivered";
   const isPending = status === "pending";
   const isCancelled = status === "cancelled";
+  const isNoOffers = status === "no_offers";
 
   return (
     <main className="min-h-screen bg-gray-50 py-6 px-4">
@@ -200,6 +201,60 @@ function TrackingContent({ request, trackingToken }: TrackingContentProps) {
                   <RotateCcw className="mr-2 h-4 w-4" />
                   Nueva Solicitud
                 </Link>
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Status-specific content: No Offers (Timeout) */}
+        {/* AC10.4.5: Orange badge with "Sin Ofertas" */}
+        {/* AC10.4.6: Empathetic message */}
+        {/* AC10.4.7: "Nueva Solicitud" button */}
+        {/* AC10.4.8: "Contactar Soporte" WhatsApp link */}
+        {isNoOffers && (
+          <Card className="border-orange-200 bg-orange-50" data-testid="no-offers-card">
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-3">
+                  <AlertTriangle className="h-6 w-6 text-orange-600" aria-hidden="true" />
+                </div>
+                <p className="text-lg font-semibold text-orange-800 mb-1" data-testid="no-offers-title">
+                  Sin Ofertas
+                </p>
+                <p className="text-sm text-orange-700 mb-2" data-testid="no-offers-message">
+                  Lo sentimos, no hay aguateros disponibles ahora
+                </p>
+                <p className="text-xs text-orange-600">
+                  Tu solicitud no recibió ofertas en las últimas 4 horas.
+                  Esto puede ocurrir en horarios de baja demanda o zonas con pocos aguateros.
+                </p>
+              </div>
+            </CardContent>
+            <div className="px-6 pb-6 space-y-3">
+              <Button
+                className="w-full bg-orange-600 hover:bg-orange-700"
+                asChild
+                data-testid="new-request-button"
+              >
+                <Link href="/">
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Nueva Solicitud
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full border-green-500 text-green-700 hover:bg-green-50"
+                asChild
+                data-testid="contact-support-button"
+              >
+                <a
+                  href="https://wa.me/56912345678?text=Hola,%20necesito%20ayuda%20con%20mi%20solicitud%20de%20agua"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Contactar Soporte
+                </a>
               </Button>
             </div>
           </Card>

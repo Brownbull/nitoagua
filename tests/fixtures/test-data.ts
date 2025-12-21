@@ -169,6 +169,26 @@ export const SEEDED_CANCELLED_REQUEST = {
   cancelled_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
 };
 
+/**
+ * Request in NO_OFFERS state - timed out without offers (Story 10.4)
+ * Use for: timeout notification UI tests, retry button tests
+ */
+export const SEEDED_NO_OFFERS_REQUEST = {
+  id: "66666666-6666-6666-6666-666666666667",
+  tracking_token: "seed-token-no-offers",
+  status: "no_offers",
+  guest_phone: "+56966666667",
+  guest_name: "Guest No Offers",
+  guest_email: "nooffers@test.local",
+  address: "Calle Sin Ofertas 500, Villarrica, Chile",
+  amount: 1000,
+  special_instructions: "Request that timed out without offers",
+  is_urgent: false,
+  consumer_id: null,
+  supplier_id: null,
+  timed_out_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+};
+
 // =============================================================================
 // CONVENIENCE EXPORTS FOR TESTS
 // =============================================================================
@@ -183,6 +203,7 @@ export const TRACKING_TOKENS = {
   delivered: SEEDED_DELIVERED_REQUEST.tracking_token,
   consumerDelivered: SEEDED_CONSUMER_DELIVERED_REQUEST.tracking_token,
   cancelled: SEEDED_CANCELLED_REQUEST.tracking_token,
+  noOffers: SEEDED_NO_OFFERS_REQUEST.tracking_token,
 } as const;
 
 /**
@@ -195,6 +216,7 @@ export const REQUEST_IDS = {
   delivered: SEEDED_DELIVERED_REQUEST.id,
   consumerDelivered: SEEDED_CONSUMER_DELIVERED_REQUEST.id,
   cancelled: SEEDED_CANCELLED_REQUEST.id,
+  noOffers: SEEDED_NO_OFFERS_REQUEST.id,
 } as const;
 
 /**
@@ -207,6 +229,7 @@ export const ALL_SEEDED_REQUESTS = [
   SEEDED_DELIVERED_REQUEST,
   SEEDED_CONSUMER_DELIVERED_REQUEST,
   SEEDED_CANCELLED_REQUEST,
+  SEEDED_NO_OFFERS_REQUEST,
 ];
 
 /**

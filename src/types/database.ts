@@ -433,6 +433,7 @@ export type Database = {
           special_instructions: string | null
           status: string
           supplier_id: string | null
+          timed_out_at: string | null
           tracking_token: string | null
         }
         Insert: {
@@ -458,6 +459,7 @@ export type Database = {
           special_instructions?: string | null
           status?: string
           supplier_id?: string | null
+          timed_out_at?: string | null
           tracking_token?: string | null
         }
         Update: {
@@ -483,6 +485,7 @@ export type Database = {
           special_instructions?: string | null
           status?: string
           supplier_id?: string | null
+          timed_out_at?: string | null
           tracking_token?: string | null
         }
         Relationships: [
