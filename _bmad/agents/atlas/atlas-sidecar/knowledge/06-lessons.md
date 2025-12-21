@@ -103,4 +103,30 @@
 
 ---
 
-*Last verified: 2025-12-19 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10 implementations*
+---
+
+## Epic 10 Code Review Lessons (2025-12-21)
+
+### Story 10-4: Request Timeout Notification
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **Seed script missing test data** | Test fixtures defined data that seed script didn't create | **Always add to both**: `tests/fixtures/test-data.ts` AND `scripts/local/seed-test-data.ts` |
+| **Registered consumer email missed** | Cron route only checked `guest_email`, not `profiles.email` | For features affecting both guest AND registered users, verify BOTH email sources |
+| **E2E tests not following Atlas patterns** | Epic 10 tests didn't use merged-fixtures | New tests MUST use `import { test, expect } from '../support/fixtures/merged-fixtures'` |
+| **Missing assertNoErrorState** | Tests passed when page showed error states | Call `assertNoErrorState(page)` after `page.goto()` before content assertions |
+
+### Patterns Confirmed
+
+1. **Dual email source for notifications**: When sending emails that could go to guests OR registered users:
+   ```typescript
+   const email = request.guest_email || request.profiles?.email;
+   ```
+
+2. **Seed-fixture synchronization**: Every constant in `tests/fixtures/test-data.ts` MUST have matching data seeded by `scripts/local/seed-test-data.ts`
+
+3. **Atlas Section 5 test patterns**: All new tests use merged fixtures + log fixture + assertNoErrorState
+
+---
+
+*Last verified: 2025-12-21 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4 implementations*
