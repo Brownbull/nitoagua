@@ -179,8 +179,8 @@ development_status:
   10-3-offer-countdown-timer-consumer-view: deployed  # DEPLOYED 2025-12-21 - Production release, 2 code review fixes, 12 E2E + 33 unit tests  # APPROVED 2025-12-21 - Atlas code review passed, 2 fixes applied, 12 E2E + 33 unit tests
   10-4-request-timeout-notification: deployed  # DEPLOYED 2025-12-21 - Atlas code review passed, 4 fixes applied, cron every 15 min
   10-5-request-status-with-offer-context: deployed  # DEPLOYED 2025-12-21 - Atlas code review passed, 5 fixes applied, 30 E2E tests
-  10-6-pwa-settings-and-notifications: done  # APPROVED 2025-12-22 - Atlas code review passed, 7 fixes applied, 8 E2E tests passing
-  10-7-mobile-screen-adaptability: done  # APPROVED 2025-12-22 - Code review passed, deploying for Android device verification
+  10-6-pwa-settings-and-notifications: deployed  # DEPLOYED 2025-12-22 - Atlas code review passed, 7 fixes applied, 8 E2E tests passing
+  10-7-mobile-screen-adaptability: deployed  # DEPLOYED 2025-12-22 - CSS viewport fixes, code review passed, 1 fix applied
   epic-10-retrospective: optional
 
   # Epic 11: Full Application Workflow Validation (Post-Epic 10)
