@@ -66,10 +66,26 @@ Add this temporarily to see what's overflowing:
 
 ### What the research missed:
 
-**1. `min-h-dvh` doesn't prevent scrolling on content-heavy pages**
-- `min-h-dvh` sets MINIMUM height, not maximum
-- If content exceeds viewport, page will still scroll
-- Landing pages with multiple sections (hero, benefits, footer) often exceed viewport on smaller phones
+**1. `min-h-dvh` vs `h-dvh` - CRITICAL difference**
+- `min-h-dvh` sets MINIMUM height - content can exceed and cause scrolling
+- `h-dvh` sets EXACT height - constrains everything to viewport
+- For screens that MUST NOT scroll (landing pages), use `h-dvh` + `overflow-hidden`
+- Add `shrink-0` to header/footer sections so they don't collapse
+- Use `flex-1` on main content area to fill remaining space
+
+```jsx
+// CORRECT - fits exactly in viewport
+<div className="h-dvh flex flex-col overflow-hidden">
+  <header className="shrink-0">...</header>
+  <main className="flex-1 flex flex-col justify-center">...</main>
+  <footer className="shrink-0">...</footer>
+</div>
+```
+
+**1b. flex-1 spacers push content off screen**
+- A `<div className="flex-1" />` spacer INSIDE main will push footer off viewport
+- Use `justify-center` on the flex container instead of spacers
+- Spacers work for centering within a FIXED container, not for viewport fitting
 
 **2. Horizontal layouts save more vertical space than reducing padding**
 ```css
