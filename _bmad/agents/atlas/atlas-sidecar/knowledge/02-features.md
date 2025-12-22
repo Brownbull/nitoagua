@@ -1,7 +1,7 @@
 # Feature Inventory + Intent
 
 > Section 2 of Atlas Memory
-> Last Sync: 2025-12-18
+> Last Sync: 2025-12-22
 > Sources: docs/prd.md, docs/architecture.md, docs/epics.md
 
 ## Feature Overview
@@ -105,7 +105,7 @@ nitoagua provides features for three user types: Consumers, Providers (aguateros
 | Epic 6 | 6.1-6.10 | Admin panel |
 | Epic 7 | 7.1-7.11 | Provider onboarding |
 | Epic 8 | 8.1-8.10 | Offer system |
-| Epic 10 | 10.1-10.5 | Consumer offer selection |
+| Epic 10 | 10.1-10.7 | Consumer offer selection + PWA/UX polish |
 | Epic 11 | 11.1-11.4 | Full workflow validation (all personas) |
 | Epic 12 | 12.1-12.5 | Consumer UX enhancements (backlog) |
 
@@ -121,9 +121,14 @@ nitoagua provides features for three user types: Consumers, Providers (aguateros
 | Epic 10 stories created | 2025-12-19 | 5 stories ready-for-dev (10-1 to 10-5) | Consumer-side offer selection flow |
 | Epic 11 created | 2025-12-19 | 4 stories (11-1 to 11-4) - 102 ACs total | Cross-persona validation, multi-context tests |
 | 10-1-offer-list-view | 2025-12-19 | Consumer offers page with realtime + guest access | Server component + admin client for guest token access |
+| 10-3-countdown-timer | 2025-12-21 | CountdownTimer component with accessibility | ARIA live regions, Vitest unit tests |
+| 10-4-request-timeout | 2025-12-21 | Daily cron job for expired requests | Vercel Hobby 1/day limit, `no_offers` status |
+| 10-5-request-status | 2025-12-21 | Offer context in status cards | Provider info display, acceptance flow |
+| 10-6-pwa-settings | 2025-12-22 | PWA install/update UI, notification settings | Service worker update detection |
+| 10-7-mobile-adaptability | 2025-12-22 | Dynamic viewport units, icon-only nav | PWA standards doc created |
 
 > Full story details in `docs/sprint-artifacts/` - Atlas tracks patterns, not full implementations.
 
 ---
 
-*Last verified: 2025-12-19 | Sources: prd.md, architecture.md, epics.md*
+*Last verified: 2025-12-22 | Sources: prd.md, architecture.md, epics.md*

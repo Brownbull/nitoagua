@@ -1,8 +1,8 @@
 # Workflow Chains
 
 > Section 8 of Atlas Memory
-> Last Sync: 2025-12-18
-> Sources: docs/architecture.md, docs/prd.md
+> Last Sync: 2025-12-22
+> Sources: docs/architecture.md, docs/prd.md, Epic 10 implementation
 
 ## User Journey Mapping
 
@@ -22,23 +22,37 @@
 4. Receives email with tracking link
 5. Tracks status: Pending → Accepted → Delivered
 
-### Journey: Consumer Water Request (V2 with Offers)
+### Journey: Consumer Water Request (V2 with Offers) - IMPLEMENTED
 
 ```
-[Submit Request] → [Offers Received] → [Compare] → [Accept Offer] → [Track] → [Delivered]
-       ↓                  ↓               ↓              ↓             ↓
-  [Pending Status]   [Realtime        [Price,        [Provider      [Commission
-                      Broadcast]       Time Window]   Notified]      Logged]
+[Submit Request] → [Wait for Offers] → [View Offers] → [Accept Offer] → [Track] → [Delivered]
+       ↓                  ↓                  ↓               ↓             ↓            ↓
+  status=pending    24hr timeout       Countdown        status=        Provider     Commission
+  /request/[id]     → no_offers        timer UX        accepted       info shown    recorded
 ```
 
 **Steps:**
-1. Consumer submits request
-2. Providers see request in dashboard (realtime)
-3. Providers submit offers (price, delivery window)
-4. Consumer compares offers
-5. Consumer accepts preferred offer
-6. Provider delivers water
-7. Commission logged to settlement ledger
+1. Consumer submits request → redirected to `/request/[id]` (status page)
+2. Request visible to providers in `/provider/requests` (realtime subscription)
+3. Providers submit offers (calculated price from admin settings)
+4. Consumer sees offers with countdown timers on status page
+5. Consumer accepts preferred offer → `select_offer()` atomic function
+6. Provider notified (in-app + email) → delivers water
+7. Provider marks delivered → commission logged to settlement ledger
+
+**Key Components:**
+| Step | Component | Path |
+|------|-----------|------|
+| Submit Request | RequestForm | `/request` |
+| View Status | RequestStatusClient | `/request/[id]` |
+| View Offers | OfferCard + CountdownTimer | `/request/[id]` |
+| Accept Offer | `select_offer()` server action | `lib/actions/offers.ts` |
+| Track Guest | TrackingPage | `/track/[token]` |
+
+**Timeout Flow:**
+- Requests without accepted offer after 24 hours → status = `no_offers`
+- Cron job: `/api/cron/request-timeout` (daily, Vercel Hobby limit)
+- Consumer notified via email when request times out
 
 ### Journey: Provider Offer Flow
 
@@ -102,16 +116,36 @@
 | Email templates | All notification touchpoints |
 | Realtime subscriptions | Dashboard, Offer tracking |
 
-## Component Mapping
+## Component Mapping (Verified Dec 2025)
 
 | Journey Step | Component Location |
 |--------------|-------------------|
-| Request Form | `src/app/consumer/request/` |
-| Provider Dashboard | `src/app/provider/dashboard/` |
-| Offer Submission | `src/app/provider/offers/` |
-| Admin Queue | `src/app/admin/verification/` |
-| Tracking Page | `src/app/consumer/track/` |
+| Consumer Home | `src/app/page.tsx` |
+| Request Form | `src/app/(consumer)/request/page.tsx` |
+| Request Status | `src/app/(consumer)/request/[id]/page.tsx` |
+| Guest Tracking | `src/app/track/[token]/page.tsx` |
+| Consumer History | `src/app/(consumer)/history/page.tsx` |
+| Consumer Profile | `src/app/consumer-profile/page.tsx` |
+| Consumer Settings | `src/app/settings/page.tsx` |
+| Provider Dashboard | `src/app/provider/requests/page.tsx` |
+| Provider Offers | `src/app/provider/offers/page.tsx` |
+| Provider Earnings | `src/app/provider/earnings/page.tsx` |
+| Provider Settings | `src/app/provider/settings/page.tsx` |
+| Provider Map | `src/app/provider/map/page.tsx` |
+| Admin Dashboard | `src/app/admin/page.tsx` |
+| Admin Verification | `src/app/admin/verification/page.tsx` |
+| Admin Orders | `src/app/admin/orders/page.tsx` |
+| Admin Settlement | `src/app/admin/settlement/page.tsx` |
+| Admin Settings | `src/app/admin/settings/page.tsx` |
+
+## Navigation Components
+
+| Persona | Nav Component | Features |
+|---------|---------------|----------|
+| Consumer | `consumer-nav.tsx` | Icon-only, center FAB, unread badge |
+| Provider | `provider-nav.tsx` | Icon + label, notification badge |
+| Admin | Admin sidebar | Desktop-style sidebar |
 
 ---
 
-*Last verified: 2025-12-18 | Sources: architecture.md, prd.md*
+*Last verified: 2025-12-22 | Sources: architecture.md, prd.md, actual implementation*

@@ -1,8 +1,8 @@
 # Architectural Decisions & Patterns
 
 > Section 4 of Atlas Memory
-> Last Sync: 2025-12-18
-> Sources: docs/architecture.md
+> Last Sync: 2025-12-22
+> Sources: docs/architecture.md, docs/standards/progressive-web-app-standards.md
 
 ## Tech Stack
 
@@ -187,6 +187,8 @@ export async function requireAdmin() { /* ... */ }
 - CSS variables: `--safe-top`, `--safe-bottom`, `--safe-left`, `--safe-right`
 
 **Critical Rule:** Standalone fallback components (loading states, error states) must use `min-h-dvh` directly. Do NOT use `flex-1` unless the component is guaranteed to be inside a flex parent.
+
+**Full Standards:** See `docs/standards/progressive-web-app-standards.md` for complete PWA development guidelines.
 
 ---
 
