@@ -55,18 +55,12 @@ test.describe("Consumer Home Screen", () => {
 
   test("displays benefits section with 3 items", async ({ page, log }) => {
     await log({ level: "step", message: "Verify benefits are visible" });
+    // Compact horizontal layout with short labels
     await expect(page.getByText("Entrega rápida")).toBeVisible();
-    await expect(page.getByText("Proveedores verificados")).toBeVisible();
-    await expect(page.getByText("Sin cuenta requerida")).toBeVisible();
+    await expect(page.getByText("Verificados")).toBeVisible();
+    await expect(page.getByText("Sin cuenta")).toBeVisible();
+    await expect(page.getByText("Agua certificada")).toBeVisible();
     await log({ level: "success", message: "Benefits section verified" });
-  });
-
-  test("displays trust indicators", async ({ page, log }) => {
-    await log({ level: "step", message: "Verify trust indicators" });
-    // Trust indicators section with line breaks
-    await expect(page.getByText(/Agua.*certificada/s).first()).toBeVisible();
-    await expect(page.getByText(/Servicio.*confiable/s).first()).toBeVisible();
-    await log({ level: "success", message: "Trust indicators verified" });
   });
 
   test("displays quality badge", async ({ page }) => {
@@ -83,7 +77,7 @@ test.describe("Consumer Home Screen", () => {
 
     await log({ level: "step", message: "Verify benefits in Spanish" });
     await expect(page.getByText("Entrega rápida")).toBeVisible();
-    await expect(page.getByText("En menos de 24 horas")).toBeVisible();
+    await expect(page.getByText("En menos de 24h")).toBeVisible();
 
     await log({ level: "step", message: "Verify login links in Spanish" });
     // Use role selectors to target footer login links specifically
@@ -151,8 +145,8 @@ test.describe("Admin Access", () => {
     const adminLink = page.getByTestId("admin-access-link");
     await expect(adminLink).toBeVisible();
     await expect(adminLink).toHaveAttribute("href", "/admin");
-    // Should show "Administración" text
-    await expect(adminLink).toContainText("Administración");
+    // Shows "Admin" text (compact footer layout)
+    await expect(adminLink).toContainText("Admin");
   });
 
   test("admin button click redirects to admin login", async ({ page }) => {

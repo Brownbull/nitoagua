@@ -202,4 +202,5 @@ development_status:
   12-3-negative-status-states: backlog
   12-4-urgency-pricing-display: backlog
   12-5-remove-fake-social-proof: backlog
+  12-6-web-push-notifications: drafted  # Created 2025-12-22 - Android PWA push notifications, 8 ACs
   epic-12-retrospective: optional
