@@ -154,3 +154,89 @@ min-h-screen md:min-h-dvh  /* graceful degradation */
 - Login/register forms
 
 ---
+
+## Login Page Adaptability Fix (2025-12-22)
+
+### Problem
+Login page with DevLogin component (dev mode) didn't fit on Samsung S23 (360x780 CSS pixels). Required scrolling to see all content.
+
+### Root Causes
+1. **Layout used `min-h-dvh`** - allowed content to exceed viewport
+2. **Large header** - `pt-8 pb-10` padding, `text-4xl` logo, `text-2xl` title
+3. **Generous spacing** - `mt-8 pt-6` between sections, `space-y-4` in forms
+4. **DevLogin adds ~250px** - role buttons + email/password fields + submit
+
+### Solution: Compact Everything
+
+**Auth Layout Changes:**
+```jsx
+// BEFORE
+<div className="min-h-dvh flex flex-col">
+  <header>...</header>
+  <div className="flex-1 px-6 py-8">...</div>
+</div>
+
+// AFTER - Fixed viewport with internal scroll
+<div className="h-dvh flex flex-col overflow-hidden">
+  <div className="shrink-0">
+    <header>...</header>
+  </div>
+  <div className="flex-1 px-5 py-4 overflow-y-auto">...</div>
+</div>
+```
+
+**Header Compaction:**
+| Element | Before | After | Savings |
+|---------|--------|-------|---------|
+| Padding | `pt-8 pb-10` | `pt-6 pb-6` | ~24px |
+| Logo | `text-4xl mb-6` | `text-3xl mb-3` | ~20px |
+| Title | `text-2xl mb-2` | `text-xl mb-1` | ~8px |
+| Subtitle | `text-[15px]` | `text-sm` | ~2px |
+
+**Form Compaction:**
+| Element | Before | After | Savings |
+|---------|--------|-------|---------|
+| Section margins | `mt-6 pt-6` | `mt-4 pt-4` | ~16px |
+| Button height | default | `h-8` / `h-9` | ~8px each |
+| Form spacing | `space-y-4` | `space-y-2.5` | ~12px |
+| Label spacing | `space-y-2` | `space-y-1` | ~8px |
+| Input height | default | `h-9` | ~6px each |
+
+**Total savings: ~100-120px** - now fits on S23 without scrolling
+
+### Key Insight: Internal Scrolling
+For pages with variable content (like login with optional DevLogin):
+```jsx
+// Parent: fixed to viewport
+<div className="h-dvh flex flex-col overflow-hidden">
+  // Header: never scrolls
+  <div className="shrink-0">...</div>
+
+  // Content: scrolls internally if needed
+  <div className="flex-1 overflow-y-auto">
+    {/* Content that might overflow on tiny screens */}
+  </div>
+</div>
+```
+
+This ensures:
+- Header always visible
+- Content scrolls only if absolutely necessary
+- No page-level scroll bounce
+- Works on all screen sizes
+
+### Testing Setup
+**Android Studio Emulator** (recommended for PWA testing):
+- Works with Hyper-V/WSL2 via WHPX
+- Select device with **Play Store icon** for WebAPK support
+- Pixel 7 (1080x2400) similar to Galaxy S23 (1080x2340)
+
+**Target viewports to test:**
+| Device | CSS Pixels | Notes |
+|--------|------------|-------|
+| iPhone SE | 375x667 | Smallest common |
+| Galaxy S23 | 360x780 | Android target |
+| iPhone 12/13/14 | 390x844 | iOS standard |
+| Pixel 7 | 412x915 | Android large |
+
+---

@@ -62,7 +62,7 @@ interface PwaSettingsProps {
  *
  * Spanish copy per story Dev Notes.
  */
-export function PwaSettings({ version = "0.1.0", className }: PwaSettingsProps) {
+export function PwaSettings({ version = "1.0.0", className }: PwaSettingsProps) {
   const [isStandalone, setIsStandalone] = useState(false);
   const [platform, setPlatform] = useState<"ios" | "android" | "desktop">("desktop");
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -188,19 +188,19 @@ export function PwaSettings({ version = "0.1.0", className }: PwaSettingsProps) 
   if (!mounted) {
     return (
       <div className={cn("bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden", className)}>
-        <div className="p-4 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Smartphone className="w-5 h-5 text-[#0077B6]" aria-hidden="true" />
-              <span className="font-semibold text-gray-900">Instalación de App</span>
+              <Smartphone className="w-4 h-4 text-[#0077B6]" aria-hidden="true" />
+              <span className="text-sm font-semibold text-gray-900">Instalación de App</span>
             </div>
-            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+            <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
               v{version}
             </span>
           </div>
         </div>
-        <div className="p-4 animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+        <div className="px-4 py-3 animate-pulse">
+          <div className="h-3 bg-gray-200 rounded w-3/4"></div>
         </div>
       </div>
     );
@@ -212,14 +212,14 @@ export function PwaSettings({ version = "0.1.0", className }: PwaSettingsProps) 
       data-testid="pwa-settings"
     >
       {/* Section Header - AC10.6.1 */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Smartphone className="w-5 h-5 text-[#0077B6]" aria-hidden="true" />
-            <span className="font-semibold text-gray-900">Instalación de App</span>
+            <Smartphone className="w-4 h-4 text-[#0077B6]" aria-hidden="true" />
+            <span className="text-sm font-semibold text-gray-900">Instalación de App</span>
           </div>
           <span
-            className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded"
+            className="text-[11px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded"
             data-testid="app-version"
           >
             v{version}
@@ -228,11 +228,11 @@ export function PwaSettings({ version = "0.1.0", className }: PwaSettingsProps) 
       </div>
 
       {/* Install Row - AC10.6.2, AC10.6.3 */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="font-medium text-gray-900">Instalar App</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm font-medium text-gray-900">Instalar App</p>
+            <p className="text-xs text-gray-500">
               {isStandalone
                 ? "La app está instalada en tu dispositivo"
                 : "Sigue los pasos de abajo para instalar"}
@@ -242,35 +242,35 @@ export function PwaSettings({ version = "0.1.0", className }: PwaSettingsProps) 
           {isStandalone ? (
             // AC10.6.3: Installed badge
             <div
-              className="flex items-center gap-1.5 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg"
+              className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-lg"
               data-testid="pwa-installed-badge"
             >
-              <CheckCircle className="w-4 h-4" aria-hidden="true" />
-              <span className="text-sm font-medium">Instalada</span>
+              <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
+              <span className="text-xs font-medium">Instalada</span>
             </div>
           ) : deferredPrompt ? (
             // AC10.6.2: Install button (Chrome/Android)
             <button
               onClick={handleInstall}
-              className="flex items-center gap-1.5 text-white bg-[#0077B6] hover:bg-[#005f8f] px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1 text-white bg-[#0077B6] hover:bg-[#005f8f] px-2 py-1 rounded-lg transition-colors"
               data-testid="pwa-install-button"
             >
-              <Download className="w-4 h-4" aria-hidden="true" />
-              <span className="text-sm font-medium">Instalar</span>
+              <Download className="w-3.5 h-3.5" aria-hidden="true" />
+              <span className="text-xs font-medium">Instalar</span>
             </button>
           ) : (
             // AC10.6.4: Show instructions toggle for iOS/manual install
             <button
               onClick={() => setShowInstructions(!showInstructions)}
-              className="flex items-center gap-1 text-[#0077B6] text-sm font-medium"
+              className="flex items-center gap-1 text-[#0077B6] text-xs font-medium"
               data-testid="pwa-instructions-toggle"
               aria-expanded={showInstructions}
             >
               {showInstructions ? "Ocultar" : "Ver pasos"}
               {showInstructions ? (
-                <ChevronUp className="w-4 h-4" aria-hidden="true" />
+                <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" />
               ) : (
-                <ChevronDown className="w-4 h-4" aria-hidden="true" />
+                <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
               )}
             </button>
           )}
@@ -285,11 +285,11 @@ export function PwaSettings({ version = "0.1.0", className }: PwaSettingsProps) 
       </div>
 
       {/* Updates Row - AC10.6.5 */}
-      <div className="p-4">
+      <div className="px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="font-medium text-gray-900">Actualizaciones</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm font-medium text-gray-900">Actualizaciones</p>
+            <p className="text-xs text-gray-500">
               {updateAvailable
                 ? "Nueva versión disponible"
                 : "Toca para buscar actualizaciones"}
@@ -299,24 +299,24 @@ export function PwaSettings({ version = "0.1.0", className }: PwaSettingsProps) 
           {updateAvailable ? (
             <button
               onClick={handleInstallUpdate}
-              className="flex items-center gap-1.5 text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1 text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-lg transition-colors"
               data-testid="pwa-install-update-button"
             >
-              <RefreshCw className="w-4 h-4" aria-hidden="true" />
-              <span className="text-sm font-medium">Actualizar</span>
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+              <span className="text-xs font-medium">Actualizar</span>
             </button>
           ) : (
             <button
               onClick={handleCheckUpdates}
               disabled={checkingUpdates}
-              className="flex items-center gap-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-1 text-gray-700 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-lg transition-colors disabled:opacity-50"
               data-testid="pwa-check-updates-button"
             >
               <RefreshCw
-                className={cn("w-4 h-4", checkingUpdates && "animate-spin")}
+                className={cn("w-3.5 h-3.5", checkingUpdates && "animate-spin")}
                 aria-hidden="true"
               />
-              <span className="text-sm font-medium">
+              <span className="text-xs font-medium">
                 {checkingUpdates ? "Buscando..." : "Buscar"}
               </span>
             </button>

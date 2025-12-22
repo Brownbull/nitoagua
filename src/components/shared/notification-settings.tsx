@@ -137,14 +137,14 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
   if (!mounted) {
     return (
       <div className={cn("bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden", className)}>
-        <div className="p-4 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Bell className="w-5 h-5 text-[#0077B6]" aria-hidden="true" />
-            <span className="font-semibold text-gray-900">Notificaciones</span>
+            <Bell className="w-4 h-4 text-[#0077B6]" aria-hidden="true" />
+            <span className="text-sm font-semibold text-gray-900">Notificaciones</span>
           </div>
         </div>
-        <div className="p-4 animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+        <div className="px-4 py-3 animate-pulse">
+          <div className="h-3 bg-gray-200 rounded w-3/4"></div>
         </div>
       </div>
     );
@@ -157,14 +157,14 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
         className={cn("bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden", className)}
         data-testid="notification-settings"
       >
-        <div className="p-4 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Bell className="w-5 h-5 text-[#0077B6]" aria-hidden="true" />
-            <span className="font-semibold text-gray-900">Notificaciones</span>
+            <Bell className="w-4 h-4 text-[#0077B6]" aria-hidden="true" />
+            <span className="text-sm font-semibold text-gray-900">Notificaciones</span>
           </div>
         </div>
-        <div className="p-4">
-          <p className="text-sm text-gray-500">
+        <div className="px-4 py-3">
+          <p className="text-xs text-gray-500">
             Las notificaciones no están soportadas en este navegador.
           </p>
         </div>
@@ -181,32 +181,32 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       data-testid="notification-settings"
     >
       {/* Section Header - AC10.6.6 */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <Bell className="w-5 h-5 text-[#0077B6]" aria-hidden="true" />
-          <span className="font-semibold text-gray-900">Notificaciones</span>
+          <Bell className="w-4 h-4 text-[#0077B6]" aria-hidden="true" />
+          <span className="text-sm font-semibold text-gray-900">Notificaciones</span>
         </div>
       </div>
 
       {/* Push Notifications Toggle - AC10.6.7 */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="font-medium text-gray-900">Notificaciones Push</p>
-            <p className="text-sm text-gray-500">{statusInfo.description}</p>
+            <p className="text-sm font-medium text-gray-900">Notificaciones Push</p>
+            <p className="text-xs text-gray-500">{statusInfo.description}</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Status badge */}
             <div
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-medium",
+                "flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium",
                 statusInfo.color,
                 statusInfo.bgColor
               )}
               data-testid="notification-status-badge"
             >
-              <StatusIcon className="w-3.5 h-3.5" aria-hidden="true" />
+              <StatusIcon className="w-3 h-3" aria-hidden="true" />
               <span>{statusInfo.text}</span>
             </div>
 
@@ -218,6 +218,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
                 disabled={requesting}
                 aria-label="Activar notificaciones push"
                 data-testid="notification-toggle"
+                className="scale-90"
               />
             )}
           </div>
@@ -225,8 +226,8 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
 
         {/* Blocked state help text */}
         {permission === "denied" && (
-          <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
-            <p className="text-sm text-amber-800">
+          <div className="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-100">
+            <p className="text-xs text-amber-800">
               <strong>¿Cómo habilitarlas?</strong> Abre la configuración del navegador y permite
               notificaciones para este sitio.
             </p>
@@ -235,11 +236,11 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       </div>
 
       {/* Test Notification - AC10.6.8 */}
-      <div className="p-4">
+      <div className="px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="font-medium text-gray-900">Probar Notificación</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm font-medium text-gray-900">Probar Notificación</p>
+            <p className="text-xs text-gray-500">
               Envía una notificación de prueba para verificar
             </p>
           </div>
@@ -248,7 +249,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
             onClick={handleTestNotification}
             disabled={permission !== "granted" || sending}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium",
+              "flex items-center gap-1 px-2 py-1 rounded-lg transition-colors text-xs font-medium",
               permission === "granted"
                 ? testSent
                   ? "bg-green-100 text-green-700"
@@ -260,17 +261,17 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
           >
             {testSent ? (
               <>
-                <CheckCircle className="w-4 h-4" aria-hidden="true" />
+                <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Enviada</span>
               </>
             ) : sending ? (
               <>
-                <BellRing className="w-4 h-4 animate-pulse" aria-hidden="true" />
+                <BellRing className="w-3.5 h-3.5 animate-pulse" aria-hidden="true" />
                 <span>Enviando...</span>
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" aria-hidden="true" />
+                <Send className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Probar</span>
               </>
             )}

@@ -33,35 +33,35 @@ export function ConsumerNav() {
   return (
     <nav
       data-testid="consumer-nav"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white safe-area-bottom"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white pb-safe"
     >
-      <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2">
+      <div className="mx-auto flex h-[72px] max-w-lg items-center justify-around px-2">
         {/* Home */}
         <Link
           href="/"
           className={cn(
-            "flex flex-col items-center gap-0.5 min-w-[56px] px-2 py-1.5 rounded-xl transition-colors",
+            "flex flex-col items-center gap-1 min-w-[60px] px-3 py-2 rounded-xl transition-colors",
             isHomeActive
               ? "text-[#0077B6] bg-[#CAF0F8]"
               : "text-gray-400"
           )}
         >
-          <Home className="w-5 h-5" strokeWidth={2} />
-          <span className="text-[10px] font-medium">Inicio</span>
+          <Home className="w-6 h-6" strokeWidth={2} />
+          <span className="text-xs font-medium">Inicio</span>
         </Link>
 
         {/* History */}
         <Link
           href="/history"
           className={cn(
-            "relative flex flex-col items-center gap-0.5 min-w-[56px] px-2 py-1.5 rounded-xl transition-colors",
+            "relative flex flex-col items-center gap-1 min-w-[60px] px-3 py-2 rounded-xl transition-colors",
             isHistoryActive
               ? "text-[#0077B6] bg-[#CAF0F8]"
               : "text-gray-400"
           )}
         >
           <div className="relative">
-            <Clock className="w-5 h-5" strokeWidth={2} />
+            <Clock className="w-6 h-6" strokeWidth={2} />
             {/* Unread badge (AC5-3-2) */}
             {hasUnread && !isHistoryActive && (
               <span
@@ -72,31 +72,31 @@ export function ConsumerNav() {
               </span>
             )}
           </div>
-          <span className="text-[10px] font-medium">Historial</span>
+          <span className="text-xs font-medium">Historial</span>
         </Link>
 
         {/* Center FAB - Request Water */}
-        <div className="flex flex-col items-center relative -top-4">
+        <div className="flex flex-col items-center relative -top-3">
           <button
             onClick={() => router.push("/request")}
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-[0_4px_14px_rgba(0,119,182,0.4)]"
+            className="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-[0_4px_14px_rgba(0,119,182,0.4)]"
             style={{
               background: "linear-gradient(135deg, #0077B6 0%, #005f8f 100%)",
             }}
             aria-label="Pedir agua"
           >
-            <Droplets className="w-6 h-6" fill="currentColor" />
+            <Droplets className="w-7 h-7" fill="currentColor" />
           </button>
-          <span className="text-[10px] font-semibold text-[#0077B6] mt-0.5">Pedir</span>
+          <span className="text-xs font-semibold text-[#0077B6] mt-1">Pedir</span>
         </div>
 
         {/* Alerts - placeholder for now */}
         <Link
           href="/history"
-          className="flex flex-col items-center gap-0.5 min-w-[56px] px-2 py-1.5 rounded-xl text-gray-400"
+          className="flex flex-col items-center gap-1 min-w-[60px] px-3 py-2 rounded-xl text-gray-400"
         >
           <svg
-            className="w-5 h-5"
+            className="w-6 h-6"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -104,21 +104,21 @@ export function ConsumerNav() {
           >
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           </svg>
-          <span className="text-[10px] font-medium">Alertas</span>
+          <span className="text-xs font-medium">Alertas</span>
         </Link>
 
         {/* Profile */}
         <Link
           href="/consumer-profile"
           className={cn(
-            "flex flex-col items-center gap-0.5 min-w-[56px] px-2 py-1.5 rounded-xl transition-colors",
+            "flex flex-col items-center gap-1 min-w-[60px] px-3 py-2 rounded-xl transition-colors",
             isProfileActive
               ? "text-[#0077B6] bg-[#CAF0F8]"
               : "text-gray-400"
           )}
         >
-          <User className="w-5 h-5" strokeWidth={2} />
-          <span className="text-[10px] font-medium">Perfil</span>
+          <User className="w-6 h-6" strokeWidth={2} />
+          <span className="text-xs font-medium">Perfil</span>
         </Link>
       </div>
     </nav>
