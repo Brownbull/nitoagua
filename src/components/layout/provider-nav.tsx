@@ -36,7 +36,7 @@ export function ProviderNav() {
   return (
     <nav
       data-testid="provider-nav"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white safe-area-bottom"
     >
       <div className="mx-auto flex h-16 max-w-lg items-end justify-around pb-1">
         {/* Left side items */}

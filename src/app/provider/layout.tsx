@@ -16,7 +16,7 @@ export default function ProviderLayout({
   const isMapPage = pathname === "/provider/map";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+    <div className="min-h-dvh bg-gradient-to-b from-orange-50 to-white">
       {/* Header with Logo and Notification Bell - AC: 8.5.1 */}
       {/* Hidden on map page for full-screen experience */}
       {!isMapPage && (

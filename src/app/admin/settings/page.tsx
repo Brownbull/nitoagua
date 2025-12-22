@@ -3,6 +3,8 @@ import { getSettings } from "@/lib/actions/admin";
 import { DEFAULT_ADMIN_SETTINGS } from "@/lib/validations/admin";
 import { SettingsForm } from "@/components/admin/settings-form";
 import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
+import { PwaSettings } from "@/components/shared/pwa-settings";
+import { NotificationSettings } from "@/components/shared/notification-settings";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -39,7 +41,7 @@ export default async function AdminSettingsPage() {
             Admin
           </div>
         </div>
-        <h1 className="text-xl font-extrabold text-gray-900">Configuracion</h1>
+        <h1 className="text-xl font-extrabold text-gray-900">Configuración</h1>
         <p className="text-gray-500 text-sm">
           Ajustes del sistema de ofertas
         </p>
@@ -49,7 +51,7 @@ export default async function AdminSettingsPage() {
       <div className="p-6">
         {/* Admin session display */}
         <div className="mb-4 p-3.5 bg-white rounded-xl shadow-sm">
-          <p className="text-xs text-gray-500">Sesion activa como:</p>
+          <p className="text-xs text-gray-500">Sesión activa como:</p>
           <p className="text-sm font-semibold text-gray-900">{user.email}</p>
         </div>
 
@@ -59,9 +61,27 @@ export default async function AdminSettingsPage() {
         {/* Info note */}
         <div className="mt-4 p-3.5 bg-blue-50 rounded-xl border border-blue-100">
           <p className="text-xs text-blue-800">
-            <strong>Nota:</strong> Los cambios se aplicaran inmediatamente a las nuevas ofertas.
-            Las ofertas existentes mantendran su configuracion original.
+            <strong>Nota:</strong> Los cambios se aplicarán inmediatamente a las nuevas ofertas.
+            Las ofertas existentes mantendrán su configuración original.
           </p>
+        </div>
+
+        {/* Divider */}
+        <div className="my-6 border-t border-gray-200" />
+
+        {/* App Settings Section - AC10.6.12 */}
+        <h2 className="text-base font-semibold text-gray-900 mb-4">
+          Configuración de la Aplicación
+        </h2>
+
+        {/* PWA Settings - AC10.6.12 */}
+        <div className="mb-4">
+          <PwaSettings version={process.env.NEXT_PUBLIC_APP_VERSION} />
+        </div>
+
+        {/* Notification Settings - AC10.6.12 */}
+        <div className="mb-6">
+          <NotificationSettings />
         </div>
 
         {/* Logout button */}

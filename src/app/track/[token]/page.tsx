@@ -38,7 +38,7 @@ interface RequestWithSupplier {
 
 function TrackingErrorPage() {
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col">
+    <main className="min-h-dvh bg-gray-50 flex flex-col">
       <GradientHeader title="Solicitud no encontrada" showBack={false} />
       <div className="flex-1 flex items-center justify-center p-5">
         <div className="text-center">
@@ -85,7 +85,7 @@ function TrackingContent({ request, trackingToken }: TrackingContentProps) {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col">
+    <main className="min-h-dvh bg-gray-50 flex flex-col">
       <TrackingRefresh />
 
       {/* Gradient Header */}

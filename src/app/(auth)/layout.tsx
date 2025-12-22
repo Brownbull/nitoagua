@@ -33,7 +33,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-dvh flex flex-col bg-white">
       {/* Back button - absolute positioned */}
       <Link
         href="/"

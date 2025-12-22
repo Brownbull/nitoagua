@@ -172,6 +172,22 @@ export async function requireAdmin() { /* ... */ }
 - **Format:** "MM:SS" when < 1 hour, "X h MM min" when > 1 hour
 - **Spanish copy:** "Expira en {time}", "Expirada"
 
+### Mobile Screen Adaptability (Story 10-7)
+
+| Pattern | Usage | Location |
+|---------|-------|----------|
+| `min-h-dvh` | Dynamic viewport height for mobile layouts | `src/app/globals.css` |
+| `safe-area-bottom` | Bottom nav padding for notched devices | `src/app/globals.css` |
+| `flex-1 overflow-y-auto` | Scrollable content within fixed viewport | Layout components |
+
+**CSS Utilities Added:**
+- `min-h-dvh`, `h-dvh`, `min-h-svh`, `min-h-lvh` - Viewport height variants
+- `safe-area-bottom`, `safe-area-top` - Safe area padding with base padding
+- `pb-safe`, `pt-safe` - Safe area padding without base padding
+- CSS variables: `--safe-top`, `--safe-bottom`, `--safe-left`, `--safe-right`
+
+**Critical Rule:** Standalone fallback components (loading states, error states) must use `min-h-dvh` directly. Do NOT use `flex-1` unless the component is guaranteed to be inside a flex parent.
+
 ---
 
-*Last verified: 2025-12-21 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3 code reviews*
+*Last verified: 2025-12-22 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7 code reviews*

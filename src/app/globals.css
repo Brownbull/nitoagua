@@ -48,6 +48,13 @@
 :root {
   --radius: 0.625rem;
 
+  /* Safe Area Insets for notched devices (iOS, Android with gesture nav) */
+  /* These use env() with fallback to 0px for non-notched devices */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
   /* Agua Pura Theme - Light Mode */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -157,5 +164,56 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* =============================================================================
+   Mobile Screen Adaptability - Story 10-7
+   =============================================================================
+   These utilities help screens adapt to different mobile viewport sizes and
+   handle browser chrome, navigation bars, and safe areas on notched devices.
+
+   Usage Pattern:
+   - Use `min-h-dvh` instead of `min-h-screen` for full-viewport layouts
+   - Use `safe-area-bottom` on fixed bottom navigation
+   - Use flex layouts with `flex-1 overflow-y-auto` for scrollable content
+   ============================================================================= */
+
+@layer utilities {
+  /* Dynamic Viewport Height - adjusts for browser UI changes */
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+
+  .h-dvh {
+    height: 100dvh;
+  }
+
+  /* Small Viewport Height - most conservative (smallest visible area) */
+  .min-h-svh {
+    min-height: 100svh;
+  }
+
+  /* Large Viewport Height - assumes browser UI is hidden */
+  .min-h-lvh {
+    min-height: 100lvh;
+  }
+
+  /* Safe Area Padding - for bottom navigation and fixed elements */
+  .safe-area-bottom {
+    padding-bottom: calc(0.5rem + var(--safe-bottom));
+  }
+
+  .safe-area-top {
+    padding-top: calc(0.5rem + var(--safe-top));
+  }
+
+  /* Safe area padding without base padding */
+  .pb-safe {
+    padding-bottom: var(--safe-bottom);
+  }
+
+  .pt-safe {
+    padding-top: var(--safe-top);
   }
 }

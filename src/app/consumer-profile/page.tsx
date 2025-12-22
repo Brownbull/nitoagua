@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, LogOut } from "lucide-react";
+import Link from "next/link";
+import { Loader2, LogOut, Settings, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ConsumerNav } from "@/components/layout/consumer-nav";
@@ -103,6 +104,24 @@ export default function ProfilePage() {
             <ConsumerProfileForm initialData={profile} email={email} />
           )}
         </div>
+
+        {/* Settings Link - AC10.6.10 */}
+        <Link
+          href="/settings"
+          className="flex items-center justify-between w-full bg-white rounded-xl shadow-sm p-4 mb-3 hover:bg-gray-50 transition-colors"
+          data-testid="consumer-settings-link"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#CAF0F8] flex items-center justify-center">
+              <Settings className="w-4 h-4 text-[#0077B6]" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-900 text-sm">Ajustes</p>
+              <p className="text-xs text-gray-500">App, notificaciones</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
+        </Link>
 
         {/* Logout Button */}
         <Button

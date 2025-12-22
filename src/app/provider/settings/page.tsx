@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { AvailabilityToggleWrapper } from "@/components/supplier";
 import { SignOutButton } from "./sign-out-button";
+import { PwaSettings } from "@/components/shared/pwa-settings";
+import { NotificationSettings } from "@/components/shared/notification-settings";
 
 export const metadata: Metadata = {
   title: "Ajustes - nitoagua Proveedor",
@@ -126,7 +128,7 @@ export default async function ProviderSettingsPage() {
       )}
 
       {/* Settings Menu */}
-      <div className="space-y-2 mb-8">
+      <div className="space-y-2 mb-6">
         <h3 className="text-sm font-medium text-gray-700 mb-3">
           Configuración de Cuenta
         </h3>
@@ -156,6 +158,19 @@ export default async function ProviderSettingsPage() {
             );
           })}
         </div>
+      </div>
+
+      {/* PWA Settings - AC10.6.11 */}
+      <div className="mb-6">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">
+          Aplicación
+        </h3>
+        <PwaSettings version={process.env.NEXT_PUBLIC_APP_VERSION} />
+      </div>
+
+      {/* Notification Settings - AC10.6.11 */}
+      <div className="mb-8">
+        <NotificationSettings />
       </div>
 
       {/* Sign Out Button */}

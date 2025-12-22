@@ -55,7 +55,7 @@ export function WelcomeScreen() {
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-64px)]">
+    <div className="flex flex-col flex-1">
       {/* Hero Section */}
       <div className="flex-1 px-4 py-8">
         <div className="max-w-md mx-auto">

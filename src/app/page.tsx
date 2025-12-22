@@ -60,7 +60,7 @@ export default function Home() {
     : "U";
 
   return (
-    <div className={`min-h-screen bg-white flex flex-col ${user ? 'pb-20' : ''}`}>
+    <div className={`min-h-dvh bg-white flex flex-col ${user ? 'pb-20' : ''}`}>
       {/* Header with gradient */}
       <header
         className="px-4 pt-3 pb-4 flex justify-between items-center shrink-0"
