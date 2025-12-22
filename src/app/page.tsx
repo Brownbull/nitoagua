@@ -60,7 +60,7 @@ export default function Home() {
     : "U";
 
   return (
-    <div className={`min-h-dvh bg-white flex flex-col ${user ? 'pb-20' : ''}`}>
+    <div className={`h-dvh bg-white flex flex-col overflow-hidden ${user ? 'pb-20' : ''}`}>
       {/* Header with gradient */}
       <header
         className="px-4 pt-3 pb-4 flex justify-between items-center shrink-0"
@@ -102,9 +102,9 @@ export default function Home() {
         )}
       </header>
 
-      {/* Hero Section - Compact for mobile viewport fit */}
+      {/* Hero Section - Centered, no spacer to avoid pushing footer */}
       <main
-        className="flex-1 flex flex-col px-5 py-4 text-center"
+        className="flex-1 flex flex-col justify-center px-5 py-4 text-center"
         style={{ background: "linear-gradient(180deg, white 0%, #F9FAFB 100%)" }}
       >
         {/* Quality Badge */}
@@ -151,13 +151,10 @@ export default function Home() {
             </Link>
           </p>
         )}
-
-        {/* Spacer */}
-        <div className="flex-1" />
       </main>
 
       {/* Benefits Section - Compact horizontal layout */}
-      <section className="px-5 py-4 bg-gray-50 border-t border-gray-100">
+      <section className="px-5 py-4 bg-gray-50 border-t border-gray-100 shrink-0">
         <div className="flex justify-between gap-2">
           <div className="flex flex-col items-center text-center flex-1">
             <div className="w-9 h-9 bg-[#CAF0F8] rounded-lg flex items-center justify-center mb-1">
@@ -187,7 +184,7 @@ export default function Home() {
 
       {/* Footer Links - Login options and Admin (only shown when not logged in) */}
       {!checkingAuth && !user && (
-        <footer className="px-5 py-3 bg-gray-50 border-t border-gray-100">
+        <footer className="px-5 py-3 bg-gray-50 border-t border-gray-100 shrink-0">
           <div className="flex items-center justify-center gap-4 text-sm">
             <Link
               href="/login?role=consumer"
