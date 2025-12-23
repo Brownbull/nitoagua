@@ -180,4 +180,26 @@ export async function requireAdmin() { /* ... */ }
 
 ---
 
-*Last verified: 2025-12-22 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7 code reviews*
+### Vercel Caching Prevention (Story 11-8)
+
+**Problem:** Next.js pages with SSR database queries get cached by Vercel, showing stale data.
+
+**Pattern:** Export `dynamic = "force-dynamic"` on any page that:
+- Displays real-time queue data (admin verification, orders)
+- Shows current status that changes frequently
+- Queries database for counts or listings
+
+**Example:**
+```typescript
+// src/app/admin/verification/page.tsx
+export const dynamic = "force-dynamic";
+```
+
+**Pages requiring force-dynamic:**
+- `/admin/verification` - Provider verification queue
+- `/admin/orders` - Orders management
+- `/admin/dashboard` - Operations dashboard (if showing live counts)
+
+---
+
+*Last verified: 2025-12-23 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8 code reviews*

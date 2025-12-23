@@ -5,7 +5,7 @@
 | **Story ID** | 11-8 |
 | **Epic** | Epic 11 - Playwright Workflow Validation |
 | **Title** | Admin Verification (Production) |
-| **Status** | review |
+| **Status** | done |
 | **Points** | 2 |
 | **Priority** | P0 - Critical |
 | **Depends On** | Story 11-7 |
@@ -67,12 +67,34 @@
 - Symptom: Page showed "Pendientes (0), Revisando (1)" instead of seeded data
 - Root cause: Verification page was being cached by Vercel (Next.js SSR caching)
 - Fix: Added `export const dynamic = "force-dynamic"` to `/admin/verification/page.tsx`
-- Deployed commit: 63d2d91
+- Commit: 63d2d91 (immediate production fix)
 
 **Issue 2: Tests running against wrong URL**
 - Symptom: Tests failing even after fix deployed
 - Root cause: Missing `BASE_URL` environment variable - tests defaulting to localhost
 - Fix: Added `BASE_URL="https://nitoagua.vercel.app"` to test command
+
+### Production Test Commands
+
+**Seed test data:**
+```bash
+npm run seed:verification:prod
+```
+
+**Run tests against production:**
+```bash
+BASE_URL="https://nitoagua.vercel.app" \
+NEXT_PUBLIC_SUPABASE_URL="https://spvbmmydrfquvndxpcug.supabase.co" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>" \
+NEXT_PUBLIC_DEV_LOGIN=true \
+DISPLAY= timeout 420 npx playwright test tests/e2e/admin-verification-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Clean up test data:**
+```bash
+npm run seed:verification:prod:clean
+```
 
 ### Test Results
 
@@ -94,9 +116,9 @@
 ### File List
 
 **Modified Files:**
-- `src/app/admin/verification/page.tsx` - Added `force-dynamic` export
-- `scripts/local/seed-admin-verification-tests.ts` - Added production support via env vars
-- `package.json` - Added `seed:verification:prod` and `seed:verification:prod:clean` scripts
+- `src/app/admin/verification/page.tsx` - Added `force-dynamic` export (commit 63d2d91, immediate fix)
+- `scripts/local/seed-admin-verification-tests.ts` - Added production support via env vars (commit 9d49d4d)
+- `package.json` - Added `seed:verification:prod` and `seed:verification:prod:clean` scripts (commit 9d49d4d)
 
 ---
 
@@ -106,3 +128,4 @@
 |------|--------|--------|
 | 2025-12-23 | Story created | SM |
 | 2025-12-23 | Production tests passing (16/18, 2 skipped) | Dev Agent |
+| 2025-12-23 | Atlas code review: Added test commands, clarified commits | Dev Agent |

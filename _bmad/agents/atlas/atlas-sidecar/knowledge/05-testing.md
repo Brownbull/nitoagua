@@ -408,4 +408,47 @@ NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= timeout 180 npx playwright test \
 
 ---
 
-*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7 code reviews*
+## Admin Verification Production Tests (Story 11-8)
+
+> Added 2025-12-23 from Story 11-8: Admin Verification (Production)
+
+### Production Caching Fix
+
+**Problem:** Admin verification page showing stale data on production (Vercel caching).
+
+**Pattern:** Pages that display real-time database content must use `force-dynamic`.
+
+**Location:** `src/app/admin/verification/page.tsx`
+
+**Code:**
+```typescript
+export const dynamic = "force-dynamic";
+```
+
+**Rule:** Any Next.js page that queries database for real-time status (verification queues, orders, dashboards) should export `dynamic = "force-dynamic"` to prevent Vercel caching.
+
+### Production Test Execution Pattern - Admin Verification
+
+**Seed Command:**
+```bash
+npm run seed:verification:prod  # Uses ./scripts/run-with-prod-env.sh wrapper
+```
+
+**Test Execution:**
+```bash
+BASE_URL="https://nitoagua.vercel.app" \
+NEXT_PUBLIC_SUPABASE_URL="<prod-url>" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>" \
+NEXT_PUBLIC_DEV_LOGIN=true \
+DISPLAY= timeout 420 npx playwright test tests/e2e/admin-verification-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Key Requirements:**
+1. **BASE_URL required** - Tests default to localhost without it
+2. **Timeout 420s** (7 min) for admin workflow complexity
+3. **Expect skipped tests** - Serial data-mutating tests consume providers
+
+---
+
+*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8 code reviews*
