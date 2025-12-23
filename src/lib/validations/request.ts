@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getDeliveryPrice } from "@/lib/utils/commission";
 
 /**
  * Chilean phone number regex pattern
@@ -57,13 +58,15 @@ export type RequestFormInput = Omit<RequestInput, "isUrgent"> & {
 
 /**
  * Amount options with their display labels and prices in CLP
+ * Prices are derived from getDeliveryPrice() - single source of truth
+ * per Atlas Section 4: "Single source of truth: getDeliveryPrice()"
  */
 export const AMOUNT_OPTIONS = [
-  { value: "100", label: "100 L", price: 5000 },
-  { value: "1000", label: "1.000 L", price: 15000 },
-  { value: "5000", label: "5.000 L", price: 45000 },
-  { value: "10000", label: "10.000 L", price: 80000 },
-] as const;
+  { value: "100" as const, label: "100 L", price: getDeliveryPrice(100) },
+  { value: "1000" as const, label: "1.000 L", price: getDeliveryPrice(1000) },
+  { value: "5000" as const, label: "5.000 L", price: getDeliveryPrice(5000) },
+  { value: "10000" as const, label: "10.000 L", price: getDeliveryPrice(10000) },
+];
 
 /**
  * Format price in Chilean pesos

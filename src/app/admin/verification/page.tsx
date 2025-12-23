@@ -1,8 +1,10 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VerificationFilterTabs } from "@/components/admin/verification-filter-tabs";
-import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Verificaciones - Admin nitoagua",

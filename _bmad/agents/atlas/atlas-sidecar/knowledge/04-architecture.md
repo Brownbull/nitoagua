@@ -136,41 +136,29 @@ export async function requireAdmin() { /* ... */ }
 
 ---
 
-## Code Review Learnings (Epic 8)
+## Code Review Learnings (Consolidated)
 
-| Story | Key Patterns | Location |
-|-------|--------------|----------|
-| 8-6 | `getDeliveryPrice()` centralized pricing | `src/lib/utils/commission.ts` |
-| 8-6 | `aria-busy`/`aria-live` for loading states | Period selectors |
-| 8-7 | Storage bucket with folder-based RLS | `commission-receipts` bucket |
-| 8-9 | `hideBackButton` prop for component reuse | ServiceAreaSettings |
-| 8-9 | Settings page layout standard | `max-w-lg mx-auto px-4 py-6` |
-| 8-10 | `dynamic()` import for SSR bypass | Leaflet map wrapper |
-| 8-10 | Full-screen page layout override | `usePathname()` conditional |
+| Epic | Story | Pattern | Location |
+|------|-------|---------|----------|
+| 8 | 8-6 | `getDeliveryPrice()` centralized pricing | `src/lib/utils/commission.ts` |
+| 8 | 8-6 | `aria-busy`/`aria-live` for loading states | Period selectors |
+| 8 | 8-7 | Storage bucket with folder-based RLS | `commission-receipts` bucket |
+| 8 | 8-9 | `hideBackButton` prop for component reuse | ServiceAreaSettings |
+| 8 | 8-9 | Settings page layout: `max-w-lg mx-auto px-4 py-6` | Provider settings |
+| 8 | 8-10 | `dynamic()` import for SSR bypass | Leaflet map wrapper |
+| 8 | 8-10 | Full-screen page layout override | `usePathname()` conditional |
+| 10 | 10-3 | `data-testid` prop passthrough | CountdownTimer |
+| 10 | 10-3 | `aria-live` on active AND expired states | Accessibility |
+| 10 | 10-3 | `COUNTDOWN_THRESHOLDS` exported constants | `src/lib/utils/countdown.ts` |
+| 10 | 10-7 | Dynamic viewport units (`min-h-dvh`) | `globals.css` |
+| 10 | 10-7 | Safe area handling (`pb-safe`) | PWA standards |
 
-### Storage Bucket: commission-receipts
+### Key Component Patterns
 
-- **Bucket:** `commission-receipts` (private, 5MB, images + PDF)
-- **Path:** `{provider_id}/{timestamp}-receipt.{ext}`
-- **RLS:** Providers upload/view own, admins view all
-- **Actions:** `getPlatformBankDetails()`, `submitCommissionPayment()`, `getReceiptUrl()`
-
-## Code Review Learnings (Epic 10)
-
-| Story | Key Patterns | Location |
-|-------|--------------|----------|
-| 10-3 | `data-testid` prop passthrough pattern | `CountdownTimer` component |
-| 10-3 | `aria-live` on both active AND expired states | Accessibility for state transitions |
-| 10-3 | `COUNTDOWN_THRESHOLDS` exported constants | `src/lib/utils/countdown.ts` |
-| 10-3 | Urgency colors: orange (< 10 min), red (< 5 min) | Per AC10.3.3 |
-
-### CountdownTimer Component Pattern
-
-- **Location:** `src/components/shared/countdown-timer.tsx`
-- **Props:** `expiresAt`, `onExpire`, `showPrefix`, `showIcon`, `className`, `warningClassName`, `criticalClassName`, `data-testid`
-- **Accessibility:** `aria-live="polite"` on both active timer and expired state
-- **Format:** "MM:SS" when < 1 hour, "X h MM min" when > 1 hour
-- **Spanish copy:** "Expira en {time}", "Expirada"
+| Component | Location | Key Props |
+|-----------|----------|-----------|
+| CountdownTimer | `src/components/shared/countdown-timer.tsx` | `expiresAt`, `onExpire`, `showPrefix`, `showIcon`, `data-testid` |
+| Storage Bucket | `commission-receipts` | Private, 5MB, path: `{provider_id}/{timestamp}-receipt.{ext}` |
 
 ### Mobile Screen Adaptability (Story 10-7)
 
@@ -192,4 +180,48 @@ export async function requireAdmin() { /* ... */ }
 
 ---
 
-*Last verified: 2025-12-22 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7 code reviews*
+### Vercel Caching Prevention (Story 11-8)
+
+**Problem:** Next.js pages with SSR database queries get cached by Vercel, showing stale data.
+
+**Pattern:** Export `dynamic = "force-dynamic"` on any page that:
+- Displays real-time queue data (admin verification, orders)
+- Shows current status that changes frequently
+- Queries database for counts or listings
+
+**Example:**
+```typescript
+// src/app/admin/verification/page.tsx
+export const dynamic = "force-dynamic";
+```
+
+**Pages requiring force-dynamic:**
+- `/admin/verification` - Provider verification queue
+- `/admin/orders` - Orders management
+- `/admin/dashboard` - Operations dashboard (if showing live counts)
+
+---
+
+### Pricing DRY Enforcement (Story 11-9)
+
+**Problem:** `AMOUNT_OPTIONS` in `request.ts` had hardcoded prices that diverged from `getDeliveryPrice()`.
+
+**Pattern:** All pricing MUST derive from `getDeliveryPrice()` - NO hardcoded price values.
+
+**Fixed Location:** `src/lib/validations/request.ts`
+
+**Code:**
+```typescript
+export const AMOUNT_OPTIONS = [
+  { value: "100" as const, label: "100 L", price: getDeliveryPrice(100) },
+  { value: "1000" as const, label: "1.000 L", price: getDeliveryPrice(1000) },
+  { value: "5000" as const, label: "5.000 L", price: getDeliveryPrice(5000) },
+  { value: "10000" as const, label: "10.000 L", price: getDeliveryPrice(10000) },
+];
+```
+
+**Rule:** When adding new pricing displays, import and call `getDeliveryPrice()` - never hardcode prices.
+
+---
+
+*Last verified: 2025-12-23 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9 code reviews*

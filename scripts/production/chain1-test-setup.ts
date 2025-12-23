@@ -62,15 +62,16 @@ if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
 }
 
 // Test users for CHAIN-1
+// NOTE: Passwords match dev-login.tsx for Playwright E2E compatibility
 const TEST_USERS = {
   consumer: {
     email: "consumer@nitoagua.cl",
-    password: "test.123",
+    password: "consumer.123",
     expectedRole: "consumer",
   },
   provider: {
     email: "supplier@nitoagua.cl",
-    password: "test.123",
+    password: "supplier.123",
     expectedRole: "supplier",
   },
 };

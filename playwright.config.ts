@@ -36,6 +36,17 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    // Mobile viewport for PWA testing (Epic 11+)
+    // 360x780 matches common mobile devices and user's screenshot
+    {
+      name: 'mobile',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 360, height: 780 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
   ],
 
   webServer: {

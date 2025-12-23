@@ -1,7 +1,7 @@
 # Testing Patterns & Coverage Expectations
 
 > Section 5 of Atlas Memory
-> Last Sync: 2025-12-18
+> Last Sync: 2025-12-23
 > Sources: docs/sprint-artifacts/testing/, run_app.local.md, epic retrospectives
 
 ## Testing Strategy
@@ -33,7 +33,7 @@
 | Consumer request | User profile, address | `scripts/local/seed-test-data.ts` |
 | Provider offers | Provider profile, pending requests | `scripts/local/seed-offer-tests.ts` |
 | Earnings dashboard | Completed deliveries with commissions | `scripts/local/seed-earnings-tests.ts` |
-| Admin verification | Pending providers, documents | Per-test seeding |
+| Admin verification | Pending providers, documents | `scripts/local/seed-admin-verification-tests.ts` |
 
 ### Seed Data Commands
 
@@ -46,6 +46,9 @@ npm run seed:offers
 
 # Earnings-specific tests
 npm run seed:earnings
+
+# Admin verification tests
+npm run seed:verification
 
 # Clean and re-seed
 npm run seed:test:clean && npm run seed:test
@@ -182,151 +185,398 @@ Each test must:
 
 ## Playwright Utils Integration (Testing-3)
 
-> Added 2025-12-18 from Story Testing-3: Playwright Utils Integration
-
-### Merged Fixtures Pattern
-
-**Purpose:** Combine `@seontechnologies/playwright-utils` with project fixtures for enhanced E2E capabilities.
-
 **Location:** `tests/support/fixtures/merged-fixtures.ts`
 
-**Available Fixtures:**
+**Key Fixtures:** `log` (structured logging), `recurse` (polling), `interceptNetworkCall`, `networkErrorMonitor`, `userFactory`
 
-| Fixture | Purpose |
-|---------|---------|
-| `log` | Structured logging in reports - `log({ level: 'step', message: '...' })` |
-| `recurse` | Polling for async conditions (like Cypress retry) |
-| `interceptNetworkCall` | Spy/stub network requests |
-| `networkErrorMonitor` | Auto-fail on HTTP 4xx/5xx |
-| `userFactory` | Create/cleanup test users (project fixture) |
+**Import (Epic 10+):** `import { test, expect } from '../support/fixtures/merged-fixtures';`
 
 **Log Levels:** `info`, `step`, `success`, `warning`, `error`, `debug`
 
-### Migration Strategy
+**Persona Validation:** `tests/e2e/persona-validation.spec.ts` - 13 tests covering all personas
 
-**New tests (Epic 10+):** Use merged fixtures:
+**Full Reference:** `docs/testing/playwright-utils-integration.md`
+
+### Wait Patterns (Story 11-11)
+
+> Added 2025-12-23 from Atlas Code Review of Story 11-11
+
+**Problem:** Tests using arbitrary `waitForTimeout(2000)` delays, which are unreliable and slow.
+
+**Pattern:** Use specific element or network waits instead of fixed timeouts.
+
+**Anti-pattern:**
 ```typescript
-import { test, expect } from '../support/fixtures/merged-fixtures';
+await page.goto("/provider/earnings");
+await page.waitForTimeout(2000); // ❌ Arbitrary delay
+await assertNoErrorState(page);
 ```
 
-**Existing tests:** Keep `@playwright/test` - no changes needed.
-
-**Gradual migration:** When touching existing tests, consider upgrading imports and adding `log()` calls.
-
-### Example Usage
-
+**Correct pattern:**
 ```typescript
-test('example', async ({ page, log }) => {
-  await log({ level: 'step', message: 'Navigate to page' });
-  await page.goto('/consumer/offers');
+async function waitForEarningsPageLoad(page: Page): Promise<void> {
+  await page.getByRole("heading", { name: "Mis Ganancias" }).waitFor({ state: "visible", timeout: 10000 });
+  await page.waitForLoadState("networkidle", { timeout: 10000 });
+}
 
-  await log({ level: 'step', message: 'Verify content' });
-  await expect(page.locator('[data-testid="offer"]')).toBeVisible();
+await page.goto("/provider/earnings");
+await waitForEarningsPageLoad(page); // ✅ Specific element wait
+await assertNoErrorState(page);
+```
 
-  await log({ level: 'success', message: 'Test complete' });
+**Benefits:**
+- Faster tests (no unnecessary waiting)
+- More reliable (waits for actual readiness)
+- Self-documenting (helper name explains what we're waiting for)
+
+### CSS Selector Specificity (Story 11-11)
+
+**Problem:** Generic CSS class selectors like `.bg-gradient-to-br` can match multiple elements.
+
+**Anti-pattern:**
+```typescript
+const heroCard = page.locator("[class*='bg-gradient']"); // ❌ Matches multiple
+await expect(heroCard).toBeVisible(); // Fails: strict mode violation
+```
+
+**Correct patterns:**
+```typescript
+// Option 1: More specific CSS
+const heroCard = page.locator(".bg-gradient-to-br.from-gray-900"); // ✅ Unique
+
+// Option 2: Use data-testid (preferred)
+const heroCard = page.getByTestId("earnings-hero-card"); // ✅ Best practice
+
+// Option 3: Use first() if truly necessary
+await expect(heroCard.first()).toBeVisible(); // ✅ When duplicates expected
+```
+
+---
+
+## Chrome Extension vs Playwright Decision Guide
+
+| Factor | Chrome Extension | Playwright |
+|--------|------------------|------------|
+| **Best For** | New features, multi-persona, exploratory | Regression, CI/CD, timing-sensitive |
+| **Data** | Requires real/seeded data | Seeds per-test |
+| **Multi-persona** | Natural tab switching | Multi-context setup |
+| **Production** | ❌ No seed scripts | ❌ Never run |
+
+**Rule:** New feature → Chrome Extension first → then Playwright for regression.
+
+**Reference:** `docs/testing/e2e-checklists/` for Chrome Extension results.
+
+---
+
+---
+
+## Epic 11 Workflow Validation Patterns
+
+> Added 2025-12-23 from Story 11-3: Provider Visibility (Local)
+
+### Provider Visibility Tests (P7, P8, P9)
+
+**Test File:** `tests/e2e/provider-visibility.spec.ts`
+
+**Seed Dependency:** `npm run seed:offers` (includes notifications)
+
+**Patterns Validated:**
+1. **P7 - Track My Offers:** Offers list with status sections (pending/accepted/history)
+2. **P8 - Acceptance Notification:** Notification bell popover with offer_accepted type
+3. **P9 - Delivery Details:** Full request details page with customer info
+
+**Mobile Testing Pattern:**
+```typescript
+test.use({
+  viewport: { width: 360, height: 780 },
+  isMobile: true,
+  hasTouch: true,
 });
 ```
 
-**Reference:** `docs/testing/playwright-utils-integration.md`
+**Notification Seeding:**
+- Added to `scripts/local/seed-offer-tests.ts`
+- Uses valid UUIDs (pattern: `a0000000-0000-0000-0000-00000000XXXX`)
+- Creates both read and unread notifications for testing
 
-### Persona Validation Tests
+**Key Selectors:**
+| Element | Test ID | Usage |
+|---------|---------|-------|
+| Pending offers | `section-pending` | P7 status grouping |
+| Accepted offers | `section-accepted` | P7 + P9 delivery link |
+| Notification bell | `notification-bell` | P8 trigger |
+| Offer cards | `offer-card` | P7 card display |
+| Offer countdown | `offer-countdown` | P7.3 countdown timer |
+| Notification items | `notification-item-${id}` | P8 dynamic testid (use `^=` prefix selector) |
 
-**Purpose:** Verify playwright-utils integration across all three personas.
+### Code Review Lessons - Story 11-3
 
-**Location:** `tests/e2e/persona-validation.spec.ts`
+**Selector Mismatch Pattern:**
+- **Problem:** Tests using `.catch(() => false)` mask selector mismatches
+- **Solution:** Use `.count() > 0` before assertions to validate element exists
 
-**Personas Tested:**
-- **Dona Maria (Consumer)**: Home screen, big button, Spanish interface, request form
-- **Don Pedro (Provider)**: Login page access, dev login detection, dashboard access
-- **Admin**: Login page, branding, security notices, dev login
+**Countdown Format Handling:**
+- `< 1 hour`: Format is `XX:XX` (e.g., "25:30")
+- `> 1 hour`: Format is `X h MM min` (e.g., "1 h 19 min")
+- **Regex:** `/Expira en\s*(\d{1,2}:\d{2}|\d+ h \d{2} min)/`
 
-**Test Count:** 13 tests (11 pass, 2 skip when dev login unavailable)
-
-**Key Patterns:**
-- Use `log({ level: 'step', message: '...' })` for each test step
-- Use `log({ level: 'success', message: '...' })` at test completion
-- Use `log({ level: 'info', message: '...' })` for informational notes
-- Use `log({ level: 'warning', message: '...' })` before test.skip()
+**Dynamic TestID Pattern:**
+- Components with dynamic testids (e.g., `notification-item-${id}`) require prefix selectors
+- Use `[data-testid^="notification-item-"]` instead of exact match
 
 ---
 
-## Chrome Extension vs Playwright: Decision Guide
+## Production Validation Pattern (Story 11-4)
 
-> Added 2025-12-21 after Chrome Extension E2E testing session
+> Added 2025-12-23 from Story 11-4: Provider Visibility (Production)
 
-### When to Use Chrome Extension E2E
+### Production Test Execution Pattern
 
-| Scenario | Why Chrome Extension |
-|----------|---------------------|
-| **Multi-persona workflows** | Natural multi-tab management, easy persona switching |
-| **Complex user journeys** | Human judgment for UI/UX validation |
-| **Exploratory testing** | Can adapt on the fly, notice unexpected issues |
-| **Visual verification** | Human eye catches layout/design issues |
-| **New feature validation** | Before investing in automation |
-| **Cross-persona timing** | Real-time observation of sync points |
-
-### When to Use Playwright Automated Tests
-
-| Scenario | Why Playwright |
-|----------|----------------|
-| **Regression testing** | Consistent, repeatable coverage |
-| **CI/CD integration** | Runs on every push/PR |
-| **Feature-specific tests** | Countdown timers, animations, state transitions |
-| **Race conditions** | Precise timing control impossible manually |
-| **Large test suites** | 100+ tests run in minutes, not hours |
-| **Data isolation** | Each test seeds and cleans up its own data |
-
-### Decision Matrix
-
-```
-Is this a NEW feature being validated for the first time?
-├── YES → Chrome Extension (exploratory, catch UX issues)
-└── NO → Already validated?
-    ├── YES → Playwright (regression, CI/CD)
-    └── NO → Is it multi-persona or complex timing?
-        ├── Multi-persona → Chrome Extension first, then Playwright
-        └── Timing-sensitive → Playwright (precise control)
+**Seed Command:**
+```bash
+npm run seed:offers:prod  # Uses ./scripts/run-with-prod-env.sh wrapper
 ```
 
-### Data Considerations
+**Test Execution Template:**
+```bash
+NEXT_PUBLIC_SUPABASE_URL="<prod-url>" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>" \
+NEXT_PUBLIC_DEV_LOGIN=true \
+DISPLAY= \
+timeout 180 npx playwright test <test-file> \
+  --project=chromium --workers=1 --reporter=list
+```
 
-| Environment | Chrome Extension | Playwright |
-|-------------|------------------|------------|
-| **Local dev** | ✅ Can seed data | ✅ Seeds per-test |
-| **Staging** | ⚠️ May have stale data | ⚠️ Usually no seeding |
-| **Production** | ❌ No seed scripts | ❌ Never run automated |
+**Key Requirements:**
+1. **Environment file:** `.env.production.local` with `SUPABASE_URL` and `SUPABASE_SERVICE_KEY`
+2. **Seed first:** Run `npm run seed:offers:prod` before tests
+3. **Timeout:** Use `timeout 180` (3 min) for production latency
+4. **Single worker:** `--workers=1` for deterministic ordering
+5. **Dev login:** `NEXT_PUBLIC_DEV_LOGIN=true` enables test login
 
-**Key Rule:** Always validate test data exists BEFORE generating Chrome Extension checklists. Use `step-03b-data-validation.md` in the atlas-e2e workflow.
-
----
-
-## Chrome Extension E2E Test Records
-
-### E2E Test Record: 10-3 (Chrome Extension)
-
-**Date:** 2025-12-20
-**Story:** 10-3 - Offer Countdown Timer (Consumer View)
-**Pass Rate:** N/A (Skipped - no test data on production)
-
-**Coverage:**
-- AC10.3.1 - AC10.3.7: All SKIPPED
-
-**Personas Tested:**
-- Consumer (Doña María): Login verified, 0 scenarios executed
-
-**Patterns Established:**
-- Production lacks seed data for feature E2E tests
-- Chrome Extension E2E requires either local environment or real test data
-- Dev login mode works on production
-
-**Issues Found:**
-- None (tests not executed due to data constraint)
-
-**Checklist:** docs/testing/e2e-checklists/10-3-offer-countdown-timer.md
-
-**Lesson Learned:**
-> Chrome Extension E2E testing on production requires real test data or a staging environment with persistent seed data. For feature-specific tests like countdown timers, prefer running Playwright automated tests locally with `npm run seed:offers`.
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| P7 | 3 | Track My Offers - Offer list with status |
+| P8 | 2 | Acceptance Notification - Bell + popover |
+| P9 | 2 | Delivery Details - Full request info |
+| Integration | 1 | Full navigation flow |
 
 ---
 
-*Last verified: 2025-12-20 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E*
+## Consumer Tracking Production Validation (Story 11-6)
+
+> Added 2025-12-23 from Story 11-6: Consumer Status Tracking (Production)
+
+### Consumer Tracking Production Tests (C3, C4)
+
+**Seed Command:**
+```bash
+npm run seed:test:prod  # Uses ./scripts/run-with-prod-env.sh wrapper
+```
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_SUPABASE_URL="<prod-url>" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>" \
+NEXT_PUBLIC_DEV_LOGIN=true \
+DISPLAY= \
+timeout 240 npx playwright test tests/e2e/consumer-status-tracking.spec.ts tests/e2e/consumer-tracking.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| C3.1-C3.6 | 6 | Status at each stage (pending, has_offers, accepted, delivered, cancelled, no_offers) |
+| C3.7-C3.9 | 3 | Timeline progression indicators |
+| C3.10 | 1 | Request details display |
+| C4.1-C4.4 | 4 | Contact button visibility states |
+| C4.5-C4.6 | 2 | One-tap contact functionality |
+| Accessibility | 2 | Keyboard nav, headings |
+| Spanish | 1 | All content in Spanish |
+
+### Code Review Lessons - Story 11-6
+
+**Schema Compatibility Pattern:**
+- **Problem:** Local schema had `timed_out_at` column, production did not
+- **Solution:** Removed column from seed data - `status: 'no_offers'` alone indicates timeout
+- **Rule:** When seeding production, verify column existence before including in data
+
+**CSS Class Update Pattern:**
+- **Problem:** Test expected `min-h-screen`, code uses `min-h-dvh` per Story 10-7 PWA standards
+- **Solution:** Updated test assertion to match current implementation
+- **Rule:** When CSS classes change for mobile optimization, update test assertions
+
+---
+
+## Admin Verification Workflow Tests (Story 11-7)
+
+> Added 2025-12-23 from Story 11-7: Admin Verification (Local)
+
+### Admin Verification Tests (A1-A4)
+
+**Seed Command:**
+```bash
+npm run seed:verification      # Create test providers in various states
+npm run seed:verification:clean  # Remove test data
+```
+
+**Test File:** `tests/e2e/admin-verification-workflow.spec.ts`
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= timeout 180 npx playwright test \
+  tests/e2e/admin-verification-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| A1 | 4 | View verification queue, count, filter tabs |
+| A2 | 5 | Review documents, personal/bank info, navigation |
+| A3 | 6 | Approve/reject actions, confirmation dialogs |
+| A4 | 2 | Email notifications on status change |
+
+**Seed Data Created:**
+| Status | Email | Documents |
+|--------|-------|-----------|
+| pending | pending-provider1@test.local | 3 (cedula, vehiculo, licencia) |
+| pending | pending-provider2@test.local | 0 |
+| more_info_needed | moreinfo-provider@test.local | 1 |
+| rejected | rejected-provider@test.local | 0 |
+| approved | approved-provider@test.local | 2 |
+
+### Code Review Lessons - Story 11-7
+
+**Serial Test Data Consumption:**
+- **Problem:** Tests A3.5 and A3.6 approve/reject providers, consuming data for later tests
+- **Solution:** Configure `test.describe.configure({ mode: "serial" })`, skip later tests if no data
+- **Rule:** Data-mutating tests should run serially and expect some tests to skip
+
+**assertNoErrorState Consistency:**
+- **Problem:** Tests A2.3 and A2.4 navigated to pages without error state check
+- **Solution:** Added `assertNoErrorState(page)` after all page navigations
+- **Rule:** ALL tests that navigate to pages must call `assertNoErrorState(page)` first
+
+---
+
+## Admin Verification Production Tests (Story 11-8)
+
+> Added 2025-12-23 from Story 11-8: Admin Verification (Production)
+
+### Production Caching Fix
+
+**Problem:** Admin verification page showing stale data on production (Vercel caching).
+
+**Pattern:** Pages that display real-time database content must use `force-dynamic`.
+
+**Location:** `src/app/admin/verification/page.tsx`
+
+**Code:**
+```typescript
+export const dynamic = "force-dynamic";
+```
+
+**Rule:** Any Next.js page that queries database for real-time status (verification queues, orders, dashboards) should export `dynamic = "force-dynamic"` to prevent Vercel caching.
+
+### Production Test Execution Pattern - Admin Verification
+
+**Seed Command:**
+```bash
+npm run seed:verification:prod  # Uses ./scripts/run-with-prod-env.sh wrapper
+```
+
+**Test Execution:**
+```bash
+BASE_URL="https://nitoagua.vercel.app" \
+NEXT_PUBLIC_SUPABASE_URL="<prod-url>" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>" \
+NEXT_PUBLIC_DEV_LOGIN=true \
+DISPLAY= timeout 420 npx playwright test tests/e2e/admin-verification-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Key Requirements:**
+1. **BASE_URL required** - Tests default to localhost without it
+2. **Timeout 420s** (7 min) for admin workflow complexity
+3. **Expect skipped tests** - Serial data-mutating tests consume providers
+
+---
+
+## Provider Earnings Workflow Tests (Story 11-11)
+
+> Added 2025-12-23 from Story 11-11: Provider Earnings (Local)
+
+### Provider Earnings Tests (P11, P12)
+
+**Test File:** `tests/e2e/provider-earnings-workflow.spec.ts`
+
+**Seed Dependency:** `npm run seed:earnings`
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= timeout 90 npx playwright test \
+  tests/e2e/provider-earnings-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| P11.1-P11.5 | 5 | Earnings page, summary cards, period selector, delivery history, commission calculations |
+| P12.1-P12.6 | 6 | Settlement button, withdraw page, bank details, upload area, pending state, navigation |
+| Integration | 1 | Full earnings to settlement navigation flow |
+
+### Code Review Lessons - Story 11-11
+
+**Strict Mode Selector Issue:**
+- **Problem:** `getByText(/Tu ganancia/)` matched 2 elements (header and stat row)
+- **Solution:** Use exact match: `getByText("Tu ganancia", { exact: true })`
+- **Rule:** When text appears in multiple places (headers, labels, values), use `{ exact: true }` or more specific selectors
+
+**Existing Test Hardcoding Issue:**
+- **Problem:** `provider-earnings-seeded.spec.ts` has hardcoded expected amounts ($12,250) that drift when seed data changes
+- **Note:** Workflow tests avoid this by checking for element presence rather than specific values
+- **Pattern:** For dynamic seed data, check element visibility rather than exact amounts
+
+---
+
+## Production Earnings Workflow Tests (Story 11-12)
+
+> Added 2025-12-23 from Story 11-12: Provider Earnings (Production)
+
+### Production Test Execution Pattern
+
+**Seed Command:**
+```bash
+npm run seed:earnings:prod  # Uses ./scripts/run-with-prod-env.sh wrapper
+```
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_SUPABASE_URL="<prod-url>" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>" \
+NEXT_PUBLIC_DEV_LOGIN=true \
+DISPLAY= timeout 120 npx playwright test tests/e2e/provider-earnings-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| P11.1-P11.5 | 5 | Earnings page, summary cards, period selector, delivery history, commission calculations |
+| P12.1-P12.6 | 6 | Settlement button, withdraw page, bank details, upload area, pending state, navigation |
+| Integration | 1 | Full earnings to settlement navigation flow |
+
+### Code Review Lessons - Story 11-12
+
+**Test File Commit Pattern:**
+- **Problem:** Test file created in one story but left untracked in git
+- **Solution:** Always verify `git status` includes new test files before marking story complete
+- **Rule:** Production validation stories should verify test files are committed, not just passing
+
+---
+
+*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12 code reviews*

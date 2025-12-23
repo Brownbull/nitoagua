@@ -1,6 +1,6 @@
 {
   "name": "nitoagua",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3005",
@@ -26,6 +26,10 @@
     "seed:offers:clean": "npx ts-node scripts/local/seed-offer-tests.ts --clean",
     "seed:earnings": "npx ts-node scripts/local/seed-earnings-tests.ts",
     "seed:earnings:clean": "npx ts-node scripts/local/seed-earnings-tests.ts --clean",
+    "seed:verification": "npx ts-node scripts/local/seed-admin-verification-tests.ts",
+    "seed:verification:clean": "npx ts-node scripts/local/seed-admin-verification-tests.ts --clean",
+    "seed:verification:prod": "./scripts/run-with-prod-env.sh npx ts-node scripts/local/seed-admin-verification-tests.ts",
+    "seed:verification:prod:clean": "./scripts/run-with-prod-env.sh npx ts-node scripts/local/seed-admin-verification-tests.ts --clean",
     "seed:earnings:prod": "./scripts/run-with-prod-env.sh npx ts-node scripts/local/seed-earnings-tests.ts",
     "seed:earnings:prod:clean": "./scripts/run-with-prod-env.sh npx ts-node scripts/local/seed-earnings-tests.ts --clean",
     "seed:offers:prod": "./scripts/run-with-prod-env.sh npx ts-node scripts/local/seed-offer-tests.ts",
@@ -38,6 +42,9 @@
     "verify:local-db": "npx ts-node scripts/verify-local-db.ts",
     "cleanup:prod": "npx ts-node scripts/production/cleanup-production-test-data.ts",
     "cleanup:prod:confirm": "npx ts-node scripts/production/cleanup-production-test-data.ts --confirm",
+    "seed:chain1:prod": "npx ts-node scripts/production/chain1-test-setup.ts",
+    "chain1:cleanup:prod": "npx ts-node scripts/production/chain1-test-cleanup.ts --confirm",
+    "chain1:cleanup:prod:dry": "npx ts-node scripts/production/chain1-test-cleanup.ts",
     "email:dev": "email dev --dir emails --port 3006",
     "email:export": "email export --dir emails --outDir out/emails"
   },

@@ -264,6 +264,49 @@ const CONSUMER_FACING_OFFERS = [
 // AND match the COMUNAS constant in src/lib/validations/provider-registration.ts
 const PROVIDER_SERVICE_AREA_IDS = ["villarrica", "pucon", "lican-ray", "curarrehue"];
 
+// =============================================================================
+// PROVIDER NOTIFICATIONS (Story 11-3: P8 - Acceptance Notification)
+// =============================================================================
+
+// Notification for accepted offer - provider sees "¡Tu oferta fue aceptada!"
+// Using valid UUIDs (n000... pattern for notifications)
+const OFFER_TEST_NOTIFICATIONS = [
+  {
+    id: "a0000000-0000-0000-0000-000000000001",
+    user_id: null, // Will be mapped to dev provider
+    type: "offer_accepted",
+    title: "¡Tu oferta fue aceptada!",
+    message: "Cliente Aceptado ha aceptado tu oferta para 1000L en Curarrehue",
+    read: false,
+    data: {
+      request_id: "77777777-7777-7777-7777-777777777774",
+      offer_id: "88888888-8888-8888-8888-888888888884",
+      customer_name: "Cliente Aceptado",
+      amount: 1000,
+      address: "Camino Internacional, Curarrehue",
+    },
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+  },
+  // Older read notification for history
+  {
+    id: "a0000000-0000-0000-0000-000000000002",
+    user_id: null, // Will be mapped to dev provider
+    type: "offer_accepted",
+    title: "¡Tu oferta fue aceptada!",
+    message: "Cliente Histórico ha aceptado tu oferta para 5000L en Villarrica",
+    read: true,
+    read_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Read 1 day ago
+    data: {
+      request_id: "77777777-7777-7777-7777-777777777770",
+      offer_id: "88888888-8888-8888-8888-888888888880",
+      customer_name: "Cliente Histórico",
+      amount: 5000,
+      address: "Av. Pedro de Valdivia 50, Villarrica",
+    },
+    created_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(), // 25 hours ago
+  },
+];
+
 // Map of id -> display name for creating comunas if needed
 // These are the Villarrica-area comunas from the COMUNAS constant
 const TEST_COMUNAS = [
@@ -303,6 +346,8 @@ async function main() {
       // Consumer-facing offers (Story 10-1)
       await ensureConsumerFacingProviders(supabase);
       await seedConsumerFacingOffers(supabase, providerId);
+      // Provider notifications (Story 11-3: P8)
+      await seedProviderNotifications(supabase, providerId);
       await verifyOfferTestData(supabase);
     }
 
@@ -586,8 +631,49 @@ async function seedConsumerFacingOffers(supabase: any, devProviderId: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function seedProviderNotifications(supabase: any, providerId: string) {
+  console.log("\n🔔 Seeding provider notifications (Story 11-3: P8)...");
+
+  // Map notifications to the actual provider ID
+  const notificationsToSeed = OFFER_TEST_NOTIFICATIONS.map((notification) => ({
+    ...notification,
+    user_id: providerId,
+  }));
+
+  // Delete existing test notifications for this provider
+  const notificationIds = OFFER_TEST_NOTIFICATIONS.map((n) => n.id);
+  await supabase.from("notifications").delete().in("id", notificationIds);
+
+  // Insert new notifications
+  const { error } = await supabase.from("notifications").upsert(notificationsToSeed, { onConflict: "id" });
+
+  if (error) {
+    console.warn(`  ⚠ Failed to seed notifications: ${error.message}`);
+    console.warn("  → Notifications table may not exist or RLS blocking. P8 tests may skip.");
+  } else {
+    console.log(`  ✓ Seeded ${notificationsToSeed.length} provider notifications`);
+    for (const n of notificationsToSeed) {
+      console.log(`    - [${n.read ? "read" : "unread"}] ${n.title}`);
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function cleanOfferTestData(supabase: any) {
   console.log("\n🗑️  Cleaning offer test data...");
+
+  // Delete provider notifications (Story 11-3)
+  const notificationIds = OFFER_TEST_NOTIFICATIONS.map((n) => n.id);
+  const { error: notifError, count: notifCount } = await supabase
+    .from("notifications")
+    .delete({ count: "exact" })
+    .in("id", notificationIds);
+
+  if (notifError) {
+    console.warn(`  ⚠ Failed to delete notifications: ${notifError.message}`);
+  } else {
+    console.log(`  ✓ Deleted ${notifCount || 0} provider notifications`);
+  }
 
   // Delete consumer-facing offers (Story 10-1)
   const consumerOfferIds = CONSUMER_FACING_OFFERS.map((o) => o.id);
@@ -702,6 +788,18 @@ async function verifyOfferTestData(supabase: any) {
       .eq("provider_id", devProvider.id);
 
     console.log(`  ✓ Provider service areas: ${serviceAreas?.length || 0}`);
+
+    // Check provider notifications (Story 11-3: P8)
+    const { data: notifications } = await supabase
+      .from("notifications")
+      .select("id, type, title, read")
+      .eq("user_id", devProvider.id)
+      .eq("type", "offer_accepted");
+
+    console.log(`  ✓ Provider notifications (offer_accepted): ${notifications?.length || 0}`);
+    for (const n of notifications || []) {
+      console.log(`    - [${n.read ? "read" : "unread"}] ${n.title}`);
+    }
   }
 }
 

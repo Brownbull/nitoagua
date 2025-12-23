@@ -183,17 +183,49 @@ development_status:
   10-7-mobile-screen-adaptability: deployed  # DEPLOYED 2025-12-22 - CSS viewport fixes, code review passed, 1 fix applied
   epic-10-retrospective: optional
 
-  # Epic 11: Full Application Workflow Validation (Post-Epic 10)
+  # Epic 11: Playwright Workflow Validation (Post-Epic 10)
   # =============================================================
-  # Purpose: Validate complete workflows across all three personas
-  # Timing: Run after Epic 10 is complete
-  # Priority: CRITICAL - Proves platform works as cohesive whole
-  epic-11: contexted  # Tech spec created 2025-12-19
-  11-1-consumer-full-workflow-validation: ready-for-dev  # 22 ACs covering all consumer features
-  11-2-provider-full-workflow-validation: ready-for-dev  # 32 ACs covering all provider features
-  11-3-admin-full-workflow-validation: ready-for-dev  # 30 ACs covering all admin features
-  11-4-cross-persona-integration-tests: ready-for-dev  # 18 ACs - THE critical integration tests
+  # Purpose: Validate workflows via Playwright tests (WSL)
+  # Approach: Local first → Production second → Fix issues as found
+  # Source: Revised 2025-12-22 after Chrome Extension RLS issues
+  # Priority: CRITICAL - Fix RLS issues before Chrome Extension testing
+  epic-11: contexted  # Tech spec revised 2025-12-22 - Playwright approach
+  11-1-chain1-local: done  # 5/5 tests pass - Atlas code review complete 2025-12-22
+  11-2-chain1-production: done  # CHAIN-1 production - 5/5 PASS, 8 migrations, Atlas code review 2025-12-22
+  11-3-provider-visibility-local: deployed  # P7, P8, P9 - Provider tracking - 8/8 tests passing, deployed 2025-12-23
+  11-4-provider-visibility-production: done  # 8/8 tests pass on production - Atlas code review approved 2025-12-23
+  11-5-consumer-tracking-local: done  # C3, C4 - 19/19 tests, Atlas code review fixes applied 2025-12-23
+  11-6-consumer-tracking-production: deployed  # 48/49 tests pass on production - deployed 2025-12-23
+  # Admin Verification workflow (A1-A4)
+  11-7-admin-verification-local: deployed  # A1-A4: Admin verification queue, documents, approve/reject - deployed 2025-12-23
+  11-8-admin-verification-production: deployed  # 16/18 tests pass (2 skipped), Atlas code review passed, deployed 2025-12-23
+  # Consumer Request Submission workflow (C1-C2)
+  11-9-consumer-request-local: done  # Atlas code review passed, pricing DRY fix applied
+  11-10-consumer-request-production: deployed  # 11/11 tests pass, Atlas code review passed, deployed 2025-12-23
+  # Provider Earnings workflow (P11-P12)
+  11-11-provider-earnings-local: done  # P11-P12: 12/12 tests passing, Atlas code review passed 2025-12-23
+  11-12-provider-earnings-production: done  # 12/12 tests pass on production - Atlas code review passed 2025-12-23
+  # Request Timeout workflow (C5-C7) - What happens when no offers?
+  11-13-request-timeout-local: ready-for-dev  # C5-C7: Timeout status, notification, retry
+  11-14-request-timeout-production: drafted  # Same tests, production - depends on 11-13
+  # Consumer Cancellation workflow (C8-C11) - What happens when consumer cancels?
+  11-15-consumer-cancellation-local: ready-for-dev  # C8-C11: Cancel pending, cancel with offers, notifications
+  11-16-consumer-cancellation-production: drafted  # Same tests, production - depends on 11-15
+  # Provider Offer Edge Cases (P13-P16) - What happens to provider offers?
+  11-17-provider-offer-edge-cases-local: ready-for-dev  # P13-P16: Expire, withdraw, consumer cancels, competitor wins
+  11-18-provider-offer-edge-cases-production: drafted  # Same tests, production - depends on 11-17
+  # Admin Orders & Settlement (A5-A9)
+  11-19-admin-orders-settlement-local: ready-for-dev  # A5-A9: View orders, details, settlement queue, approve/reject
+  11-20-admin-orders-settlement-production: drafted  # Same tests, production - depends on 11-19
   epic-11-retrospective: optional
+
+  # Epic 11A: Testing-Discovered Gaps (Created from Epic 11 findings)
+  # =============================================================
+  # Purpose: Fix gaps discovered during Playwright workflow validation
+  # Origin: Story 11-1 found P10 delivery completion not working
+  # Priority: P0 - Critical (blocks CHAIN-1 completion)
+  epic-11a: contexted  # Tech spec created 2025-12-22
+  11a-1-p10-delivery-completion: done  # FR31: Mark request as delivered - APPROVED 2025-12-22 Atlas code review passed
 
   # Epic 12: Consumer UX Enhancements (depends on Epic 10 consumer flow)
   epic-12: backlog
@@ -204,3 +236,18 @@ development_status:
   12-5-remove-fake-social-proof: backlog
   12-6-web-push-notifications: drafted  # Created 2025-12-22 - Android PWA push notifications, 8 ACs
   epic-12-retrospective: optional
+
+  # Epic 13: Chrome Extension Final Validation (LAST EPIC)
+  # =============================================================
+  # Purpose: Final production validation via Chrome Extension E2E
+  # Prerequisites: Epic 11 complete, all RLS issues fixed
+  # Approach: Document → Execute (Windows) → Report
+  # Note: Moved from original Epic 11 after RLS issues discovered
+  epic-13: backlog  # Will be contexted after Epic 11 complete
+  13-1-core-transaction-chrome: backlog  # CHAIN-1 final validation
+  13-2-trust-visibility-chrome: backlog  # C3, C4, P7, P8, P9
+  13-3-provider-onboarding-chrome: backlog  # CHAIN-2: P1-P4, A1-A3
+  13-4-platform-operations-chrome: backlog  # A4-A7, P11
+  13-5-accountability-chrome: backlog  # C5, P12, P13, strikes
+  13-6-edge-cases-chrome: backlog  # Empty states, variations
+  epic-13-retrospective: optional

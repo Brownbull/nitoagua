@@ -1,13 +1,14 @@
--- Migration: Add select_offer database function
--- Story: 10-2 Select Provider Offer
--- AC: 10.2.4, 10.2.5, 10.2.6 - Atomic offer selection transaction
+-- Migration: Fix SECURITY DEFINER functions to set search_path
+-- Story: 11-2 CHAIN-1 Production Testing (Code Review Fix)
+-- Addresses: Supabase security advisor warning "function_search_path_mutable"
+--
+-- Problem: SECURITY DEFINER functions without search_path can be exploited
+--          by creating objects in a user-controlled schema that shadows
+--          the intended objects.
+--
+-- Solution: Set search_path = public for all SECURITY DEFINER functions.
 
--- Create the select_offer function for atomic offer selection
--- This function is called by the selectOffer server action to:
--- 1. Accept the selected offer
--- 2. Cancel all other active offers on the same request
--- 3. Update the request with provider assignment and delivery window
-
+-- Fix select_offer function
 CREATE OR REPLACE FUNCTION select_offer(
   p_offer_id UUID,
   p_request_id UUID
@@ -22,7 +23,6 @@ DECLARE
   v_delivery_window TEXT;
 BEGIN
   -- AC10.2.4: Verify offer exists, is active, AND belongs to the specified request
-  -- Security: Validate offer-request relationship to prevent cross-request attacks
   SELECT provider_id, delivery_window_start, delivery_window_end, status
   INTO v_provider_id, v_delivery_start, v_delivery_end, v_offer_status
   FROM offers
@@ -47,7 +47,6 @@ BEGIN
     );
   END IF;
 
-  -- Verify request is still pending
   SELECT status INTO v_request_status
   FROM water_requests
   WHERE id = p_request_id;
@@ -66,21 +65,18 @@ BEGIN
     );
   END IF;
 
-  -- AC10.2.4: Update selected offer to 'accepted' with accepted_at timestamp
   UPDATE offers
   SET status = 'accepted', accepted_at = NOW()
   WHERE id = p_offer_id
     AND status = 'active';
 
   IF NOT FOUND THEN
-    -- Race condition: offer was modified between check and update
     RETURN json_build_object(
       'success', false,
       'error', 'Error al aceptar la oferta. Por favor, intenta de nuevo.'
     );
   END IF;
 
-  -- AC10.2.6: Cancel all other active offers on this request
   UPDATE offers
   SET status = 'request_filled'
   WHERE request_id = p_request_id
@@ -89,8 +85,6 @@ BEGIN
 
   GET DIAGNOSTICS v_cancelled_count = ROW_COUNT;
 
-  -- AC10.2.5: Update request with provider_id and delivery window
-  -- Format delivery window as "HH:mm - HH:mm" string (Chile timezone)
   v_delivery_window := TO_CHAR(v_delivery_start AT TIME ZONE 'America/Santiago', 'HH24:MI') ||
                        ' - ' ||
                        TO_CHAR(v_delivery_end AT TIME ZONE 'America/Santiago', 'HH24:MI');
@@ -105,8 +99,6 @@ BEGIN
     AND status = 'pending';
 
   IF NOT FOUND THEN
-    -- Race condition: request was modified between check and update
-    -- Rollback the offer changes
     UPDATE offers SET status = 'active', accepted_at = NULL WHERE id = p_offer_id;
     UPDATE offers SET status = 'active' WHERE request_id = p_request_id AND status = 'request_filled';
 
@@ -116,7 +108,6 @@ BEGIN
     );
   END IF;
 
-  -- Success
   RETURN json_build_object(
     'success', true,
     'provider_id', v_provider_id,
@@ -126,9 +117,17 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public;
 
--- Grant execute permission to authenticated users
--- (actual authorization is handled by the function checking request ownership)
-GRANT EXECUTE ON FUNCTION select_offer(UUID, UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION select_offer(UUID, UUID) TO service_role;
+-- Fix update_updated_at_column function
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $function$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$function$;
 
-COMMENT ON FUNCTION select_offer IS 'Atomically selects a provider offer for a water request. Updates offer status, cancels other offers, and assigns provider to request.';
+COMMENT ON FUNCTION select_offer IS 'Atomically selects a provider offer. search_path fixed for security.';
+COMMENT ON FUNCTION update_updated_at_column IS 'Trigger to auto-update updated_at. search_path fixed for security.';

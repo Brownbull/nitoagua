@@ -1,9 +1,21 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   ArrowLeft,
   User,
@@ -15,10 +27,13 @@ import {
   Navigation,
   CheckCircle2,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { toast } from "sonner";
 import { formatLiters } from "@/lib/utils/commission";
+import { completeDelivery } from "@/lib/actions/delivery";
 
 interface DeliveryData {
   offerId: string;
@@ -47,10 +62,45 @@ interface DeliveryDetailClientProps {
  * AC: 8.5.4 - "Ver Detalles" navigates here from notification
  */
 export function DeliveryDetailClient({ delivery }: DeliveryDetailClientProps) {
+  // AC 11A-1.2: State for confirmation dialog
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  // AC 11A-1.4: Loading state during submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
   // Generate Google Maps link for navigation
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     delivery.deliveryAddress
   )}`;
+
+  /**
+   * Handle delivery completion
+   * AC 11A-1.3: Calls server action
+   * AC 11A-1.4: Shows success/error toast and redirects
+   */
+  const handleCompleteDelivery = async () => {
+    setIsSubmitting(true);
+    try {
+      const result = await completeDelivery(delivery.offerId);
+      if (result.success) {
+        // AC 11A-1.4: Success toast
+        toast.success("¡Entrega completada!");
+        // AC 11A-1.4: Redirect to provider offers
+        router.push("/provider/offers");
+      } else {
+        // AC 11A-1.4: Error toast with reason
+        toast.error(result.error || "Error al completar la entrega");
+      }
+    } catch {
+      toast.error("Error inesperado");
+    } finally {
+      setIsSubmitting(false);
+      setShowConfirmDialog(false);
+    }
+  };
+
+  // AC 11A-1.1: Button should only be enabled for accepted deliveries
+  const canComplete = delivery.requestStatus === "accepted";
 
   // Format delivery window
   const formatDateTime = (isoDate: string) => {
@@ -215,21 +265,78 @@ export function DeliveryDetailClient({ delivery }: DeliveryDetailClientProps) {
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - AC 11A-1.1, 11A-1.2 */}
         <div className="space-y-3">
-          {/* Mark as Delivered button - placeholder for future use */}
-          <Button
-            className="w-full bg-green-500 hover:bg-green-600 h-12"
-            disabled
-            title="Funcionalidad próximamente"
-          >
-            <CheckCircle2 className="h-5 w-5 mr-2" />
-            Marcar como Entregado
-          </Button>
-          <p className="text-xs text-center text-gray-500">
-            Esta función estará disponible próximamente
-          </p>
+          {/* Mark as Delivered button - AC 11A-1.1: Enabled for accepted deliveries */}
+          {canComplete ? (
+            <Button
+              className="w-full bg-green-500 hover:bg-green-600 h-12"
+              onClick={() => setShowConfirmDialog(true)}
+              disabled={isSubmitting}
+              data-testid="complete-delivery-button"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-5 w-5 mr-2" />
+                  Marcar como Entregado
+                </>
+              )}
+            </Button>
+          ) : (
+            <div className="text-center py-4 bg-gray-50 rounded-lg">
+              <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+              <p className="text-sm text-gray-600">
+                {delivery.requestStatus === "delivered"
+                  ? "Esta entrega ya fue completada"
+                  : "Esta entrega no puede ser completada"}
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* AC 11A-1.2: Confirmation Dialog */}
+        <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Entrega</AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-2">
+                  <p>¿Confirmas que has entregado el pedido?</p>
+                  <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                    {/* AC 11A-1.2: Show delivery summary */}
+                    <p className="font-medium text-gray-900">{delivery.customerName}</p>
+                    <p className="text-gray-600">{delivery.deliveryAddress}</p>
+                    <p className="text-blue-600 font-medium mt-1">
+                      {formatLiters(delivery.amount)}
+                    </p>
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isSubmitting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleCompleteDelivery}
+                disabled={isSubmitting}
+                className="bg-green-500 hover:bg-green-600"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  "Confirmar Entrega"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Acceptance timestamp */}
         {delivery.acceptedAt && (
