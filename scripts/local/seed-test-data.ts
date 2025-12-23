@@ -174,6 +174,7 @@ const SEEDED_REQUESTS = [
     cancelled_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
   },
   // Story 10.4/11-5: Request that timed out without offers
+  // Note: no timed_out_at column in production - status alone indicates timeout
   {
     id: "66666666-6666-6666-6666-666666666667",
     tracking_token: "seed-token-no-offers",
@@ -187,7 +188,6 @@ const SEEDED_REQUESTS = [
     is_urgent: false,
     consumer_id: null,
     supplier_id: null,
-    timed_out_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
   },
 ];
 

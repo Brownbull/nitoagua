@@ -307,4 +307,50 @@ timeout 180 npx playwright test <test-file> \
 
 ---
 
-*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4 code reviews*
+## Consumer Tracking Production Validation (Story 11-6)
+
+> Added 2025-12-23 from Story 11-6: Consumer Status Tracking (Production)
+
+### Consumer Tracking Production Tests (C3, C4)
+
+**Seed Command:**
+```bash
+npm run seed:test:prod  # Uses ./scripts/run-with-prod-env.sh wrapper
+```
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_SUPABASE_URL="<prod-url>" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>" \
+NEXT_PUBLIC_DEV_LOGIN=true \
+DISPLAY= \
+timeout 240 npx playwright test tests/e2e/consumer-status-tracking.spec.ts tests/e2e/consumer-tracking.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| C3.1-C3.6 | 6 | Status at each stage (pending, has_offers, accepted, delivered, cancelled, no_offers) |
+| C3.7-C3.9 | 3 | Timeline progression indicators |
+| C3.10 | 1 | Request details display |
+| C4.1-C4.4 | 4 | Contact button visibility states |
+| C4.5-C4.6 | 2 | One-tap contact functionality |
+| Accessibility | 2 | Keyboard nav, headings |
+| Spanish | 1 | All content in Spanish |
+
+### Code Review Lessons - Story 11-6
+
+**Schema Compatibility Pattern:**
+- **Problem:** Local schema had `timed_out_at` column, production did not
+- **Solution:** Removed column from seed data - `status: 'no_offers'` alone indicates timeout
+- **Rule:** When seeding production, verify column existence before including in data
+
+**CSS Class Update Pattern:**
+- **Problem:** Test expected `min-h-screen`, code uses `min-h-dvh` per Story 10-7 PWA standards
+- **Solution:** Updated test assertion to match current implementation
+- **Rule:** When CSS classes change for mobile optimization, update test assertions
+
+---
+
+*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6 code reviews*

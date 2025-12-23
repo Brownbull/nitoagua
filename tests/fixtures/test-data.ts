@@ -172,6 +172,7 @@ export const SEEDED_CANCELLED_REQUEST = {
 /**
  * Request in NO_OFFERS state - timed out without offers (Story 10.4)
  * Use for: timeout notification UI tests, retry button tests
+ * Note: no timed_out_at column in production - status alone indicates timeout
  */
 export const SEEDED_NO_OFFERS_REQUEST = {
   id: "66666666-6666-6666-6666-666666666667",
@@ -186,7 +187,6 @@ export const SEEDED_NO_OFFERS_REQUEST = {
   is_urgent: false,
   consumer_id: null,
   supplier_id: null,
-  timed_out_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
 };
 
 // =============================================================================

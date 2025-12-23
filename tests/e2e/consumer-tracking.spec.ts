@@ -88,9 +88,10 @@ test.describe("Request Status Tracking (Story 2-5)", () => {
 
       // Error page should have gradient header and centered content
       // New mockup design doesn't use Card component - uses centered layout with icon
+      // Uses min-h-dvh (dynamic viewport height) per Story 10-7 PWA standards
       const main = page.locator("main");
       await expect(main).toBeVisible();
-      await expect(main).toHaveClass(/min-h-screen/);
+      await expect(main).toHaveClass(/min-h-dvh/);
     });
 
     test("error page has flex column layout", async ({ page }) => {
