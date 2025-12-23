@@ -176,4 +176,41 @@
 
 ---
 
-*Last verified: 2025-12-22 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1 implementations*
+### Story 11-2: CHAIN-1 Production Testing (2025-12-22)
+
+**Issues Found & Fixed:**
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **SECURITY DEFINER functions vulnerable** | `select_offer` and `update_updated_at_column` lacked `SET search_path` | Always add `SET search_path = public` to SECURITY DEFINER functions |
+| **Migration drift local/production** | Migrations applied via Supabase dashboard with auto-generated timestamps | Always apply migrations via `supabase db push` or commit SQL files first |
+| **Test credentials in story files** | Passwords hardcoded in markdown | Store in `.env.production.local`, reference in docs |
+| **Production user IDs in git** | Baseline JSON committed with UUIDs | Add baseline files to `.gitignore` |
+
+**Security Patterns:**
+
+1. **SECURITY DEFINER functions must include:**
+   ```sql
+   CREATE OR REPLACE FUNCTION my_function()
+   RETURNS ...
+   LANGUAGE plpgsql
+   SECURITY DEFINER
+   SET search_path = public  -- REQUIRED for security
+   AS $$ ... $$;
+   ```
+
+2. **Run security check after DB changes:**
+   ```
+   mcp__supabase__get_advisors type=security
+   ```
+
+3. **Production test data hygiene:**
+   - Baseline files with user IDs → `.gitignore`
+   - Passwords → `.env.production.local`
+   - Never commit SERVICE_ROLE_KEY references
+
+**Key Lesson:** Run Supabase security advisors after every migration to catch `function_search_path_mutable` and `rls_disabled_in_public` warnings immediately.
+
+---
+
+*Last verified: 2025-12-22 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2 implementations*

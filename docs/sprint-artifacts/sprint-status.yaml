@@ -191,11 +191,11 @@ development_status:
   # Priority: CRITICAL - Fix RLS issues before Chrome Extension testing
   epic-11: contexted  # Tech spec revised 2025-12-22 - Playwright approach
   11-1-chain1-local: done  # 5/5 tests pass - Atlas code review complete 2025-12-22
-  11-2-chain1-production: drafted  # CHAIN-1 production - same tests, prod environment
-  11-3-provider-visibility-local: drafted  # P7, P8, P9 - Provider tracking
-  11-4-provider-visibility-production: drafted  # Same tests, production
-  11-5-consumer-tracking-local: drafted  # C3, C4 - Consumer status tracking
-  11-6-consumer-tracking-production: drafted  # Same tests, production
+  11-2-chain1-production: done  # CHAIN-1 production - 5/5 PASS, 8 migrations, Atlas code review 2025-12-22
+  11-3-provider-visibility-local: ready-for-dev  # P7, P8, P9 - Provider tracking
+  11-4-provider-visibility-production: drafted  # Same tests, production - depends on 11-3
+  11-5-consumer-tracking-local: ready-for-dev  # C3, C4 - Consumer status tracking
+  11-6-consumer-tracking-production: drafted  # Same tests, production - depends on 11-5
   epic-11-retrospective: optional
 
   # Epic 11A: Testing-Discovered Gaps (Created from Epic 11 findings)

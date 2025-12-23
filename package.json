@@ -38,6 +38,9 @@
     "verify:local-db": "npx ts-node scripts/verify-local-db.ts",
     "cleanup:prod": "npx ts-node scripts/production/cleanup-production-test-data.ts",
     "cleanup:prod:confirm": "npx ts-node scripts/production/cleanup-production-test-data.ts --confirm",
+    "seed:chain1:prod": "npx ts-node scripts/production/chain1-test-setup.ts",
+    "chain1:cleanup:prod": "npx ts-node scripts/production/chain1-test-cleanup.ts --confirm",
+    "chain1:cleanup:prod:dry": "npx ts-node scripts/production/chain1-test-cleanup.ts",
     "email:dev": "email dev --dir emails --port 3006",
     "email:export": "email export --dir emails --outDir out/emails"
   },
