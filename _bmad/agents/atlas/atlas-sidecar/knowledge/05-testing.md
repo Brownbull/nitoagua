@@ -1,7 +1,7 @@
 # Testing Patterns & Coverage Expectations
 
 > Section 5 of Atlas Memory
-> Last Sync: 2025-12-18
+> Last Sync: 2025-12-23
 > Sources: docs/sprint-artifacts/testing/, run_app.local.md, epic retrospectives
 
 ## Testing Strategy
@@ -196,6 +196,60 @@ Each test must:
 **Persona Validation:** `tests/e2e/persona-validation.spec.ts` - 13 tests covering all personas
 
 **Full Reference:** `docs/testing/playwright-utils-integration.md`
+
+### Wait Patterns (Story 11-11)
+
+> Added 2025-12-23 from Atlas Code Review of Story 11-11
+
+**Problem:** Tests using arbitrary `waitForTimeout(2000)` delays, which are unreliable and slow.
+
+**Pattern:** Use specific element or network waits instead of fixed timeouts.
+
+**Anti-pattern:**
+```typescript
+await page.goto("/provider/earnings");
+await page.waitForTimeout(2000); // ❌ Arbitrary delay
+await assertNoErrorState(page);
+```
+
+**Correct pattern:**
+```typescript
+async function waitForEarningsPageLoad(page: Page): Promise<void> {
+  await page.getByRole("heading", { name: "Mis Ganancias" }).waitFor({ state: "visible", timeout: 10000 });
+  await page.waitForLoadState("networkidle", { timeout: 10000 });
+}
+
+await page.goto("/provider/earnings");
+await waitForEarningsPageLoad(page); // ✅ Specific element wait
+await assertNoErrorState(page);
+```
+
+**Benefits:**
+- Faster tests (no unnecessary waiting)
+- More reliable (waits for actual readiness)
+- Self-documenting (helper name explains what we're waiting for)
+
+### CSS Selector Specificity (Story 11-11)
+
+**Problem:** Generic CSS class selectors like `.bg-gradient-to-br` can match multiple elements.
+
+**Anti-pattern:**
+```typescript
+const heroCard = page.locator("[class*='bg-gradient']"); // ❌ Matches multiple
+await expect(heroCard).toBeVisible(); // Fails: strict mode violation
+```
+
+**Correct patterns:**
+```typescript
+// Option 1: More specific CSS
+const heroCard = page.locator(".bg-gradient-to-br.from-gray-900"); // ✅ Unique
+
+// Option 2: Use data-testid (preferred)
+const heroCard = page.getByTestId("earnings-hero-card"); // ✅ Best practice
+
+// Option 3: Use first() if truly necessary
+await expect(heroCard.first()).toBeVisible(); // ✅ When duplicates expected
+```
 
 ---
 
@@ -451,4 +505,78 @@ DISPLAY= timeout 420 npx playwright test tests/e2e/admin-verification-workflow.s
 
 ---
 
-*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8 code reviews*
+## Provider Earnings Workflow Tests (Story 11-11)
+
+> Added 2025-12-23 from Story 11-11: Provider Earnings (Local)
+
+### Provider Earnings Tests (P11, P12)
+
+**Test File:** `tests/e2e/provider-earnings-workflow.spec.ts`
+
+**Seed Dependency:** `npm run seed:earnings`
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= timeout 90 npx playwright test \
+  tests/e2e/provider-earnings-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| P11.1-P11.5 | 5 | Earnings page, summary cards, period selector, delivery history, commission calculations |
+| P12.1-P12.6 | 6 | Settlement button, withdraw page, bank details, upload area, pending state, navigation |
+| Integration | 1 | Full earnings to settlement navigation flow |
+
+### Code Review Lessons - Story 11-11
+
+**Strict Mode Selector Issue:**
+- **Problem:** `getByText(/Tu ganancia/)` matched 2 elements (header and stat row)
+- **Solution:** Use exact match: `getByText("Tu ganancia", { exact: true })`
+- **Rule:** When text appears in multiple places (headers, labels, values), use `{ exact: true }` or more specific selectors
+
+**Existing Test Hardcoding Issue:**
+- **Problem:** `provider-earnings-seeded.spec.ts` has hardcoded expected amounts ($12,250) that drift when seed data changes
+- **Note:** Workflow tests avoid this by checking for element presence rather than specific values
+- **Pattern:** For dynamic seed data, check element visibility rather than exact amounts
+
+---
+
+## Production Earnings Workflow Tests (Story 11-12)
+
+> Added 2025-12-23 from Story 11-12: Provider Earnings (Production)
+
+### Production Test Execution Pattern
+
+**Seed Command:**
+```bash
+npm run seed:earnings:prod  # Uses ./scripts/run-with-prod-env.sh wrapper
+```
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_SUPABASE_URL="<prod-url>" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>" \
+NEXT_PUBLIC_DEV_LOGIN=true \
+DISPLAY= timeout 120 npx playwright test tests/e2e/provider-earnings-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| P11.1-P11.5 | 5 | Earnings page, summary cards, period selector, delivery history, commission calculations |
+| P12.1-P12.6 | 6 | Settlement button, withdraw page, bank details, upload area, pending state, navigation |
+| Integration | 1 | Full earnings to settlement navigation flow |
+
+### Code Review Lessons - Story 11-12
+
+**Test File Commit Pattern:**
+- **Problem:** Test file created in one story but left untracked in git
+- **Solution:** Always verify `git status` includes new test files before marking story complete
+- **Rule:** Production validation stories should verify test files are committed, not just passing
+
+---
+
+*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12 code reviews*
