@@ -4,6 +4,8 @@ import { VerificationFilterTabs } from "@/components/admin/verification-filter-t
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Verificaciones - Admin nitoagua",
   description: "Cola de verificacion de proveedores",
