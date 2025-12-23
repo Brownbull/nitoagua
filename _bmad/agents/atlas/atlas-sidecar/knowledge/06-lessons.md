@@ -152,4 +152,39 @@
 
 ---
 
-*Last verified: 2025-12-21 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5 implementations*
+---
+
+### Story 11-1: Chrome Extension E2E Testing (2025-12-22)
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **RLS blocked offer creation** | Policy checks `role = 'provider'` but profiles use `role = 'supplier'` | Run migrations on production; verify role names match across policies |
+| **Consumer can't view own requests** | Missing/incorrect RLS policy | Test RLS policies with Playwright before production E2E |
+| **Tracking page broken** | Unknown RLS or routing issue | Debug guest access flows early |
+| **Chrome Extension E2E too fragile for early testing** | Cascading failures when RLS/permissions fail | Use Chrome Extension E2E only on polished apps |
+
+### Patterns for Chrome Extension E2E Testing
+
+1. **Prerequisites for Chrome Extension E2E on production:**
+   - All RLS policies verified via Playwright tests
+   - Manual testing confirms happy path works
+   - No known blocking issues in core flows
+
+2. **Testing progression (recommended order):**
+   - **First**: Playwright tests (fast iteration, catches RLS issues)
+   - **Second**: Manual testing (catches UX issues)
+   - **Last**: Chrome Extension E2E (final production validation)
+
+3. **When Chrome Extension E2E fails early, stop and fix:**
+   - Don't try to work around RLS issues with admin scripts
+   - Fix the root cause first, then resume testing
+   - Each workaround compounds complexity and wastes time
+
+4. **Admin scripts are for debugging, not testing:**
+   - Scripts like `create-test-offer.ts` help diagnose issues
+   - But they shouldn't be used to "complete" an E2E test
+   - If you need admin bypass, the test is blocked, not passed
+
+---
+
+*Last verified: 2025-12-22 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1 implementations*
