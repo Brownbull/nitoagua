@@ -11,3 +11,9 @@ communication_language: English
 document_output_language: English
 output_folder: "{project-root}/docs"
 install_user_docs: true
+
+# Test Architect Configuration
+tea_use_playwright_utils: true  # Enable @seontechnologies/playwright-utils integration
+tea_mobile_viewport:
+  width: 360
+  height: 780

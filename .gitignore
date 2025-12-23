@@ -61,6 +61,9 @@ supabase/.temp/
 supabase/.branches/
 .env.scripts
 
+# Production test baselines (contain user IDs)
+scripts/production/.chain1-baseline.json
+
 # Tailwind templates
 docs/design-references/tailwind_templates
 

@@ -172,6 +172,7 @@ export const SEEDED_CANCELLED_REQUEST = {
 /**
  * Request in NO_OFFERS state - timed out without offers (Story 10.4)
  * Use for: timeout notification UI tests, retry button tests
+ * Note: no timed_out_at column in production - status alone indicates timeout
  */
 export const SEEDED_NO_OFFERS_REQUEST = {
   id: "66666666-6666-6666-6666-666666666667",
@@ -186,7 +187,6 @@ export const SEEDED_NO_OFFERS_REQUEST = {
   is_urgent: false,
   consumer_id: null,
   supplier_id: null,
-  timed_out_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
 };
 
 // =============================================================================
@@ -255,7 +255,7 @@ export const OFFER_TEST_DATA = {
       tracking_token: "offer-test-pending-1",
       status: "pending" as const,
       guest_name: "Cliente Pendiente 1",
-      comuna_name: "Santiago",
+      comuna_id: "villarrica", // Matches seed-offer-tests.ts (Araucanía region - target market)
       amount: 1000,
     },
     pendingWithActiveOfferUrgent: {
@@ -263,7 +263,7 @@ export const OFFER_TEST_DATA = {
       tracking_token: "offer-test-pending-2",
       status: "pending" as const,
       guest_name: "Cliente Pendiente 2",
-      comuna_name: "Las Condes",
+      comuna_id: "pucon", // Matches seed-offer-tests.ts
       amount: 5000,
       is_urgent: true,
     },
@@ -272,7 +272,7 @@ export const OFFER_TEST_DATA = {
       tracking_token: "offer-test-pending-3",
       status: "pending" as const,
       guest_name: "Cliente Pendiente 3",
-      comuna_name: "Providencia",
+      comuna_id: "lican-ray", // Matches seed-offer-tests.ts
       amount: 10000,
     },
     acceptedWithOffer: {
@@ -280,7 +280,7 @@ export const OFFER_TEST_DATA = {
       tracking_token: "offer-test-accepted",
       status: "accepted" as const,
       guest_name: "Cliente Aceptado",
-      comuna_name: "Vitacura",
+      comuna_id: "curarrehue", // Matches seed-offer-tests.ts
       amount: 1000,
     },
   },
@@ -321,8 +321,8 @@ export const OFFER_TEST_DATA = {
     },
   },
 
-  /** Service areas configured for the test provider */
-  serviceAreas: ["Santiago", "Las Condes", "Providencia", "Vitacura"],
+  /** Service areas configured for the test provider (Villarrica-area, Araucanía) */
+  serviceAreas: ["villarrica", "pucon", "lican-ray", "curarrehue"],
 } as const;
 
 /**
@@ -571,4 +571,46 @@ export const CONSUMER_OFFERS_IDS = [
   CONSUMER_OFFERS_TEST_DATA.offers.earliest.id,
   CONSUMER_OFFERS_TEST_DATA.offers.medium.id,
   CONSUMER_OFFERS_TEST_DATA.offers.latest.id,
+];
+
+// =============================================================================
+// PROVIDER NOTIFICATIONS (Story 11-3: P8) - run `npm run seed:offers` to seed
+// =============================================================================
+
+/**
+ * Provider notification test data for Story 11-3: P8 - Acceptance Notification
+ * These are seeded by scripts/local/seed-offer-tests.ts
+ */
+export const PROVIDER_NOTIFICATIONS_TEST_DATA = {
+  /**
+   * Unread notification for accepted offer
+   */
+  unreadAcceptance: {
+    id: "a0000000-0000-0000-0000-000000000001",
+    type: "offer_accepted",
+    title: "¡Tu oferta fue aceptada!",
+    read: false,
+  },
+
+  /**
+   * Read notification for historical offer
+   */
+  readAcceptance: {
+    id: "a0000000-0000-0000-0000-000000000002",
+    type: "offer_accepted",
+    title: "¡Tu oferta fue aceptada!",
+    read: true,
+  },
+
+  /** Total expected notifications */
+  totalNotifications: 2,
+  unreadCount: 1,
+} as const;
+
+/**
+ * All provider notification IDs for verification/cleanup
+ */
+export const PROVIDER_NOTIFICATION_IDS = [
+  PROVIDER_NOTIFICATIONS_TEST_DATA.unreadAcceptance.id,
+  PROVIDER_NOTIFICATIONS_TEST_DATA.readAcceptance.id,
 ];

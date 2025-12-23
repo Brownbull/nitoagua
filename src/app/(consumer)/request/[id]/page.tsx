@@ -38,7 +38,7 @@ interface RequestWithSupplier {
  */
 function LoadingState() {
   return (
-    <div className="flex min-h-[calc(100vh-120px)] items-center justify-center">
+    <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
       <Loader2 className="h-8 w-8 animate-spin text-[#0077B6]" />
     </div>
   );
@@ -49,7 +49,7 @@ function LoadingState() {
  */
 function RequestNotFoundPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] p-4">
+    <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">
         <CardContent className="pt-8 pb-6">
           <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-4">
@@ -75,17 +75,17 @@ function RequestNotFoundPage() {
  */
 function AuthRequiredPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] p-4">
+    <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">
         <CardContent className="pt-8 pb-6">
           <div className="mx-auto w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
             <AlertCircle className="h-8 w-8 text-blue-600" aria-hidden="true" />
           </div>
           <h1 className="text-xl font-semibold text-gray-900 mb-2">
-            Inicio de sesion requerido
+            Inicio de sesión requerido
           </h1>
           <p className="text-gray-600 mb-6">
-            Debes iniciar sesion para ver los detalles de tu solicitud
+            Debes iniciar sesión para ver los detalles de tu solicitud
           </p>
           <div className="space-y-3">
             <Button asChild className="w-full">

@@ -37,6 +37,7 @@ export interface GetAvailableRequestsResult {
  */
 export async function getAvailableRequests(): Promise<GetAvailableRequestsResult> {
   const supabase = await createClient();
+  const adminClient = createAdminClient();
 
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -154,7 +155,8 @@ export async function getAvailableRequests(): Promise<GetAvailableRequestsResult
   let offerCounts: Record<string, number> = {};
 
   if (requestIds.length > 0) {
-    const { data: offers, error: offersError } = await supabase
+    // Use admin client to bypass RLS on offers table
+    const { data: offers, error: offersError } = await adminClient
       .from("offers")
       .select("request_id")
       .in("request_id", requestIds)
@@ -712,6 +714,7 @@ export interface GetMyOffersResult {
  */
 export async function getMyOffers(): Promise<GetMyOffersResult> {
   const supabase = await createClient();
+  const adminClient = createAdminClient();
 
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -746,7 +749,9 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
 
   // Query provider's offers with request details
   // AC: 8.3.2 - Include request summary (amount, location, urgency)
-  const { data: offers, error: offersError } = await supabase
+  // Use admin client to bypass RLS on water_requests join
+  // (RLS blocks providers from seeing non-pending requests even for their own offers)
+  const { data: offers, error: offersError } = await adminClient
     .from("offers")
     .select(`
       id,

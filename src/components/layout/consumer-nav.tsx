@@ -33,70 +33,66 @@ export function ConsumerNav() {
   return (
     <nav
       data-testid="consumer-nav"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white safe-area-bottom"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white pb-safe"
     >
-      <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2">
+      <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-4">
         {/* Home */}
         <Link
           href="/"
           className={cn(
-            "flex flex-col items-center gap-0.5 min-w-[56px] px-2 py-1.5 rounded-xl transition-colors",
+            "flex items-center justify-center w-12 h-12 rounded-full transition-colors",
             isHomeActive
               ? "text-[#0077B6] bg-[#CAF0F8]"
               : "text-gray-400"
           )}
+          aria-label="Inicio"
         >
-          <Home className="w-5 h-5" strokeWidth={2} />
-          <span className="text-[10px] font-medium">Inicio</span>
+          <Home className="w-6 h-6" strokeWidth={2} />
         </Link>
 
         {/* History */}
         <Link
           href="/history"
           className={cn(
-            "relative flex flex-col items-center gap-0.5 min-w-[56px] px-2 py-1.5 rounded-xl transition-colors",
+            "relative flex items-center justify-center w-12 h-12 rounded-full transition-colors",
             isHistoryActive
               ? "text-[#0077B6] bg-[#CAF0F8]"
               : "text-gray-400"
           )}
+          aria-label="Historial"
         >
-          <div className="relative">
-            <Clock className="w-5 h-5" strokeWidth={2} />
-            {/* Unread badge (AC5-3-2) */}
-            {hasUnread && !isHistoryActive && (
-              <span
-                className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
-                aria-label={`${unreadCount} actualizaciones sin leer`}
-              >
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] font-medium">Historial</span>
+          <Clock className="w-6 h-6" strokeWidth={2} />
+          {/* Unread badge (AC5-3-2) */}
+          {hasUnread && !isHistoryActive && (
+            <span
+              className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
+              aria-label={`${unreadCount} actualizaciones sin leer`}
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
         </Link>
 
         {/* Center FAB - Request Water */}
-        <div className="flex flex-col items-center relative -top-4">
-          <button
-            onClick={() => router.push("/request")}
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-[0_4px_14px_rgba(0,119,182,0.4)]"
-            style={{
-              background: "linear-gradient(135deg, #0077B6 0%, #005f8f 100%)",
-            }}
-            aria-label="Pedir agua"
-          >
-            <Droplets className="w-6 h-6" fill="currentColor" />
-          </button>
-          <span className="text-[10px] font-semibold text-[#0077B6] mt-0.5">Pedir</span>
-        </div>
+        <button
+          onClick={() => router.push("/request")}
+          className="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-[0_4px_14px_rgba(0,119,182,0.4)] -mt-4"
+          style={{
+            background: "linear-gradient(135deg, #0077B6 0%, #005f8f 100%)",
+          }}
+          aria-label="Pedir agua"
+        >
+          <Droplets className="w-7 h-7" fill="currentColor" />
+        </button>
 
         {/* Alerts - placeholder for now */}
         <Link
           href="/history"
-          className="flex flex-col items-center gap-0.5 min-w-[56px] px-2 py-1.5 rounded-xl text-gray-400"
+          className="flex items-center justify-center w-12 h-12 rounded-full text-gray-400"
+          aria-label="Alertas"
         >
           <svg
-            className="w-5 h-5"
+            className="w-6 h-6"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -104,21 +100,20 @@ export function ConsumerNav() {
           >
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           </svg>
-          <span className="text-[10px] font-medium">Alertas</span>
         </Link>
 
         {/* Profile */}
         <Link
           href="/consumer-profile"
           className={cn(
-            "flex flex-col items-center gap-0.5 min-w-[56px] px-2 py-1.5 rounded-xl transition-colors",
+            "flex items-center justify-center w-12 h-12 rounded-full transition-colors",
             isProfileActive
               ? "text-[#0077B6] bg-[#CAF0F8]"
               : "text-gray-400"
           )}
+          aria-label="Perfil"
         >
-          <User className="w-5 h-5" strokeWidth={2} />
-          <span className="text-[10px] font-medium">Perfil</span>
+          <User className="w-6 h-6" strokeWidth={2} />
         </Link>
       </div>
     </nav>

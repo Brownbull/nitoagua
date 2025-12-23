@@ -47,7 +47,7 @@ export function RequestConfirmation({
     : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-dvh bg-gray-50 flex flex-col pb-20">
       {/* Gradient Header */}
       <div
         className="shrink-0 px-5 pt-8 pb-6 text-center"
@@ -79,7 +79,7 @@ export function RequestConfirmation({
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-5 py-4 pb-24">
+      <div className="flex-1 px-5 py-4">
         {/* Contact Message Card */}
         <div className="bg-white rounded-xl p-4 border border-gray-200 text-center mb-3">
           <p className="text-[15px] font-medium text-gray-900 mb-2">

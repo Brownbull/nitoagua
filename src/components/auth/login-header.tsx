@@ -23,18 +23,18 @@ export function LoginHeader() {
     : "Inicia sesión para pedir agua a domicilio";
 
   return (
-    <div className="pt-8 pb-10 px-6 text-center" style={gradientStyle}>
+    <div className="pt-6 pb-6 px-5 text-center" style={gradientStyle}>
       {/* Logo */}
       <span
-        className={`text-4xl ${logoColor} block mb-6`}
+        className={`text-3xl ${logoColor} block mb-3`}
         style={{ fontFamily: "'Pacifico', cursive" }}
       >
         nitoagua
       </span>
 
       {/* Title */}
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido</h1>
-      <p className="text-[15px] text-gray-500">{subtitle}</p>
+      <h1 className="text-xl font-bold text-gray-900 mb-1">Bienvenido</h1>
+      <p className="text-sm text-gray-500">{subtitle}</p>
     </div>
   );
 }

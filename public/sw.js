@@ -1,7 +1,9 @@
 // nitoagua Service Worker
 // Cache-first strategy for static assets, network-first for API
 
-const CACHE_NAME = "nitoagua-v1";
+// Version should be updated with each deploy for update detection
+const SW_VERSION = "1.0.0";
+const CACHE_NAME = `nitoagua-v${SW_VERSION}`;
 
 // Assets to pre-cache on install
 const PRECACHE_ASSETS = ["/", "/icons/icon-192.png", "/icons/icon-512.png"];
@@ -12,8 +14,15 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_ASSETS))
-      .then(() => self.skipWaiting())
+      // Don't call skipWaiting here - wait for user to trigger update
   );
+});
+
+// Message event - handle update requests from the app
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 // Activate event - clean up old caches

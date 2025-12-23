@@ -103,53 +103,114 @@
 
 ---
 
----
-
 ## Epic 10 Code Review Lessons (2025-12-21)
 
-### Story 10-4: Request Timeout Notification
+| Story | Issue | Prevention |
+|-------|-------|------------|
+| 10-4 | Seed script missing test data | Add to BOTH `tests/fixtures/test-data.ts` AND `scripts/local/seed-test-data.ts` |
+| 10-4 | Registered consumer email missed | Check BOTH `guest_email` and `profiles?.email` for notifications |
+| 10-4 | E2E tests not using merged-fixtures | New tests: `import { test } from '../support/fixtures/merged-fixtures'` |
+| 10-4 | Missing assertNoErrorState | Call `assertNoErrorState(page)` after `page.goto()` |
+| 10-5 | Dead component left in codebase | Delete old component immediately when replacing |
+| 10-5 | Missing database column | Migration first → update types → update code |
+| 10-5 | Story AC didn't match mockup | Update ACs after mockup alignment |
+| 10-5 | TypeScript types not regenerated | Run `npx supabase gen types typescript` after migrations |
+
+### Key Patterns from Epic 10
+
+- **Dual email source:** `const email = request.guest_email || request.profiles?.email;`
+- **Seed-fixture sync:** Every test fixture constant needs matching seed data
+- **Timeline component:** 4-step timelines with status-contextual labels
+- **Dead code rule:** Delete unused components immediately
+
+---
+
+---
+
+### Story 11-1: Chrome Extension E2E Testing (2025-12-22)
 
 | Issue | Root Cause | Prevention |
 |-------|------------|------------|
-| **Seed script missing test data** | Test fixtures defined data that seed script didn't create | **Always add to both**: `tests/fixtures/test-data.ts` AND `scripts/local/seed-test-data.ts` |
-| **Registered consumer email missed** | Cron route only checked `guest_email`, not `profiles.email` | For features affecting both guest AND registered users, verify BOTH email sources |
-| **E2E tests not following Atlas patterns** | Epic 10 tests didn't use merged-fixtures | New tests MUST use `import { test, expect } from '../support/fixtures/merged-fixtures'` |
-| **Missing assertNoErrorState** | Tests passed when page showed error states | Call `assertNoErrorState(page)` after `page.goto()` before content assertions |
+| **RLS blocked offer creation** | Policy checks `role = 'provider'` but profiles use `role = 'supplier'` | Run migrations on production; verify role names match across policies |
+| **Consumer can't view own requests** | Missing/incorrect RLS policy | Test RLS policies with Playwright before production E2E |
+| **Tracking page broken** | Unknown RLS or routing issue | Debug guest access flows early |
+| **Chrome Extension E2E too fragile for early testing** | Cascading failures when RLS/permissions fail | Use Chrome Extension E2E only on polished apps |
 
-### Patterns Confirmed
+### Patterns for Chrome Extension E2E Testing
 
-1. **Dual email source for notifications**: When sending emails that could go to guests OR registered users:
-   ```typescript
-   const email = request.guest_email || request.profiles?.email;
+1. **Prerequisites for Chrome Extension E2E on production:**
+   - All RLS policies verified via Playwright tests
+   - Manual testing confirms happy path works
+   - No known blocking issues in core flows
+
+2. **Testing progression (recommended order):**
+   - **First**: Playwright tests (fast iteration, catches RLS issues)
+   - **Second**: Manual testing (catches UX issues)
+   - **Last**: Chrome Extension E2E (final production validation)
+
+3. **When Chrome Extension E2E fails early, stop and fix:**
+   - Don't try to work around RLS issues with admin scripts
+   - Fix the root cause first, then resume testing
+   - Each workaround compounds complexity and wastes time
+
+4. **Admin scripts are for debugging, not testing:**
+   - Scripts like `create-test-offer.ts` help diagnose issues
+   - But they shouldn't be used to "complete" an E2E test
+   - If you need admin bypass, the test is blocked, not passed
+
+---
+
+### Story 11A-1: P10 Delivery Completion (2025-12-22)
+
+**Issue:** Delivery completion button was disabled with "Coming soon" text, blocking CHAIN-1 E2E tests.
+
+| Fix Applied | Pattern Used |
+|------------|--------------|
+| **Server Action pattern** | `completeDelivery(offerId)` in `src/lib/actions/delivery.ts` |
+| **AlertDialog confirmation** | Standard shadcn/ui confirmation dialog before action |
+| **Commission recording** | Integrated with existing `commission_ledger` table |
+| **Dual notification paths** | In-app for registered consumers, email for guests |
+| **data-testid for Playwright** | `complete-delivery-button` selector for reliable tests |
+
+**Key Lesson:** When tests find disabled/placeholder features, create a gap story (Epic 11A) to track and fix them immediately.
+
+---
+
+### Story 11-2: CHAIN-1 Production Testing (2025-12-22)
+
+**Issues Found & Fixed:**
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **SECURITY DEFINER functions vulnerable** | `select_offer` and `update_updated_at_column` lacked `SET search_path` | Always add `SET search_path = public` to SECURITY DEFINER functions |
+| **Migration drift local/production** | Migrations applied via Supabase dashboard with auto-generated timestamps | Always apply migrations via `supabase db push` or commit SQL files first |
+| **Test credentials in story files** | Passwords hardcoded in markdown | Store in `.env.production.local`, reference in docs |
+| **Production user IDs in git** | Baseline JSON committed with UUIDs | Add baseline files to `.gitignore` |
+
+**Security Patterns:**
+
+1. **SECURITY DEFINER functions must include:**
+   ```sql
+   CREATE OR REPLACE FUNCTION my_function()
+   RETURNS ...
+   LANGUAGE plpgsql
+   SECURITY DEFINER
+   SET search_path = public  -- REQUIRED for security
+   AS $$ ... $$;
    ```
 
-2. **Seed-fixture synchronization**: Every constant in `tests/fixtures/test-data.ts` MUST have matching data seeded by `scripts/local/seed-test-data.ts`
+2. **Run security check after DB changes:**
+   ```
+   mcp__supabase__get_advisors type=security
+   ```
 
-3. **Atlas Section 5 test patterns**: All new tests use merged fixtures + log fixture + assertNoErrorState
+3. **Production test data hygiene:**
+   - Baseline files with user IDs → `.gitignore`
+   - Passwords → `.env.production.local`
+   - Never commit SERVICE_ROLE_KEY references
 
----
-
-### Story 10-5: Request Status with Offer Context
-
-| Issue | Root Cause | Prevention |
-|-------|------------|------------|
-| **Dead component left in codebase** | Created new `timeline-tracker.tsx` but didn't delete old `status-tracker.tsx` | When replacing components, **delete the old one immediately** to avoid dead code |
-| **Missing database column** | Code referenced `in_transit_at` but no migration existed | When adding timestamp columns for status tracking, **create the migration first**, then update types, then update code |
-| **Story AC didn't match mockup implementation** | AC said "Solicitado → Aceptado" but mockups showed richer labels | **Update ACs after mockup alignment** - the mockups are the source of truth for UX |
-| **Story File List incomplete** | New components created weren't added to File List | During implementation, **update File List in real-time** as files are created |
-| **TypeScript types not regenerated** | Added column to migration but database.ts not updated | After adding columns, **always update `src/types/database.ts`** (or regenerate with `npx supabase gen types typescript`) |
-
-### Patterns Confirmed
-
-1. **Timeline component pattern**: Use 4-step timelines with contextual labels that change based on status (pending shows offer-focused steps, accepted+ shows delivery-focused steps)
-
-2. **Component extraction for reuse**: When building status pages, create:
-   - `TimelineTracker` - reusable timeline with steps
-   - `StatusCard` - status-specific styling with children slots
-   - `GradientHeader` - branded headers for key pages
-
-3. **Dead code elimination**: When a code review finds unused components, delete them immediately - they add confusion and maintenance burden
+**Key Lesson:** Run Supabase security advisors after every migration to catch `function_search_path_mutable` and `rls_disabled_in_public` warnings immediately.
 
 ---
 
-*Last verified: 2025-12-21 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5 implementations*
+*Last verified: 2025-12-22 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2 implementations*

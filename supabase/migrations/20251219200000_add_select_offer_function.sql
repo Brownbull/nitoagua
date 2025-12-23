@@ -123,7 +123,8 @@ BEGIN
     'cancelled_offers', v_cancelled_count
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public;
 
 -- Grant execute permission to authenticated users
 -- (actual authorization is handled by the function checking request ownership)

@@ -91,22 +91,22 @@ export function DevLogin() {
   }
 
   return (
-    <div className="mt-6 pt-6 border-t border-gray-200">
-      <div className="text-center mb-4">
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+    <div className="mt-4 pt-4 border-t border-gray-200">
+      <div className="text-center mb-3">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
           Dev Mode
         </span>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-[11px] text-gray-500 mt-0.5">
           Email/Password login for local testing
         </p>
       </div>
 
-      {/* Role selector buttons */}
-      <div className="flex gap-2 mb-4">
+      {/* Role selector buttons - more compact */}
+      <div className="flex gap-1.5 mb-3">
         <Button
           type="button"
           variant={selectedRole === "consumer" ? "default" : "outline"}
-          className="flex-1 text-sm"
+          className="flex-1 text-xs h-8 px-2"
           onClick={() => handleRoleChange("consumer")}
           disabled={isLoading}
         >
@@ -115,7 +115,7 @@ export function DevLogin() {
         <Button
           type="button"
           variant={selectedRole === "supplier" ? "default" : "outline"}
-          className="flex-1 text-sm"
+          className="flex-1 text-xs h-8 px-2"
           onClick={() => handleRoleChange("supplier")}
           disabled={isLoading}
         >
@@ -124,7 +124,7 @@ export function DevLogin() {
         <Button
           type="button"
           variant={selectedRole === "newSupplier" ? "default" : "outline"}
-          className="flex-1 text-sm"
+          className="flex-1 text-xs h-8 px-2"
           onClick={() => handleRoleChange("newSupplier")}
           disabled={isLoading}
         >
@@ -132,9 +132,9 @@ export function DevLogin() {
         </Button>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+      <form onSubmit={handleLogin} className="space-y-2.5">
+        <div className="space-y-1">
+          <Label htmlFor="email" className="text-xs">Email</Label>
           <Input
             id="email"
             type="email"
@@ -142,11 +142,12 @@ export function DevLogin() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder={TEST_ACCOUNTS[selectedRole].email}
             disabled={isLoading}
+            className="h-9 text-sm"
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+        <div className="space-y-1">
+          <Label htmlFor="password" className="text-xs">Password</Label>
           <Input
             id="password"
             type="password"
@@ -154,12 +155,13 @@ export function DevLogin() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             disabled={isLoading}
+            className="h-9 text-sm"
           />
         </div>
 
         <Button
           type="submit"
-          className="w-full"
+          className="w-full h-9"
           disabled={isLoading}
           data-testid="dev-login-button"
         >
@@ -170,7 +172,7 @@ export function DevLogin() {
         </Button>
 
         {error && (
-          <p className="text-sm text-red-600 text-center" role="alert">
+          <p className="text-xs text-red-600 text-center" role="alert">
             {error}
           </p>
         )}

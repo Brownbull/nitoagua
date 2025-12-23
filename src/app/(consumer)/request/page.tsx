@@ -262,7 +262,7 @@ export default function RequestPage() {
   // Loading state
   if (state === "loading") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#0077B6]" />
       </div>
     );
@@ -323,7 +323,7 @@ export default function RequestPage() {
   const stepInfo = getStepInfo();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-dvh bg-gray-50 flex flex-col">
       {/* Header with progress */}
       <RequestHeader
         title={stepInfo.title}

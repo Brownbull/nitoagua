@@ -61,6 +61,23 @@ Consolidated verbose entries into tables. Token count: ~9,850 → ~8,450.
 - **Patterns Documented:** CountdownTimer component pattern added to Section 4
 - **Status:** Story marked `done`, sprint-status synced
 
+### 2025-12-22: Epic 10 Completion
+- **Stories Completed:** 10-6 (PWA Settings), 10-7 (Mobile Adaptability)
+- **App Version:** Updated to 1.0.0 (package.json, sw.js, env)
+- **PWA Standards Doc Created:** `docs/standards/progressive-web-app-standards.md`
+- **Consumer Nav Updated:** Icon-only design (removed text labels)
+- **Key Patterns Added:**
+  - Dynamic viewport units (`min-h-dvh`, `h-dvh`)
+  - Safe area handling (`pb-safe`, `safe-area-bottom`)
+  - Service worker versioning for update detection
+  - Compact font sizing for settings screens
+- **Sections Updated:**
+  - Section 0: Added app version, PWA config
+  - Section 2: Epic 10 story implementations
+  - Section 8: V2 consumer flow with components, accurate path mapping
+- **Epic 10 Status:** All 7 stories deployed to production
+- **Next:** Epic 11 (Full Workflow Validation) ready for dev
+
 ## Documents Tracked
 
 | Document | Location | Last Checked |

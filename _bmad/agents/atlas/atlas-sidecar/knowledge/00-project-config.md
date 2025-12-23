@@ -1,7 +1,7 @@
 # Project Configuration
 
 > Section 0 of Atlas Memory
-> Last Sync: 2025-12-20
+> Last Sync: 2025-12-22
 > Sources: Deployment config, seed scripts, environment files, Vercel dashboard
 
 ## Deployment URLs
@@ -73,10 +73,21 @@ When `NEXT_PUBLIC_DEV_LOGIN=true`:
 | Identifier | Value |
 |------------|-------|
 | Project Name | nitoagua |
+| App Version | 1.0.0 |
 | Vercel Project | nitoagua |
 | Supabase Project | spvbmmydrfquvndxpcug |
-| GitHub Repo | [repository URL] |
+| GitHub Repo | Brownbull/nitoagua |
+
+## PWA Configuration
+
+| Setting | Value |
+|---------|-------|
+| Service Worker | `public/sw.js` |
+| SW Version | 1.0.0 (matches app version) |
+| Manifest | `public/manifest.json` |
+| Dev Port | 3005 |
+| Standards Doc | `docs/standards/progressive-web-app-standards.md` |
 
 ---
 
-*Last verified: 2025-12-20 | Sources: Vercel dashboard, .env files, seed scripts*
+*Last verified: 2025-12-22 | Sources: Vercel dashboard, .env files, seed scripts, package.json*

@@ -174,7 +174,7 @@ export function TimelineTracker({
   const steps = getTimelineSteps(currentStatus, createdAt, acceptedAt, inTransitAt, deliveredAt);
 
   return (
-    <div className="bg-white rounded-2xl p-5 mb-4 shadow-sm">
+    <div className="bg-white rounded-2xl p-5 mb-4 shadow-sm" data-testid="timeline">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">Progreso</h3>
 
       <div className="relative pl-7">
@@ -186,7 +186,7 @@ export function TimelineTracker({
 
         <ol className="space-y-5">
           {steps.map((step, index) => (
-            <li key={step.id} className="relative">
+            <li key={step.id} className="relative" data-testid={`timeline-step-${step.id}`} data-status={step.status}>
               {/* Step dot */}
               <span
                 className={cn(

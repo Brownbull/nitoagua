@@ -188,7 +188,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-dvh bg-gray-50 flex flex-col">
       {/* Polling Indicator */}
       {isPolling && (
         <div className="fixed top-4 right-4 z-50">
