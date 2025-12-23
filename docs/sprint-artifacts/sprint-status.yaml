@@ -183,17 +183,28 @@ development_status:
   10-7-mobile-screen-adaptability: deployed  # DEPLOYED 2025-12-22 - CSS viewport fixes, code review passed, 1 fix applied
   epic-10-retrospective: optional
 
-  # Epic 11: Full Application Workflow Validation (Post-Epic 10)
+  # Epic 11: Playwright Workflow Validation (Post-Epic 10)
   # =============================================================
-  # Purpose: Validate complete workflows across all three personas
-  # Timing: Run after Epic 10 is complete
-  # Priority: CRITICAL - Proves platform works as cohesive whole
-  epic-11: contexted  # Tech spec created 2025-12-19
-  11-1-consumer-full-workflow-validation: ready-for-dev  # 22 ACs covering all consumer features
-  11-2-provider-full-workflow-validation: ready-for-dev  # 32 ACs covering all provider features
-  11-3-admin-full-workflow-validation: ready-for-dev  # 30 ACs covering all admin features
-  11-4-cross-persona-integration-tests: ready-for-dev  # 18 ACs - THE critical integration tests
+  # Purpose: Validate workflows via Playwright tests (WSL)
+  # Approach: Local first → Production second → Fix issues as found
+  # Source: Revised 2025-12-22 after Chrome Extension RLS issues
+  # Priority: CRITICAL - Fix RLS issues before Chrome Extension testing
+  epic-11: contexted  # Tech spec revised 2025-12-22 - Playwright approach
+  11-1-chain1-local: done  # 5/5 tests pass - Atlas code review complete 2025-12-22
+  11-2-chain1-production: drafted  # CHAIN-1 production - same tests, prod environment
+  11-3-provider-visibility-local: drafted  # P7, P8, P9 - Provider tracking
+  11-4-provider-visibility-production: drafted  # Same tests, production
+  11-5-consumer-tracking-local: drafted  # C3, C4 - Consumer status tracking
+  11-6-consumer-tracking-production: drafted  # Same tests, production
   epic-11-retrospective: optional
+
+  # Epic 11A: Testing-Discovered Gaps (Created from Epic 11 findings)
+  # =============================================================
+  # Purpose: Fix gaps discovered during Playwright workflow validation
+  # Origin: Story 11-1 found P10 delivery completion not working
+  # Priority: P0 - Critical (blocks CHAIN-1 completion)
+  epic-11a: contexted  # Tech spec created 2025-12-22
+  11a-1-p10-delivery-completion: done  # FR31: Mark request as delivered - APPROVED 2025-12-22 Atlas code review passed
 
   # Epic 12: Consumer UX Enhancements (depends on Epic 10 consumer flow)
   epic-12: backlog
@@ -204,3 +215,18 @@ development_status:
   12-5-remove-fake-social-proof: backlog
   12-6-web-push-notifications: drafted  # Created 2025-12-22 - Android PWA push notifications, 8 ACs
   epic-12-retrospective: optional
+
+  # Epic 13: Chrome Extension Final Validation (LAST EPIC)
+  # =============================================================
+  # Purpose: Final production validation via Chrome Extension E2E
+  # Prerequisites: Epic 11 complete, all RLS issues fixed
+  # Approach: Document → Execute (Windows) → Report
+  # Note: Moved from original Epic 11 after RLS issues discovered
+  epic-13: backlog  # Will be contexted after Epic 11 complete
+  13-1-core-transaction-chrome: backlog  # CHAIN-1 final validation
+  13-2-trust-visibility-chrome: backlog  # C3, C4, P7, P8, P9
+  13-3-provider-onboarding-chrome: backlog  # CHAIN-2: P1-P4, A1-A3
+  13-4-platform-operations-chrome: backlog  # A4-A7, P11
+  13-5-accountability-chrome: backlog  # C5, P12, P13, strikes
+  13-6-edge-cases-chrome: backlog  # Empty states, variations
+  epic-13-retrospective: optional

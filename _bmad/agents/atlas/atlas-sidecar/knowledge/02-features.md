@@ -115,17 +115,13 @@ nitoagua provides features for three user types: Consumers, Providers (aguateros
 
 | Story | Date | Key Outcome | Pattern Added |
 |-------|------|-------------|---------------|
-| testing-2-local-schema-sync | 2025-12-18 | `verify:local-db` + `seed:dev-login` scripts | Database health checks |
-| 8-10-provider-map-view | 2025-12-19 | `/provider/map` with Leaflet/OSM | Dynamic import for SSR bypass |
-| Epic 10 tech-spec | 2025-12-19 | Consumer offer selection design | `select_offer()` atomic function |
-| Epic 10 stories created | 2025-12-19 | 5 stories ready-for-dev (10-1 to 10-5) | Consumer-side offer selection flow |
-| Epic 11 created | 2025-12-19 | 4 stories (11-1 to 11-4) - 102 ACs total | Cross-persona validation, multi-context tests |
-| 10-1-offer-list-view | 2025-12-19 | Consumer offers page with realtime + guest access | Server component + admin client for guest token access |
 | 10-3-countdown-timer | 2025-12-21 | CountdownTimer component with accessibility | ARIA live regions, Vitest unit tests |
 | 10-4-request-timeout | 2025-12-21 | Daily cron job for expired requests | Vercel Hobby 1/day limit, `no_offers` status |
 | 10-5-request-status | 2025-12-21 | Offer context in status cards | Provider info display, acceptance flow |
 | 10-6-pwa-settings | 2025-12-22 | PWA install/update UI, notification settings | Service worker update detection |
 | 10-7-mobile-adaptability | 2025-12-22 | Dynamic viewport units, icon-only nav | PWA standards doc created |
+
+> Older entries (testing-2, 8-10, 10-1, 10-2, Epic 11 creation) archived in v3 backup.
 
 > Full story details in `docs/sprint-artifacts/` - Atlas tracks patterns, not full implementations.
 

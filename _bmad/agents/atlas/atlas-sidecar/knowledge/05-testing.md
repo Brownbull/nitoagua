@@ -182,150 +182,32 @@ Each test must:
 
 ## Playwright Utils Integration (Testing-3)
 
-> Added 2025-12-18 from Story Testing-3: Playwright Utils Integration
-
-### Merged Fixtures Pattern
-
-**Purpose:** Combine `@seontechnologies/playwright-utils` with project fixtures for enhanced E2E capabilities.
-
 **Location:** `tests/support/fixtures/merged-fixtures.ts`
 
-**Available Fixtures:**
+**Key Fixtures:** `log` (structured logging), `recurse` (polling), `interceptNetworkCall`, `networkErrorMonitor`, `userFactory`
 
-| Fixture | Purpose |
-|---------|---------|
-| `log` | Structured logging in reports - `log({ level: 'step', message: '...' })` |
-| `recurse` | Polling for async conditions (like Cypress retry) |
-| `interceptNetworkCall` | Spy/stub network requests |
-| `networkErrorMonitor` | Auto-fail on HTTP 4xx/5xx |
-| `userFactory` | Create/cleanup test users (project fixture) |
+**Import (Epic 10+):** `import { test, expect } from '../support/fixtures/merged-fixtures';`
 
 **Log Levels:** `info`, `step`, `success`, `warning`, `error`, `debug`
 
-### Migration Strategy
+**Persona Validation:** `tests/e2e/persona-validation.spec.ts` - 13 tests covering all personas
 
-**New tests (Epic 10+):** Use merged fixtures:
-```typescript
-import { test, expect } from '../support/fixtures/merged-fixtures';
-```
-
-**Existing tests:** Keep `@playwright/test` - no changes needed.
-
-**Gradual migration:** When touching existing tests, consider upgrading imports and adding `log()` calls.
-
-### Example Usage
-
-```typescript
-test('example', async ({ page, log }) => {
-  await log({ level: 'step', message: 'Navigate to page' });
-  await page.goto('/consumer/offers');
-
-  await log({ level: 'step', message: 'Verify content' });
-  await expect(page.locator('[data-testid="offer"]')).toBeVisible();
-
-  await log({ level: 'success', message: 'Test complete' });
-});
-```
-
-**Reference:** `docs/testing/playwright-utils-integration.md`
-
-### Persona Validation Tests
-
-**Purpose:** Verify playwright-utils integration across all three personas.
-
-**Location:** `tests/e2e/persona-validation.spec.ts`
-
-**Personas Tested:**
-- **Dona Maria (Consumer)**: Home screen, big button, Spanish interface, request form
-- **Don Pedro (Provider)**: Login page access, dev login detection, dashboard access
-- **Admin**: Login page, branding, security notices, dev login
-
-**Test Count:** 13 tests (11 pass, 2 skip when dev login unavailable)
-
-**Key Patterns:**
-- Use `log({ level: 'step', message: '...' })` for each test step
-- Use `log({ level: 'success', message: '...' })` at test completion
-- Use `log({ level: 'info', message: '...' })` for informational notes
-- Use `log({ level: 'warning', message: '...' })` before test.skip()
+**Full Reference:** `docs/testing/playwright-utils-integration.md`
 
 ---
 
-## Chrome Extension vs Playwright: Decision Guide
+## Chrome Extension vs Playwright Decision Guide
 
-> Added 2025-12-21 after Chrome Extension E2E testing session
+| Factor | Chrome Extension | Playwright |
+|--------|------------------|------------|
+| **Best For** | New features, multi-persona, exploratory | Regression, CI/CD, timing-sensitive |
+| **Data** | Requires real/seeded data | Seeds per-test |
+| **Multi-persona** | Natural tab switching | Multi-context setup |
+| **Production** | ❌ No seed scripts | ❌ Never run |
 
-### When to Use Chrome Extension E2E
+**Rule:** New feature → Chrome Extension first → then Playwright for regression.
 
-| Scenario | Why Chrome Extension |
-|----------|---------------------|
-| **Multi-persona workflows** | Natural multi-tab management, easy persona switching |
-| **Complex user journeys** | Human judgment for UI/UX validation |
-| **Exploratory testing** | Can adapt on the fly, notice unexpected issues |
-| **Visual verification** | Human eye catches layout/design issues |
-| **New feature validation** | Before investing in automation |
-| **Cross-persona timing** | Real-time observation of sync points |
-
-### When to Use Playwright Automated Tests
-
-| Scenario | Why Playwright |
-|----------|----------------|
-| **Regression testing** | Consistent, repeatable coverage |
-| **CI/CD integration** | Runs on every push/PR |
-| **Feature-specific tests** | Countdown timers, animations, state transitions |
-| **Race conditions** | Precise timing control impossible manually |
-| **Large test suites** | 100+ tests run in minutes, not hours |
-| **Data isolation** | Each test seeds and cleans up its own data |
-
-### Decision Matrix
-
-```
-Is this a NEW feature being validated for the first time?
-├── YES → Chrome Extension (exploratory, catch UX issues)
-└── NO → Already validated?
-    ├── YES → Playwright (regression, CI/CD)
-    └── NO → Is it multi-persona or complex timing?
-        ├── Multi-persona → Chrome Extension first, then Playwright
-        └── Timing-sensitive → Playwright (precise control)
-```
-
-### Data Considerations
-
-| Environment | Chrome Extension | Playwright |
-|-------------|------------------|------------|
-| **Local dev** | ✅ Can seed data | ✅ Seeds per-test |
-| **Staging** | ⚠️ May have stale data | ⚠️ Usually no seeding |
-| **Production** | ❌ No seed scripts | ❌ Never run automated |
-
-**Key Rule:** Always validate test data exists BEFORE generating Chrome Extension checklists. Use `step-03b-data-validation.md` in the atlas-e2e workflow.
-
----
-
-## Chrome Extension E2E Test Records
-
-### E2E Test Record: 10-3 (Chrome Extension)
-
-**Date:** 2025-12-20
-**Story:** 10-3 - Offer Countdown Timer (Consumer View)
-**Pass Rate:** N/A (Skipped - no test data on production)
-
-**Coverage:**
-- AC10.3.1 - AC10.3.7: All SKIPPED
-
-**Personas Tested:**
-- Consumer (Doña María): Login verified, 0 scenarios executed
-
-**Patterns Established:**
-- Production lacks seed data for feature E2E tests
-- Chrome Extension E2E requires either local environment or real test data
-- Dev login mode works on production
-
-**Issues Found:**
-- None (tests not executed due to data constraint)
-
-**Checklist:** docs/testing/e2e-checklists/10-3-offer-countdown-timer.md
-
-**Lesson Learned:**
-> Chrome Extension E2E testing on production requires real test data or a staging environment with persistent seed data. For feature-specific tests like countdown timers, prefer running Playwright automated tests locally with `npm run seed:offers`.
+**Reference:** `docs/testing/e2e-checklists/` for Chrome Extension results.
 
 ---
 

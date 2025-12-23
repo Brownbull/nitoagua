@@ -1,227 +1,220 @@
-# Tech Spec: Epic 11 - Full Application Workflow Validation
+# Tech Spec: Epic 11 - Playwright Workflow Validation
 
 **Epic:** Epic 11 (Post-Epic 10)
 **Author:** Atlas Project Intelligence
-**Date:** 2025-12-19
-**Status:** Draft
+**Date:** 2025-12-22 (Revised after Chrome Extension attempt)
+**Status:** Active
 
 ---
 
 ## 1. Overview
 
-This testing epic validates that all three user personas (Consumer, Provider, Admin) can complete their critical workflows end-to-end after Epic 10 completes the V2 offer model. It bridges per-story unit tests with comprehensive integration tests that verify the application works as a cohesive whole.
+This epic validates nitoagua workflows using **Playwright tests executed in WSL**.
 
-**Why This Epic Matters:**
-- Epic 10 completes the V2 Consumer-Choice Offer Model
-- Individual stories have been tested in isolation
-- No existing tests validate the complete cross-persona workflow
-- Production readiness requires proof that all roles can operate together
+**Key Insight from Chrome Extension Testing:**
+> Chrome Extension E2E on production should come LAST, after Playwright tests and manual testing verify the app works. RLS issues cascade and make entire test sessions unproductive.
 
----
+### New Testing Strategy
 
-## 2. Objectives & Scope
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 1: LOCAL VALIDATION (WSL + Local Supabase)              │
+│  - Create/verify seed scripts                                   │
+│  - Write Playwright tests                                       │
+│  - Run tests, identify gaps                                     │
+│  - Fix issues locally                                           │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  PHASE 2: PRODUCTION VALIDATION (WSL + Production Supabase)    │
+│  - Create prod seed scripts (same data pattern)                 │
+│  - Run same Playwright tests against production                 │
+│  - Identify prod-only issues (RLS, migrations)                  │
+│  - Fix or backlog issues                                        │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### In Scope
-
-| Story | Focus | Validates |
-|-------|-------|-----------|
-| **11-1** | Consumer workflows | All consumer features from guest to registered |
-| **11-2** | Provider workflows | All provider features from onboarding to earnings |
-| **11-3** | Admin workflows | All admin features from verification to settlement |
-| **11-4** | Cross-persona integration | Complete V2 offer model with all three roles |
-
-### Out of Scope
-
-- Performance/load testing (future epic)
-- Security penetration testing (future epic)
-- Accessibility compliance testing (covered per-story)
-- Mobile-specific testing beyond responsive checks
-
----
-
-## 3. Feature Inventory by Persona
-
-### 3.1 Consumer (Doña María) Features
-
-| Category | Feature | Epic Source | Priority |
-|----------|---------|-------------|----------|
-| **Core Flow** | Guest water request | Epic 2 | P0 |
-| **Core Flow** | Request tracking | Epic 2 | P0 |
-| **Core Flow** | Request cancellation | Epic 4 | P0 |
-| **V2 Flow** | View offers | Epic 10 | P0 |
-| **V2 Flow** | Select offer | Epic 10 | P0 |
-| **V2 Flow** | Offer countdown visibility | Epic 10 | P1 |
-| **V2 Flow** | Request timeout handling | Epic 10 | P1 |
-| **Registered** | Account registration | Epic 4 | P1 |
-| **Registered** | Pre-filled forms | Epic 4 | P1 |
-| **Registered** | Request history | Epic 4 | P1 |
-| **Registered** | In-app notifications | Epic 5 | P1 |
-| **Platform** | PWA installation prompt | Epic 1 | P2 |
-| **Platform** | Spanish interface | All | P1 |
-
-### 3.2 Provider (Don Pedro) Features
-
-| Category | Feature | Epic Source | Priority |
-|----------|---------|-------------|----------|
-| **Onboarding** | Registration flow | Epic 7 | P0 |
-| **Onboarding** | Document upload | Epic 7 | P0 |
-| **Onboarding** | Verification status | Epic 7 | P0 |
-| **Profile** | Service area configuration | Epic 7 | P0 |
-| **Profile** | Availability toggle | Epic 7 | P1 |
-| **Profile** | Bank details | Epic 7 | P1 |
-| **Profile** | Settings page | Epic 8 | P1 |
-| **Operations** | Request browser | Epic 8 | P0 |
-| **Operations** | Submit offer | Epic 8 | P0 |
-| **Operations** | Active offers list | Epic 8 | P0 |
-| **Operations** | Withdraw offer | Epic 8 | P1 |
-| **Operations** | Offer acceptance notification | Epic 8 | P0 |
-| **Operations** | Mark delivered | Epic 3 | P0 |
-| **Operations** | Map view | Epic 8 | P2 |
-| **Earnings** | Earnings dashboard | Epic 8 | P1 |
-| **Earnings** | Commission settlement | Epic 8 | P1 |
-
-### 3.3 Admin Features
-
-| Category | Feature | Epic Source | Priority |
-|----------|---------|-------------|----------|
-| **Access** | Admin authentication | Epic 6 | P0 |
-| **Verification** | Provider verification queue | Epic 6 | P0 |
-| **Verification** | Approve/reject providers | Epic 6 | P0 |
-| **Management** | Provider directory | Epic 6 | P1 |
-| **Management** | Orders management | Epic 6 | P0 |
-| **Configuration** | Pricing configuration | Epic 6 | P0 |
-| **Configuration** | Offer system settings | Epic 6 | P1 |
-| **Finance** | Cash settlement tracking | Epic 6 | P1 |
-| **Dashboard** | Operations dashboard | Epic 6 | P2 |
+**For each gap/issue found:**
+1. Discuss: Is it worth fixing now?
+2. If yes: Fix immediately
+3. If no: Create backlog story for future epic
 
 ---
 
-## 4. Test Architecture
+## 2. Workflow Inventory (From Brainstorming)
 
-### 4.1 Test File Structure
+### 2.1 Priority Tiers
+
+**Tier 1: Critical Path (Epic 11 Focus)**
+| ID | Workflow | Persona | Success Criteria |
+|----|----------|---------|------------------|
+| C1 | Request Water | Consumer | Home → Form → Confirm in ≤3 screens |
+| P5 | Browse Requests | Provider | See requests in service areas |
+| P6 | Submit Offer | Provider | Quick offer with auto-pricing |
+| C2 | Accept Offer | Consumer | See provider → One-tap accept |
+| P10 | Complete Delivery | Provider | One-tap mark delivered |
+
+**Tier 2: Trust Layer (Epic 11 Optional)**
+| ID | Workflow | Persona |
+|----|----------|---------|
+| C3 | Track Delivery Status | Consumer |
+| P7 | Track My Offers | Provider |
+| P8 | Receive Acceptance | Provider |
+
+**Tier 3: Lifecycle (Epic 13 - Chrome Extension)**
+- P1-P4: Provider Onboarding
+- A1-A7: Admin Operations
+- C5, P12, P13: Accountability
+
+---
+
+## 3. Story Breakdown
+
+### Story 11-1: CHAIN-1 Core Transaction (Local)
+
+**Goal:** Validate happy path delivery flow works locally
+
+**Workflows:** C1 → P5 → P6 → C2 → P10
+
+**Deliverables:**
+1. Seed script: `scripts/local/seed-chain1-test.ts`
+2. Playwright test: `tests/e2e/chain1-happy-path.spec.ts`
+3. All tests passing on local
+
+**Acceptance Criteria:**
+- [ ] Seed script creates consumer + approved provider + service areas
+- [ ] Consumer can create water request via UI
+- [ ] Provider sees request in dashboard
+- [ ] Provider can submit offer
+- [ ] Consumer can accept offer
+- [ ] Provider can mark delivered
+- [ ] Commission recorded in ledger
+
+---
+
+### Story 11-2: CHAIN-1 Core Transaction (Production)
+
+**Goal:** Validate happy path delivery flow works on production
+
+**Prerequisites:** Story 11-1 complete
+
+**Deliverables:**
+1. Prod seed script: `scripts/production/seed-chain1-test.ts`
+2. Same Playwright tests run against production
+3. Report of issues found
+
+**Acceptance Criteria:**
+- [ ] Prod seed script creates test data
+- [ ] Same tests pass on production
+- [ ] RLS issues identified and documented
+- [ ] Fix stories created OR issues fixed inline
+
+---
+
+### Story 11-3: Provider Visibility (Local)
+
+**Goal:** Validate provider can track their offers and deliveries
+
+**Workflows:** P7, P8, P9
+
+**Deliverables:**
+1. Seed script updates for offer states
+2. Playwright tests for offer tracking
+3. All tests passing on local
+
+---
+
+### Story 11-4: Provider Visibility (Production)
+
+**Goal:** Same as 11-3 but on production
+
+**Prerequisites:** Story 11-3 complete
+
+---
+
+### Story 11-5: Consumer Status Tracking (Local)
+
+**Goal:** Validate consumer can track delivery status
+
+**Workflows:** C3, C4
+
+**Deliverables:**
+1. Playwright tests for status page
+2. Tests for contact driver link
+3. All tests passing on local
+
+---
+
+### Story 11-6: Consumer Status Tracking (Production)
+
+**Goal:** Same as 11-5 but on production
+
+**Prerequisites:** Story 11-5 complete
+
+---
+
+## 4. Test File Structure
 
 ```
 tests/
 ├── e2e/
-│   ├── validation/
-│   │   ├── consumer-workflows.spec.ts      # 11-1
-│   │   ├── provider-workflows.spec.ts      # 11-2
-│   │   ├── admin-workflows.spec.ts         # 11-3
-│   │   └── full-v2-integration.spec.ts     # 11-4
-│   └── ... (existing tests)
-├── fixtures/
-│   ├── validation-seeds.ts                 # Shared seed data
-│   └── ... (existing fixtures)
-└── support/
-    └── fixtures/
-        └── merged-fixtures.ts              # Playwright utils (Testing-3)
+│   ├── chain1-happy-path.spec.ts      # Story 11-1, 11-2
+│   ├── provider-offer-tracking.spec.ts # Story 11-3, 11-4
+│   └── consumer-status-tracking.spec.ts # Story 11-5, 11-6
+│
+scripts/
+├── local/
+│   └── seed-chain1-test.ts            # Local seed
+└── production/
+    └── seed-chain1-test.ts            # Prod seed (already created)
 ```
 
-### 4.2 Test Patterns
+---
 
-**Use Merged Fixtures (from Testing-3):**
+## 5. Implementation Pattern
+
+Each story follows this pattern:
+
 ```typescript
-import { test, expect } from '../../support/fixtures/merged-fixtures';
+// tests/e2e/chain1-happy-path.spec.ts
+import { test, expect } from '../support/fixtures/merged-fixtures';
+import { assertNoErrorState } from '../fixtures/error-detection';
 
-test.describe('Consumer Workflows @validation', () => {
-  test('Guest request → offer selection → tracking', async ({ page, log }) => {
-    await log({ level: 'step', message: '1. Submit water request as guest' });
-    // ...
+test.describe('CHAIN-1: Happy Path Delivery', () => {
+  test.beforeAll(async () => {
+    // Seed data using appropriate script
+    // Local: npm run seed:chain1:local
+    // Prod: npm run seed:chain1:prod
   });
+
+  test('C1: Consumer creates water request', async ({ page }) => {
+    await page.goto('/');
+    await assertNoErrorState(page);
+    // ... test steps
+  });
+
+  test('P5: Provider sees request in dashboard', async ({ page }) => {
+    // Login as provider
+    // Navigate to requests
+    // Assert request visible
+  });
+
+  // ... more tests
 });
 ```
 
-**Per-Test Seeding:**
-```typescript
-test.beforeEach(async ({ userFactory }) => {
-  // Create isolated test data for this test
-  await userFactory.createConsumer({ name: 'Test Consumer' });
-  await userFactory.createProvider({ verified: true });
-});
-```
-
-### 4.3 Seed Data Requirements
-
-| Scenario | Data Required | Script |
-|----------|--------------|--------|
-| Consumer full flow | Provider with offers, requests | `scripts/local/seed-validation-consumer.ts` |
-| Provider full flow | Pending requests, approved provider | `scripts/local/seed-validation-provider.ts` |
-| Admin full flow | Pending providers, active orders | `scripts/local/seed-validation-admin.ts` |
-| Integration flow | All personas, realistic state | `scripts/local/seed-validation-full.ts` |
-
 ---
 
-## 5. Story Breakdown
+## 6. RLS Issues Found (From 11-1 Chrome Extension)
 
-### Story 11-1: Consumer Full Workflow Validation (5 points)
+These must be fixed before production tests will pass:
 
-**Critical Paths:**
-1. Guest request → offer viewing → selection → tracking → delivery notification
-2. Registered user: login → prefilled form → request → history update
-3. Request cancellation (before offer acceptance)
-4. Request timeout (no offers scenario)
-
-### Story 11-2: Provider Full Workflow Validation (8 points)
-
-**Critical Paths:**
-1. Registration → document upload → verification pending
-2. After approval: service area config → availability on
-3. Browse requests → submit offer → wait for acceptance
-4. Offer accepted → mark delivered → commission logged
-5. Earnings view → settlement request
-6. Withdraw pending offer
-
-### Story 11-3: Admin Full Workflow Validation (5 points)
-
-**Critical Paths:**
-1. Admin login (allowlist validation)
-2. Verification queue → approve provider → provider can operate
-3. Verification queue → reject provider → provider blocked
-4. Orders management → view all requests → filter by status
-5. Pricing configuration → update delivery prices
-6. Settlement tracking → view provider debts → mark settled
-
-### Story 11-4: Cross-Persona Integration Tests (8 points)
-
-**The Complete V2 Happy Path:**
-```
-Doña María (Consumer)     Don Pedro (Provider)      Admin
-        |                         |                    |
-        |-- Submit Request ------>|                    |
-        |                         |                    |
-        |                  [Sees request in dashboard] |
-        |                         |                    |
-        |                  [Submits offer]             |
-        |                         |                    |
-        |<-- Sees offer --------->|                    |
-        |                         |                    |
-        |-- Selects offer ------->|                    |
-        |                         |                    |
-        |                  [Notified of acceptance]   |
-        |                         |                    |
-        |                  [Marks delivered]          |
-        |                         |                    |
-        |                  [Commission logged] ------>|
-        |                         |                    |
-        |                         |      [Views in settlement]
-```
-
-**Edge Cases:**
-- Consumer cancels after provider offers (offers auto-cancelled)
-- Multiple providers compete for same request
-- Offer expires while consumer views it
-- Provider unavailable when consumer selects
-
----
-
-## 6. Dependencies
-
-| Dependency | Status | Required For |
-|------------|--------|--------------|
-| Epic 10 complete | Pending | Consumer offer selection tests |
-| Testing-3 merged fixtures | ✅ Complete | Log fixture, userFactory |
-| Seed scripts | Needs creation | Per-test data isolation |
-| Dev login mode | ✅ Available | Auth bypass for E2E |
+| # | Issue | Root Cause | Status |
+|---|-------|------------|--------|
+| 1 | Provider can't create offers | Policy checks `role = 'provider'` but profiles use `role = 'supplier'` | Migration exists, needs deploy |
+| 2 | Consumer can't view own requests | Missing RLS policy | Needs investigation |
+| 3 | Tracking token page broken | Unknown | Needs investigation |
+| 4 | Offers page permission error | RLS on users table join | Needs investigation |
 
 ---
 
@@ -229,31 +222,34 @@ Doña María (Consumer)     Don Pedro (Provider)      Admin
 
 | Metric | Target |
 |--------|--------|
-| All P0 paths passing | 100% |
-| All P1 paths passing | 100% |
-| P2 paths passing | 80%+ |
-| Test execution time | < 10 min total |
-| Cross-browser (Chromium) | 100% pass |
-| Cross-browser (Firefox) | 95%+ pass |
-| Cross-browser (WebKit) | 90%+ pass (known flakiness) |
+| Local tests passing | 100% for CHAIN-1 |
+| Production tests passing | 100% for CHAIN-1 |
+| RLS issues identified | All documented |
+| RLS issues fixed | Critical ones fixed |
+| Backlog stories created | For non-critical issues |
 
 ---
 
-## 8. Execution Strategy
+## 8. Dependencies
 
-### Phase 1: Seed Data Setup
-Create validation seed scripts before writing tests.
-
-### Phase 2: Per-Persona Tests (Parallel)
-Testing-4, Testing-5, Testing-6 can run in parallel.
-
-### Phase 3: Integration Tests
-Testing-7 requires all persona features working.
-
-### Phase 4: CI Integration
-Add validation tests to CI pipeline as gate before deployment.
+| Dependency | Status | Required For |
+|------------|--------|--------------|
+| Local Supabase running | Required | Local tests |
+| Production access | Required | Prod tests |
+| Merged fixtures | ✅ Available | Test patterns |
+| Seed scripts | Partial | Need chain1 seeds |
 
 ---
 
-*Generated by Atlas Project Intelligence*
-*Date: 2025-12-19*
+## 9. Chrome Extension Testing (Moved to Epic 13)
+
+**Original Epic 11 content (Chrome Extension E2E) moved to Epic 13:**
+- Will execute AFTER Playwright validation
+- Will use same workflow definitions
+- Will be final production validation
+- Reference: `docs/testing/chrome-extension/*.md`
+
+---
+
+*Revised 2025-12-22 after Chrome Extension E2E revealed RLS issues*
+*Pattern: Playwright first → Chrome Extension last*
