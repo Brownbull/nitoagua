@@ -20,12 +20,22 @@
 
 import { createClient } from "@supabase/supabase-js";
 
-// Local Supabase configuration
+// Local Supabase configuration (default)
 const LOCAL_CONFIG = {
   url: "http://127.0.0.1:55326",
   serviceRoleKey:
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU",
 };
+
+// Production config via environment variables
+const PROD_CONFIG = {
+  url: process.env.SUPABASE_URL || "",
+  serviceRoleKey: process.env.SUPABASE_SERVICE_KEY || "",
+};
+
+// Use production if env vars are set, otherwise local
+const useProduction = !!(PROD_CONFIG.url && PROD_CONFIG.serviceRoleKey);
+const CONFIG = useProduction ? PROD_CONFIG : LOCAL_CONFIG;
 
 // Deterministic UUIDs for test data
 const TEST_PROVIDER_IDS = {
@@ -172,11 +182,16 @@ const TEST_PROVIDERS = [
 const isClean = process.argv.includes("--clean");
 
 async function main() {
+  const targetName = useProduction ? "PRODUCTION" : "LOCAL";
   console.log("\n🔐 Admin Verification Workflow Test Data");
-  console.log(`   Target: LOCAL (${LOCAL_CONFIG.url})`);
+  console.log(`   Target: ${targetName} (${CONFIG.url})`);
   console.log(`   Mode: ${isClean ? "CLEAN" : "SEED"}`);
 
-  const supabase = createClient(LOCAL_CONFIG.url, LOCAL_CONFIG.serviceRoleKey, {
+  if (useProduction) {
+    console.log("\n⚠️  WARNING: Operating on PRODUCTION database!");
+  }
+
+  const supabase = createClient(CONFIG.url, CONFIG.serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
