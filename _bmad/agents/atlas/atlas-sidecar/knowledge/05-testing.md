@@ -269,4 +269,42 @@ test.use({
 
 ---
 
-*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Story 11-3 code review*
+## Production Validation Pattern (Story 11-4)
+
+> Added 2025-12-23 from Story 11-4: Provider Visibility (Production)
+
+### Production Test Execution Pattern
+
+**Seed Command:**
+```bash
+npm run seed:offers:prod  # Uses ./scripts/run-with-prod-env.sh wrapper
+```
+
+**Test Execution Template:**
+```bash
+NEXT_PUBLIC_SUPABASE_URL="<prod-url>" \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>" \
+NEXT_PUBLIC_DEV_LOGIN=true \
+DISPLAY= \
+timeout 180 npx playwright test <test-file> \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Key Requirements:**
+1. **Environment file:** `.env.production.local` with `SUPABASE_URL` and `SUPABASE_SERVICE_KEY`
+2. **Seed first:** Run `npm run seed:offers:prod` before tests
+3. **Timeout:** Use `timeout 180` (3 min) for production latency
+4. **Single worker:** `--workers=1` for deterministic ordering
+5. **Dev login:** `NEXT_PUBLIC_DEV_LOGIN=true` enables test login
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| P7 | 3 | Track My Offers - Offer list with status |
+| P8 | 2 | Acceptance Notification - Bell + popover |
+| P9 | 2 | Delivery Details - Full request info |
+| Integration | 1 | Full navigation flow |
+
+---
+
+*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4 code reviews*
