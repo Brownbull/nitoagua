@@ -26,6 +26,8 @@
     "seed:offers:clean": "npx ts-node scripts/local/seed-offer-tests.ts --clean",
     "seed:earnings": "npx ts-node scripts/local/seed-earnings-tests.ts",
     "seed:earnings:clean": "npx ts-node scripts/local/seed-earnings-tests.ts --clean",
+    "seed:verification": "npx ts-node scripts/local/seed-admin-verification-tests.ts",
+    "seed:verification:clean": "npx ts-node scripts/local/seed-admin-verification-tests.ts --clean",
     "seed:earnings:prod": "./scripts/run-with-prod-env.sh npx ts-node scripts/local/seed-earnings-tests.ts",
     "seed:earnings:prod:clean": "./scripts/run-with-prod-env.sh npx ts-node scripts/local/seed-earnings-tests.ts --clean",
     "seed:offers:prod": "./scripts/run-with-prod-env.sh npx ts-node scripts/local/seed-offer-tests.ts",

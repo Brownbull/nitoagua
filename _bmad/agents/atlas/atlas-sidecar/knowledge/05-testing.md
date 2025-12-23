@@ -33,7 +33,7 @@
 | Consumer request | User profile, address | `scripts/local/seed-test-data.ts` |
 | Provider offers | Provider profile, pending requests | `scripts/local/seed-offer-tests.ts` |
 | Earnings dashboard | Completed deliveries with commissions | `scripts/local/seed-earnings-tests.ts` |
-| Admin verification | Pending providers, documents | Per-test seeding |
+| Admin verification | Pending providers, documents | `scripts/local/seed-admin-verification-tests.ts` |
 
 ### Seed Data Commands
 
@@ -46,6 +46,9 @@ npm run seed:offers
 
 # Earnings-specific tests
 npm run seed:earnings
+
+# Admin verification tests
+npm run seed:verification
 
 # Clean and re-seed
 npm run seed:test:clean && npm run seed:test
@@ -353,4 +356,56 @@ timeout 240 npx playwright test tests/e2e/consumer-status-tracking.spec.ts tests
 
 ---
 
-*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6 code reviews*
+## Admin Verification Workflow Tests (Story 11-7)
+
+> Added 2025-12-23 from Story 11-7: Admin Verification (Local)
+
+### Admin Verification Tests (A1-A4)
+
+**Seed Command:**
+```bash
+npm run seed:verification      # Create test providers in various states
+npm run seed:verification:clean  # Remove test data
+```
+
+**Test File:** `tests/e2e/admin-verification-workflow.spec.ts`
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= timeout 180 npx playwright test \
+  tests/e2e/admin-verification-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| A1 | 4 | View verification queue, count, filter tabs |
+| A2 | 5 | Review documents, personal/bank info, navigation |
+| A3 | 6 | Approve/reject actions, confirmation dialogs |
+| A4 | 2 | Email notifications on status change |
+
+**Seed Data Created:**
+| Status | Email | Documents |
+|--------|-------|-----------|
+| pending | pending-provider1@test.local | 3 (cedula, vehiculo, licencia) |
+| pending | pending-provider2@test.local | 0 |
+| more_info_needed | moreinfo-provider@test.local | 1 |
+| rejected | rejected-provider@test.local | 0 |
+| approved | approved-provider@test.local | 2 |
+
+### Code Review Lessons - Story 11-7
+
+**Serial Test Data Consumption:**
+- **Problem:** Tests A3.5 and A3.6 approve/reject providers, consuming data for later tests
+- **Solution:** Configure `test.describe.configure({ mode: "serial" })`, skip later tests if no data
+- **Rule:** Data-mutating tests should run serially and expect some tests to skip
+
+**assertNoErrorState Consistency:**
+- **Problem:** Tests A2.3 and A2.4 navigated to pages without error state check
+- **Solution:** Added `assertNoErrorState(page)` after all page navigations
+- **Rule:** ALL tests that navigate to pages must call `assertNoErrorState(page)` first
+
+---
+
+*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7 code reviews*
