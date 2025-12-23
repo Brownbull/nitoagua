@@ -205,6 +205,18 @@ development_status:
   # Provider Earnings workflow (P11-P12)
   11-11-provider-earnings-local: drafted  # P11-P12: Earnings dashboard, settlement request
   11-12-provider-earnings-production: drafted  # Same tests, production - depends on 11-11
+  # Request Timeout workflow (C5-C7) - What happens when no offers?
+  11-13-request-timeout-local: drafted  # C5-C7: Timeout status, notification, retry
+  11-14-request-timeout-production: drafted  # Same tests, production - depends on 11-13
+  # Consumer Cancellation workflow (C8-C11) - What happens when consumer cancels?
+  11-15-consumer-cancellation-local: drafted  # C8-C11: Cancel pending, cancel with offers, notifications
+  11-16-consumer-cancellation-production: drafted  # Same tests, production - depends on 11-15
+  # Provider Offer Edge Cases (P13-P16) - What happens to provider offers?
+  11-17-provider-offer-edge-cases-local: drafted  # P13-P16: Expire, withdraw, consumer cancels, competitor wins
+  11-18-provider-offer-edge-cases-production: drafted  # Same tests, production - depends on 11-17
+  # Admin Orders & Settlement (A5-A9)
+  11-19-admin-orders-settlement-local: drafted  # A5-A9: View orders, details, settlement queue, approve/reject
+  11-20-admin-orders-settlement-production: drafted  # Same tests, production - depends on 11-19
   epic-11-retrospective: optional
 
   # Epic 11A: Testing-Discovered Gaps (Created from Epic 11 findings)
