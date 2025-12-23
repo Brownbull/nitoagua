@@ -5,7 +5,7 @@
 | **Story ID** | 11-4 |
 | **Epic** | Epic 11 - Playwright Workflow Validation |
 | **Title** | Provider Visibility (Production) |
-| **Status** | drafted |
+| **Status** | ready-for-dev |
 | **Points** | 2 |
 | **Priority** | P1 - High |
 | **Depends On** | Story 11-3 |
