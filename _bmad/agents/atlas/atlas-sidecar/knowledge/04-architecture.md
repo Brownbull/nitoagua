@@ -202,4 +202,26 @@ export const dynamic = "force-dynamic";
 
 ---
 
-*Last verified: 2025-12-23 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8 code reviews*
+### Pricing DRY Enforcement (Story 11-9)
+
+**Problem:** `AMOUNT_OPTIONS` in `request.ts` had hardcoded prices that diverged from `getDeliveryPrice()`.
+
+**Pattern:** All pricing MUST derive from `getDeliveryPrice()` - NO hardcoded price values.
+
+**Fixed Location:** `src/lib/validations/request.ts`
+
+**Code:**
+```typescript
+export const AMOUNT_OPTIONS = [
+  { value: "100" as const, label: "100 L", price: getDeliveryPrice(100) },
+  { value: "1000" as const, label: "1.000 L", price: getDeliveryPrice(1000) },
+  { value: "5000" as const, label: "5.000 L", price: getDeliveryPrice(5000) },
+  { value: "10000" as const, label: "10.000 L", price: getDeliveryPrice(10000) },
+];
+```
+
+**Rule:** When adding new pricing displays, import and call `getDeliveryPrice()` - never hardcode prices.
+
+---
+
+*Last verified: 2025-12-23 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9 code reviews*
