@@ -579,4 +579,64 @@ DISPLAY= timeout 120 npx playwright test tests/e2e/provider-earnings-workflow.sp
 
 ---
 
-*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12 code reviews*
+---
+
+## Request Timeout Workflow Tests (Story 11-13)
+
+> Added 2025-12-23 from Story 11-13: Request Timeout Flow (Local)
+
+### Request Timeout Tests (C5, C6, C7)
+
+**Test File:** `tests/e2e/request-timeout-workflow.spec.ts`
+
+**Seed Dependency:** `npm run seed:test` (includes guest + consumer no_offers requests)
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= timeout 90 npx playwright test \
+  tests/e2e/request-timeout-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| C5.1-C5.3 | 3 | Status badge, Spanish message, timeline state |
+| C6.1-C6.2 | 2 | Consumer notification view, helpful next steps |
+| C7.1-C7.3 | 3 | Retry button visibility, navigation, history display |
+| Integration | 1 | Full timeout flow: status → options → retry |
+
+**Seed Data Added:**
+| Request | Email | Status | Consumer ID |
+|---------|-------|--------|-------------|
+| Guest no_offers | nooffers@test.local | no_offers | null |
+| Consumer no_offers | test-consumer@test.local | no_offers | TEST_CONSUMER.id |
+
+### Code Review Lessons - Story 11-13
+
+**Strict Mode Selector Pattern:**
+- **Problem:** `getByText("Sin Ofertas")` matched 4 elements (badge, heading, card title, address text)
+- **Solution:** Use `.first()` selector: `getByText("Sin Ofertas").first()`
+- **Rule:** When text appears in page title, status badge, AND address field, use `.first()` or more specific selector
+
+**URL Pattern Matching:**
+- **Problem:** Regex `/^https?:\/\/[^/]+(\/request)?$/` didn't match `http://localhost:3005/` (trailing slash)
+- **Solution:** Use `(\/)?` to optionally match trailing slash: `/^https?:\/\/[^/]+(\/)?$/`
+- **Rule:** Home page URLs have trailing slash; include `(\/)?` in URL patterns
+
+**Consumer Login Skip Pattern:**
+- **Problem:** Consumer login tests fail when dev login button not available
+- **Solution:** Use `test.skip()` with `.catch(() => false)` pattern
+- **Pattern:**
+```typescript
+const devLoginButton = page.getByTestId("dev-login-consumer");
+if (await devLoginButton.isVisible().catch(() => false)) {
+  await devLoginButton.click();
+} else {
+  test.skip(true, "Dev login not available");
+}
+```
+
+---
+
+*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12/11-13 code reviews*

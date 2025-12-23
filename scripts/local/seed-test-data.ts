@@ -189,6 +189,22 @@ const SEEDED_REQUESTS = [
     consumer_id: null,
     supplier_id: null,
   },
+  // Story 11-13: Consumer-owned request that timed out (C5-C7 workflow validation)
+  // Used for: consumer history tests, retry pre-fill tests, in-app notification tests
+  {
+    id: "66666666-6666-6666-6666-666666666668",
+    tracking_token: "seed-token-consumer-no-offers",
+    status: "no_offers",
+    guest_phone: TEST_CONSUMER.profile.phone,
+    guest_name: TEST_CONSUMER.profile.name,
+    guest_email: TEST_CONSUMER.email,
+    address: TEST_CONSUMER.profile.address,
+    amount: 5000,
+    special_instructions: "Consumer request that timed out",
+    is_urgent: false,
+    consumer_id: TEST_CONSUMER.id, // Will be mapped to actual ID
+    supplier_id: null,
+  },
 ];
 
 // =============================================================================

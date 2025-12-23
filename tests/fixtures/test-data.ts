@@ -189,6 +189,25 @@ export const SEEDED_NO_OFFERS_REQUEST = {
   supplier_id: null,
 };
 
+/**
+ * Request owned by TEST_CONSUMER in NO_OFFERS state (Story 11-13: C5-C7)
+ * Use for: consumer history with timeout, retry with pre-fill, in-app notification tests
+ */
+export const SEEDED_CONSUMER_NO_OFFERS_REQUEST = {
+  id: "66666666-6666-6666-6666-666666666668",
+  tracking_token: "seed-token-consumer-no-offers",
+  status: "no_offers",
+  guest_phone: TEST_CONSUMER.profile.phone,
+  guest_name: TEST_CONSUMER.profile.name,
+  guest_email: TEST_CONSUMER.email,
+  address: TEST_CONSUMER.profile.address || "Calle Consumidor 456",
+  amount: 5000,
+  special_instructions: "Consumer request that timed out",
+  is_urgent: false,
+  consumer_id: TEST_CONSUMER.id,
+  supplier_id: null,
+};
+
 // =============================================================================
 // CONVENIENCE EXPORTS FOR TESTS
 // =============================================================================
@@ -204,6 +223,7 @@ export const TRACKING_TOKENS = {
   consumerDelivered: SEEDED_CONSUMER_DELIVERED_REQUEST.tracking_token,
   cancelled: SEEDED_CANCELLED_REQUEST.tracking_token,
   noOffers: SEEDED_NO_OFFERS_REQUEST.tracking_token,
+  consumerNoOffers: SEEDED_CONSUMER_NO_OFFERS_REQUEST.tracking_token,
 } as const;
 
 /**
@@ -217,6 +237,7 @@ export const REQUEST_IDS = {
   consumerDelivered: SEEDED_CONSUMER_DELIVERED_REQUEST.id,
   cancelled: SEEDED_CANCELLED_REQUEST.id,
   noOffers: SEEDED_NO_OFFERS_REQUEST.id,
+  consumerNoOffers: SEEDED_CONSUMER_NO_OFFERS_REQUEST.id,
 } as const;
 
 /**
@@ -230,6 +251,7 @@ export const ALL_SEEDED_REQUESTS = [
   SEEDED_CONSUMER_DELIVERED_REQUEST,
   SEEDED_CANCELLED_REQUEST,
   SEEDED_NO_OFFERS_REQUEST,
+  SEEDED_CONSUMER_NO_OFFERS_REQUEST,
 ];
 
 /**
