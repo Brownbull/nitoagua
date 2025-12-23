@@ -211,4 +211,62 @@ Each test must:
 
 ---
 
-*Last verified: 2025-12-20 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E*
+---
+
+## Epic 11 Workflow Validation Patterns
+
+> Added 2025-12-23 from Story 11-3: Provider Visibility (Local)
+
+### Provider Visibility Tests (P7, P8, P9)
+
+**Test File:** `tests/e2e/provider-visibility.spec.ts`
+
+**Seed Dependency:** `npm run seed:offers` (includes notifications)
+
+**Patterns Validated:**
+1. **P7 - Track My Offers:** Offers list with status sections (pending/accepted/history)
+2. **P8 - Acceptance Notification:** Notification bell popover with offer_accepted type
+3. **P9 - Delivery Details:** Full request details page with customer info
+
+**Mobile Testing Pattern:**
+```typescript
+test.use({
+  viewport: { width: 360, height: 780 },
+  isMobile: true,
+  hasTouch: true,
+});
+```
+
+**Notification Seeding:**
+- Added to `scripts/local/seed-offer-tests.ts`
+- Uses valid UUIDs (pattern: `a0000000-0000-0000-0000-00000000XXXX`)
+- Creates both read and unread notifications for testing
+
+**Key Selectors:**
+| Element | Test ID | Usage |
+|---------|---------|-------|
+| Pending offers | `section-pending` | P7 status grouping |
+| Accepted offers | `section-accepted` | P7 + P9 delivery link |
+| Notification bell | `notification-bell` | P8 trigger |
+| Offer cards | `offer-card` | P7 card display |
+| Offer countdown | `offer-countdown` | P7.3 countdown timer |
+| Notification items | `notification-item-${id}` | P8 dynamic testid (use `^=` prefix selector) |
+
+### Code Review Lessons - Story 11-3
+
+**Selector Mismatch Pattern:**
+- **Problem:** Tests using `.catch(() => false)` mask selector mismatches
+- **Solution:** Use `.count() > 0` before assertions to validate element exists
+
+**Countdown Format Handling:**
+- `< 1 hour`: Format is `XX:XX` (e.g., "25:30")
+- `> 1 hour`: Format is `X h MM min` (e.g., "1 h 19 min")
+- **Regex:** `/Expira en\s*(\d{1,2}:\d{2}|\d+ h \d{2} min)/`
+
+**Dynamic TestID Pattern:**
+- Components with dynamic testids (e.g., `notification-item-${id}`) require prefix selectors
+- Use `[data-testid^="notification-item-"]` instead of exact match
+
+---
+
+*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Story 11-3 code review*
