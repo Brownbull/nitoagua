@@ -201,7 +201,7 @@ development_status:
   11-8-admin-verification-production: deployed  # 16/18 tests pass (2 skipped), Atlas code review passed, deployed 2025-12-23
   # Consumer Request Submission workflow (C1-C2)
   11-9-consumer-request-local: done  # Atlas code review passed, pricing DRY fix applied
-  11-10-consumer-request-production: done  # 11/11 tests pass, Atlas code review passed 2025-12-23
+  11-10-consumer-request-production: deployed  # 11/11 tests pass, Atlas code review passed, deployed 2025-12-23
   # Provider Earnings workflow (P11-P12)
   11-11-provider-earnings-local: ready-for-dev  # P11-P12: Earnings dashboard, settlement request
   11-12-provider-earnings-production: drafted  # Same tests, production - depends on 11-11
