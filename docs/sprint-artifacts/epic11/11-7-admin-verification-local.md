@@ -5,7 +5,7 @@
 | **Story ID** | 11-7 |
 | **Epic** | Epic 11 - Playwright Workflow Validation |
 | **Title** | Admin Verification (Local) |
-| **Status** | drafted |
+| **Status** | ready-for-dev |
 | **Points** | 3 |
 | **Priority** | P0 - Critical |
 | **Depends On** | Story 11-1 |

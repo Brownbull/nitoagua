@@ -5,7 +5,7 @@
 | **Story ID** | 11-15 |
 | **Epic** | Epic 11 - Playwright Workflow Validation |
 | **Title** | Consumer Cancellation (Local) |
-| **Status** | drafted |
+| **Status** | ready-for-dev |
 | **Points** | 3 |
 | **Priority** | P1 - High |
 | **Depends On** | Story 11-1 |

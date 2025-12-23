@@ -5,7 +5,7 @@
 | **Story ID** | 11-19 |
 | **Epic** | Epic 11 - Playwright Workflow Validation |
 | **Title** | Admin Orders & Settlement (Local) |
-| **Status** | drafted |
+| **Status** | ready-for-dev |
 | **Points** | 3 |
 | **Priority** | P1 - High |
 | **Depends On** | Story 11-7 |

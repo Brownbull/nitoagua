@@ -5,7 +5,7 @@
 | **Story ID** | 11-17 |
 | **Epic** | Epic 11 - Playwright Workflow Validation |
 | **Title** | Provider Offer Edge Cases (Local) |
-| **Status** | drafted |
+| **Status** | ready-for-dev |
 | **Points** | 3 |
 | **Priority** | P1 - High |
 | **Depends On** | Story 11-1 |
