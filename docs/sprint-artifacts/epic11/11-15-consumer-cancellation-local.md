@@ -5,7 +5,7 @@
 | **Story ID** | 11-15 |
 | **Epic** | Epic 11 - Playwright Workflow Validation |
 | **Title** | Consumer Cancellation (Local) |
-| **Status** | review |
+| **Status** | done |
 | **Points** | 3 |
 | **Priority** | P1 - High |
 | **Depends On** | Story 11-1 |
@@ -173,10 +173,9 @@ Running 18 tests using 1 worker
 
 ### File List
 **New Files:**
-- `tests/e2e/consumer-cancellation-workflow.spec.ts`
+- `tests/e2e/consumer-cancellation-workflow.spec.ts` - 18 tests covering C8-C11 workflows
 
 **Modified Files:**
-- `docs/sprint-artifacts/sprint-status.yaml` (status: in-progress → review)
 - `docs/sprint-artifacts/epic11/11-15-consumer-cancellation-local.md` (this file)
 
 ---
@@ -188,3 +187,4 @@ Running 18 tests using 1 worker
 | 2025-12-23 | Story created | SM |
 | 2025-12-23 | Implementation complete, 18/18 tests passing, C11 gap documented | Claude |
 | 2025-12-24 | C11 gap fixed in Story 11A-2, ACs updated to reflect fix | Claude |
+| 2025-12-24 | Atlas code review: Fixed test title, updated File List | Claude |

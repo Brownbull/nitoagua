@@ -639,4 +639,47 @@ if (await devLoginButton.isVisible().catch(() => false)) {
 
 ---
 
-*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12/11-13 code reviews*
+## Consumer Cancellation Workflow Tests (Story 11-15)
+
+> Added 2025-12-24 from Story 11-15: Consumer Cancellation (Local)
+
+### Consumer Cancellation Tests (C8-C11)
+
+**Test File:** `tests/e2e/consumer-cancellation-workflow.spec.ts`
+
+**Seed Dependency:** `npm run seed:test` + `npm run seed:offers`
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= timeout 90 npx playwright test \
+  tests/e2e/consumer-cancellation-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| C8.1-C8.3 | 3 | Cancel button visible, dialog opens, Volver closes |
+| C9.1-C9.2 | 2 | Cancel with offers - warning shown |
+| C10.1-C10.5 | 5 | Cancelled page UI, Spanish text, Nueva Solicitud button |
+| C11.1-C11.3 | 3 | Provider notification warning when offers exist |
+| Edge Cases | 4 | Delivered, accepted, cancelled, no_offers states |
+| Integration | 1 | Full cancel flow navigation |
+| Spanish | 2 | Language verification |
+
+### Code Review Lessons - Story 11-15
+
+**Test Title Clarity:**
+- **Problem:** Test title said "button visible" but asserted NOT visible
+- **Solution:** Title must match assertion: "Cancel button NOT visible on no_offers request"
+- **Rule:** Test titles must accurately describe the expected behavior being verified
+
+**Terminal Status Cancel Button Pattern:**
+- Cancelled requests: Cancel button NOT visible (already cancelled)
+- Delivered requests: Cancel button NOT visible (completed)
+- No_offers requests: Cancel button NOT visible (timed out - terminal state)
+- Pending/Accepted: Cancel button visible
+
+---
+
+*Last verified: 2025-12-24 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12/11-13/11-15 code reviews*
