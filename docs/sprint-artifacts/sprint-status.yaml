@@ -212,7 +212,7 @@ development_status:
   11-15-consumer-cancellation-local: deployed  # C8-C11: Cancel pending, cancel with offers, notifications - 19/19 tests passing, deployed 2025-12-24
   11-16-consumer-cancellation-production: deployed  # 19/20 pass (1 expected skip), deployed 2025-12-24
   # Provider Offer Edge Cases (P13-P16) - What happens to provider offers?
-  11-17-provider-offer-edge-cases-local: done  # P13-P16: 12/12 tests passing, Atlas code review passed - 2025-12-24
+  11-17-provider-offer-edge-cases-local: deployed  # P13-P16: 12/12 tests passing, deployed 2025-12-24
   11-18-provider-offer-edge-cases-production: drafted  # Same tests, production - depends on 11-17
   # Admin Orders & Settlement (A5-A9)
   11-19-admin-orders-settlement-local: ready-for-dev  # A5-A9: View orders, details, settlement queue, approve/reject
