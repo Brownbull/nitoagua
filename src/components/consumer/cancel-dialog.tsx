@@ -16,6 +16,7 @@ interface CancelDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => Promise<void>;
   isLoading: boolean;
+  activeOfferCount?: number;
 }
 
 export function CancelDialog({
@@ -23,15 +24,26 @@ export function CancelDialog({
   onOpenChange,
   onConfirm,
   isLoading,
+  activeOfferCount = 0,
 }: CancelDialogProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Cancelar Solicitud</AlertDialogTitle>
-          <AlertDialogDescription>
-            ¿Estás seguro de que quieres cancelar esta solicitud? Esta acción no
-            se puede deshacer.
+          <AlertDialogDescription asChild>
+            <div className="space-y-3">
+              <p>
+                ¿Estás seguro de que quieres cancelar esta solicitud? Esta acción no
+                se puede deshacer.
+              </p>
+              {activeOfferCount > 0 && (
+                <div className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg" data-testid="active-offers-warning">
+                  ⚠️ Hay {activeOfferCount} {activeOfferCount === 1 ? "oferta activa" : "ofertas activas"} de repartidores.
+                  Al cancelar, serán notificados.
+                </div>
+              )}
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

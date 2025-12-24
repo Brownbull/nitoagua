@@ -279,11 +279,71 @@ async function handleCancelAction(
     );
   }
 
-  // TODO: Epic 5 - Send notification about cancellation
-  console.log("[NOTIFY] Request cancelled - notification would send here", {
-    requestId,
-    cancelledBy: userId || "guest",
-  });
+  // Handle offer invalidation and provider notifications
+  const adminClient = createAdminClient();
+
+  // Get affected offers (only active ones)
+  const { data: activeOffers } = await adminClient
+    .from("offers")
+    .select("id, provider_id")
+    .eq("request_id", requestId)
+    .eq("status", "active");
+
+  if (activeOffers && activeOffers.length > 0) {
+    // Invalidate all active offers
+    const { error: updateOffersError } = await adminClient
+      .from("offers")
+      .update({ status: "request_cancelled" })
+      .eq("request_id", requestId)
+      .eq("status", "active");
+
+    if (updateOffersError) {
+      console.error("[API/REQUESTS/PATCH]", {
+        action: "invalidate_offers",
+        requestId,
+        error: updateOffersError.message,
+      });
+      // Continue anyway - request is already cancelled
+    }
+
+    // Get request details for notification message
+    const { data: requestDetails } = await adminClient
+      .from("water_requests")
+      .select("amount, address")
+      .eq("id", requestId)
+      .single();
+
+    // Create notifications for each affected provider (fire and forget)
+    const notifications = activeOffers.map((offer) => ({
+      user_id: offer.provider_id,
+      type: "offer_request_cancelled",
+      title: "Solicitud cancelada",
+      message: `El cliente canceló la solicitud para ${requestDetails?.amount || ""}L en ${requestDetails?.address || "la dirección"}`,
+      data: {
+        offer_id: offer.id,
+        request_id: requestId,
+      },
+      read: false,
+    }));
+
+    adminClient
+      .from("notifications")
+      .insert(notifications)
+      .then(({ error: notifyError }) => {
+        if (notifyError) {
+          console.error("[API/REQUESTS/PATCH]", {
+            action: "notify_providers",
+            requestId,
+            error: notifyError.message,
+          });
+        } else {
+          console.log("[NOTIFY] Providers notified of request cancellation", {
+            requestId,
+            providerCount: notifications.length,
+          });
+        }
+      });
+  }
 
   // Return success response
   return NextResponse.json(

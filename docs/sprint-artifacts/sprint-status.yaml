@@ -209,7 +209,7 @@ development_status:
   11-13-request-timeout-local: done  # C5-C7: 7/9 tests passing (2 skipped expected), Atlas code review passed - 2025-12-23
   11-14-request-timeout-production: done  # 7/9 pass, 2 skipped expected, Atlas review passed - 2025-12-23
   # Consumer Cancellation workflow (C8-C11) - What happens when consumer cancels?
-  11-15-consumer-cancellation-local: ready-for-dev  # C8-C11: Cancel pending, cancel with offers, notifications
+  11-15-consumer-cancellation-local: review  # C8-C11: Cancel pending, cancel with offers, notifications - 18/18 tests passing
   11-16-consumer-cancellation-production: drafted  # Same tests, production - depends on 11-15
   # Provider Offer Edge Cases (P13-P16) - What happens to provider offers?
   11-17-provider-offer-edge-cases-local: ready-for-dev  # P13-P16: Expire, withdraw, consumer cancels, competitor wins
@@ -226,6 +226,7 @@ development_status:
   # Priority: P0 - Critical (blocks CHAIN-1 completion)
   epic-11a: contexted  # Tech spec created 2025-12-22
   11a-1-p10-delivery-completion: done  # FR31: Mark request as delivered - APPROVED 2025-12-22 Atlas code review passed
+  11a-2-c11-provider-cancellation-notification: done  # C11: Provider notified when consumer cancels request with offers - Atlas code review passed 2025-12-24
 
   # Epic 12: Consumer UX Enhancements (depends on Epic 10 consumer flow)
   epic-12: backlog

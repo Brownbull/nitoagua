@@ -50,14 +50,47 @@ During CHAIN-1 testing (Story 11-1), we discovered that the **P10 - Provider Com
 - Epic 7-8 redesigned provider UI with new flow: `/provider/offers` → `/provider/deliveries/[id]`
 - Delivery completion action was not migrated to new UI
 
+**Resolution:** Story 11A-1 implemented and deployed 2025-12-22.
+
+---
+
+### GAP-2: C11 - Provider Cancellation Notification (High)
+
+| Attribute | Value |
+|-----------|-------|
+| **FR Reference** | FR28: Provider receives notifications about offer status |
+| **Discovery** | Story 11-15 Consumer Cancellation workflow testing |
+| **Current State** | Not implemented - TODO comment in code |
+| **Location** | `src/app/api/requests/[id]/route.ts:~283` |
+| **Impact** | Providers not notified when consumer cancels request with offers |
+
+**Evidence:**
+```typescript
+// Current code (route.ts handleCancelAction function)
+// TODO: Epic 5 - Send notification about cancellation
+```
+
+**Root Cause:**
+- Consumer cancellation was implemented in Epic 4 (Story 4-5)
+- Offer system was added later in Epic 8
+- No integration between cancel flow and offer notification system
+
+**What's Missing:**
+1. Offers not invalidated when request cancelled
+2. Providers not notified when their offer's request is cancelled
+3. No warning to consumer about existing offers when cancelling
+
+**Resolution:** Story 11A-2 created to implement full C11 workflow.
+
 ---
 
 ## Stories
 
 | Story | Title | Priority | Points | Status |
 |-------|-------|----------|--------|--------|
-| 11A-1 | P10 Delivery Completion | P0 | 3 | ready-for-dev |
-| 11A-2 | (Reserved for future gaps) | - | - | - |
+| 11A-1 | P10 Delivery Completion | P0 | 3 | done |
+| 11A-2 | C11 Provider Cancellation Notification | P1 | 3 | ready-for-dev |
+| 11A-3 | (Reserved for future gaps) | - | - | - |
 
 ---
 
@@ -172,9 +205,14 @@ Expected result: 5 passed, 0 skipped
 
 As Epic 11 testing continues, additional gaps may be discovered and added here:
 
-- 11A-2: (TBD based on 11-2 production testing)
-- 11A-3: (TBD based on 11-3 provider visibility testing)
+- 11A-3: (TBD based on provider offer edge cases testing - Story 11-17)
+- 11A-4: (TBD based on admin orders testing - Story 11-19)
 - etc.
+
+### Completed/Resolved
+
+- ✅ **GAP-1 (P10)**: Resolved in Story 11A-1 (2025-12-22)
+- 🔲 **GAP-2 (C11)**: Story 11A-2 ready-for-dev (2025-12-23)
 
 ---
 

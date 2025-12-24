@@ -11,12 +11,14 @@ interface CancelRequestButtonProps {
   requestId: string;
   trackingToken?: string;
   variant?: "default" | "danger";
+  activeOfferCount?: number;
 }
 
 export function CancelRequestButton({
   requestId,
   trackingToken,
   variant = "default",
+  activeOfferCount = 0,
 }: CancelRequestButtonProps) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -76,6 +78,7 @@ export function CancelRequestButton({
         onOpenChange={setIsDialogOpen}
         onConfirm={handleCancel}
         isLoading={isLoading}
+        activeOfferCount={activeOfferCount}
       />
     </>
   );

@@ -159,7 +159,12 @@ function TrackingContent({ request, trackingToken }: TrackingContentProps) {
             </Button>
 
             {/* Cancel button */}
-            <CancelRequestButton requestId={request.id} trackingToken={trackingToken} variant="danger" />
+            <CancelRequestButton
+              requestId={request.id}
+              trackingToken={trackingToken}
+              variant="danger"
+              activeOfferCount={request.active_offer_count}
+            />
           </>
         )}
 
