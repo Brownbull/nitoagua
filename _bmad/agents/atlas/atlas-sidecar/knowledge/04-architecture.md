@@ -224,4 +224,29 @@ export const AMOUNT_OPTIONS = [
 
 ---
 
-*Last verified: 2025-12-23 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9 code reviews*
+### Workflow Documentation Pattern (Story 11-21)
+
+**Pattern:** Comprehensive workflow documentation with test traceability.
+
+**Location:** `docs/workflows/`
+
+| Document | Persona | Workflows | Coverage |
+|----------|---------|-----------|----------|
+| `consumer-workflows.md` | Doña María | C1-C7 | 100% |
+| `provider-workflows.md` | Don Pedro | P1-P16 | 87.5% (P2, P12 backlogged) |
+| `admin-workflows.md` | Admin | A1-A9 | 100% |
+
+**Workflow ID Convention:**
+- **C#:** Consumer workflows (C1=Request Water, C2=Accept Offer, etc.)
+- **P#:** Provider workflows (P1=Register, P5=Browse Requests, P6=Submit Offer, etc.)
+- **A#:** Admin workflows (A1=View Queue, A3=Approve/Reject, etc.)
+
+**Cross-Reference:** Each workflow doc links to Atlas Section 8 (Workflow Chains).
+
+**Backlogged Gaps (Epic 12):**
+- P2: Document upload mechanics (file upload not E2E tested)
+- P12: Withdrawal request button click (seeded only)
+
+---
+
+*Last verified: 2025-12-24 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21 code reviews*
