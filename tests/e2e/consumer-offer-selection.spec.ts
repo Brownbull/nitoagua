@@ -125,7 +125,7 @@ test.describe("Consumer Offer Selection (Story 10-2)", () => {
       await expect(page.getByTestId("selection-modal-title")).toContainText("Confirmar Selección");
       await expect(page.getByText("Entrega estimada")).toBeVisible();
       await expect(page.getByText("Precio total")).toBeVisible();
-      await expect(page.getByText("Repartidor verificado")).toBeVisible();
+      await expect(page.getByText("Proveedor verificado")).toBeVisible();
 
       // Should NOT have English text
       await expect(page.getByText("Confirm Selection")).not.toBeVisible();

@@ -74,10 +74,13 @@ export function OfferCard({
     .toUpperCase()
     .slice(0, 2);
 
-  // Mock rating data (in real app this would come from the offer/profile)
-  // For now we use placeholder values to match the mockup
-  const rating = 4.8;
-  const deliveryCount = 127;
+  // NOTE: Provider reputation metrics (rating, delivery count) intentionally removed
+  // as part of Story 12-5 to eliminate fake social proof.
+  // Future Implementation Pattern (when real data available):
+  // - Only show metrics when provider has >50 completed deliveries
+  // - Rating should come from real customer reviews
+  // - Use: const { rating, deliveryCount } = offer.profiles || {}
+  // - Condition: {deliveryCount >= 50 && <span>{rating} • {deliveryCount} entregas</span>}
 
   return (
     <div
@@ -113,8 +116,9 @@ export function OfferCard({
             >
               {providerName}
             </p>
+            {/* Provider verified badge - factual statement only */}
             <p className="text-xs text-gray-500">
-              {rating} • {deliveryCount} entregas
+              Proveedor verificado
             </p>
           </div>
         </div>
