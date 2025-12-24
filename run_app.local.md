@@ -116,6 +116,46 @@ feature → develop → staging → main
 2. Merge `staging` → `main` (production deploy)
 3. Delete feature branches after successful merge
 
+## Current Sprint Status
+
+**Last Updated:** 2025-12-24
+
+### Completed Epics
+| Epic | Title | Status |
+|------|-------|--------|
+| 1 | Foundation & Infrastructure | ✅ Complete |
+| 2 | Consumer Water Request | ✅ Complete |
+| 3 | Supplier Dashboard | ✅ Complete |
+| 4 | User Accounts & Profiles | ✅ Complete |
+| 5 | Notifications & Communication | ✅ Complete (MVP) |
+| 6 | Admin Operations Panel | ✅ Complete |
+| 7 | Provider Onboarding | ✅ Complete |
+| 8 | Provider Offer System | ✅ Complete |
+| 9 | CORFO Application | ✅ Complete |
+| 10 | Consumer Offer Selection | ✅ Complete |
+| 11 | Playwright Workflow Validation | ✅ Complete |
+
+### Current Epic: 12 - Consumer UX Enhancements
+
+| Story | Title | Status |
+|-------|-------|--------|
+| 12-1 | Map location pinpoint | backlog |
+| 12-2 | Payment method selection | backlog |
+| 12-3 | Negative status states | backlog |
+| 12-4 | Urgency pricing display | backlog |
+| 12-5 | Remove fake social proof | backlog |
+| 12-6 | Web Push Notifications | **drafted** |
+
+**Next Steps:**
+1. Context Epic 12 (`/bmad:bmm:workflows:create-architecture`)
+2. Or start with 12-6 (`/bmad:bmm:workflows:dev-story 12-6`)
+
+### Backlogged Items (from Epic 11)
+- P2: Document upload E2E testing
+- P12: Withdrawal request E2E testing
+
+---
+
 ## BMAD Suite
 
 The project uses BMAD (Business Method for Agile Development) located in `_bmad/`.
