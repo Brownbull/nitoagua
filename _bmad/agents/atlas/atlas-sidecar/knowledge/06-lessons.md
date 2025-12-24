@@ -213,4 +213,27 @@
 
 ---
 
-*Last verified: 2025-12-22 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2 implementations*
+---
+
+### Story 11-19: Admin Orders & Settlement (2025-12-24)
+
+**Issues Found in Code Review:**
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **Missing `force-dynamic` on admin pages** | Used `revalidate = 30` instead of force-dynamic for admin dashboards | Admin pages with real-time counts MUST use `export const dynamic = "force-dynamic"` |
+| **Missing `assertNoErrorState` in tests** | New test file didn't follow testing patterns | Call `assertNoErrorState(page)` after EVERY `page.goto()` in tests |
+| **Arbitrary `waitForTimeout` delays** | Test used `waitForTimeout(500)` for search debounce | Use element-based waits (e.g., `expect(page.getByTestId("title")).toBeVisible()`) |
+| **Unused constants in test files** | Dead code left from development | Remove unused constants during review |
+| **Wrong import paths** | Test file used non-existent `../support/helpers/assertions` | Use `../fixtures/error-detection` for assertNoErrorState import |
+
+**Key Patterns from Story 11-19:**
+
+- **Admin dashboard caching:** ALWAYS use `export const dynamic = "force-dynamic"` for admin dashboards
+- **Import path for error detection:** `import { assertNoErrorState } from "../fixtures/error-detection"`
+- **Wait pattern:** Replace `waitForTimeout()` with element-visible assertions
+- **Test file cleanup:** Remove unused constants and fix import paths during initial review
+
+---
+
+*Last verified: 2025-12-24 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2, 11-19 implementations*
