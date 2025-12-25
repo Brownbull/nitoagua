@@ -241,8 +241,8 @@ development_status:
   # Phase 1: Quick Wins (UI-only changes)
   # -------------------------------------
   12-5-remove-fake-social-proof: done  # P0: Replace fake stats with qualitative trust signals, 4 ACs - COMPLETE 2025-12-24
-  12-3-negative-status-states: drafted  # P0: Clear UI for timeout/cancelled states, 5 ACs
-  12-7-ui-validation-local: drafted  # Checkpoint: Playwright tests for 12-3, 12-5 on local
+  12-3-negative-status-states: done  # P0: Clear UI for timeout/cancelled states, 5 ACs - Atlas code review passed 2025-12-25
+  12-7-ui-validation-local: done  # Checkpoint: Playwright tests for 12-3, 12-5 on local - 33/33 tests passing, Atlas code review passed 2025-12-25
   12-8-ui-validation-production: drafted  # Checkpoint: Playwright tests for 12-3, 12-5 on production
 
   # Phase 2: Request Form Enhancements

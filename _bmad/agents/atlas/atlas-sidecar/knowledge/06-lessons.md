@@ -236,4 +236,31 @@
 
 ---
 
-*Last verified: 2025-12-24 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2, 11-19 implementations*
+### Story 12-3: Negative Status States (2025-12-25)
+
+**Issues Found in Code Review:**
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **Seed script missing `cancelled_by` mapping** | `cancelled_by` field referenced static ID, not actual user ID | Map ALL foreign key fields in seed scripts: `supplier_id`, `consumer_id`, AND `cancelled_by` |
+| **Test selectors matched multiple elements** | `getByText("Cancelado")` matched timeline step AND cancellation timestamp | Use `getByTestId()` for unique selectors when text appears multiple times |
+| **Inconsistent cancelled_by logic** | Track page only checked `null`, request-status-client checked `null OR consumer_id` | Align logic across all pages that handle the same state |
+| **Missing `assertNoErrorState` calls** | New test file didn't follow testing patterns | Import from `../fixtures/error-detection` and call after EVERY `page.goto()` |
+| **Tests not using merged-fixtures** | Test file used plain `@playwright/test` import | Use `import { test, expect } from "../support/fixtures/merged-fixtures"` |
+| **Missing mobile viewport test** | DoD required mobile testing but no test existed | Add `test.use({ viewport: { width: 360, height: 780 }, isMobile: true })` test block |
+
+**Key Patterns from Story 12-3:**
+
+- **Foreign key mapping in seed scripts:** ALL FK fields must be mapped to actual user IDs:
+  ```typescript
+  if (mapped.cancelled_by === TEST_SUPPLIER.id) {
+    mapped.cancelled_by = userIds.supplierActualId;
+  }
+  ```
+- **Strict mode violations:** When `getByText()` matches multiple elements, use `getByTestId()` or `.first()`
+- **Cancelled state detection:** Check BOTH `cancelled_by === null` AND `cancelled_by === consumer_id`
+- **Component test IDs:** Use data-testid with variant suffix: `data-testid="negative-status-{variant}"`
+
+---
+
+*Last verified: 2025-12-25 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2, 11-19, 12-3 implementations*
