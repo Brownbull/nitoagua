@@ -428,3 +428,37 @@ export async function updatePricingSettings(
     };
   }
 }
+
+/**
+ * Get urgency surcharge percentage from admin settings
+ * Public function - no authentication required (read-only)
+ * Story 12-4: AC12.4.2 - Dynamic surcharge display
+ *
+ * @returns Urgency surcharge percentage (default 10 if not set)
+ */
+export async function getUrgencySurchargePercent(): Promise<number> {
+  try {
+    const adminClient = createAdminClient();
+
+    const { data, error } = await adminClient
+      .from("admin_settings")
+      .select("value")
+      .eq("key", "urgency_surcharge_percent")
+      .single();
+
+    if (error || !data) {
+      console.log("[ADMIN] Urgency surcharge not found in DB, using default 10%");
+      return DEFAULT_PRICING_SETTINGS.urgency_surcharge_percent;
+    }
+
+    // JSONB value is stored as { value: number }
+    const value = typeof data.value === "object" && data.value !== null
+      ? (data.value as { value: number }).value
+      : (data.value as number);
+
+    return value ?? DEFAULT_PRICING_SETTINGS.urgency_surcharge_percent;
+  } catch (err) {
+    console.error("[ADMIN] Error fetching urgency surcharge:", err);
+    return DEFAULT_PRICING_SETTINGS.urgency_surcharge_percent;
+  }
+}

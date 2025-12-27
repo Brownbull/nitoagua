@@ -243,13 +243,13 @@ development_status:
   12-5-remove-fake-social-proof: done  # P0: Replace fake stats with qualitative trust signals, 4 ACs - COMPLETE 2025-12-24
   12-3-negative-status-states: done  # P0: Clear UI for timeout/cancelled states, 5 ACs - Atlas code review passed 2025-12-25
   12-7-ui-validation-local: done  # Checkpoint: Playwright tests for 12-3, 12-5 on local - 33/33 tests passing, Atlas code review passed 2025-12-25
-  12-8-ui-validation-production: drafted  # Checkpoint: Playwright tests for 12-3, 12-5 on production
+  12-8-ui-validation-production: done  # Checkpoint: Playwright tests for 12-3, 12-5 on production - 33/33 tests pass, Atlas code review passed
 
   # Phase 2: Request Form Enhancements
   # ----------------------------------
-  12-2-payment-method-selection: drafted  # P1: Cash/Transfer selection in request form, 5 ACs
-  12-4-urgency-pricing-display: drafted  # P1: Show surcharge percentage on urgency toggle, 5 ACs
-  12-1-map-location-pinpoint: drafted  # P1: Google Maps pinpoint after address entry, 5 ACs
+  12-2-payment-method-selection: done  # P1: Cash/Transfer selection - Atlas code review passed 2025-12-26, 3 auto-fixes, 16 E2E tests
+  12-4-urgency-pricing-display: done  # P1: Show surcharge percentage on urgency toggle, 5 ACs - Atlas code review passed 2025-12-26, 20 E2E tests
+  12-1-map-location-pinpoint: done  # P1: Leaflet map pinpoint after address entry, 5 ACs - Atlas code review passed 2025-12-27, 1 fix (confirm button disabled until loaded), 14 E2E tests
   12-9-form-enhancements-local: drafted  # Checkpoint: Playwright tests for 12-1, 12-2, 12-4 on local
   12-10-form-enhancements-production: drafted  # Checkpoint: Playwright tests on production
 

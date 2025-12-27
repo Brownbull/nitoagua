@@ -445,6 +445,7 @@ export type Database = {
           is_urgent: boolean | null
           latitude: number | null
           longitude: number | null
+          payment_method: string | null
           special_instructions: string | null
           status: string
           supplier_id: string | null
@@ -472,6 +473,7 @@ export type Database = {
           is_urgent?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          payment_method?: string | null
           special_instructions?: string | null
           status?: string
           supplier_id?: string | null
@@ -499,6 +501,7 @@ export type Database = {
           is_urgent?: boolean | null
           latitude?: number | null
           longitude?: number | null
+          payment_method?: string | null
           special_instructions?: string | null
           status?: string
           supplier_id?: string | null
