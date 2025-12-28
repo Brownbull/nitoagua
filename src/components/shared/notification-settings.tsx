@@ -289,13 +289,13 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       case "granted":
         // Permission granted but not subscribed to push
         return {
-          text: "Activadas",
+          text: "Desactivadas",
           description: pushSupported
-            ? "Activa push para recibir alertas con la app cerrada"
-            : "Recibirás notificaciones de NitoAgua",
-          icon: CheckCircle,
-          color: "text-green-600",
-          bgColor: "bg-green-50",
+            ? "Activa para recibir alertas con la app cerrada"
+            : "Activa para recibir notificaciones",
+          icon: AlertCircle,
+          color: "text-amber-600",
+          bgColor: "bg-amber-50",
           isLoading: false,
         };
       case "denied":
@@ -360,7 +360,8 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
 
   const statusInfo = getStatusInfo();
   const StatusIcon = statusInfo.icon;
-  const isToggleChecked = pushState === "subscribed" || permission === "granted";
+  // Toggle is checked only if actively subscribed to push (not just permission granted)
+  const isToggleChecked = pushState === "subscribed";
   const isToggleDisabled = requesting || pushState === "subscribing" || !pushSupported;
 
   return (
