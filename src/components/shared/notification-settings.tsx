@@ -67,13 +67,15 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       !("PushManager" in window)
     ) {
       setPushSupported(false);
+      setPushError("Push no soportado en este navegador");
       return;
     }
 
     // Check if VAPID is configured
     if (!isVapidConfigured()) {
-      console.warn("[NotificationSettings] VAPID not configured");
+      console.warn("[NotificationSettings] VAPID not configured - NEXT_PUBLIC_VAPID_PUBLIC_KEY is empty");
       setPushSupported(false);
+      setPushError("Push no configurado en el servidor");
       return;
     }
 
@@ -85,6 +87,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       }
     } catch (err) {
       console.error("[NotificationSettings] Error checking subscription:", err);
+      setPushError("Error al verificar suscripción");
     }
   }, []);
 
@@ -259,6 +262,18 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       };
     }
 
+    // Show when VAPID is not configured
+    if (!pushSupported && pushError) {
+      return {
+        text: "No disponible",
+        description: pushError,
+        icon: AlertCircle,
+        color: "text-amber-600",
+        bgColor: "bg-amber-50",
+        isLoading: false,
+      };
+    }
+
     if (pushState === "subscribed" && permission === "granted") {
       return {
         text: "Push activo",
@@ -346,7 +361,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
   const statusInfo = getStatusInfo();
   const StatusIcon = statusInfo.icon;
   const isToggleChecked = pushState === "subscribed" || permission === "granted";
-  const isToggleDisabled = requesting || pushState === "subscribing";
+  const isToggleDisabled = requesting || pushState === "subscribing" || !pushSupported;
 
   return (
     <div
