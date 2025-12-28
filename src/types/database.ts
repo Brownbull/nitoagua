@@ -7,10 +7,30 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -262,6 +282,7 @@ export type Database = {
           price_5000l: number | null
           rejection_reason: string | null
           role: string
+          rut: string | null
           service_area: string | null
           special_instructions: string | null
           suspension_reason: string | null
@@ -292,6 +313,7 @@ export type Database = {
           price_5000l?: number | null
           rejection_reason?: string | null
           role: string
+          rut?: string | null
           service_area?: string | null
           special_instructions?: string | null
           suspension_reason?: string | null
@@ -322,6 +344,7 @@ export type Database = {
           price_5000l?: number | null
           rejection_reason?: string | null
           role?: string
+          rut?: string | null
           service_area?: string | null
           special_instructions?: string | null
           suspension_reason?: string | null
@@ -423,6 +446,44 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       water_requests: {
         Row: {
           accepted_at: string | null
@@ -446,7 +507,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           payment_method: string | null
-          special_instructions: string | null
+          special_instructions: string
           status: string
           supplier_id: string | null
           timed_out_at: string | null
@@ -474,7 +535,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           payment_method?: string | null
-          special_instructions?: string | null
+          special_instructions: string
           status?: string
           supplier_id?: string | null
           timed_out_at?: string | null
@@ -488,7 +549,6 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           comuna_id?: string | null
-          in_transit_at?: string | null
           consumer_id?: string | null
           created_at?: string | null
           decline_reason?: string | null
@@ -498,11 +558,12 @@ export type Database = {
           guest_name?: string | null
           guest_phone?: string
           id?: string
+          in_transit_at?: string | null
           is_urgent?: boolean | null
           latitude?: number | null
           longitude?: number | null
           payment_method?: string | null
-          special_instructions?: string | null
+          special_instructions?: string
           status?: string
           supplier_id?: string | null
           timed_out_at?: string | null
@@ -598,7 +659,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_view_supplier_profile: {
+        Args: { profile_id: string }
+        Returns: boolean
+      }
+      select_offer: {
+        Args: { p_offer_id: string; p_request_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
@@ -727,7 +795,11 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
 } as const
+

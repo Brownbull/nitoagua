@@ -251,11 +251,11 @@ development_status:
   12-4-urgency-pricing-display: done  # P1: Show surcharge percentage on urgency toggle, 5 ACs - Atlas code review passed 2025-12-26, 20 E2E tests
   12-1-map-location-pinpoint: done  # P1: Leaflet map pinpoint after address entry, 5 ACs - Atlas code review passed 2025-12-27, 1 fix (confirm button disabled until loaded), 14 E2E tests
   12-9-form-enhancements-local: done  # Checkpoint: 50/50 tests passing (map, payment, urgency) - Atlas code review passed 2025-12-27, 3 fixes (import pattern, AC doc, filename)
-  12-10-form-enhancements-production: drafted  # Checkpoint: Playwright tests on production
+  12-10-form-enhancements-production: done  # 50/50 tests pass - Phase 2 complete 2025-12-27
 
   # Phase 3: Push Notifications
   # ---------------------------
-  12-6-web-push-notifications: drafted  # P1: Android PWA push notifications, 8 ACs
+  12-6-web-push-notifications: in-progress  # P1: Android PWA push notifications, 12 ACs (4 Atlas-suggested)
   12-11-push-notifications-local: drafted  # Checkpoint: Push subscription tests + manual Android testing
   12-12-push-notifications-production: drafted  # Checkpoint: Production push + Edge Function validation
 

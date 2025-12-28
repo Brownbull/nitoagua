@@ -81,6 +81,23 @@ Consolidated verbose entries into tables. Token count: ~9,850 → ~8,450.
   - P12: Withdrawal request button E2E testing
 - **Status:** Story marked `done`, sprint-status synced
 
+### 2025-12-27: Story 12-6 Atlas-Enhanced Creation
+- **Story Created:** 12-6 Web Push Notifications
+- **Workflow Chain Analysis:** 6 workflows identified as affected
+  - C3 (Consumer Status Tracking), C5 (Request Timeout)
+  - P7 (Track My Offers), P8 (Acceptance Notification)
+  - Consumer Request (V2), Provider Offer Flow
+- **Atlas-Suggested ACs Added:** 4 new acceptance criteria (12.6.9-12.6.12)
+  - Notification Coordination (complement email, don't replace)
+  - Subscription Lifecycle (renewal, cleanup, re-subscribe)
+  - Offline Queue (verify browser queueing)
+  - Duplicate Prevention (foreground detection, tagging)
+- **Tasks Created:** 10 detailed task groups with 45+ subtasks
+- **Files Updated:**
+  - `docs/sprint-artifacts/epic12/12-6-web-push-notifications.md` (ready-for-dev)
+  - Section 2 (Features): Added Web Push Notifications to Platform Features
+- **Status:** Story marked `ready-for-dev`, sprint-status synced
+
 ### 2025-12-22: Epic 10 Completion
 - **Stories Completed:** 10-6 (PWA Settings), 10-7 (Mobile Adaptability)
 - **App Version:** Updated to 1.0.0 (package.json, sw.js, env)

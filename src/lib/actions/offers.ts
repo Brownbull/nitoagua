@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { sendOfferAcceptedEmail } from "@/lib/email/send-provider-offer-notification";
+import {
+  triggerOfferAcceptedPush,
+  triggerNewOfferPush,
+  triggerRequestFilledPush,
+} from "@/lib/push/trigger-push";
 
 // Types for the request browser
 export interface AvailableRequest {
@@ -639,6 +644,12 @@ export async function createOffer(
         message: `Un proveedor ha enviado una oferta para tu solicitud de ${request.amount} litros`,
         data: { offer_id: offer.id, request_id: requestId },
       });
+
+    // AC12.6.7: Send push notification for new offer
+    // Note: offerCount is approximate (this offer just added)
+    triggerNewOfferPush(request.consumer_id, requestId, request.amount, 1).catch(
+      (err) => console.error("[Offers] Push notification error:", err)
+    );
   }
 
   // Revalidate relevant paths
@@ -1235,6 +1246,11 @@ export async function notifyProviderOfferAccepted(
     }
   }
 
+  // AC12.6.7: Send push notification for offer accepted
+  triggerOfferAcceptedPush(providerId, request.id, request.amount, comunaName).catch(
+    (err) => console.error("[Offers] Push notification error:", err)
+  );
+
   console.log(`[Offers] Notified provider ${providerId} of offer acceptance: ${offerId}`);
 
   return {
@@ -1456,6 +1472,13 @@ async function notifyOtherProvidersOfferCancelled(
   } else {
     console.log(
       `[SelectOffer] Notified ${notifications.length} providers of request_filled`
+    );
+  }
+
+  // AC12.6.7: Send push notifications to other providers
+  for (const offer of cancelledOffers) {
+    triggerRequestFilledPush(offer.provider_id, requestId).catch(
+      (err) => console.error("[SelectOffer] Push notification error:", err)
     );
   }
 }
