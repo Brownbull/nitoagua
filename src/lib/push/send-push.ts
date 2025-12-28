@@ -14,14 +14,33 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * to a user's subscribed devices.
  */
 
-// Configure web-push with VAPID keys
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:soporte@nitoagua.cl";
+// Lazy initialization flag
+let vapidInitialized = false;
 
-// Initialize web-push with VAPID details
-if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+/**
+ * Initialize web-push with VAPID details (lazy, on first use)
+ * This prevents build-time errors when env vars are not available
+ */
+function initVapid(): boolean {
+  if (vapidInitialized) return true;
+
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
+  const privateKey = process.env.VAPID_PRIVATE_KEY || "";
+  const subject = process.env.VAPID_SUBJECT || "mailto:soporte@nitoagua.cl";
+
+  if (!publicKey || !privateKey) {
+    console.warn("[Push] VAPID keys not configured");
+    return false;
+  }
+
+  try {
+    webpush.setVapidDetails(subject, publicKey, privateKey);
+    vapidInitialized = true;
+    return true;
+  } catch (error) {
+    console.error("[Push] Error initializing VAPID:", error);
+    return false;
+  }
 }
 
 export interface PushPayload {
@@ -54,9 +73,9 @@ export async function sendPushToUser(
   userId: string,
   notification: PushPayload
 ): Promise<SendPushResult> {
-  // Check if VAPID is configured
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-    console.warn("[Push] VAPID keys not configured, skipping push send");
+  // Initialize VAPID on first use (lazy initialization)
+  if (!initVapid()) {
+    console.warn("[Push] VAPID not configured, skipping push send");
     return { success: true, sent: 0, total: 0, cleaned: 0 };
   }
 
