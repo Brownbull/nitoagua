@@ -21,6 +21,8 @@ interface OfferCardProps {
   isBestOffer?: boolean;
   /** Whether this is the first card (gets filled button) */
   isFirstCard?: boolean;
+  /** Whether the request is urgent - AC12.4.4 */
+  isUrgent?: boolean;
 }
 
 /**
@@ -39,6 +41,7 @@ export function OfferCard({
   onExpire,
   isBestOffer = false,
   isFirstCard = false,
+  isUrgent = false,
 }: OfferCardProps) {
   // Track local expired state for real-time updates - AC10.3.4
   const [localExpired, setLocalExpired] = useState(false);
@@ -123,7 +126,7 @@ export function OfferCard({
           </div>
         </div>
 
-        {/* Price + Best offer badge */}
+        {/* Price + Best offer badge + Urgency badge */}
         <div className="text-right">
           <p
             className="text-xl font-bold text-gray-900"
@@ -133,6 +136,15 @@ export function OfferCard({
           </p>
           {isBestOffer && !isExpired && (
             <span className="text-xs font-medium text-[#10B981]">Mejor precio</span>
+          )}
+          {/* Urgency badge - AC12.4.4 */}
+          {isUrgent && !isExpired && (
+            <span
+              className="inline-block mt-1 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-semibold rounded-full"
+              data-testid="urgency-badge"
+            >
+              ⚡ Urgente
+            </span>
           )}
         </div>
       </div>

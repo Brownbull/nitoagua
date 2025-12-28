@@ -250,7 +250,7 @@ development_status:
   12-2-payment-method-selection: done  # P1: Cash/Transfer selection - Atlas code review passed 2025-12-26, 3 auto-fixes, 16 E2E tests
   12-4-urgency-pricing-display: done  # P1: Show surcharge percentage on urgency toggle, 5 ACs - Atlas code review passed 2025-12-26, 20 E2E tests
   12-1-map-location-pinpoint: done  # P1: Leaflet map pinpoint after address entry, 5 ACs - Atlas code review passed 2025-12-27, 1 fix (confirm button disabled until loaded), 14 E2E tests
-  12-9-form-enhancements-local: drafted  # Checkpoint: Playwright tests for 12-1, 12-2, 12-4 on local
+  12-9-form-enhancements-local: done  # Checkpoint: 50/50 tests passing (map, payment, urgency) - Atlas code review passed 2025-12-27, 3 fixes (import pattern, AC doc, filename)
   12-10-form-enhancements-production: drafted  # Checkpoint: Playwright tests on production
 
   # Phase 3: Push Notifications

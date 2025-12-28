@@ -12,6 +12,7 @@ export interface AvailableRequest {
   comuna_name: string | null;
   amount: number;
   is_urgent: boolean;
+  payment_method: "cash" | "transfer";
   created_at: string | null;
   offer_count: number;
 }
@@ -133,6 +134,7 @@ export async function getAvailableRequests(): Promise<GetAvailableRequestsResult
       comunas!water_requests_comuna_id_fkey(name),
       amount,
       is_urgent,
+      payment_method,
       created_at
     `)
     .eq("status", "pending")
@@ -177,6 +179,7 @@ export async function getAvailableRequests(): Promise<GetAvailableRequestsResult
     comuna_name: (r.comunas as { name: string } | null)?.name ?? null,
     amount: r.amount,
     is_urgent: r.is_urgent ?? false,
+    payment_method: (r.payment_method as "cash" | "transfer") ?? "cash",
     created_at: r.created_at,
     offer_count: offerCounts[r.id] ?? 0,
   }));
@@ -253,6 +256,7 @@ export interface RequestDetail {
   address: string;
   amount: number;
   is_urgent: boolean;
+  payment_method: "cash" | "transfer";
   special_instructions: string | null;
   created_at: string | null;
   status: string;
@@ -325,6 +329,7 @@ export async function getRequestDetail(requestId: string): Promise<GetRequestDet
       address,
       amount,
       is_urgent,
+      payment_method,
       special_instructions,
       created_at,
       status
@@ -369,6 +374,7 @@ export async function getRequestDetail(requestId: string): Promise<GetRequestDet
       address: request.address,
       amount: request.amount,
       is_urgent: request.is_urgent ?? false,
+      payment_method: (request.payment_method as "cash" | "transfer") ?? "cash",
       special_instructions: request.special_instructions,
       created_at: request.created_at,
       status: request.status,

@@ -12,8 +12,7 @@
  * - AC12.1.5: Mobile optimization
  */
 
-import { test, expect } from "@playwright/test";
-import { assertNoErrorState } from "../fixtures/error-detection";
+import { test, expect, assertNoErrorState } from "../fixtures/error-detection";
 
 // Helper to fill step 1 form
 async function fillStep1Form(page: import("@playwright/test").Page) {

@@ -137,18 +137,44 @@ feature → develop → staging → main
 
 ### Current Epic: 12 - Consumer UX Enhancements
 
-| Story | Title | Status |
-|-------|-------|--------|
-| 12-1 | Map location pinpoint | backlog |
-| 12-2 | Payment method selection | backlog |
-| 12-3 | Negative status states | backlog |
-| 12-4 | Urgency pricing display | backlog |
-| 12-5 | Remove fake social proof | backlog |
-| 12-6 | Web Push Notifications | **drafted** |
+**Structure:** 3 phases with local/production validation checkpoints
+
+#### Phase 1: Quick Wins (UI-only)
+| Story | Title | Status | Type |
+|-------|-------|--------|------|
+| 12-5 | Remove fake social proof | **drafted** | Implementation |
+| 12-3 | Negative status states | **drafted** | Implementation |
+| 12-7 | UI Validation Local | **drafted** | Checkpoint |
+| 12-8 | UI Validation Production | **drafted** | Checkpoint |
+
+#### Phase 2: Form Enhancements
+| Story | Title | Status | Type |
+|-------|-------|--------|------|
+| 12-2 | Payment method selection | **drafted** | Implementation |
+| 12-4 | Urgency pricing display | **drafted** | Implementation |
+| 12-1 | Map location pinpoint | **drafted** | Implementation |
+| 12-9 | Form Enhancements Local | **drafted** | Checkpoint |
+| 12-10 | Form Enhancements Production | **drafted** | Checkpoint |
+
+#### Phase 3: Push Notifications
+| Story | Title | Status | Type |
+|-------|-------|--------|------|
+| 12-6 | Web Push Notifications | **drafted** | Implementation |
+| 12-11 | Push Notifications Local | **drafted** | Checkpoint |
+| 12-12 | Push Notifications Production | **drafted** | Checkpoint |
+
+#### Final Validation
+| Story | Title | Status | Type |
+|-------|-------|--------|------|
+| 12-13 | Epic Full Local Validation | **drafted** | Final Checkpoint |
+| 12-14 | Epic Full Production Validation | **drafted** | Final Checkpoint |
+
+**Total:** 14 stories (6 implementation + 8 validation)
 
 **Next Steps:**
-1. Context Epic 12 (`/bmad:bmm:workflows:create-architecture`)
-2. Or start with 12-6 (`/bmad:bmm:workflows:dev-story 12-6`)
+1. Start Phase 1: `/bmad:bmm:workflows:dev-story 12-5`
+2. After 12-5 done: `/bmad:bmm:workflows:dev-story 12-3`
+3. Run checkpoint: `/bmad:bmm:workflows:dev-story 12-7`
 
 ### Backlogged Items (from Epic 11)
 - P2: Document upload E2E testing

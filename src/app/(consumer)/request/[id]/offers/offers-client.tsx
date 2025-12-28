@@ -17,6 +17,8 @@ interface OffersClientProps {
   isGuestAccess?: boolean;
   /** Tracking token for guest consumers (AC10.2.6) */
   trackingToken?: string;
+  /** Whether the request is urgent - AC12.4.4 */
+  isUrgent?: boolean;
 }
 
 /**
@@ -37,6 +39,7 @@ export function OffersClient({
   initialOffers = [],
   isGuestAccess = false,
   trackingToken,
+  isUrgent = false,
 }: OffersClientProps) {
   const router = useRouter();
   const [selectingOfferId, setSelectingOfferId] = useState<string | null>(null);
@@ -164,6 +167,7 @@ export function OffersClient({
         loading={isLoading}
         onSelectOffer={handleSelectOffer}
         selectingOfferId={selectingOfferId}
+        isUrgent={isUrgent}
       />
 
       {/* Confirmation Modal - AC10.2.1, AC10.2.2 */}

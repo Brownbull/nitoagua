@@ -682,4 +682,61 @@ NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= timeout 90 npx playwright test \
 
 ---
 
-*Last verified: 2025-12-24 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12/11-13/11-15 code reviews*
+## Epic 12 Phase 1 Validation Pattern (Story 12-8)
+
+> Added 2025-12-25 from Story 12-8: UI Validation Production
+
+### Phase Checkpoint Validation Pattern
+
+**Pattern:** Phase checkpoint stories validate local tests on production environment.
+
+**Structure:**
+- Local validation story (12-7) → Production validation story (12-8)
+- Same tests, different environment
+- Confirms deployment succeeded
+
+**Test Files Validated:**
+| File | Tests | Coverage |
+|------|-------|----------|
+| consumer-home-trust-signals.spec.ts | 10 | Trust signals (Story 12-5) |
+| negative-status-states.spec.ts | 23 | Negative states (Story 12-3) |
+
+**Key Patterns Confirmed:**
+- `assertNoErrorState` on all page navigations
+- Seeded test data via `TRACKING_TOKENS` fixture
+- Mobile viewport testing included
+- `data-testid` selectors for reliable targeting
+- Spanish language verification tests
+
+**Phase 1 Complete (Epic 12):**
+- 12-5: Remove Fake Social Proof ✅
+- 12-3: Negative Status States ✅
+- 12-7: Local Validation (33/33 tests) ✅
+- 12-8: Production Validation (33/33 tests) ✅
+
+### Negative Status Test Data Pattern
+
+**Seed Data Required:** `npm run seed:test`
+
+**Tracking Tokens for Negative States:**
+| Status | Token | Test ID |
+|--------|-------|---------|
+| no_offers | `seed-token-no-offers` | `negative-status-no_offers` |
+| cancelled_by_user | `seed-token-cancelled` | `negative-status-cancelled_by_user` |
+| cancelled_by_provider | `seed-token-cancelled-by-provider` | `negative-status-cancelled_by_provider` |
+
+**Component Test IDs:**
+| Element | Test ID | Usage |
+|---------|---------|-------|
+| Status card | `negative-status-{variant}` | AC12.3.5 visual tests |
+| Title | `negative-status-title` | Text verification |
+| Message | `negative-status-message` | Description verification |
+| Primary action | `primary-action-button` | Navigation tests |
+| Support section | `support-contact` | AC12.3.4 visibility |
+| WhatsApp link | `whatsapp-support` | Contact format tests |
+| Email link | `email-support` | Contact format tests |
+| Timeline | `timeline` | Step status tests |
+
+---
+
+*Last verified: 2025-12-25 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12/11-13/11-15, 12-7/12-8 code reviews*
