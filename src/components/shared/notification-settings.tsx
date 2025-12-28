@@ -204,6 +204,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
   );
 
   // Handle test notification - AC10.6.8
+  // Uses Service Worker showNotification for PWA compatibility on Android
   const handleTestNotification = useCallback(async () => {
     if (permission !== "granted") return;
 
@@ -211,20 +212,27 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
     setTestSent(false);
 
     try {
-      // Create a test notification
-      const notification = new Notification("NitoAgua", {
-        body: "¡Las notificaciones están funcionando!",
-        icon: "/icons/icon-192.png",
-        badge: "/icons/icon-192.png",
-        tag: "test-notification",
-      });
-
-      // Auto-close after 4 seconds
-      setTimeout(() => {
-        notification.close();
-      }, 4000);
-
-      setTestSent(true);
+      // Use Service Worker for PWA compatibility (required on Android standalone mode)
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification("NitoAgua", {
+          body: "¡Las notificaciones están funcionando!",
+          icon: "/icons/icon-192.png",
+          badge: "/icons/icon-192.png",
+          tag: "test-notification",
+        } as NotificationOptions);
+        setTestSent(true);
+      } else {
+        // Fallback to direct Notification API (desktop browsers)
+        const notification = new Notification("NitoAgua", {
+          body: "¡Las notificaciones están funcionando!",
+          icon: "/icons/icon-192.png",
+          badge: "/icons/icon-192.png",
+          tag: "test-notification",
+        });
+        setTimeout(() => notification.close(), 4000);
+        setTestSent(true);
+      }
 
       // Reset test sent state after 3 seconds
       setTimeout(() => {
@@ -232,6 +240,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       }, 3000);
     } catch (error) {
       console.error("Test notification error:", error);
+      setPushError("Error al enviar notificación de prueba");
     } finally {
       setSending(false);
     }
