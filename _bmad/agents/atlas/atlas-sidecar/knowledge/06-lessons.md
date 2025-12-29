@@ -263,4 +263,178 @@
 
 ---
 
-*Last verified: 2025-12-25 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2, 11-19, 12-3 implementations*
+---
+
+### Story 12-6: Web Push Notifications (2025-12-28)
+
+**Issues Found & Fixed:**
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **Push subscriptions table 404** | Migration file existed locally but not applied to production | Apply migrations to production via `mcp__supabase__apply_migration` or `supabase db push` |
+| **VAPID build-time error** | `web-push.setVapidDetails()` called at module load, before env vars available | Use **lazy initialization** - call `setVapidDetails()` on first use, not at import |
+| **Toggle stayed ON after unsubscribe** | `isToggleChecked` based on `permission === "granted"` (browser permission doesn't change) | Base toggle state on `pushState === "subscribed"` only, not browser permission |
+| **Test notification silent fail on Android PWA** | `new Notification()` constructor doesn't work in PWA standalone mode | Use `ServiceWorkerRegistration.showNotification()` instead |
+| **Old UI served from cache** | Service worker version `1.1.0` while app was `2.1.0` | Sync SW_VERSION with app version in package.json |
+
+**Key Patterns from Story 12-6:**
+
+1. **Lazy VAPID Initialization for web-push:**
+   ```typescript
+   let vapidInitialized = false;
+   function initVapid(): boolean {
+     if (vapidInitialized) return true;
+     // Only call setVapidDetails() when actually needed
+     webpush.setVapidDetails(subject, publicKey, privateKey);
+     vapidInitialized = true;
+     return true;
+   }
+   ```
+
+2. **PWA Notification Pattern (Android compatible):**
+   ```typescript
+   // Don't use: new Notification("Title", options);
+   // Use instead:
+   const registration = await navigator.serviceWorker.ready;
+   await registration.showNotification("Title", options);
+   ```
+
+3. **Service Worker Version Sync:**
+   - `public/sw.js` → `SW_VERSION` must match `package.json` version
+   - Version mismatch causes stale cache issues
+
+4. **Push Toggle State Logic:**
+   - Base toggle on subscription state, not browser permission
+   - `permission === "granted"` persists even after unsubscribe
+   - `pushState === "subscribed"` accurately reflects active subscription
+
+5. **Migration Application Order:**
+   - Local migrations don't auto-sync to production
+   - Apply via Supabase MCP or CLI before testing
+
+**Hard-Won Wisdom:**
+
+> "The `new Notification()` API silently fails in Android PWA standalone mode. Always use Service Worker's `showNotification()` for PWA compatibility."
+
+> "VAPID validation happens at `setVapidDetails()` call time, not at send time. If called at module load, build will fail when env vars aren't available."
+
+> "Browser notification permission and push subscription are separate concepts. Permission can be 'granted' while not actively subscribed to push."
+
+---
+
+### Story 12-6: Web Push Notifications Code Review (2025-12-28)
+
+**Issues Fixed in Code Review:**
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **Missing `SET search_path`** | Trigger function `update_push_subscription_updated_at` lacked security hardening | ALL PostgreSQL functions MUST include `SET search_path = public` (applies migration after initial) |
+| **Missing AC integration** | `triggerRequestTimeoutPush()` defined but never called in cron job | Verify all trigger functions are actually CALLED, not just defined |
+| **Test selector matched multiple** | `getByText("Notificaciones")` matched 4 elements including "Notificaciones Push" | Use `{ exact: true }` or unique `getByTestId()` selectors |
+
+**Key Patterns:**
+
+1. **Security function check after migrations:**
+   - Run `mcp__supabase__get_advisors type=security` after every migration
+   - Look for `function_search_path_mutable` warnings
+   - Apply fix migration: `CREATE OR REPLACE FUNCTION ... SET search_path = public`
+
+2. **AC verification pattern:**
+   - Don't trust that defining a function means AC is complete
+   - Grep for actual CALLS to the function, not just definitions
+   - Example: `grep "triggerRequestTimeoutPush" src/` should show imports AND calls
+
+3. **Strict mode test selectors:**
+   - When text appears in nested/related phrases, use exact match
+   - Pattern: `getByText("Notificaciones", { exact: true })`
+   - Alternative: Add unique `data-testid` to target element
+
+---
+
+### Story 12-11: Push Notifications Local Validation (2025-12-28)
+
+**Testing Limitations Documented:**
+
+| Limitation | Reason | Solution |
+|------------|--------|----------|
+| **Cannot test permission grant** | Playwright can't interact with browser permission dialog | Manual testing on real device |
+| **Cannot test push subscription** | Requires user interaction with permission dialog | Manual Android PWA testing |
+| **Cannot test push delivery** | Requires real service worker and push service | Manual testing documented in story |
+| **Dev login skip tests** | Tests skip when `NEXT_PUBLIC_DEV_LOGIN=false` | Intentional design for CI portability |
+
+**Environment Variable Behavior:**
+
+1. **Playwright receives env vars correctly** - Variables passed like `NEXT_PUBLIC_DEV_LOGIN=true npx playwright test` reach test file at module load time
+2. **webServer inherits env vars** - Playwright's webServer command inherits parent process env
+3. **Existing server conflict** - If server already running on port, Playwright reuses it (ignoring new env vars)
+
+**Key Patterns:**
+
+1. **Stop existing servers before testing:**
+   ```bash
+   pkill -f "next dev" 2>/dev/null
+   fuser 3005/tcp 2>/dev/null | xargs kill -9 2>/dev/null
+   ```
+
+2. **Environment variable passing:**
+   ```bash
+   NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= npx playwright test tests/e2e/push-subscription.spec.ts
+   ```
+
+3. **Graceful skip pattern for optional tests:**
+   ```typescript
+   const skipIfNoDevLogin = process.env.NEXT_PUBLIC_DEV_LOGIN !== "true";
+   test.skip(skipIfNoDevLogin, "Dev login required for tests");
+   ```
+
+4. **Manual test documentation in checkpoint stories:**
+   - Fill results tables referencing parent story's testing results
+   - Link back to actual device testing in parent story
+
+---
+
+### Story 12-12: Push Notifications Production Validation (2025-12-28)
+
+**Production Deployment Lessons:**
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **Edge Function not auto-deployed** | Edge Functions require manual deployment via MCP or CLI | Deploy Edge Functions explicitly with `mcp__supabase__deploy_edge_function` |
+| **Tests skipped without BASE_URL** | Playwright defaulted to localhost when BASE_URL not set | Always set `BASE_URL="https://production.url"` for production E2E tests |
+| **Edge Function secrets not set** | VAPID keys needed in Edge Function runtime, not just Vercel | Configure secrets in Supabase Dashboard → Edge Functions → Secrets |
+
+**Key Patterns:**
+
+1. **Edge Function Deployment:**
+   ```bash
+   # Deploy Edge Function to production
+   mcp__supabase__deploy_edge_function name="send-push-notification" files=[{name:"index.ts", content:"..."}]
+
+   # Verify deployment
+   mcp__supabase__list_edge_functions
+   ```
+
+2. **Production E2E Test Command Pattern:**
+   ```bash
+   BASE_URL="https://nitoagua.vercel.app" \
+   NEXT_PUBLIC_SUPABASE_URL="..." \
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="..." \
+   NEXT_PUBLIC_DEV_LOGIN=true \
+   DISPLAY= timeout 180 npx playwright test tests/e2e/test.spec.ts \
+     --project=chromium --workers=1 --reporter=list
+   ```
+
+3. **Edge Function Secrets Configuration:**
+   - Supabase Dashboard → Edge Functions → [function name] → Secrets
+   - Required for VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT
+   - Different from Vercel environment variables
+
+**Hard-Won Wisdom:**
+
+> "Edge Functions don't auto-deploy with code pushes. Always explicitly deploy via MCP or Supabase CLI after changes."
+
+> "BASE_URL environment variable is critical for production Playwright tests. Without it, tests run against localhost even with production credentials."
+
+---
+
+*Last verified: 2025-12-28 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2, 11-19, 12-3, 12-6, 12-11, 12-12 implementations*

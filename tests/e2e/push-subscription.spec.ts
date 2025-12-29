@@ -42,11 +42,8 @@ async function loginAsSupplier(page: Page) {
   // Wait a moment for the email/password to auto-fill
   await page.waitForTimeout(100);
 
-  // Override with seeded test supplier if the auto-fill uses production credentials
-  const emailInput = page.locator('input[name="email"], input[type="email"]').first();
-  const passwordInput = page.locator('input[name="password"], input[type="password"]').first();
-
   // Check if we need to use seeded test credentials
+  const emailInput = page.locator('input[name="email"], input[type="email"]').first();
   const currentEmail = await emailInput.inputValue();
   if (currentEmail === "supplier@nitoagua.cl") {
     // The auto-fill is using production credentials - we need seeded data
@@ -107,7 +104,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
       await expect(notificationSettings).toBeVisible();
 
       // Should have section header with bell icon
-      await expect(notificationSettings.getByText("Notificaciones")).toBeVisible();
+      await expect(notificationSettings.getByText("Notificaciones", { exact: true })).toBeVisible();
     });
 
     test("displays push notification toggle section", async ({ page }) => {
