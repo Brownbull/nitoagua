@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Droplets, Clock, Users, Zap } from "lucide-react";
+import { MapPin, Droplets, Clock, Users, Zap, Banknote, Building2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ export function RequestCard({ request }: RequestCardProps) {
     comuna_name,
     amount,
     is_urgent,
+    payment_method,
     created_at,
     offer_count,
   } = request;
@@ -91,6 +92,25 @@ export function RequestCard({ request }: RequestCardProps) {
                 <Users className="h-3 w-3" />
                 <span>
                   {offer_count === 0 ? "0" : offer_count} {offer_count === 1 ? "oferta" : "ofertas"}
+                </span>
+              </div>
+
+              {/* Payment Method - AC12.2.4 */}
+              <div
+                className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
+                  payment_method === "transfer"
+                    ? "bg-purple-50 text-purple-700"
+                    : "bg-green-50 text-green-700"
+                }`}
+                data-testid="payment-badge"
+              >
+                {payment_method === "transfer" ? (
+                  <Building2 className="h-3 w-3" />
+                ) : (
+                  <Banknote className="h-3 w-3" />
+                )}
+                <span className="font-medium">
+                  {payment_method === "transfer" ? "Transf." : "Efectivo"}
                 </span>
               </div>
             </div>

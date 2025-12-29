@@ -13,6 +13,8 @@ interface OfferListProps {
   loading?: boolean;
   onSelectOffer: (offerId: string) => void;
   selectingOfferId: string | null;
+  /** Whether the request is urgent - AC12.4.4 */
+  isUrgent?: boolean;
 }
 
 /**
@@ -108,6 +110,7 @@ export function OfferList({
   loading = false,
   onSelectOffer,
   selectingOfferId,
+  isUrgent = false,
 }: OfferListProps) {
   // Track offers that expired during viewing - AC10.3.4
   const [expiredDuringView, setExpiredDuringView] = useState<Set<string>>(
@@ -181,6 +184,7 @@ export function OfferList({
             onExpire={handleOfferExpire}
             isBestOffer={offer.id === bestOfferId}
             isFirstCard={index === 0 && !isOfferExpired(offer, expiredDuringView)}
+            isUrgent={isUrgent}
           />
         ))}
       </div>

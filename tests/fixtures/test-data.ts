@@ -150,8 +150,9 @@ export const SEEDED_CONSUMER_DELIVERED_REQUEST = {
 };
 
 /**
- * Request in CANCELLED state
+ * Request in CANCELLED state (cancelled by user)
  * Use for: cancelled status UI tests, "Nueva Solicitud" button tests
+ * AC12.3.2: Cancelled by User State
  */
 export const SEEDED_CANCELLED_REQUEST = {
   id: "66666666-6666-6666-6666-666666666666",
@@ -166,7 +167,32 @@ export const SEEDED_CANCELLED_REQUEST = {
   is_urgent: false,
   consumer_id: null,
   supplier_id: null,
+  cancelled_by: null, // null means cancelled by consumer/guest
+  cancellation_reason: null,
   cancelled_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
+};
+
+/**
+ * Request in CANCELLED state (cancelled by provider)
+ * Use for: provider cancellation UI tests (AC12.3.3)
+ * Shows different messaging and styling than user cancellation
+ */
+export const SEEDED_CANCELLED_BY_PROVIDER_REQUEST = {
+  id: "66666666-6666-6666-6666-666666666669",
+  tracking_token: "seed-token-cancelled-by-provider",
+  status: "cancelled",
+  guest_phone: "+56966666669",
+  guest_name: "Guest Cancelled By Provider",
+  guest_email: "cancelled-by-provider@test.local",
+  address: "Calle Cancelada Por Proveedor 450, Villarrica, Chile",
+  amount: 5000,
+  special_instructions: "Request that was cancelled by provider",
+  is_urgent: false,
+  consumer_id: null,
+  supplier_id: TEST_SUPPLIER.id,
+  cancelled_by: TEST_SUPPLIER.id, // Cancelled by provider
+  cancellation_reason: "No tengo disponibilidad para esta zona en este momento",
+  cancelled_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
 };
 
 /**
@@ -222,6 +248,7 @@ export const TRACKING_TOKENS = {
   delivered: SEEDED_DELIVERED_REQUEST.tracking_token,
   consumerDelivered: SEEDED_CONSUMER_DELIVERED_REQUEST.tracking_token,
   cancelled: SEEDED_CANCELLED_REQUEST.tracking_token,
+  cancelledByProvider: SEEDED_CANCELLED_BY_PROVIDER_REQUEST.tracking_token,
   noOffers: SEEDED_NO_OFFERS_REQUEST.tracking_token,
   consumerNoOffers: SEEDED_CONSUMER_NO_OFFERS_REQUEST.tracking_token,
 } as const;
@@ -236,6 +263,7 @@ export const REQUEST_IDS = {
   delivered: SEEDED_DELIVERED_REQUEST.id,
   consumerDelivered: SEEDED_CONSUMER_DELIVERED_REQUEST.id,
   cancelled: SEEDED_CANCELLED_REQUEST.id,
+  cancelledByProvider: SEEDED_CANCELLED_BY_PROVIDER_REQUEST.id,
   noOffers: SEEDED_NO_OFFERS_REQUEST.id,
   consumerNoOffers: SEEDED_CONSUMER_NO_OFFERS_REQUEST.id,
 } as const;
@@ -250,6 +278,7 @@ export const ALL_SEEDED_REQUESTS = [
   SEEDED_DELIVERED_REQUEST,
   SEEDED_CONSUMER_DELIVERED_REQUEST,
   SEEDED_CANCELLED_REQUEST,
+  SEEDED_CANCELLED_BY_PROVIDER_REQUEST,
   SEEDED_NO_OFFERS_REQUEST,
   SEEDED_CONSUMER_NO_OFFERS_REQUEST,
 ];

@@ -6,6 +6,9 @@ import Link from "next/link";
 import { differenceInDays, startOfMonth, endOfMonth, startOfYear, endOfYear, format } from "date-fns";
 import { es } from "date-fns/locale";
 
+// Force dynamic rendering - admin dashboards must always show current data
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Liquidaciones - Admin nitoagua",
   description: "Gestion de liquidaciones y pagos de proveedores",

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Droplets, Clock, Users, Zap, AlertCircle, FileText, CheckCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Droplets, Clock, Users, Zap, AlertCircle, FileText, CheckCircle, Banknote, Building2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getRequestDetail, getOfferSettings } from "@/lib/actions/offers";
 import { OfferForm, OfferFormSkeleton } from "@/components/provider/offer-form";
@@ -98,7 +98,7 @@ export default async function RequestDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Amount + Time + Offers - Single row */}
+          {/* Amount + Time + Offers + Payment - Single row */}
           <div className="flex flex-wrap items-center gap-2 text-[11px]">
             <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">
               <Droplets className="h-3 w-3" />
@@ -114,6 +114,24 @@ export default async function RequestDetailPage({ params }: PageProps) {
                 {request.offer_count === 0
                   ? "Sin ofertas"
                   : `${request.offer_count} oferta${request.offer_count > 1 ? "s" : ""}`}
+              </span>
+            </div>
+            {/* Payment Method - AC12.2.4 */}
+            <div
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${
+                request.payment_method === "transfer"
+                  ? "bg-purple-50 text-purple-700"
+                  : "bg-green-50 text-green-700"
+              }`}
+              data-testid="payment-badge"
+            >
+              {request.payment_method === "transfer" ? (
+                <Building2 className="h-3 w-3" />
+              ) : (
+                <Banknote className="h-3 w-3" />
+              )}
+              <span className="font-medium">
+                {request.payment_method === "transfer" ? "Transferencia" : "Efectivo"}
               </span>
             </div>
           </div>

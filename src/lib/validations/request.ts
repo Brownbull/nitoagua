@@ -9,6 +9,28 @@ import { getDeliveryPrice } from "@/lib/utils/commission";
 export const CHILEAN_PHONE_REGEX = /^\+56[0-9]{9}$/;
 
 /**
+ * Payment method options
+ * - cash: Pay the delivery person on arrival (default, most common)
+ * - transfer: Bank transfer before delivery
+ */
+export const PAYMENT_METHOD_OPTIONS = [
+  {
+    value: "cash" as const,
+    label: "Efectivo",
+    subtitle: "Paga al repartidor cuando llegue",
+    icon: "banknote" as const,
+  },
+  {
+    value: "transfer" as const,
+    label: "Transferencia",
+    subtitle: "Transfiere antes de la entrega",
+    icon: "building" as const,
+  },
+] as const;
+
+export type PaymentMethod = "cash" | "transfer";
+
+/**
  * Water request validation schema
  * Used for guest consumer water request form validation
  */
@@ -39,6 +61,7 @@ export const requestSchema = z.object({
     message: "Selecciona una cantidad",
   }),
   isUrgent: z.boolean(),
+  paymentMethod: z.enum(["cash", "transfer"]),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
 });

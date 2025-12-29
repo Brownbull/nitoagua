@@ -126,6 +126,7 @@ function OffersContent({ request, isGuestAccess, trackingToken, initialOffers }:
           initialOffers={initialOffers}
           isGuestAccess={isGuestAccess}
           trackingToken={trackingToken}
+          isUrgent={request.is_urgent ?? false}
         />
       </div>
     </main>

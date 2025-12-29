@@ -3,8 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-// Revalidate every 30 seconds - order details can be slightly stale
-export const revalidate = 30;
+// Force dynamic rendering - admin dashboards must always show current data
+export const dynamic = "force-dynamic";
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
 import { es } from "date-fns/locale";
 import {

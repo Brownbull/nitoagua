@@ -336,11 +336,6 @@ async function handleCancelAction(
             requestId,
             error: notifyError.message,
           });
-        } else {
-          console.log("[NOTIFY] Providers notified of request cancellation", {
-            requestId,
-            providerCount: notifications.length,
-          });
         }
       });
   }

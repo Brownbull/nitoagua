@@ -18,6 +18,7 @@ import { GradientHeader } from "@/components/consumer/gradient-header";
 import { TimelineTracker } from "@/components/consumer/timeline-tracker";
 import { StatusCard, SupplierInfo, CallButton } from "@/components/consumer/status-card";
 import { CancelRequestButton } from "@/components/consumer/cancel-request-button";
+import { NegativeStatusCard } from "@/components/consumer/negative-status-card";
 import { OfferList } from "@/components/consumer/offer-list";
 import { OfferSelectionModal } from "@/components/consumer/offer-selection-modal";
 import {
@@ -42,6 +43,10 @@ interface RequestWithSupplier {
   delivered_at: string | null;
   delivery_window: string | null;
   supplier_id: string | null;
+  consumer_id: string | null; // AC12.3: To compare with cancelled_by
+  cancelled_by: string | null; // AC12.3.2/3: Who cancelled the request
+  cancellation_reason: string | null; // AC12.3.2/3: Reason for cancellation
+  cancelled_at: string | null; // AC12.3.2/3: When it was cancelled
   active_offer_count?: number;
   profiles: {
     name: string;
@@ -387,67 +392,30 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
           </>
         )}
 
-        {/* Status-specific content: Cancelled */}
+        {/* Status-specific content: Cancelled - AC12.3.2 & AC12.3.3 */}
         {isCancelled && (
-          <>
-            <StatusCard
-              status="cancelled"
-              title="Solicitud cancelada"
-              description="Esta solicitud fue cancelada y no será procesada"
-            />
-
-            <Button
-              asChild
-              variant="outline"
-              className="w-full rounded-xl py-4 text-base font-semibold"
-            >
-              <Link href="/">
-                <RotateCcw className="mr-2 h-5 w-5" />
-                Nueva Solicitud
-              </Link>
-            </Button>
-          </>
+          <NegativeStatusCard
+            variant={
+              // Determine if cancelled by user or provider
+              // If cancelled_by === consumer_id OR cancelled_by is null, it's user cancellation
+              // Otherwise it's provider cancellation
+              request.cancelled_by === null ||
+              request.cancelled_by === request.consumer_id
+                ? "cancelled_by_user"
+                : "cancelled_by_provider"
+            }
+            cancelledAt={request.cancelled_at}
+            cancellationReason={request.cancellation_reason}
+          />
         )}
 
-        {/* Status-specific content: No Offers */}
+        {/* Status-specific content: No Offers - AC12.3.1 */}
         {isNoOffers && (
           <div data-testid="no-offers-card">
-            <StatusCard
-              status="no_offers"
-              title="Sin Ofertas"
-              description="Lo sentimos, no hay aguateros disponibles ahora"
-            >
-              <p className="text-xs text-[#C2410C] mt-2" data-testid="no-offers-message">
-                Tu solicitud no recibió ofertas. Esto puede ocurrir en horarios de baja demanda.
-              </p>
-            </StatusCard>
-
-            <Button
-              asChild
-              className="w-full bg-[#EA580C] hover:bg-[#C2410C] rounded-xl py-4 text-base font-semibold mb-3"
-              data-testid="new-request-button"
-            >
-              <Link href="/">
-                <RotateCcw className="mr-2 h-5 w-5" />
-                Nueva Solicitud
-              </Link>
-            </Button>
-
-            <Button
-              asChild
-              variant="outline"
-              className="w-full border-[#10B981] text-[#059669] hover:bg-green-50 rounded-xl py-4 text-base font-semibold"
-              data-testid="contact-support-button"
-            >
-              <a
-                href="https://wa.me/56912345678?text=Hola,%20necesito%20ayuda%20con%20mi%20solicitud%20de%20agua"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                Contactar Soporte
-              </a>
-            </Button>
+            <NegativeStatusCard
+              variant="no_offers"
+              createdAt={request.created_at}
+            />
           </div>
         )}
 

@@ -4,8 +4,8 @@ import { OrdersTable } from "@/components/admin/orders-table";
 import { Package, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-// Revalidate every 30 seconds - orders change frequently but not instantly
-export const revalidate = 30;
+// Force dynamic rendering - admin dashboards must always show current data
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Pedidos - Admin nitoagua",

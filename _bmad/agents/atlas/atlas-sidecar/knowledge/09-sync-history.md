@@ -61,6 +61,43 @@ Consolidated verbose entries into tables. Token count: ~9,850 → ~8,450.
 - **Patterns Documented:** CountdownTimer component pattern added to Section 4
 - **Status:** Story marked `done`, sprint-status synced
 
+### 2025-12-24: Story 11-21 Atlas Code Review
+- **Story Reviewed:** 11-21 Seed Data Blind Spot Analysis & Workflow Documentation
+- **Issues Found:** 3 HIGH, 2 MEDIUM, 1 LOW
+- **Fixes Applied:**
+  1. Marked backlogged tasks (3.4, 3.5) as complete with Epic 12 notation
+  2. Marked superseded task (4.2) as complete
+  3. Added Atlas Section 8 cross-references to all workflow docs
+  4. Updated Definition of Done with expanded scope items
+- **Patterns Documented:**
+  - Workflow documentation pattern added to Section 4
+  - C#/P#/A# workflow ID convention established
+- **Documentation Created:**
+  - `docs/workflows/consumer-workflows.md` (C1-C7, 100% coverage)
+  - `docs/workflows/provider-workflows.md` (P1-P16, 87.5% coverage)
+  - `docs/workflows/admin-workflows.md` (A1-A9, 100% coverage)
+- **Backlogged to Epic 12:**
+  - P2: Document upload E2E testing
+  - P12: Withdrawal request button E2E testing
+- **Status:** Story marked `done`, sprint-status synced
+
+### 2025-12-27: Story 12-6 Atlas-Enhanced Creation
+- **Story Created:** 12-6 Web Push Notifications
+- **Workflow Chain Analysis:** 6 workflows identified as affected
+  - C3 (Consumer Status Tracking), C5 (Request Timeout)
+  - P7 (Track My Offers), P8 (Acceptance Notification)
+  - Consumer Request (V2), Provider Offer Flow
+- **Atlas-Suggested ACs Added:** 4 new acceptance criteria (12.6.9-12.6.12)
+  - Notification Coordination (complement email, don't replace)
+  - Subscription Lifecycle (renewal, cleanup, re-subscribe)
+  - Offline Queue (verify browser queueing)
+  - Duplicate Prevention (foreground detection, tagging)
+- **Tasks Created:** 10 detailed task groups with 45+ subtasks
+- **Files Updated:**
+  - `docs/sprint-artifacts/epic12/12-6-web-push-notifications.md` (ready-for-dev)
+  - Section 2 (Features): Added Web Push Notifications to Platform Features
+- **Status:** Story marked `ready-for-dev`, sprint-status synced
+
 ### 2025-12-22: Epic 10 Completion
 - **Stories Completed:** 10-6 (PWA Settings), 10-7 (Mobile Adaptability)
 - **App Version:** Updated to 1.0.0 (package.json, sw.js, env)
@@ -89,6 +126,9 @@ Consolidated verbose entries into tables. Token count: ~9,850 → ~8,450.
 | Stories | docs/sprint-artifacts/epic*/*.md | 2025-12-18 |
 | Retrospectives | docs/sprint-artifacts/retrospectives/ | 2025-12-18 |
 | Process | run_app.local.md | 2025-12-18 |
+| Consumer Workflows | docs/workflows/consumer-workflows.md | 2025-12-24 |
+| Provider Workflows | docs/workflows/provider-workflows.md | 2025-12-24 |
+| Admin Workflows | docs/workflows/admin-workflows.md | 2025-12-24 |
 
 ## Drift Detection
 

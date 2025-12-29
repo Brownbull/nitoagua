@@ -639,4 +639,110 @@ if (await devLoginButton.isVisible().catch(() => false)) {
 
 ---
 
-*Last verified: 2025-12-23 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12/11-13 code reviews*
+## Consumer Cancellation Workflow Tests (Story 11-15)
+
+> Added 2025-12-24 from Story 11-15: Consumer Cancellation (Local)
+
+### Consumer Cancellation Tests (C8-C11)
+
+**Test File:** `tests/e2e/consumer-cancellation-workflow.spec.ts`
+
+**Seed Dependency:** `npm run seed:test` + `npm run seed:offers`
+
+**Test Execution:**
+```bash
+NEXT_PUBLIC_DEV_LOGIN=true DISPLAY= timeout 90 npx playwright test \
+  tests/e2e/consumer-cancellation-workflow.spec.ts \
+  --project=chromium --workers=1 --reporter=list
+```
+
+**Workflows Validated:**
+| Workflow | Tests | Description |
+|----------|-------|-------------|
+| C8.1-C8.3 | 3 | Cancel button visible, dialog opens, Volver closes |
+| C9.1-C9.2 | 2 | Cancel with offers - warning shown |
+| C10.1-C10.5 | 5 | Cancelled page UI, Spanish text, Nueva Solicitud button |
+| C11.1-C11.3 | 3 | Provider notification warning when offers exist |
+| Edge Cases | 4 | Delivered, accepted, cancelled, no_offers states |
+| Integration | 1 | Full cancel flow navigation |
+| Spanish | 2 | Language verification |
+
+### Code Review Lessons - Story 11-15
+
+**Test Title Clarity:**
+- **Problem:** Test title said "button visible" but asserted NOT visible
+- **Solution:** Title must match assertion: "Cancel button NOT visible on no_offers request"
+- **Rule:** Test titles must accurately describe the expected behavior being verified
+
+**Terminal Status Cancel Button Pattern:**
+- Cancelled requests: Cancel button NOT visible (already cancelled)
+- Delivered requests: Cancel button NOT visible (completed)
+- No_offers requests: Cancel button NOT visible (timed out - terminal state)
+- Pending/Accepted: Cancel button visible
+
+---
+
+## Epic 12 Phase 1 Validation Pattern (Story 12-8)
+
+> Added 2025-12-25 from Story 12-8: UI Validation Production
+
+### Phase Checkpoint Validation Pattern
+
+**Pattern:** Phase checkpoint stories validate local tests on production environment.
+
+**Structure:**
+- Local validation story (12-7) → Production validation story (12-8)
+- Same tests, different environment
+- Confirms deployment succeeded
+
+**Test Files Validated:**
+| File | Tests | Coverage |
+|------|-------|----------|
+| consumer-home-trust-signals.spec.ts | 10 | Trust signals (Story 12-5) |
+| negative-status-states.spec.ts | 23 | Negative states (Story 12-3) |
+
+**Key Patterns Confirmed:**
+- `assertNoErrorState` on all page navigations
+- Seeded test data via `TRACKING_TOKENS` fixture
+- Mobile viewport testing included
+- `data-testid` selectors for reliable targeting
+- Spanish language verification tests
+
+**Phase 1 Complete (Epic 12):**
+- 12-5: Remove Fake Social Proof ✅
+- 12-3: Negative Status States ✅
+- 12-7: Local Validation (33/33 tests) ✅
+- 12-8: Production Validation (33/33 tests) ✅
+
+**Phase 2 Complete (Epic 12):**
+- 12-1: Map Location Pinpoint ✅
+- 12-2: Payment Method Selection ✅
+- 12-4: Urgency Pricing Display ✅
+- 12-9: Local Validation (50/50 tests) ✅
+
+### Negative Status Test Data Pattern
+
+**Seed Data Required:** `npm run seed:test`
+
+**Tracking Tokens for Negative States:**
+| Status | Token | Test ID |
+|--------|-------|---------|
+| no_offers | `seed-token-no-offers` | `negative-status-no_offers` |
+| cancelled_by_user | `seed-token-cancelled` | `negative-status-cancelled_by_user` |
+| cancelled_by_provider | `seed-token-cancelled-by-provider` | `negative-status-cancelled_by_provider` |
+
+**Component Test IDs:**
+| Element | Test ID | Usage |
+|---------|---------|-------|
+| Status card | `negative-status-{variant}` | AC12.3.5 visual tests |
+| Title | `negative-status-title` | Text verification |
+| Message | `negative-status-message` | Description verification |
+| Primary action | `primary-action-button` | Navigation tests |
+| Support section | `support-contact` | AC12.3.4 visibility |
+| WhatsApp link | `whatsapp-support` | Contact format tests |
+| Email link | `email-support` | Contact format tests |
+| Timeline | `timeline` | Step status tests |
+
+---
+
+*Last verified: 2025-12-27 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Chrome Extension E2E, Stories 11-3/11-4/11-5/11-6/11-7/11-8/11-11/11-12/11-13/11-15, 12-7/12-8/12-9 code reviews*

@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       special_instructions: data.specialInstructions,
       amount: parseInt(data.amount, 10),
       is_urgent: data.isUrgent,
+      payment_method: data.paymentMethod ?? "cash", // AC12.2.3: Default to cash
       latitude: data.latitude ?? null,
       longitude: data.longitude ?? null,
       comuna_id: data.comunaId ?? null,

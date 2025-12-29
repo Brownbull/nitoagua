@@ -158,6 +158,7 @@ const SEEDED_REQUESTS = [
     accepted_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
     delivered_at: new Date(Date.now() - 46 * 60 * 60 * 1000).toISOString(),
   },
+  // Story 12-3 AC12.3.2: Cancelled by user state
   {
     id: "66666666-6666-6666-6666-666666666666",
     tracking_token: "seed-token-cancelled",
@@ -171,7 +172,27 @@ const SEEDED_REQUESTS = [
     is_urgent: false,
     consumer_id: null,
     supplier_id: null,
+    cancelled_by: null, // null means cancelled by user
+    cancellation_reason: null,
     cancelled_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+  },
+  // Story 12-3 AC12.3.3: Cancelled by provider state
+  {
+    id: "66666666-6666-6666-6666-666666666669",
+    tracking_token: "seed-token-cancelled-by-provider",
+    status: "cancelled",
+    guest_phone: "+56966666669",
+    guest_name: "Guest Cancelled By Provider",
+    guest_email: "cancelled-by-provider@test.local",
+    address: "Calle Cancelada Por Proveedor 450, Villarrica, Chile",
+    amount: 5000,
+    special_instructions: "Request that was cancelled by provider",
+    is_urgent: false,
+    consumer_id: null,
+    supplier_id: TEST_SUPPLIER.id,
+    cancelled_by: TEST_SUPPLIER.id, // Cancelled by provider
+    cancellation_reason: "No tengo disponibilidad para esta zona en este momento",
+    cancelled_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
   },
   // Story 10.4/11-5: Request that timed out without offers
   // Note: no timed_out_at column in production - status alone indicates timeout
@@ -353,6 +374,13 @@ async function seedRequests(supabase: any, userIds: { supplierActualId: string; 
     // Map consumer_id
     if (mapped.consumer_id === TEST_CONSUMER.id) {
       mapped.consumer_id = userIds.consumerActualId;
+    }
+
+    // Map cancelled_by (Story 12-3: Negative Status States)
+    if (mapped.cancelled_by === TEST_SUPPLIER.id) {
+      mapped.cancelled_by = userIds.supplierActualId;
+    } else if (mapped.cancelled_by === TEST_CONSUMER.id) {
+      mapped.cancelled_by = userIds.consumerActualId;
     }
 
     return mapped;
