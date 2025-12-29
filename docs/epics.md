@@ -2957,6 +2957,305 @@ Epic 7.1 (Provider Registration) ←── Epic 6.1
 
 ---
 
+## Epic 12.5: Performance Optimization
+
+**Goal:** Diagnose and resolve application-wide performance issues affecting all user types. The app feels sluggish across all pages on both mobile and desktop. This epic follows a diagnostic-first approach: measure, identify bottlenecks, then apply targeted fixes.
+
+**User Value:** Consumers and providers get a responsive, fast experience. Page loads feel instant, interactions are snappy, and the PWA feels like a native app.
+
+**Problem Statement:**
+- All pages load slowly (multi-second delays on Samsung S23 and desktop)
+- Every navigation feels "overloaded" with visible delays
+- User interactions require waiting seconds for response
+- Issue is present across consumer, provider, and admin interfaces
+
+**Approach:** Diagnostic-first. Before implementing fixes, we must understand the root causes through profiling and measurement.
+
+**Dependencies:**
+- Requires Epic 12 complete (current UX enhancements may affect bundle)
+- Must complete before Epic 13 (Chrome Extension testing requires stable performance baseline)
+
+---
+
+### Story 12.5.1: Performance Audit & Baseline
+
+As a **developer**,
+I want **comprehensive performance metrics for the current application state**,
+So that **I can identify specific bottlenecks and measure improvement impact**.
+
+**Acceptance Criteria:**
+
+**Given** the production application at nitoagua.vercel.app
+**When** a performance audit is conducted
+**Then** the following metrics are documented:
+
+**AC12.5.1.1 - Lighthouse Audit:**
+- Lighthouse scores for 5 key pages: Home, Request Form, Request Status, Provider Dashboard, Admin Dashboard
+- Document: Performance, FCP, LCP, TBT, CLS scores for each
+- Run on both mobile and desktop presets
+
+**AC12.5.1.2 - Bundle Analysis:**
+- Run `npm run build` with bundle analyzer
+- Document total JS bundle size
+- Identify top 10 largest dependencies
+- Document route-specific bundle sizes
+
+**AC12.5.1.3 - Network Waterfall:**
+- Chrome DevTools network waterfall for each key page
+- Document: Time to First Byte (TTFB)
+- Document: Number of requests before first paint
+- Identify waterfall blocking patterns
+
+**AC12.5.1.4 - Database Query Analysis:**
+- Review Supabase dashboard query logs
+- Identify queries taking >100ms
+- Check for N+1 query patterns
+- Document RLS policy evaluation overhead
+
+**AC12.5.1.5 - React Profiler:**
+- Profile 3 key user flows with React DevTools
+- Document: Excessive re-renders
+- Document: Slow component mounts
+- Identify components causing layout thrash
+
+**And** a performance baseline document is created at `docs/sprint-artifacts/epic12.5/performance-baseline.md`
+**And** specific, measurable targets are defined for improvement
+
+**Prerequisites:** Epic 12 complete
+
+**Technical Notes:**
+- Use `@next/bundle-analyzer` for bundle analysis
+- Use Supabase Studio > Logs for query analysis
+- Target metrics: LCP < 2.5s, FCP < 1.8s, bundle < 200KB initial
+- Create reproducible test conditions (clear cache, throttled network)
+
+---
+
+### Story 12.5.2: Bundle Size Optimization
+
+As a **developer**,
+I want **the JavaScript bundle size reduced**,
+So that **pages load faster, especially on mobile networks**.
+
+**Acceptance Criteria:**
+
+**Given** bundle analysis from Story 12.5.1
+**When** bundle optimization is applied
+**Then:**
+
+**AC12.5.2.1 - Code Splitting:**
+- Route-based code splitting verified/improved
+- Admin routes lazy-loaded (not in consumer bundle)
+- Provider routes lazy-loaded (not in consumer bundle)
+
+**AC12.5.2.2 - Dependency Audit:**
+- Unused dependencies removed from package.json
+- Large dependencies replaced with lighter alternatives (if applicable)
+- Tree-shaking verified for major libraries
+
+**AC12.5.2.3 - Dynamic Imports:**
+- Heavy components (maps, charts, date pickers) dynamically imported
+- Loading states shown during dynamic import
+
+**AC12.5.2.4 - Measurement:**
+- Initial bundle size reduced by ≥30% from baseline
+- Or documented justification if <30% achievable
+
+**Prerequisites:** Story 12.5.1
+
+**Technical Notes:**
+- Check for: moment.js (replace with date-fns), lodash (use lodash-es or native), unused icon libraries
+- Verify Next.js automatic code splitting is working correctly
+- Consider `next/dynamic` for heavy components
+
+---
+
+### Story 12.5.3: Data Fetching Optimization
+
+As a **developer**,
+I want **optimized data fetching patterns**,
+So that **pages render faster with less waiting**.
+
+**Acceptance Criteria:**
+
+**Given** network and database analysis from Story 12.5.1
+**When** data fetching is optimized
+**Then:**
+
+**AC12.5.3.1 - Query Optimization:**
+- Slow queries (>100ms) optimized with indexes or query restructuring
+- N+1 patterns eliminated with proper joins
+- Only required columns selected (no SELECT *)
+
+**AC12.5.3.2 - Parallel Fetching:**
+- Independent data fetches run in parallel (Promise.all)
+- No waterfall patterns for unrelated data
+
+**AC12.5.3.3 - Caching Strategy:**
+- Appropriate cache headers on API routes
+- React Query or SWR for client-side caching (if not already)
+- Stale-while-revalidate patterns for non-critical data
+
+**AC12.5.3.4 - RLS Optimization:**
+- RLS policies reviewed for performance
+- Expensive RLS checks optimized or restructured
+
+**AC12.5.3.5 - Measurement:**
+- Average page data fetch time reduced by ≥40%
+- Or documented justification if <40% achievable
+
+**Prerequisites:** Story 12.5.1
+
+**Technical Notes:**
+- Check Supabase indexes on frequently filtered columns
+- Review RLS policies using `EXPLAIN ANALYZE`
+- Consider edge caching for static-ish data
+
+---
+
+### Story 12.5.4: React Rendering Optimization
+
+As a **developer**,
+I want **optimized React rendering**,
+So that **interactions feel instant and smooth**.
+
+**Acceptance Criteria:**
+
+**Given** React profiler analysis from Story 12.5.1
+**When** rendering is optimized
+**Then:**
+
+**AC12.5.4.1 - Memoization:**
+- Expensive computations wrapped in useMemo
+- Callback functions stabilized with useCallback where needed
+- Components memoized with React.memo where beneficial
+
+**AC12.5.4.2 - State Management:**
+- State lifted appropriately (not causing unnecessary re-renders)
+- Context providers split if causing broad re-renders
+- Local state preferred over global where appropriate
+
+**AC12.5.4.3 - List Rendering:**
+- Long lists use virtualization if >50 items
+- Proper keys on all mapped elements
+- No inline object/function definitions in render
+
+**AC12.5.4.4 - Measurement:**
+- Re-render count reduced for key interactions
+- Time to Interactive improved on key pages
+
+**Prerequisites:** Story 12.5.1
+
+**Technical Notes:**
+- Use React DevTools Profiler "Highlight updates" feature
+- Consider `react-window` for virtualization if lists are long
+- Check for inline arrow functions in JSX causing re-renders
+
+---
+
+### Story 12.5.5: Build & Development Performance
+
+As a **developer**,
+I want **faster build and development cycles**,
+So that **development iteration is efficient**.
+
+**Acceptance Criteria:**
+
+**Given** current build and dev performance
+**When** build tooling is optimized
+**Then:**
+
+**AC12.5.5.1 - Build Time:**
+- Production build time documented (baseline)
+- Opportunities for improvement identified
+- Build time reduced or justified
+
+**AC12.5.5.2 - Dev Server:**
+- Hot reload time documented
+- Slow hot reloads investigated and fixed
+- Dev startup time optimized
+
+**AC12.5.5.3 - Package Manager Evaluation:**
+- Document current npm install time
+- Evaluate Bun/pnpm as alternatives
+- Implement if measurable improvement (>2x faster)
+- Document decision with rationale
+
+**Prerequisites:** Story 12.5.1
+
+**Technical Notes:**
+- Bun improves install/build time but doesn't affect runtime
+- This is lower priority than user-facing performance
+- Consider as nice-to-have after runtime optimizations
+
+---
+
+### Story 12.5.6: Performance Validation & Documentation
+
+As a **developer**,
+I want **verified performance improvements with documentation**,
+So that **we know the optimization effort succeeded**.
+
+**Acceptance Criteria:**
+
+**Given** optimizations from Stories 12.5.2-12.5.5 are complete
+**When** performance is re-measured
+**Then:**
+
+**AC12.5.6.1 - Before/After Comparison:**
+- Lighthouse scores re-run on same 5 pages
+- Documented improvement for each metric
+- Side-by-side comparison created
+
+**AC12.5.6.2 - User Experience Validation:**
+- Manual testing on Samsung S23 (or similar Android)
+- Manual testing on desktop Chrome
+- Subjective improvement documented
+
+**AC12.5.6.3 - Regression Prevention:**
+- Bundle size budget added to CI (fail if exceeds threshold)
+- Lighthouse CI integration (or equivalent)
+- Performance monitoring recommendations documented
+
+**AC12.5.6.4 - Documentation:**
+- Performance optimization guide created
+- Patterns to follow documented
+- Anti-patterns to avoid documented
+
+**Prerequisites:** Stories 12.5.2, 12.5.3, 12.5.4, 12.5.5
+
+**Technical Notes:**
+- Use same test conditions as baseline
+- Create `docs/technical/performance-guide.md`
+- Consider Vercel Analytics for ongoing monitoring
+
+---
+
+### Epic 12.5 Summary
+
+| Story | Title | Focus Area | Priority |
+|-------|-------|------------|----------|
+| 12.5.1 | Performance Audit & Baseline | Diagnostics | P0 - Required First |
+| 12.5.2 | Bundle Size Optimization | Frontend | P1 |
+| 12.5.3 | Data Fetching Optimization | Backend/API | P1 |
+| 12.5.4 | React Rendering Optimization | Frontend | P1 |
+| 12.5.5 | Build & Development Performance | DevEx | P2 |
+| 12.5.6 | Performance Validation | Verification | P0 - Required Last |
+
+**Total Stories:** 6
+
+**Execution Order:**
+1. Story 12.5.1 (Audit) - Must complete first
+2. Stories 12.5.2, 12.5.3, 12.5.4 - Can run in parallel based on findings
+3. Story 12.5.5 - Lower priority, can be deferred
+4. Story 12.5.6 (Validation) - Must complete last
+
+---
+
+_Epic 12.5 created 2025-12-28 - Performance Optimization Initiative_
+
+---
+
 _V2 Post-MVP Epics generated for Consumer-Choice Offer Model (2025-12-12)_
 
 _PRD Reference: `docs/prd-v2.md`_
