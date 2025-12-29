@@ -262,7 +262,7 @@ development_status:
   # Final Validation
   # ----------------
   12-13-epic-full-local-validation: done  # 84/98 tests pass (86%), 14 skipped expected, Atlas code review passed
-  12-14-epic-full-production-validation: done  # 84/98 tests pass production (86%), Atlas code review passed 2025-12-29
+  12-14-epic-full-production-validation: deployed  # 84/98 tests pass production (86%), Atlas code review passed, deployed 2025-12-29
 
   epic-12-retrospective: optional
 
