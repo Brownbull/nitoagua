@@ -437,4 +437,50 @@
 
 ---
 
-*Last verified: 2025-12-28 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2, 11-19, 12-3, 12-6, 12-11, 12-12 implementations*
+### Story 12-13: Epic 12 Full Local Validation (2025-12-28)
+
+**Issues Found in Atlas Code Review:**
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **Untracked test file** | New integration test file `epic12-integration.spec.ts` not added to git | Always run `git status` before marking validation stories complete to catch untracked test files |
+| **Test file names mismatch docs** | Story documented wrong filenames (`consumer-negative-status.spec.ts` vs actual `negative-status-states.spec.ts`) | Copy-paste actual filenames from filesystem, not from memory |
+| **Grep pattern mismatch** | `--grep "12-"` doesn't match test descriptions like "Story 12-X" | Use `--grep "Story 12-"` or run explicit file list |
+| **Provider login tests skip silently** | Dev-login component uses production credentials (`supplier@nitoagua.cl`) which don't exist in local Supabase | Expected behavior - provider tests validated on production (12-14) |
+
+**Key Patterns from Story 12-13:**
+
+1. **Test file tracking rule:**
+   - Before marking validation stories complete, run:
+     ```bash
+     git status tests/e2e/
+     ```
+   - Add ANY untracked test files before committing
+
+2. **Documentation file name verification:**
+   - Verify file names exist with:
+     ```bash
+     ls tests/e2e/*.spec.ts | grep -E "(pattern)"
+     ```
+   - Don't trust copy-pasted names from prior documentation
+
+3. **Local vs Production test expectations:**
+   - Consumer-facing features: Fully testable locally (86% pass rate expected)
+   - Provider-facing features: Skip locally, validate on production
+   - Push notifications: UI testable, actual push requires production
+
+4. **Validation story checklist:**
+   - [ ] All test files tracked in git
+   - [ ] Test commands in story use actual filenames
+   - [ ] Skipped tests documented with clear reasons
+   - [ ] Production validation story drafted for remaining tests
+
+**Hard-Won Wisdom:**
+
+> "Local validation stories (like 12-13) have predictable skip rates. 86% pass rate with 14 provider skips is expected, not a failure."
+
+> "Always verify test files are tracked BEFORE code review. The 'untracked file' issue is easy to miss when tests all pass."
+
+---
+
+*Last verified: 2025-12-28 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2, 11-19, 12-3, 12-6, 12-11, 12-12, 12-13 implementations*

@@ -5,7 +5,7 @@
 | **Story ID** | 12-14 |
 | **Epic** | Epic 12: Consumer UX Enhancements |
 | **Title** | Epic 12 Full Production Validation |
-| **Status** | drafted |
+| **Status** | in-progress |
 | **Priority** | P0 (Final Checkpoint) |
 | **Points** | 5 |
 | **Sprint** | Backlog |
@@ -17,11 +17,43 @@ Final production validation of ALL Epic 12 features. This is the last story befo
 
 ## Prerequisites
 
-- [ ] Story 12-13 (Epic Full Local Validation) - done
+- [x] Story 12-13 (Epic Full Local Validation) - done
 - [ ] All changes merged: develop → staging → main
-- [ ] All migrations applied to production
-- [ ] Edge Functions deployed to production
-- [ ] Environment variables configured in Vercel
+- [x] All migrations applied to production
+- [x] Edge Functions deployed to production
+- [x] Environment variables configured in Vercel
+
+## Tasks/Subtasks
+
+### Task 1: Verify Prerequisites and Commit Pending Changes
+- [ ] 1.1 Commit all pending Story 12-13 changes to main
+- [ ] 1.2 Verify all changes are on main branch
+- [ ] 1.3 Verify production deployment is current
+
+### Task 2: Run Full Production Test Suite (AC12.14.1)
+- [ ] 2.1 Run Phase 1 tests (consumer-home-trust-signals, negative-status-states) on production
+- [ ] 2.2 Run Phase 2 tests (consumer-map-pinpoint, consumer-payment-selection, urgency-pricing) on production
+- [ ] 2.3 Run Phase 3 tests (push-subscription) on production
+- [ ] 2.4 Run integration tests (epic12-integration) on production
+- [ ] 2.5 Document test results in Test Results Summary
+
+### Task 3: Manual Production Verification (AC12.14.2)
+- [ ] 3.1 Verify trust signals and no fake statistics on home page
+- [ ] 3.2 Verify negative status states (timeout, cancelled)
+- [ ] 3.3 Verify map pinpoint functionality (display, drag, save)
+- [ ] 3.4 Verify payment method selection and persistence
+- [ ] 3.5 Verify urgency pricing display
+- [ ] 3.6 Verify push notifications on Android device
+
+### Task 4: Cross-Browser Check (AC12.14.3)
+- [ ] 4.1 Test on Chrome desktop
+- [ ] 4.2 Test on Chrome mobile
+- [ ] 4.3 Test Android PWA push notifications
+
+### Task 5: Complete Story Documentation
+- [ ] 5.1 Update Test Results Summary with final counts
+- [ ] 5.2 Complete Manual Verification Checklist
+- [ ] 5.3 Update story status to review
 
 ## Complete Test Coverage
 
@@ -72,14 +104,14 @@ Final production validation of ALL Epic 12 features. This is the last story befo
 ```bash
 # Run FULL Epic 12 test suite on production
 NEXT_PUBLIC_SUPABASE_URL="https://spvbmmydrfquvndxpcug.supabase.co" \
-NEXT_PUBLIC_SUPABASE_ANON_KEY="..." \
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwdmJtbXlkcmZxdXZuZHhwY3VnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NDQ4ODAsImV4cCI6MjA4MDIyMDg4MH0.FKa0r5f8djKNwsZG_rR-KT0gqZ5z5bVgpd_l0EHQ0ps" \
 NEXT_PUBLIC_DEV_LOGIN=true \
 DISPLAY= timeout 600 npx playwright test \
   tests/e2e/consumer-home-trust-signals.spec.ts \
-  tests/e2e/consumer-negative-status.spec.ts \
+  tests/e2e/negative-status-states.spec.ts \
   tests/e2e/consumer-map-pinpoint.spec.ts \
   tests/e2e/consumer-payment-selection.spec.ts \
-  tests/e2e/consumer-urgency-pricing.spec.ts \
+  tests/e2e/urgency-pricing.spec.ts \
   tests/e2e/push-subscription.spec.ts \
   tests/e2e/epic12-integration.spec.ts \
   --project=chromium --workers=1 --reporter=list

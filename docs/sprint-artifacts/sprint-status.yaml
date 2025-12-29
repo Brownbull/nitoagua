@@ -261,10 +261,25 @@ development_status:
 
   # Final Validation
   # ----------------
-  12-13-epic-full-local-validation: drafted  # All 46 tests local + integration tests
-  12-14-epic-full-production-validation: drafted  # All 46 tests production + manual checklist
+  12-13-epic-full-local-validation: done  # 84/98 tests pass (86%), 14 skipped expected, Atlas code review passed
+  12-14-epic-full-production-validation: in-progress  # All 46 tests production + manual checklist
 
   epic-12-retrospective: optional
+
+  # Epic 12.5: Performance Optimization (Tech Debt)
+  # =============================================================
+  # Purpose: Diagnose and fix application-wide performance issues
+  # Approach: Diagnostic-first - measure before optimizing
+  # Priority: HIGH - User-reported sluggishness across all pages
+  # Created: 2025-12-28
+  epic-12.5: contexted  # Tech spec and stories created 2025-12-28
+  12.5-1-performance-audit-baseline: drafted  # P0: Must complete first - Lighthouse, bundle, network, React profiler
+  12.5-2-bundle-size-optimization: drafted  # P1: Code splitting, dependency audit, dynamic imports
+  12.5-3-data-fetching-optimization: drafted  # P1: Query optimization, parallel fetching, caching
+  12.5-4-react-rendering-optimization: drafted  # P1: Memoization, state management, list virtualization
+  12.5-5-build-development-performance: drafted  # P2: Build time, dev server, package manager evaluation
+  12.5-6-performance-validation-documentation: drafted  # P0: Must complete last - Before/after comparison, CI budgets
+  epic-12.5-retrospective: optional
 
   # Epic 13: Chrome Extension Final Validation (LAST EPIC)
   # =============================================================

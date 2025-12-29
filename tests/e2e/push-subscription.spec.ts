@@ -21,9 +21,12 @@
 import { test, expect, Page } from "@playwright/test";
 import { assertNoErrorState } from "../fixtures/error-detection";
 
-// Check if dev login is enabled
-const devLoginEnabled = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
-const skipIfNoDevLogin = !devLoginEnabled;
+// Dev login is required for these tests - they will be skipped if login page
+// doesn't show dev login button (detected at runtime, not module load time)
+//
+// NOTE: Local Supabase skips these tests because dev-login component uses
+// production credentials (supplier@nitoagua.cl) which don't exist locally.
+// Tests will pass on production. See Story 12-13 test results for details.
 
 /**
  * Login helper for provider using test-supplier credentials
@@ -80,7 +83,7 @@ async function loginAsConsumer(page: Page) {
 
 test.describe("Push Subscription UI @push @seeded", () => {
   test.describe("Provider Settings - Notification Component", () => {
-    test.skip(skipIfNoDevLogin, "Dev login required for provider tests");
+    // Dev login is detected at runtime during login attempt
 
     test("displays notification settings section on provider settings page", async ({ page }) => {
       // Attempt login - if it fails, skip test
@@ -218,7 +221,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
   });
 
   test.describe("Consumer Settings - Notification Component", () => {
-    test.skip(skipIfNoDevLogin, "Dev login required for consumer tests");
+    // Dev login is detected at runtime during login attempt
 
     test("displays notification settings on consumer settings page", async ({ page }) => {
       try {
@@ -243,7 +246,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
   });
 
   test.describe("Admin Settings - Notification Component", () => {
-    test.skip(skipIfNoDevLogin, "Dev login required for admin tests");
+    // Dev login is detected at runtime during login attempt
 
     test("displays notification settings on admin settings page", async ({ page }) => {
       // Admin has separate login page at /admin/login
@@ -287,7 +290,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
   });
 
   test.describe("Notification Settings Component Structure", () => {
-    test.skip(skipIfNoDevLogin, "Dev login required for tests");
+    // Dev login is detected at runtime during login attempt
 
     test("notification settings has correct section structure", async ({ page }) => {
       try {
