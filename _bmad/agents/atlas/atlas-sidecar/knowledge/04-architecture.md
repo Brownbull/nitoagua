@@ -386,4 +386,51 @@ useEffect(() => {
 
 ---
 
-*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2 code reviews*
+### RLS Policy Optimization (Story 12.5-3)
+
+**Problem:** RLS policies using `auth.uid()` or `auth.jwt()` directly re-evaluate the function for each row scanned.
+
+**Solution:** Use `(select auth.uid())` or `(select auth.jwt())` which caches the result for the entire query.
+
+**Patterns:**
+```sql
+-- BEFORE - Slow (re-evaluates per row)
+CREATE POLICY "Users can read own" ON table
+    FOR SELECT
+    USING (user_id = auth.uid());
+
+-- AFTER - Fast (cached for query)
+CREATE POLICY "Users can read own" ON table
+    FOR SELECT
+    USING (user_id = (select auth.uid()));
+
+-- Admin policies use auth.jwt() for email checks
+-- BEFORE - Slow
+USING ((auth.jwt() ->> 'email') = admin_email);
+
+-- AFTER - Fast
+USING (((select auth.jwt()) ->> 'email') = admin_email);
+```
+
+**Implementation:**
+- Migration: `20251229100000_optimize_rls_performance.sql`
+- 32 RLS policies optimized across 11 tables:
+  - Part 1: 25 user policies using `auth.uid()`
+  - Part 1B: 7 admin policies using `auth.jwt()` (added by code review)
+- Expected improvement: 50-80% reduction in RLS evaluation time
+
+**Affected Tables:**
+- User policies: profiles, offers, water_requests, notifications, provider_documents, provider_service_areas, push_subscriptions, commission_ledger, withdrawal_requests
+- Admin policies: admin_allowed_emails, admin_settings
+
+**Additional Indexes Created:**
+- 6 missing FK indexes (admin_settings, commission_ledger, provider_documents, water_requests, withdrawal_requests)
+- 4 performance indexes (offers.status, profiles.role, water_requests composite)
+
+**Code Review Lesson:** Always check Supabase performance advisors after RLS migrations - they catch policies missed during manual review.
+
+**Source:** docs/sprint-artifacts/epic12.5/12.5-3-data-fetching-optimization.md
+
+---
+
+*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2, 12.5-3 code reviews*
