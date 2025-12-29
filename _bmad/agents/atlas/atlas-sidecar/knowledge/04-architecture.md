@@ -328,4 +328,62 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 ---
 
-*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1 code reviews*
+### Bundle Size Optimization (Story 12.5-2)
+
+**Pattern:** Turbopack/webpack aliasing for unused module exclusion.
+
+**Location:** `next.config.ts`
+
+**Key Implementation:**
+
+1. **Zod v4 locale exclusion** - Exclude 46 unused locale files (~238KB savings)
+```typescript
+// next.config.ts
+turbopack: {
+  resolveAlias: {
+    // Only include English locale (Spanish messages are in our schemas)
+    "zod/v4/locales": { browser: "./node_modules/zod/v4/locales/en.js" },
+  },
+},
+webpack: (config, { isServer }) => {
+  if (!isServer) {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "zod/v4/locales": require.resolve("zod/v4/locales/en.js"),
+    };
+  }
+  return config;
+},
+```
+
+2. **Dynamic import for conditional heavy libraries**
+```typescript
+// Instead of: import confetti from "canvas-confetti";
+// Use conditional dynamic import:
+useEffect(() => {
+  if (someCondition) {
+    import("canvas-confetti").then((mod) => {
+      const confetti = mod.default;
+      confetti({ /* options */ });
+    });
+  }
+}, [someCondition]);
+```
+
+**Bundle Reduction Achieved:**
+| Metric | Before | After | Savings |
+|--------|--------|-------|---------|
+| Static chunks | 3.4 MB | 3.0 MB | 400 KB (12%) |
+| Zod locales | 238 KB | 0 KB | 238 KB |
+| canvas-confetti | Static | Dynamic | ~17 KB initial |
+
+**Already Optimized (verified):**
+- Leaflet: Dynamic import with `ssr: false` (Story 8-10)
+- Lucide-react: All 120+ imports use named exports (tree-shaking works)
+- date-fns: Module imports enable tree-shaking
+
+**Source:** docs/sprint-artifacts/epic12.5/12.5-2-bundle-size-optimization.md
+
+---
+
+*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2 code reviews*

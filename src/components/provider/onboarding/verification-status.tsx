@@ -19,7 +19,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { resubmitDocuments } from "@/lib/actions/provider-registration";
-import confetti from "canvas-confetti";
+// Canvas-confetti is dynamically imported to reduce initial bundle size
+// Only loaded when status becomes "approved"
 
 type VerificationStatus = "pending" | "approved" | "rejected" | "more_info_needed";
 
@@ -65,44 +66,53 @@ export function VerificationStatusDisplay({
   const hasShownConfetti = useRef(false);
 
   // Trigger confetti effect when status becomes approved
+  // Uses dynamic import to only load canvas-confetti when needed
   useEffect(() => {
     if (status === "approved" && !hasShownConfetti.current) {
       hasShownConfetti.current = true;
 
-      // Fire multiple confetti bursts
-      const duration = 3000;
-      const animationEnd = Date.now() + duration;
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      // Dynamically import canvas-confetti only when needed
+      import("canvas-confetti").then((confettiModule) => {
+        const confetti = confettiModule.default;
 
-      function randomInRange(min: number, max: number) {
-        return Math.random() * (max - min) + min;
-      }
+        // Fire multiple confetti bursts
+        const duration = 3000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
-      const interval = setInterval(function () {
-        const timeLeft = animationEnd - Date.now();
-
-        if (timeLeft <= 0) {
-          return clearInterval(interval);
+        function randomInRange(min: number, max: number) {
+          return Math.random() * (max - min) + min;
         }
 
-        const particleCount = 50 * (timeLeft / duration);
+        const interval = setInterval(function () {
+          const timeLeft = animationEnd - Date.now();
 
-        // Fire from two sides
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-          colors: ["#10B981", "#34D399", "#6EE7B7", "#A7F3D0", "#FFD700"],
-        });
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-          colors: ["#10B981", "#34D399", "#6EE7B7", "#A7F3D0", "#FFD700"],
-        });
-      }, 250);
+          if (timeLeft <= 0) {
+            return clearInterval(interval);
+          }
 
-      return () => clearInterval(interval);
+          const particleCount = 50 * (timeLeft / duration);
+
+          // Fire from two sides
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+            colors: ["#10B981", "#34D399", "#6EE7B7", "#A7F3D0", "#FFD700"],
+          });
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+            colors: ["#10B981", "#34D399", "#6EE7B7", "#A7F3D0", "#FFD700"],
+          });
+        }, 250);
+
+        // Clear interval on cleanup
+        return () => clearInterval(interval);
+      }).catch((err) => {
+        console.error("Failed to load confetti:", err);
+      });
     }
   }, [status]);
 
