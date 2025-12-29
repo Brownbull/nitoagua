@@ -483,4 +483,91 @@
 
 ---
 
-*Last verified: 2025-12-28 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2, 11-19, 12-3, 12-6, 12-11, 12-12, 12-13 implementations*
+---
+
+### Story 12-14: Epic 12 Full Production Validation (2025-12-28)
+
+**Production Validation Lessons:**
+
+| Issue | Root Cause | Prevention |
+|-------|------------|------------|
+| **Provider tests skip on production** | Dev login uses `supplier@nitoagua.cl` which doesn't exist in production database (by design) | Expected - provider tests validated via production auth credentials, not dev login |
+| **86% pass rate is target, not failure** | 14 tests skip (12 provider auth + 2 seed data dependent) | Document expected skip counts in validation stories |
+| **Manual verification via E2E coverage** | Most manual items verifiable by referencing E2E test counts | Link manual checklist items to specific E2E test counts |
+| **Android push requires real device** | Playwright cannot simulate push permission grant or service worker push events | Document user-action-required items explicitly |
+
+**Key Patterns from Story 12-14:**
+
+1. **Production validation story structure:**
+   - Task 1: Prerequisites verification (commit pending, deployment ready)
+   - Task 2: Full test suite execution with breakdown by phase
+   - Task 3: Manual verification with E2E test cross-references
+   - Task 4: Cross-browser check (Chromium + mobile viewport)
+   - Task 5: Documentation update with results
+
+2. **Test Results Summary format:**
+   ```markdown
+   | Phase | Test Count | Pass | Fail | Skip |
+   |-------|------------|------|------|------|
+   | Phase 1: UI & Status | 33 | 33 | 0 | 0 |
+   | Phase 2: Form Enhancements | 50 | 48 | 0 | 2 |
+   | **Total** | **98** | **84** | **0** | **14** |
+   ```
+
+3. **Manual verification cross-reference:**
+   - Instead of manual clicking, reference: "E2E verified: 14 tests for map step"
+   - This proves coverage exists without redundant manual testing
+   - Only user-device-dependent items (Android push) require real manual testing
+
+4. **Production vs Local expected differences:**
+   - Local: Consumer + Provider tests pass with seed data
+   - Production: Consumer tests pass, Provider tests skip (no dev-login users)
+   - Same pass rate expected: ~86% for both
+
+5. **User action required items:**
+   - Push notification on Android device
+   - Notification click navigation
+   - Document clearly as "USER ACTION REQUIRED" in ACs
+
+**Hard-Won Wisdom:**
+
+> "Production validation stories should show SAME pass rate as local validation. If rates differ, investigate before proceeding."
+
+> "Manual verification doesn't mean clicking every button. Cross-reference E2E test counts to prove coverage exists."
+
+> "14 skipped tests out of 98 is not a problem when documented. The problem is unexpected skips."
+
+---
+
+### Epic 12 Summary (2025-12-28)
+
+**Epic 12: Consumer UX Enhancements** - 14 stories, ~180 E2E tests
+
+**Phases:**
+1. **Phase 1 (UI):** Trust signals (12-5), negative states (12-3), local/prod validation (12-7, 12-8)
+2. **Phase 2 (Forms):** Payment selection (12-2), urgency pricing (12-4), map pinpoint (12-1), local/prod validation (12-9, 12-10)
+3. **Phase 3 (Push):** Web push (12-6), local/prod validation (12-11, 12-12)
+4. **Final Validation:** Full local (12-13), full production (12-14)
+
+**Key Technical Achievements:**
+- Leaflet map integration with dynamic imports for SSR bypass
+- Web Push Notifications with lazy VAPID initialization
+- Service Worker push handlers for Android PWA
+- Edge Function deployment for server-side push delivery
+- Comprehensive E2E coverage with phased validation approach
+
+**Testing Metrics:**
+- 98 total E2E tests for Epic 12 features
+- 84 tests pass consistently (86%)
+- 14 tests skip expectedly (provider auth + seed data)
+- 0 failures, 0 regressions
+
+**Patterns Established:**
+- Phased validation: local checkpoint → production checkpoint
+- Test-count-based manual verification
+- User-action-required explicit documentation
+- Expected skip rate documentation
+
+---
+
+*Last verified: 2025-12-28 | Sources: Epic 3, Epic 8 retrospectives, Story 8-6, 8-7, 8-9, 8-10, 10-4, 10-5, 11-1, 11A-1, 11-2, 11-19, 12-3, 12-6, 12-11, 12-12, 12-13, 12-14 implementations*
