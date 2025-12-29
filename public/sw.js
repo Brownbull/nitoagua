@@ -1,8 +1,10 @@
 // nitoagua Service Worker
 // Cache-first strategy for static assets, network-first for API
+// Push notifications for background alerts (Story 12-6)
 
 // Version should be updated with each deploy for update detection
-const SW_VERSION = "1.0.0";
+// IMPORTANT: Increment version when push handlers change
+const SW_VERSION = "2.1.0";
 const CACHE_NAME = `nitoagua-v${SW_VERSION}`;
 
 // Assets to pre-cache on install
@@ -112,3 +114,145 @@ async function networkFirst(request) {
     return new Response("Network error", { status: 503 });
   }
 }
+
+// =============================================================================
+// PUSH NOTIFICATIONS (Story 12-6)
+// =============================================================================
+
+/**
+ * Push event handler
+ * AC12.6.4: Parse notification payload and display
+ *
+ * Payload structure:
+ * {
+ *   title: string,
+ *   body: string,
+ *   icon?: string,
+ *   url?: string,
+ *   tag?: string,
+ *   data?: object
+ * }
+ */
+self.addEventListener("push", (event) => {
+  console.log("[SW] Push notification received");
+
+  // Default notification if no payload
+  let notification = {
+    title: "NitoAgua",
+    body: "Tienes una nueva notificación",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    url: "/",
+    tag: "nitoagua-notification",
+  };
+
+  // Parse payload if present
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      notification = {
+        title: payload.title || notification.title,
+        body: payload.body || notification.body,
+        icon: payload.icon || notification.icon,
+        badge: notification.badge,
+        url: payload.url || notification.url,
+        tag: payload.tag || notification.tag,
+        data: payload.data || {},
+      };
+    } catch (e) {
+      console.error("[SW] Error parsing push payload:", e);
+      // Try as text
+      notification.body = event.data.text() || notification.body;
+    }
+  }
+
+  // AC12.6.4: Display notification using self.registration.showNotification()
+  const options = {
+    body: notification.body,
+    icon: notification.icon,
+    badge: notification.badge,
+    tag: notification.tag,
+    data: {
+      url: notification.url,
+      ...notification.data,
+    },
+    // Android-specific options
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    // Actions for quick response
+    actions: [
+      {
+        action: "view",
+        title: "Ver detalles",
+      },
+    ],
+  };
+
+  event.waitUntil(self.registration.showNotification(notification.title, options));
+});
+
+/**
+ * Notification click handler
+ * AC12.6.4: Navigate to correct URL on click using clients.openWindow()
+ */
+self.addEventListener("notificationclick", (event) => {
+  console.log("[SW] Notification clicked:", event.notification.tag);
+
+  // AC12.6.4: Close notification after click
+  event.notification.close();
+
+  // Get the URL to navigate to
+  const urlToOpen = event.notification.data?.url || "/";
+
+  // Handle action clicks
+  if (event.action === "view") {
+    // "Ver detalles" action - same as clicking notification
+  }
+
+  // AC12.6.4: Navigate to correct URL using clients.openWindow()
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((windowClients) => {
+        // Check if there's already a window open
+        for (const client of windowClients) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            // Navigate existing window to the URL
+            client.navigate(urlToOpen);
+            return client.focus();
+          }
+        }
+        // Open new window if none exists
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+  );
+});
+
+/**
+ * Push subscription change handler
+ * AC12.6.10: Handle subscription renewal when service worker updates
+ */
+self.addEventListener("pushsubscriptionchange", (event) => {
+  console.log("[SW] Push subscription changed");
+
+  // The old subscription is no longer valid
+  // Re-subscribe and notify the server
+  event.waitUntil(
+    self.registration.pushManager
+      .subscribe({
+        userVisibleOnly: true,
+        // Note: applicationServerKey would need to be passed from the page
+        // This event is rare and usually handled by the browser
+      })
+      .then((subscription) => {
+        console.log("[SW] Re-subscribed to push:", subscription.endpoint);
+        // The new subscription should be sent to the server
+        // This would typically be handled by the app when it next loads
+      })
+      .catch((err) => {
+        console.error("[SW] Failed to re-subscribe:", err);
+      })
+  );
+});

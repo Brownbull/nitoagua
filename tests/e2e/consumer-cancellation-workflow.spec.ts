@@ -305,7 +305,7 @@ test.describe("Consumer Cancellation Workflow (C8-C11)", () => {
       await expect(cancelButton).not.toBeVisible();
     });
 
-    test("Cancelling no_offers request - button visible", async ({ page }) => {
+    test("Cancel button NOT visible on no_offers request", async ({ page }) => {
       await page.goto(`/track/${TRACKING_TOKENS.noOffers}`);
       await assertNoErrorState(page);
 

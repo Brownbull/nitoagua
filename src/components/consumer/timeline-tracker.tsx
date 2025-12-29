@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RequestStatus } from "@/components/shared/status-badge";
 
@@ -14,7 +14,7 @@ export interface TimelineTrackerProps {
 interface TimelineStep {
   id: number;
   label: string;
-  status: "completed" | "current" | "pending";
+  status: "completed" | "current" | "pending" | "cancelled" | "failed";
   timestamp?: string | null;
 }
 
@@ -32,37 +32,49 @@ function getTimelineSteps(
   const statusOrder = ["pending", "accepted", "in_transit", "delivered"];
   const currentIndex = statusOrder.indexOf(currentStatus);
 
-  // Handle cancelled status
+  // Handle cancelled status - AC12.3: Show interrupted timeline with cancelled marker
   if (currentStatus === "cancelled") {
-    return [
+    // Build timeline based on how far request got before cancellation
+    const steps: TimelineStep[] = [
       {
         id: 1,
         label: "Solicitud enviada",
         status: "completed",
         timestamp: createdAt,
       },
-      {
+    ];
+
+    if (acceptedAt) {
+      // Cancelled after acceptance
+      steps.push({
         id: 2,
         label: "Repartidor confirmó",
-        status: acceptedAt ? "completed" : "pending",
+        status: "completed",
         timestamp: acceptedAt,
-      },
-      {
-        id: 3,
-        label: "En camino",
-        status: inTransitAt ? "completed" : "pending",
-        timestamp: inTransitAt,
-      },
-      {
-        id: 4,
-        label: "Entregado",
-        status: "pending",
-        timestamp: null,
-      },
-    ];
+      });
+      if (inTransitAt) {
+        // Cancelled during transit
+        steps.push({
+          id: 3,
+          label: "En camino",
+          status: "completed",
+          timestamp: inTransitAt,
+        });
+      }
+    }
+
+    // Add cancelled marker
+    steps.push({
+      id: steps.length + 1,
+      label: "Cancelado",
+      status: "cancelled",
+      timestamp: null, // We don't have cancelled_at in props yet
+    });
+
+    return steps;
   }
 
-  // Handle no_offers status
+  // Handle no_offers status - AC12.3.1: Show failed timeline with timeout marker
   if (currentStatus === "no_offers") {
     return [
       {
@@ -73,20 +85,8 @@ function getTimelineSteps(
       },
       {
         id: 2,
-        label: "Recibiendo ofertas",
-        status: "pending",
-        timestamp: null,
-      },
-      {
-        id: 3,
-        label: "Seleccionar oferta",
-        status: "pending",
-        timestamp: null,
-      },
-      {
-        id: 4,
-        label: "Entrega",
-        status: "pending",
+        label: "Sin ofertas recibidas",
+        status: "failed",
         timestamp: null,
       },
     ];
@@ -193,11 +193,19 @@ export function TimelineTracker({
                   "absolute -left-7 top-0 w-5 h-5 rounded-full flex items-center justify-center",
                   step.status === "completed" && "bg-[#10B981]",
                   step.status === "current" && "bg-white border-2 border-[#0077B6] shadow-[0_0_0_4px_#CAF0F8]",
-                  step.status === "pending" && "bg-white border-2 border-gray-300"
+                  step.status === "pending" && "bg-white border-2 border-gray-300",
+                  step.status === "cancelled" && "bg-gray-400",
+                  step.status === "failed" && "bg-[#EA580C]"
                 )}
               >
                 {step.status === "completed" && (
                   <Check className="h-3 w-3 text-white" aria-hidden="true" />
+                )}
+                {step.status === "cancelled" && (
+                  <X className="h-3 w-3 text-white" aria-hidden="true" />
+                )}
+                {step.status === "failed" && (
+                  <X className="h-3 w-3 text-white" aria-hidden="true" />
                 )}
               </span>
 
@@ -206,7 +214,11 @@ export function TimelineTracker({
                 <span
                   className={cn(
                     "text-sm font-semibold",
-                    step.status === "pending" ? "text-gray-400" : "text-gray-900"
+                    step.status === "pending" && "text-gray-400",
+                    step.status === "completed" && "text-gray-900",
+                    step.status === "current" && "text-gray-900",
+                    step.status === "cancelled" && "text-gray-500",
+                    step.status === "failed" && "text-[#C2410C]"
                   )}
                 >
                   {step.label}

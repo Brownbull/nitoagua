@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 import RequestTimeoutEmail from "../../../../../emails/request-timeout";
+import { triggerRequestTimeoutPush } from "@/lib/push/trigger-push";
 
 /**
  * GET /api/cron/request-timeout
@@ -211,6 +212,11 @@ async function processRequestTimeout(
       } else {
         notificationId = notification?.id;
       }
+
+      // AC12.6.6: Send push notification for request timeout
+      triggerRequestTimeoutPush(request.consumer_id, request.id).catch(
+        (err) => console.error("[CRON] Push notification error:", err)
+      );
     } catch (notifErr) {
       console.error(
         `[CRON] request-timeout: Exception creating notification for request ${request.id}:`,

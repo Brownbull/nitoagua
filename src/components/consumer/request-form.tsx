@@ -86,6 +86,7 @@ export function RequestForm({
       specialInstructions: initialData?.specialInstructions ?? "",
       amount: initialData?.amount,
       isUrgent: initialData?.isUrgent ?? false,
+      paymentMethod: initialData?.paymentMethod ?? "cash",
       latitude: initialData?.latitude,
       longitude: initialData?.longitude,
     },

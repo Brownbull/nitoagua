@@ -4,6 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { sendOfferAcceptedEmail } from "@/lib/email/send-provider-offer-notification";
+import {
+  triggerOfferAcceptedPush,
+  triggerNewOfferPush,
+  triggerRequestFilledPush,
+} from "@/lib/push/trigger-push";
 
 // Types for the request browser
 export interface AvailableRequest {
@@ -12,6 +17,7 @@ export interface AvailableRequest {
   comuna_name: string | null;
   amount: number;
   is_urgent: boolean;
+  payment_method: "cash" | "transfer";
   created_at: string | null;
   offer_count: number;
 }
@@ -133,6 +139,7 @@ export async function getAvailableRequests(): Promise<GetAvailableRequestsResult
       comunas!water_requests_comuna_id_fkey(name),
       amount,
       is_urgent,
+      payment_method,
       created_at
     `)
     .eq("status", "pending")
@@ -177,6 +184,7 @@ export async function getAvailableRequests(): Promise<GetAvailableRequestsResult
     comuna_name: (r.comunas as { name: string } | null)?.name ?? null,
     amount: r.amount,
     is_urgent: r.is_urgent ?? false,
+    payment_method: (r.payment_method as "cash" | "transfer") ?? "cash",
     created_at: r.created_at,
     offer_count: offerCounts[r.id] ?? 0,
   }));
@@ -253,6 +261,7 @@ export interface RequestDetail {
   address: string;
   amount: number;
   is_urgent: boolean;
+  payment_method: "cash" | "transfer";
   special_instructions: string | null;
   created_at: string | null;
   status: string;
@@ -325,6 +334,7 @@ export async function getRequestDetail(requestId: string): Promise<GetRequestDet
       address,
       amount,
       is_urgent,
+      payment_method,
       special_instructions,
       created_at,
       status
@@ -369,6 +379,7 @@ export async function getRequestDetail(requestId: string): Promise<GetRequestDet
       address: request.address,
       amount: request.amount,
       is_urgent: request.is_urgent ?? false,
+      payment_method: (request.payment_method as "cash" | "transfer") ?? "cash",
       special_instructions: request.special_instructions,
       created_at: request.created_at,
       status: request.status,
@@ -633,6 +644,12 @@ export async function createOffer(
         message: `Un proveedor ha enviado una oferta para tu solicitud de ${request.amount} litros`,
         data: { offer_id: offer.id, request_id: requestId },
       });
+
+    // AC12.6.7: Send push notification for new offer
+    // Note: offerCount is approximate (this offer just added)
+    triggerNewOfferPush(request.consumer_id, requestId, request.amount, 1).catch(
+      (err) => console.error("[Offers] Push notification error:", err)
+    );
   }
 
   // Revalidate relevant paths
@@ -1229,6 +1246,11 @@ export async function notifyProviderOfferAccepted(
     }
   }
 
+  // AC12.6.7: Send push notification for offer accepted
+  triggerOfferAcceptedPush(providerId, request.id, request.amount, comunaName).catch(
+    (err) => console.error("[Offers] Push notification error:", err)
+  );
+
   console.log(`[Offers] Notified provider ${providerId} of offer acceptance: ${offerId}`);
 
   return {
@@ -1450,6 +1472,13 @@ async function notifyOtherProvidersOfferCancelled(
   } else {
     console.log(
       `[SelectOffer] Notified ${notifications.length} providers of request_filled`
+    );
+  }
+
+  // AC12.6.7: Send push notifications to other providers
+  for (const offer of cancelledOffers) {
+    triggerRequestFilledPush(offer.provider_id, requestId).catch(
+      (err) => console.error("[SelectOffer] Push notification error:", err)
     );
   }
 }

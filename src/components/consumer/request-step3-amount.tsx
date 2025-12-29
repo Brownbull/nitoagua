@@ -14,13 +14,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { AMOUNT_OPTIONS, formatPrice } from "@/lib/validations/request";
+import { AMOUNT_OPTIONS, formatPrice, type PaymentMethod } from "@/lib/validations/request";
+import { PaymentSelector } from "./payment-selector";
 
 const step3Schema = z.object({
   amount: z.enum(["100", "1000", "5000", "10000"], {
     message: "Selecciona una cantidad",
   }),
   isUrgent: z.boolean(),
+  paymentMethod: z.enum(["cash", "transfer"]),
 });
 
 export type Step3Data = z.infer<typeof step3Schema>;
@@ -35,10 +37,12 @@ interface Step3Props {
   onNext: (data: Step3Data) => void;
   onBack: () => void;
   onValidChange?: (isValid: boolean) => void;
+  /** Urgency surcharge percentage from admin settings - AC12.4.2 */
+  urgencySurchargePercent?: number;
 }
 
 export const RequestStep3Amount = forwardRef<Step3Ref, Step3Props>(function RequestStep3Amount(
-  { initialData, onNext, onValidChange },
+  { initialData, onNext, onValidChange, urgencySurchargePercent = 10 },
   ref
 ) {
   const form = useForm<Step3Data>({
@@ -47,6 +51,7 @@ export const RequestStep3Amount = forwardRef<Step3Ref, Step3Props>(function Requ
     defaultValues: {
       amount: initialData?.amount,
       isUrgent: initialData?.isUrgent ?? false,
+      paymentMethod: initialData?.paymentMethod ?? "cash",
     },
   });
 
@@ -200,13 +205,29 @@ export const RequestStep3Amount = forwardRef<Step3Ref, Step3Props>(function Requ
                     data-testid="urgency-urgent"
                   >
                     <span className="text-base">⚡</span>
-                    <span className="text-sm font-semibold">Urgente (+10%)</span>
+                    <span className="text-sm font-semibold">Urgente (+{urgencySurchargePercent}%)</span>
                   </button>
                 </div>
                 <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-gray-500">
                   <Info className="w-3 h-3" />
-                  Urgente prioriza tu pedido con un cargo adicional del 10%
+                  Urgente prioriza tu pedido con un cargo adicional del {urgencySurchargePercent}%
                 </div>
+              </div>
+            </FormItem>
+          )}
+        />
+
+        {/* Payment Method Selection - AC12.2.1 */}
+        <FormField
+          control={form.control}
+          name="paymentMethod"
+          render={({ field }) => (
+            <FormItem>
+              <div className="mb-3">
+                <PaymentSelector
+                  value={field.value as PaymentMethod}
+                  onChange={field.onChange}
+                />
               </div>
             </FormItem>
           )}
@@ -219,13 +240,13 @@ export const RequestStep3Amount = forwardRef<Step3Ref, Step3Props>(function Requ
               <span className="text-sm text-gray-600">Precio estimado:</span>
               <span className="text-base font-bold text-[#0077B6]">
                 {formatPrice(
-                  (AMOUNT_OPTIONS.find((o) => o.value === selectedAmount)?.price ?? 0) *
-                    (isUrgent ? 1.1 : 1)
+                  Math.round((AMOUNT_OPTIONS.find((o) => o.value === selectedAmount)?.price ?? 0) *
+                    (isUrgent ? (1 + urgencySurchargePercent / 100) : 1))
                 )}
               </span>
             </div>
             {isUrgent && (
-              <p className="text-[11px] text-orange-600 mt-1">Incluye cargo de urgencia (+10%)</p>
+              <p className="text-[11px] text-orange-600 mt-1">Incluye cargo de urgencia (+{urgencySurchargePercent}%)</p>
             )}
           </div>
         )}

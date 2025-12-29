@@ -102,8 +102,9 @@ export function OfferSelectionModal({
                   >
                     {providerName}
                   </p>
+                  {/* Provider verified badge - factual statement only (Story 12-5) */}
                   <p className="text-sm text-muted-foreground">
-                    Repartidor verificado
+                    Proveedor verificado
                   </p>
                 </div>
               </div>

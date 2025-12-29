@@ -224,4 +224,72 @@ export const AMOUNT_OPTIONS = [
 
 ---
 
-*Last verified: 2025-12-23 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9 code reviews*
+### Workflow Documentation Pattern (Story 11-21)
+
+**Pattern:** Comprehensive workflow documentation with test traceability.
+
+**Location:** `docs/workflows/`
+
+| Document | Persona | Workflows | Coverage |
+|----------|---------|-----------|----------|
+| `consumer-workflows.md` | Doña María | C1-C7 | 100% |
+| `provider-workflows.md` | Don Pedro | P1-P16 | 87.5% (P2, P12 backlogged) |
+| `admin-workflows.md` | Admin | A1-A9 | 100% |
+
+**Workflow ID Convention:**
+- **C#:** Consumer workflows (C1=Request Water, C2=Accept Offer, etc.)
+- **P#:** Provider workflows (P1=Register, P5=Browse Requests, P6=Submit Offer, etc.)
+- **A#:** Admin workflows (A1=View Queue, A3=Approve/Reject, etc.)
+
+**Cross-Reference:** Each workflow doc links to Atlas Section 8 (Workflow Chains).
+
+**Backlogged Gaps (Epic 12):**
+- P2: Document upload mechanics (file upload not E2E tested)
+- P12: Withdrawal request button click (seeded only)
+
+---
+
+### Consumer Map Pinpoint Pattern (Story 12-1)
+
+**Pattern:** Leaflet map step integrated into multi-step wizard.
+
+**Location:** `src/components/consumer/location-pinpoint.tsx`, `location-pinpoint-wrapper.tsx`
+
+**Key Implementation:**
+- Dynamic import wrapper with `ssr: false` (reuses Story 8-10 pattern)
+- Wizard state machine: `step1 → map → step2 → step3`
+- Visual progress shows 3 steps while internal state has 4 states
+- Confirm button disabled until map fully loads (code review fix)
+
+**Code:**
+```typescript
+// Wrapper pattern for SSR bypass
+const LocationPinpoint = dynamic(
+  () => import("./location-pinpoint").then((mod) => mod.LocationPinpoint),
+  { ssr: false, loading: () => <MapLoadingSkeleton /> }
+);
+
+// Button disabled until loaded
+<Button disabled={!mapLoaded} onClick={handleConfirm}>
+  Confirmar Ubicación
+</Button>
+```
+
+**Graceful Degradation:**
+- 10-second timeout triggers error state
+- Skip button allows proceeding without coordinates
+- `console.error` for monitoring
+
+**Test Helper Pattern:**
+```typescript
+// Skip map step in tests that don't need it
+async function skipMapStep(page: Page) {
+  await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
+  await expect(page.getByTestId("map-confirm-button")).toBeVisible({ timeout: 15000 });
+  await page.getByTestId("map-confirm-button").click();
+}
+```
+
+---
+
+*Last verified: 2025-12-27 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1 code reviews*

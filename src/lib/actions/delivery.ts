@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { getDeliveryPrice } from "@/lib/utils/commission";
 import { isGuestRequest, sendGuestNotification } from "@/lib/email";
+import { triggerDeliveryCompletedPush } from "@/lib/push/trigger-push";
 
 /**
  * Result type for completeDelivery action
@@ -220,6 +221,11 @@ export async function completeDelivery(
       },
       read: false,
     });
+
+    // AC12.6.7: Send push notification for delivery completed
+    triggerDeliveryCompletedPush(request.consumer_id, request.id, request.amount).catch(
+      (err) => console.error("[Delivery] Push notification error:", err)
+    );
   } else if (isGuestRequest({ guest_email: request.guest_email, consumer_id: request.consumer_id })) {
     // Guest consumer: email notification
     // Fire and forget - don't block the response

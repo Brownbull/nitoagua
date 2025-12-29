@@ -1,5 +1,18 @@
 import { test, expect } from "@playwright/test";
 
+/**
+ * Helper to skip past the map step after filling step 1
+ * Story 12-1 added a map pinpoint step between step 1 and step 2
+ */
+async function skipMapStep(page: import("@playwright/test").Page) {
+  // Wait for map step to appear
+  await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
+  // Wait for map to load and confirm button to be visible
+  await expect(page.getByTestId("map-confirm-button")).toBeVisible({ timeout: 15000 });
+  // Confirm location to proceed to step 2
+  await page.getByTestId("map-confirm-button").click();
+}
+
 test.describe("Water Request Form - 3-Step Wizard", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/request");
@@ -61,7 +74,10 @@ test.describe("Water Request Form - 3-Step Wizard", () => {
 
       await page.getByTestId("next-button").click();
 
-      // Should go to step 2
+      // Story 12-1: Map step is now shown after step 1
+      await skipMapStep(page);
+
+      // Should now be at step 2
       await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
     });
 
@@ -101,6 +117,9 @@ test.describe("Water Request Form - 3-Step Wizard", () => {
       await page.getByTestId("address-input").fill("Camino Los Robles 123, Villarrica");
       await page.getByTestId("instructions-input").fill("Después del puente, casa azul");
       await page.getByTestId("next-button").click();
+
+      // Story 12-1: Skip map step to get to step 2
+      await skipMapStep(page);
 
       // Wait for step 2
       await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
@@ -185,11 +204,16 @@ test.describe("Water Request Form - 3-Step Wizard", () => {
       await expect(page.getByText(/cargo de urgencia/)).toBeVisible();
     });
 
-    test("back button returns to step 1", async ({ page }) => {
+    test("back button returns to map step (Story 12-1)", async ({ page }) => {
       // Use the nav back button in the header
       await page.getByTestId("nav-back-button").click();
 
-      // Should be back at step 1
+      // Story 12-1: Should be back at map step (not step 1)
+      await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByTestId("map-confirm-button")).toBeVisible({ timeout: 15000 });
+
+      // Can go back further to step 1
+      await page.getByTestId("map-back-button").click();
       await expect(page.getByText("Paso 1 de 3")).toBeVisible();
 
       // Previous data should be preserved
@@ -228,6 +252,9 @@ test.describe("Water Request Form - 3-Step Wizard", () => {
       await page.getByTestId("address-input").fill("Camino Los Robles 123, Villarrica");
       await page.getByTestId("instructions-input").fill("Después del puente, casa azul");
       await page.getByTestId("next-button").click();
+
+      // Story 12-1: Skip map step to get to step 2
+      await skipMapStep(page);
 
       // Wait for step 2
       await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
@@ -275,14 +302,14 @@ test.describe("Water Request Form - 3-Step Wizard", () => {
       await page.getByTestId("edit-amount-link").click();
 
       // Should be back at step 2
-      await expect(page.getByText("Paso 2 de 3")).toBeVisible();
+      await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
     });
 
     test("back button returns to step 2", async ({ page }) => {
       await page.getByTestId("nav-back-button").click();
 
-      // Should be back at step 2
-      await expect(page.getByText("Paso 2 de 3")).toBeVisible();
+      // Should be back at step 2 (not map - back from review goes to amount)
+      await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
     });
 
     test("submit button is visible", async ({ page }) => {
@@ -310,7 +337,7 @@ test.describe("Water Request Form - 3-Step Wizard", () => {
   });
 
   test.describe("Full form submission flow", () => {
-    test("complete 3-step flow reaches review with all data", async ({ page }) => {
+    test("complete flow with map step reaches review with all data", async ({ page }) => {
       // Step 1: Contact + Location
       await page.getByTestId("name-input").fill("María González");
       await page.getByTestId("phone-input").fill("+56912345678");
@@ -325,14 +352,17 @@ test.describe("Water Request Form - 3-Step Wizard", () => {
         .fill("Después del puente, casa azul con portón verde");
       await page.getByTestId("next-button").click();
 
+      // Story 12-1: Map step - confirm location
+      await skipMapStep(page);
+
       // Step 2: Amount
-      await expect(page.getByText("Paso 2 de 3")).toBeVisible();
+      await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
       await page.getByTestId("amount-1000").click();
       // Click header "Revisar Pedido" button
       await page.getByTestId("nav-next-button").click();
 
       // Step 3: Review
-      await expect(page.getByText("Paso 3 de 3")).toBeVisible();
+      await expect(page.getByText("Paso 3 de 3")).toBeVisible({ timeout: 10000 });
       await expect(page.getByText("Revisa tu pedido")).toBeVisible();
       await expect(page.getByTestId("review-amount")).toContainText("1.000 litros");
       await expect(page.getByTestId("review-name")).toContainText("María González");

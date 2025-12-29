@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { RequestHeader } from "@/components/consumer/request-header";
 import { RequestStep1Details, type Step1Data } from "@/components/consumer/request-step1-details";
+import { LocationPinpointWrapper } from "@/components/consumer/location-pinpoint-wrapper";
 import { RequestStep3Amount, type Step3Data, type Step3Ref } from "@/components/consumer/request-step3-amount";
 import { RequestReview } from "@/components/consumer/request-review";
 import type { RequestInput } from "@/lib/validations/request";
@@ -17,17 +18,19 @@ import {
   processQueue,
 } from "@/lib/utils/offline-queue";
 import { createClient } from "@/lib/supabase/client";
+import { getUrgencySurchargePercent } from "@/lib/actions/admin";
 
 /**
- * Request flow states (3-step wizard):
+ * Request flow states (4-step wizard with map pinpoint):
  * - loading: Loading user profile data
  * - step1: Contact + Location info (name, phone, email, comuna, address, instructions)
+ * - map: Map pinpoint - confirm/adjust exact location (Story 12-1)
  * - step2: Amount (water quantity, urgency)
  * - step3: Review screen - verify all info before submission
  * - submitting: Request is being submitted to the server
  * - submitted: Request has been successfully submitted
  */
-type RequestState = "loading" | "step1" | "step2" | "step3" | "submitting" | "submitted";
+type RequestState = "loading" | "step1" | "map" | "step2" | "step3" | "submitting" | "submitted";
 
 interface UserProfile {
   name: string;
@@ -49,11 +52,18 @@ export default function RequestPage() {
   const [wizardData, setWizardData] = useState<WizardData>({});
   const [profileData, setProfileData] = useState<Partial<RequestInput>>({});
   const [step2Valid, setStep2Valid] = useState(false);
+  const [urgencySurcharge, setUrgencySurcharge] = useState<number>(10); // Default 10%, AC12.4.2
   const step2Ref = useRef<Step3Ref>(null);
+  const handleSubmitRef = useRef<() => void>(() => {});
 
-  // Load user profile on mount
+  // Load user profile and urgency surcharge on mount
   useEffect(() => {
-    async function loadProfile() {
+    async function loadInitialData() {
+      // Fetch urgency surcharge percentage from admin settings - AC12.4.2
+      const surcharge = await getUrgencySurchargePercent();
+      setUrgencySurcharge(surcharge);
+
+      // Load user profile
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
@@ -87,7 +97,7 @@ export default function RequestPage() {
       setState("step1");
     }
 
-    loadProfile();
+    loadInitialData();
   }, []);
 
   // Register online listener to process queued requests
@@ -132,14 +142,34 @@ export default function RequestPage() {
       comunaId: step1.comunaId,
       amount: step2.amount,
       isUrgent: step2.isUrgent,
+      paymentMethod: step2.paymentMethod ?? "cash",
     };
   };
 
-  // Step 1 handlers
+  // Step 1 handlers - now goes to map step (Story 12-1)
   const handleStep1Next = (data: Step1Data) => {
     setWizardData(prev => ({ ...prev, step1: data }));
-    setState("step2");
+    setState("map"); // Go to map pinpoint step
   };
+
+  // Map step handlers - AC12.1.3
+  const handleMapConfirm = useCallback((latitude: number, longitude: number) => {
+    // Update step1 data with confirmed coordinates
+    setWizardData(prev => ({
+      ...prev,
+      step1: prev.step1 ? { ...prev.step1, latitude, longitude } : undefined,
+    }));
+    setState("step2");
+  }, []);
+
+  const handleMapBack = useCallback(() => {
+    setState("step1");
+  }, []);
+
+  const handleMapSkip = useCallback(() => {
+    // Skip without coordinates - graceful degradation AC12.1.4
+    setState("step2");
+  }, []);
 
   // Step 2 handlers
   const handleStep2Next = (data: Step3Data) => {
@@ -148,7 +178,7 @@ export default function RequestPage() {
   };
 
   const handleStep2Back = () => {
-    setState("step1");
+    setState("map"); // Go back to map step, not step1
   };
 
   // Handle step 2 "Siguiente" click from header
@@ -158,7 +188,7 @@ export default function RequestPage() {
 
   // Handle step 3 "Confirmar" click from header
   const handleStep3HeaderSubmit = useCallback(() => {
-    handleSubmit();
+    handleSubmitRef.current();
   }, []);
 
   // Handle step 2 validity changes
@@ -259,6 +289,11 @@ export default function RequestPage() {
     }
   };
 
+  // Keep ref in sync with handleSubmit
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit;
+  });
+
   // Loading state
   if (state === "loading") {
     return (
@@ -268,12 +303,14 @@ export default function RequestPage() {
     );
   }
 
-  // Get step info based on state
+  // Get step info based on state - now includes map step (Story 12-1)
+  // Visual step numbers: 1=details, 2=map, 3=amount, 4=review (but user sees 3-step progress)
   const getStepInfo = () => {
     switch (state) {
       case "step1":
         return {
           step: 1,
+          totalSteps: 3,
           title: "Pedir Agua",
           subtitle: "Tus datos y dirección",
           onBack: undefined,
@@ -281,10 +318,25 @@ export default function RequestPage() {
           showNavButtons: false,
           nextDisabled: false,
           nextLabel: "Continuar",
+          showHeader: true,
+        };
+      case "map":
+        return {
+          step: 1, // Same visual step as step1 - sub-step for location
+          totalSteps: 3,
+          title: "Confirma tu ubicación",
+          subtitle: "Ajusta el marcador si es necesario",
+          onBack: handleMapBack,
+          onNext: undefined,
+          showNavButtons: false, // Map has its own buttons
+          nextDisabled: false,
+          nextLabel: "Confirmar",
+          showHeader: false, // Map is full-screen
         };
       case "step2":
         return {
           step: 2,
+          totalSteps: 3,
           title: "¿Cuánta agua?",
           subtitle: "Elige la cantidad",
           onBack: handleStep2Back,
@@ -292,11 +344,13 @@ export default function RequestPage() {
           showNavButtons: true,
           nextDisabled: !step2Valid,
           nextLabel: "Siguiente",
+          showHeader: true,
         };
       case "step3":
       case "submitting":
         return {
           step: 3,
+          totalSteps: 3,
           title: "Revisa tu pedido",
           subtitle: "Confirma que todo esté bien",
           onBack: handleStep3Back,
@@ -305,10 +359,12 @@ export default function RequestPage() {
           nextDisabled: state === "submitting",
           nextLabel: "Confirmar",
           nextVariant: "success" as const,
+          showHeader: true,
         };
       default:
         return {
           step: 1,
+          totalSteps: 3,
           title: "Pedir Agua",
           subtitle: "Tus datos y dirección",
           onBack: undefined,
@@ -316,11 +372,28 @@ export default function RequestPage() {
           showNavButtons: false,
           nextDisabled: false,
           nextLabel: "Continuar",
+          showHeader: true,
         };
     }
   };
 
   const stepInfo = getStepInfo();
+
+  // Map step is full-screen without header - Story 12-1
+  if (state === "map") {
+    return (
+      <div className="min-h-dvh bg-gray-50 flex flex-col" data-testid="map-step">
+        <LocationPinpointWrapper
+          address={wizardData.step1?.address || ""}
+          initialLatitude={wizardData.step1?.latitude}
+          initialLongitude={wizardData.step1?.longitude}
+          onConfirm={handleMapConfirm}
+          onBack={handleMapBack}
+          onSkip={handleMapSkip}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-gray-50 flex flex-col">
@@ -329,7 +402,7 @@ export default function RequestPage() {
         title={stepInfo.title}
         subtitle={stepInfo.subtitle}
         step={stepInfo.step}
-        totalSteps={3}
+        totalSteps={stepInfo.totalSteps}
         onBack={stepInfo.onBack}
         onNext={stepInfo.onNext}
         backHref="/"
@@ -364,6 +437,7 @@ export default function RequestPage() {
             onNext={handleStep2Next}
             onBack={handleStep2Back}
             onValidChange={handleStep2ValidChange}
+            urgencySurchargePercent={urgencySurcharge}
           />
         )}
 
@@ -375,6 +449,7 @@ export default function RequestPage() {
             onEditAmount={handleEditAmount}
             onSubmit={handleSubmit}
             loading={state === "submitting"}
+            urgencySurchargePercent={urgencySurcharge}
           />
         )}
       </div>

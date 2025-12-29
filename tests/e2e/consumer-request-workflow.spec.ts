@@ -19,6 +19,19 @@
 import { test, expect } from "../support/fixtures/merged-fixtures";
 import { assertNoErrorState } from "../fixtures/error-detection";
 
+/**
+ * Helper to skip past the map step after filling step 1
+ * Story 12-1 added a map pinpoint step between step 1 and step 2
+ */
+async function skipMapStep(page: import("@playwright/test").Page) {
+  // Wait for map step to appear
+  await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
+  // Wait for map to load and confirm button to be visible
+  await expect(page.getByTestId("map-confirm-button")).toBeVisible({ timeout: 15000 });
+  // Confirm location to proceed to step 2
+  await page.getByTestId("map-confirm-button").click();
+}
+
 // Mobile viewport for PWA testing
 test.use({
   viewport: { width: 360, height: 780 },
@@ -81,6 +94,9 @@ test.describe("C1 - Fill Request Form Workflow", () => {
     await fillStep1(page);
     await page.getByTestId("next-button").click();
 
+    // Story 12-1: Skip map step
+    await skipMapStep(page);
+
     // Wait for Step 2
     await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
 
@@ -106,6 +122,10 @@ test.describe("C1 - Fill Request Form Workflow", () => {
 
     await fillStep1(page);
     await page.getByTestId("next-button").click();
+
+    // Story 12-1: Skip map step
+    await skipMapStep(page);
+
     await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
 
     await log({ level: "step", message: "Test urgency toggle" });
@@ -169,6 +189,10 @@ test.describe("C2 - Submit Request Workflow", () => {
     // Step 1: Contact + Location
     await fillStep1(page, { email: testEmail });
     await page.getByTestId("next-button").click();
+
+    // Story 12-1: Skip map step
+    await skipMapStep(page);
+
     await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
 
     // Step 2: Select amount
@@ -227,6 +251,10 @@ test.describe("C2 - Submit Request Workflow", () => {
 
     // Proceed to Step 2 (form should be valid since it's pre-filled)
     await page.getByTestId("next-button").click();
+
+    // Story 12-1: Skip map step
+    await skipMapStep(page);
+
     await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
 
     // Step 2: Select amount
@@ -353,11 +381,15 @@ test.describe("C1-C2 Integration", () => {
     await expect(page).toHaveURL(/\/request/, { timeout: 10000 });
     await assertNoErrorState(page);
 
-    await log({ level: "step", message: "Complete 3-step form" });
+    await log({ level: "step", message: "Complete form with map step" });
 
     // Step 1
     await fillStep1(page, { email: `fullflow-${Date.now()}@test.local` });
     await page.getByTestId("next-button").click();
+
+    // Story 12-1: Skip map step
+    await skipMapStep(page);
+
     await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
 
     // Step 2
@@ -445,6 +477,10 @@ async function submitFullRequest(
   // Step 1
   await fillStep1(page, step1Options);
   await page.getByTestId("next-button").click();
+
+  // Story 12-1: Skip map step
+  await skipMapStep(page);
+
   await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
 
   // Step 2

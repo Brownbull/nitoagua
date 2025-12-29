@@ -132,6 +132,47 @@ const OFFER_TEST_REQUESTS = [
     accepted_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
   },
+  // Story 11-17 P15: Request cancelled by consumer (provider's offer invalidated)
+  {
+    id: "77777777-7777-7777-7777-777777777775",
+    tracking_token: "offer-test-consumer-cancelled",
+    status: "cancelled",
+    guest_phone: "+56987651005",
+    guest_name: "Cliente que Canceló",
+    guest_email: "clientecancel@test.local",
+    address: "Av. O'Higgins 300, Villarrica",
+    comuna_id: "villarrica",
+    amount: 5000,
+    special_instructions: "El cliente canceló esta solicitud",
+    is_urgent: false,
+    consumer_id: null,
+    supplier_id: null,
+    latitude: -39.2795,
+    longitude: -72.2260,
+    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    cancelled_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+  },
+  // Story 11-17 P16: Request where another provider was selected (competitor wins)
+  {
+    id: "77777777-7777-7777-7777-777777777776",
+    tracking_token: "offer-test-competitor-won",
+    status: "accepted",
+    guest_phone: "+56987651006",
+    guest_name: "Cliente eligió otro proveedor",
+    guest_email: "clienteotro@test.local",
+    address: "Camino Villarrica-Pucón km 5",
+    comuna_id: "villarrica",
+    amount: 1000,
+    special_instructions: "Solicitud donde ganó otro proveedor",
+    is_urgent: false,
+    consumer_id: null,
+    supplier_id: null, // Will be set to SECONDARY_PROVIDER (not dev provider)
+    latitude: -39.2650,
+    longitude: -72.1800,
+    delivery_window: "10:00 - 12:00",
+    accepted_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  },
 ];
 
 // Offers in various states - will be mapped to actual provider ID
@@ -196,6 +237,43 @@ const OFFER_TEST_OFFERS = [
     expires_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // Expired 3 hours ago
     message: "Oferta antigua",
     created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+  },
+  // Story 11-17 P13: Offer about to expire (short countdown)
+  {
+    id: "88888888-8888-8888-8888-888888888886",
+    request_id: "77777777-7777-7777-7777-777777777773", // Pending request 3
+    provider_id: null,
+    status: "active",
+    delivery_window_start: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+    delivery_window_end: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+    expires_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(), // Only 2 minutes from now!
+    message: "Oferta por expirar pronto",
+    created_at: new Date(Date.now() - 28 * 60 * 1000).toISOString(), // 28 min ago (almost at 30 min limit)
+  },
+  // Story 11-17 P15: Offer cancelled by consumer (not provider withdrawal)
+  // Note: When consumer cancels request, provider's offer should show this status
+  {
+    id: "88888888-8888-8888-8888-888888888887",
+    request_id: "77777777-7777-7777-7777-777777777775", // Consumer-cancelled request
+    provider_id: null,
+    status: "cancelled", // Consumer cancelled the request, so offer is cancelled
+    delivery_window_start: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    delivery_window_end: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+    expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+    message: "Mi oferta fue cancelada por el cliente",
+    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+  },
+  // Story 11-17 P16: Offer not selected (competitor won) - request_filled status
+  {
+    id: "88888888-8888-8888-8888-888888888888",
+    request_id: "77777777-7777-7777-7777-777777777776", // Competitor-won request
+    provider_id: null, // Dev provider submitted this offer
+    status: "request_filled", // Another provider was selected
+    delivery_window_start: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    delivery_window_end: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+    expires_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // Already expired (since request filled)
+    message: "Mi oferta no fue seleccionada",
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
   },
 ];
 
@@ -341,11 +419,14 @@ async function main() {
     } else {
       const providerId = await getOrCreateTestProvider(supabase);
       await ensureProviderServiceAreas(supabase, providerId);
-      await seedOfferTestRequests(supabase, providerId);
+      // Consumer-facing offers (Story 10-1) - ensure providers exist first
+      const { secondaryProviderId } = await ensureConsumerFacingProviders(supabase);
+      // Pass secondary provider ID for P16 (competitor wins) scenario
+      await seedOfferTestRequests(supabase, providerId, secondaryProviderId);
       await seedOfferTestOffers(supabase, providerId);
-      // Consumer-facing offers (Story 10-1)
-      await ensureConsumerFacingProviders(supabase);
       await seedConsumerFacingOffers(supabase, providerId);
+      // Story 11-17 P16: Seed the winning offer from secondary provider
+      await seedCompetitorWinningOffer(supabase, secondaryProviderId);
       // Provider notifications (Story 11-3: P8)
       await seedProviderNotifications(supabase, providerId);
       await verifyOfferTestData(supabase);
@@ -459,12 +540,20 @@ async function ensureProviderServiceAreas(supabase: any, providerId: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function seedOfferTestRequests(supabase: any, providerId: string) {
+async function seedOfferTestRequests(supabase: any, providerId: string, secondaryProviderId: string) {
   console.log("\n📝 Seeding offer test water requests...");
 
-  // Map requests - set supplier_id for accepted request
+  // Map requests - set supplier_id for accepted requests
+  // Story 11-17 P16: competitor-won request needs secondary provider as supplier
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const requestsToSeed = OFFER_TEST_REQUESTS.map((req): any => {
+    // P16: Competitor-won request - SECONDARY_PROVIDER is the winner
+    if (req.id === "77777777-7777-7777-7777-777777777776") {
+      return {
+        ...req,
+        supplier_id: secondaryProviderId,
+      };
+    }
     return {
       ...req,
       supplier_id: req.status === "accepted" ? providerId : req.supplier_id,
@@ -521,8 +610,11 @@ async function seedOfferTestOffers(supabase: any, providerId: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function ensureConsumerFacingProviders(supabase: any) {
+async function ensureConsumerFacingProviders(supabase: any): Promise<{ secondaryProviderId: string; tertiaryProviderId: string }> {
   console.log("\n👥 Setting up consumer-facing test providers...");
+
+  let secondaryProviderId = SECONDARY_PROVIDER.id;
+  let tertiaryProviderId = TERTIARY_PROVIDER.id;
 
   // Create secondary and tertiary providers for consumer-facing offers
   for (const provider of [SECONDARY_PROVIDER, TERTIARY_PROVIDER]) {
@@ -554,6 +646,13 @@ async function ensureConsumerFacingProviders(supabase: any) {
       console.log(`  ✓ Found existing user: ${provider.email} (ID: ${userId})`);
     }
 
+    // Track the actual user IDs
+    if (provider.email === SECONDARY_PROVIDER.email) {
+      secondaryProviderId = userId;
+    } else if (provider.email === TERTIARY_PROVIDER.email) {
+      tertiaryProviderId = userId;
+    }
+
     // Upsert profile as verified provider
     const { error: profileError } = await supabase.from("profiles").upsert(
       {
@@ -573,6 +672,8 @@ async function ensureConsumerFacingProviders(supabase: any) {
       console.log(`  ✓ Provider profile verified: ${provider.name}`);
     }
   }
+
+  return { secondaryProviderId, tertiaryProviderId };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -627,6 +728,38 @@ async function seedConsumerFacingOffers(supabase: any, devProviderId: string) {
         ? SECONDARY_PROVIDER.name
         : TERTIARY_PROVIDER.name;
     console.log(`    - [${offer.status}] ${providerName}: ${offer.message}`);
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function seedCompetitorWinningOffer(supabase: any, secondaryProviderId: string) {
+  console.log("\n🏆 Seeding competitor winning offer (Story 11-17 P16)...");
+
+  // The winning offer from the secondary provider on the competitor-won request
+  const winningOffer = {
+    id: "88888888-8888-8888-8888-888888888889",
+    request_id: "77777777-7777-7777-7777-777777777776", // Competitor-won request
+    provider_id: secondaryProviderId,
+    status: "accepted", // This offer was accepted (provider won)
+    delivery_window_start: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(),
+    delivery_window_end: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+    expires_at: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(),
+    message: "¡Ganó esta oferta!",
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    accepted_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+  };
+
+  // Delete existing offer first
+  await supabase.from("offers").delete().eq("id", winningOffer.id);
+
+  // Insert winning offer
+  const { error } = await supabase.from("offers").upsert(winningOffer, { onConflict: "id" });
+
+  if (error) {
+    console.warn(`  ⚠ Failed to seed competitor winning offer: ${error.message}`);
+  } else {
+    console.log(`  ✓ Seeded winning offer from ${SECONDARY_PROVIDER.name}`);
+    console.log(`    - [accepted] Request: 77777777-7777-7777-7777-777777777776`);
   }
 }
 
@@ -687,6 +820,11 @@ async function cleanOfferTestData(supabase: any) {
   } else {
     console.log(`  ✓ Deleted ${consumerOfferCount || 0} consumer-facing offers`);
   }
+
+  // Delete competitor winning offer (Story 11-17 P16)
+  const competitorWinningOfferId = "88888888-8888-8888-8888-888888888889";
+  await supabase.from("offers").delete().eq("id", competitorWinningOfferId);
+  console.log(`  ✓ Deleted competitor winning offer`);
 
   // Delete provider-facing offers first (foreign key to water_requests)
   const offerIds = OFFER_TEST_OFFERS.map((o) => o.id);
@@ -757,11 +895,24 @@ async function verifyOfferTestData(supabase: any) {
     .in("id", OFFER_TEST_OFFERS.map((o) => o.id))
     .eq("status", "expired");
 
+  // Story 11-17 P16: Check for request_filled offers
+  const { data: requestFilledOffers } = await supabase
+    .from("offers")
+    .select("id, status")
+    .in("id", OFFER_TEST_OFFERS.map((o) => o.id))
+    .eq("status", "request_filled");
+
   console.log(`  ✓ Provider-facing offers by status:`);
   console.log(`    - Active (can withdraw): ${activeOffers?.length || 0}`);
-  console.log(`    - Cancelled (can re-submit): ${cancelledOffers?.length || 0}`);
+  console.log(`    - Cancelled (can re-submit/consumer cancelled): ${cancelledOffers?.length || 0}`);
   console.log(`    - Accepted (Ver Entrega): ${acceptedOffers?.length || 0}`);
   console.log(`    - Expired (history): ${expiredOffers?.length || 0}`);
+  console.log(`    - Request Filled (competitor won): ${requestFilledOffers?.length || 0}`);
+
+  // Verify critical P16 test data exists (Story 11-17)
+  if (!requestFilledOffers || requestFilledOffers.length === 0) {
+    console.warn(`  ⚠ WARNING: No request_filled offers found - P16 tests may skip`);
+  }
 
   // Check consumer-facing offers (Story 10-1)
   const { data: consumerOffers } = await supabase

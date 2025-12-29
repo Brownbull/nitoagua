@@ -26,6 +26,10 @@ interface RequestWithSupplier {
   delivered_at: string | null;
   delivery_window: string | null;
   supplier_id: string | null;
+  consumer_id: string | null; // AC12.3: To compare with cancelled_by
+  cancelled_by: string | null; // AC12.3.2/3: Who cancelled the request
+  cancellation_reason: string | null; // AC12.3.2/3: Reason for cancellation
+  cancelled_at: string | null; // AC12.3.2/3: When it was cancelled
   active_offer_count?: number; // AC10.5.7: Offer count for pending requests
   profiles: {
     name: string;
@@ -151,6 +155,7 @@ export default function RequestStatusPage() {
 
       // Query for the request with supplier info
       // Consumer can only see their own requests (consumer_id = user.id)
+      // AC12.3: Include cancellation fields for negative status states
       const { data: requestData, error } = await supabase
         .from("water_requests")
         .select(`
@@ -166,6 +171,10 @@ export default function RequestStatusPage() {
           delivered_at,
           delivery_window,
           supplier_id,
+          consumer_id,
+          cancelled_by,
+          cancellation_reason,
+          cancelled_at,
           profiles!water_requests_supplier_id_fkey (
             name,
             phone

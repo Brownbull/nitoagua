@@ -1,7 +1,7 @@
 # Feature Inventory + Intent
 
 > Section 2 of Atlas Memory
-> Last Sync: 2025-12-22
+> Last Sync: 2025-12-27
 > Sources: docs/prd.md, docs/architecture.md, docs/epics.md
 
 ## Feature Overview
@@ -69,6 +69,7 @@ nitoagua provides features for three user types: Consumers, Providers (aguateros
 | **Spanish Interface** | Chilean localization | FR40 |
 | **Responsive Design** | Mobile, tablet, desktop | FR41 |
 | **Offline Capability** | Queue requests offline | FR42, NFR17 |
+| **Web Push Notifications** | Background alerts when app closed | Story 12-6 |
 
 ## Water Amount Tiers
 
@@ -107,7 +108,7 @@ nitoagua provides features for three user types: Consumers, Providers (aguateros
 | Epic 8 | 8.1-8.10 | Offer system |
 | Epic 10 | 10.1-10.7 | Consumer offer selection + PWA/UX polish |
 | Epic 11 | 11.1-11.4 | Full workflow validation (all personas) |
-| Epic 12 | 12.1-12.5 | Consumer UX enhancements (backlog) |
+| Epic 12 | 12.1-12.14 | Consumer UX enhancements + Push notifications |
 
 ---
 
@@ -127,4 +128,4 @@ nitoagua provides features for three user types: Consumers, Providers (aguateros
 
 ---
 
-*Last verified: 2025-12-22 | Sources: prd.md, architecture.md, epics.md*
+*Last verified: 2025-12-27 | Sources: prd.md, architecture.md, epics.md*

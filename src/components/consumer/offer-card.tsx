@@ -21,6 +21,8 @@ interface OfferCardProps {
   isBestOffer?: boolean;
   /** Whether this is the first card (gets filled button) */
   isFirstCard?: boolean;
+  /** Whether the request is urgent - AC12.4.4 */
+  isUrgent?: boolean;
 }
 
 /**
@@ -39,6 +41,7 @@ export function OfferCard({
   onExpire,
   isBestOffer = false,
   isFirstCard = false,
+  isUrgent = false,
 }: OfferCardProps) {
   // Track local expired state for real-time updates - AC10.3.4
   const [localExpired, setLocalExpired] = useState(false);
@@ -74,10 +77,13 @@ export function OfferCard({
     .toUpperCase()
     .slice(0, 2);
 
-  // Mock rating data (in real app this would come from the offer/profile)
-  // For now we use placeholder values to match the mockup
-  const rating = 4.8;
-  const deliveryCount = 127;
+  // NOTE: Provider reputation metrics (rating, delivery count) intentionally removed
+  // as part of Story 12-5 to eliminate fake social proof.
+  // Future Implementation Pattern (when real data available):
+  // - Only show metrics when provider has >50 completed deliveries
+  // - Rating should come from real customer reviews
+  // - Use: const { rating, deliveryCount } = offer.profiles || {}
+  // - Condition: {deliveryCount >= 50 && <span>{rating} • {deliveryCount} entregas</span>}
 
   return (
     <div
@@ -113,13 +119,14 @@ export function OfferCard({
             >
               {providerName}
             </p>
+            {/* Provider verified badge - factual statement only */}
             <p className="text-xs text-gray-500">
-              {rating} • {deliveryCount} entregas
+              Proveedor verificado
             </p>
           </div>
         </div>
 
-        {/* Price + Best offer badge */}
+        {/* Price + Best offer badge + Urgency badge */}
         <div className="text-right">
           <p
             className="text-xl font-bold text-gray-900"
@@ -129,6 +136,15 @@ export function OfferCard({
           </p>
           {isBestOffer && !isExpired && (
             <span className="text-xs font-medium text-[#10B981]">Mejor precio</span>
+          )}
+          {/* Urgency badge - AC12.4.4 */}
+          {isUrgent && !isExpired && (
+            <span
+              className="inline-block mt-1 px-2 py-0.5 bg-amber-500 text-white text-[10px] font-semibold rounded-full"
+              data-testid="urgency-badge"
+            >
+              ⚡ Urgente
+            </span>
           )}
         </div>
       </div>

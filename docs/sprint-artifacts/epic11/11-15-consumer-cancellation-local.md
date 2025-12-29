@@ -5,7 +5,7 @@
 | **Story ID** | 11-15 |
 | **Epic** | Epic 11 - Playwright Workflow Validation |
 | **Title** | Consumer Cancellation (Local) |
-| **Status** | review |
+| **Status** | done |
 | **Points** | 3 |
 | **Priority** | P1 - High |
 | **Depends On** | Story 11-1 |
@@ -25,9 +25,9 @@
 | ID | Workflow | Success Criteria | Status |
 |----|----------|------------------|--------|
 | C8 | Cancel Pending Request | Cancel before any offers received | PASSING |
-| C9 | Cancel With Offers | Cancel after offers submitted (providers notified) | PASSING (partial - notification gap) |
+| C9 | Cancel With Offers | Cancel after offers submitted (providers notified) | PASSING |
 | C10 | Cancellation Confirmation | Consumer sees confirmation | PASSING |
-| C11 | Provider Notification | Provider notified their offer was cancelled | GAP - NOT IMPLEMENTED |
+| C11 | Provider Notification | Provider notified their offer was cancelled | PASSING (implemented in Story 11A-2) |
 
 ---
 
@@ -70,8 +70,8 @@
 
 ### AC 11-15.2: C9 - Cancel With Offers
 - [x] Cancel button visible on request with offers
-- [ ] Warning shown about existing offers - **GAP: No special warning for offers**
-- [ ] All offers invalidated on cancel - **GAP: Offers not auto-invalidated**
+- [x] Warning shown about existing offers - **Fixed in Story 11A-2**
+- [x] All offers invalidated on cancel - **Fixed in Story 11A-2**
 
 ### AC 11-15.3: C10 - Confirmation
 - [x] Cancelled page shows "Solicitud cancelada"
@@ -79,28 +79,28 @@
 - [x] Shows option to create new request ("Nueva Solicitud")
 
 ### AC 11-15.4: C11 - Provider Notification
-- [ ] Provider receives notification when their offer cancelled - **GAP: NOT IMPLEMENTED**
-- [ ] Notification shows reason (consumer cancelled) - **GAP: NOT IMPLEMENTED**
+- [x] Provider receives notification when their offer cancelled - **Fixed in Story 11A-2**
+- [x] Notification shows reason (consumer cancelled) - **Fixed in Story 11A-2**
 
 ---
 
 ## Gap Analysis
 
-### C11: Provider Notification on Consumer Cancel - NOT IMPLEMENTED
+### C11: Provider Notification on Consumer Cancel - ✅ FIXED IN STORY 11A-2
 
-**Current Behavior:**
-- Consumer can cancel pending requests successfully
-- Request status updates to "cancelled"
-- API has TODO comment: "Epic 5 - Send notification about cancellation" (line ~283)
-- Offers are NOT automatically invalidated when request is cancelled
-- Providers are NOT notified when consumer cancels
+**Original Gap (identified in this story):**
+- Providers were NOT notified when consumer cancelled request with active offers
+- Offers were NOT automatically invalidated
+
+**Resolution (Story 11A-2):**
+- Offers are now invalidated (status: `request_cancelled`) when consumer cancels
+- Providers receive in-app notification with type `offer_request_cancelled`
+- Consumer sees warning when cancelling request with active offers
+- Migration added `request_cancelled` to offer status enum
 
 **Code Location:**
-- `src/app/api/requests/[id]/route.ts` - handleCancelAction function
-
-**Recommendation:**
-- Create Epic 11A story to implement provider notification on consumer cancel
-- Should mirror `notifyOtherProvidersOfferCancelled` pattern already used for select_offer flow
+- `src/app/api/requests/[id]/route.ts` - handleCancelAction function (lines 282-346)
+- `src/components/consumer/cancel-dialog.tsx` - Warning message (lines 40-45)
 
 ---
 
@@ -173,10 +173,9 @@ Running 18 tests using 1 worker
 
 ### File List
 **New Files:**
-- `tests/e2e/consumer-cancellation-workflow.spec.ts`
+- `tests/e2e/consumer-cancellation-workflow.spec.ts` - 18 tests covering C8-C11 workflows
 
 **Modified Files:**
-- `docs/sprint-artifacts/sprint-status.yaml` (status: in-progress → review)
 - `docs/sprint-artifacts/epic11/11-15-consumer-cancellation-local.md` (this file)
 
 ---
@@ -187,3 +186,5 @@ Running 18 tests using 1 worker
 |------|--------|--------|
 | 2025-12-23 | Story created | SM |
 | 2025-12-23 | Implementation complete, 18/18 tests passing, C11 gap documented | Claude |
+| 2025-12-24 | C11 gap fixed in Story 11A-2, ACs updated to reflect fix | Claude |
+| 2025-12-24 | Atlas code review: Fixed test title, updated File List | Claude |

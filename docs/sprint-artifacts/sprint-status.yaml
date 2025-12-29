@@ -209,15 +209,17 @@ development_status:
   11-13-request-timeout-local: done  # C5-C7: 7/9 tests passing (2 skipped expected), Atlas code review passed - 2025-12-23
   11-14-request-timeout-production: done  # 7/9 pass, 2 skipped expected, Atlas review passed - 2025-12-23
   # Consumer Cancellation workflow (C8-C11) - What happens when consumer cancels?
-  11-15-consumer-cancellation-local: review  # C8-C11: Cancel pending, cancel with offers, notifications - 18/18 tests passing
-  11-16-consumer-cancellation-production: drafted  # Same tests, production - depends on 11-15
+  11-15-consumer-cancellation-local: deployed  # C8-C11: Cancel pending, cancel with offers, notifications - 19/19 tests passing, deployed 2025-12-24
+  11-16-consumer-cancellation-production: deployed  # 19/20 pass (1 expected skip), deployed 2025-12-24
   # Provider Offer Edge Cases (P13-P16) - What happens to provider offers?
-  11-17-provider-offer-edge-cases-local: ready-for-dev  # P13-P16: Expire, withdraw, consumer cancels, competitor wins
-  11-18-provider-offer-edge-cases-production: drafted  # Same tests, production - depends on 11-17
+  11-17-provider-offer-edge-cases-local: deployed  # P13-P16: 12/12 tests passing, deployed 2025-12-24
+  11-18-provider-offer-edge-cases-production: deployed  # 12/12 tests pass, Atlas code review passed, deployed 2025-12-24
   # Admin Orders & Settlement (A5-A9)
-  11-19-admin-orders-settlement-local: ready-for-dev  # A5-A9: View orders, details, settlement queue, approve/reject
-  11-20-admin-orders-settlement-production: drafted  # Same tests, production - depends on 11-19
-  epic-11-retrospective: optional
+  11-19-admin-orders-settlement-local: deployed  # A5-A9: 22/22 tests, deployed to production 2025-12-24
+  11-20-admin-orders-settlement-production: deployed  # 22/22 tests pass on production, Atlas code review passed, deployed 2025-12-24
+  # Seed Data Blind Spot Analysis
+  11-21-seed-data-blind-spot-analysis: deployed  # 32 workflows documented, 2 gaps backlogged to Epic 12, deployed 2025-12-24
+  epic-11-retrospective: done  # Quick retrospective completed 2025-12-24
 
   # Epic 11A: Testing-Discovered Gaps (Created from Epic 11 findings)
   # =============================================================
@@ -229,14 +231,55 @@ development_status:
   11a-2-c11-provider-cancellation-notification: done  # C11: Provider notified when consumer cancels request with offers - Atlas code review passed 2025-12-24
 
   # Epic 12: Consumer UX Enhancements (depends on Epic 10 consumer flow)
-  epic-12: backlog
-  12-1-map-location-pinpoint: backlog
-  12-2-payment-method-selection: backlog
-  12-3-negative-status-states: backlog
-  12-4-urgency-pricing-display: backlog
-  12-5-remove-fake-social-proof: backlog
-  12-6-web-push-notifications: drafted  # Created 2025-12-22 - Android PWA push notifications, 8 ACs
+  # =============================================================
+  # Purpose: UX polish and enhancements for consumer experience
+  # Type: UI/UX improvements, minimal backend changes
+  # Active: 2025-12-24
+  # Structure: 3 phases + final validation, each with local/production pair
+  epic-12: contexted  # Activated 2025-12-24 - No new architecture needed, uses existing V2 patterns
+
+  # Phase 1: Quick Wins (UI-only changes)
+  # -------------------------------------
+  12-5-remove-fake-social-proof: done  # P0: Replace fake stats with qualitative trust signals, 4 ACs - COMPLETE 2025-12-24
+  12-3-negative-status-states: done  # P0: Clear UI for timeout/cancelled states, 5 ACs - Atlas code review passed 2025-12-25
+  12-7-ui-validation-local: done  # Checkpoint: Playwright tests for 12-3, 12-5 on local - 33/33 tests passing, Atlas code review passed 2025-12-25
+  12-8-ui-validation-production: done  # Checkpoint: Playwright tests for 12-3, 12-5 on production - 33/33 tests pass, Atlas code review passed
+
+  # Phase 2: Request Form Enhancements
+  # ----------------------------------
+  12-2-payment-method-selection: done  # P1: Cash/Transfer selection - Atlas code review passed 2025-12-26, 3 auto-fixes, 16 E2E tests
+  12-4-urgency-pricing-display: done  # P1: Show surcharge percentage on urgency toggle, 5 ACs - Atlas code review passed 2025-12-26, 20 E2E tests
+  12-1-map-location-pinpoint: done  # P1: Leaflet map pinpoint after address entry, 5 ACs - Atlas code review passed 2025-12-27, 1 fix (confirm button disabled until loaded), 14 E2E tests
+  12-9-form-enhancements-local: done  # Checkpoint: 50/50 tests passing (map, payment, urgency) - Atlas code review passed 2025-12-27, 3 fixes (import pattern, AC doc, filename)
+  12-10-form-enhancements-production: done  # 50/50 tests pass - Phase 2 complete 2025-12-27
+
+  # Phase 3: Push Notifications
+  # ---------------------------
+  12-6-web-push-notifications: done  # P1: Android PWA push notifications - Atlas code review passed 2025-12-28, 2 HIGH + 1 MED fix
+  12-11-push-notifications-local: done  # Checkpoint: Push subscription tests + manual Android testing - Atlas code review passed 2025-12-28, 2 fixes
+  12-12-push-notifications-production: deployed  # Checkpoint: 9/10 tests pass, Edge Function deployed - deployed to production 2025-12-28
+
+  # Final Validation
+  # ----------------
+  12-13-epic-full-local-validation: done  # 84/98 tests pass (86%), 14 skipped expected, Atlas code review passed
+  12-14-epic-full-production-validation: done  # 84/98 tests pass production (86%), Atlas code review passed 2025-12-29
+
   epic-12-retrospective: optional
+
+  # Epic 12.5: Performance Optimization (Tech Debt)
+  # =============================================================
+  # Purpose: Diagnose and fix application-wide performance issues
+  # Approach: Diagnostic-first - measure before optimizing
+  # Priority: HIGH - User-reported sluggishness across all pages
+  # Created: 2025-12-28
+  epic-12.5: contexted  # Tech spec and stories created 2025-12-28
+  12.5-1-performance-audit-baseline: drafted  # P0: Must complete first - Lighthouse, bundle, network, React profiler
+  12.5-2-bundle-size-optimization: drafted  # P1: Code splitting, dependency audit, dynamic imports
+  12.5-3-data-fetching-optimization: drafted  # P1: Query optimization, parallel fetching, caching
+  12.5-4-react-rendering-optimization: drafted  # P1: Memoization, state management, list virtualization
+  12.5-5-build-development-performance: drafted  # P2: Build time, dev server, package manager evaluation
+  12.5-6-performance-validation-documentation: drafted  # P0: Must complete last - Before/after comparison, CI budgets
+  epic-12.5-retrospective: optional
 
   # Epic 13: Chrome Extension Final Validation (LAST EPIC)
   # =============================================================
