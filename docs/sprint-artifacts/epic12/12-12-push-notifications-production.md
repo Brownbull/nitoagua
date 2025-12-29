@@ -89,7 +89,7 @@ curl -X POST \
 - [x] Edge Function working in production ✅ (deployed & responding)
 - [x] Atlas code review passed ✅
 - [x] Phase 3 complete ✅
-- [ ] Story marked as deployed
+- [x] Story marked as deployed ✅
 
 ---
 
@@ -134,6 +134,7 @@ curl -X POST \
 | 2025-12-24 | Story created as checkpoint | Claude |
 | 2025-12-28 | Atlas dev-story execution: Deployed Edge Function, ran 10 tests (9 pass, 1 skip), verified Edge Function responds, documented results. Status → review. | Claude Opus 4.5 |
 | 2025-12-28 | Atlas code review: Fixed next-env.d.ts dev path, added File List, updated ACs. Status → done. | Claude Opus 4.5 |
+| 2025-12-28 | Deployed to production via main branch. Phase 3 complete. | Claude Opus 4.5 |
 
 ---
 
