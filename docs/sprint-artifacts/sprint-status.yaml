@@ -274,7 +274,7 @@ development_status:
   # Created: 2025-12-28
   epic-12.5: contexted  # Tech spec and stories created 2025-12-28
   12.5-1-performance-audit-baseline: deployed  # P0: Deployed to production 2025-12-29
-  12.5-2-bundle-size-optimization: done  # P1: 12% bundle reduction (400KB), zod locales excluded, confetti dynamic - Atlas code review APPROVED 2025-12-29
+  12.5-2-bundle-size-optimization: deployed  # P1: 12% bundle reduction (400KB), zod locales excluded, confetti dynamic - deployed 2025-12-29
   12.5-3-data-fetching-optimization: drafted  # P1: Query optimization, parallel fetching, caching
   12.5-4-react-rendering-optimization: drafted  # P1: Memoization, state management, list virtualization
   12.5-5-build-development-performance: drafted  # P2: Build time, dev server, package manager evaluation
