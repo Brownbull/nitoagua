@@ -292,4 +292,40 @@ async function skipMapStep(page: Page) {
 
 ---
 
-*Last verified: 2025-12-27 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1 code reviews*
+### Performance Baseline Metrics (Story 12.5-1)
+
+**Problem:** Users report sluggishness across all pages on mobile and desktop.
+
+**Key Findings:**
+| Page Type | Performance | Primary Issue |
+|-----------|-------------|---------------|
+| Static pages (/, /request) | ✅ Excellent (<100ms FCP) | None |
+| SSR+Auth pages | ⚠️ Slow (650-1500ms TTFB) | RLS policy inefficiency |
+| Admin pages | ❌ Critical (1.6-2.5s TTFB) | Multiple DB queries + RLS |
+
+**Root Causes Identified:**
+1. **37 RLS policies** using `auth.uid()` instead of `(select auth.uid())` - causes re-evaluation per row
+2. **6 unindexed foreign keys** causing full table scans on JOINs
+3. **Large bundles** - zod (2.3MB), Supabase packages (1.7MB) on client
+
+**Optimization Priority:**
+1. Story 12.5-3: Database (HIGH impact, LOW effort) - Fix RLS first
+2. Story 12.5-2: Bundle (MEDIUM impact, MEDIUM effort)
+3. Story 12.5-4: SSR (HIGH impact, HIGH effort)
+
+**Bundle Analyzer Pattern:**
+```typescript
+// next.config.ts
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+```
+
+**Run with:** `npm run analyze` (builds with ANALYZE=true)
+
+**Source:** docs/sprint-artifacts/epic12.5/performance-baseline.md
+
+---
+
+*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1 code reviews*
