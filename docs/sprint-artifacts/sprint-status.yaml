@@ -281,6 +281,16 @@ development_status:
   12.5-6-performance-validation-documentation: deployed  # P0: Before/after comparison, CI budgets, docs, version bump 2.1.0 → 2.2.0 - deployed 2025-12-29
   epic-12.5-retrospective: optional
 
+  # Epic 12.6: Auth Session Reliability (Tech Debt)
+  # =============================================================
+  # Purpose: Fix stale session issues on server actions
+  # Problem: User appears logged in but actions fail with "need to be logged in"
+  # Root Cause: Token refresh only on navigation, not on server action calls
+  # Priority: P0 - User-reported bug on mobile PWA
+  # Created: 2025-12-29
+  epic-12.6: contexted  # Single-story tech debt fix
+  12.6-1-stale-session-fix: ready-for-dev  # P0: Fix session expiry handling on server actions
+
   # Epic 13: Chrome Extension Final Validation (LAST EPIC)
   # =============================================================
   # Purpose: Final production validation via Chrome Extension E2E
