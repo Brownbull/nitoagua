@@ -3,7 +3,8 @@
 **Epic:** Epic 13 (Final Validation)
 **Author:** Atlas Project Intelligence
 **Date:** 2025-12-22
-**Status:** Backlog
+**Updated:** 2025-12-30
+**Status:** Ready to Context
 
 ---
 
@@ -11,14 +12,27 @@
 
 This epic performs **final production validation** using Chrome Extension E2E testing.
 
-**Prerequisites:**
-- Epic 11 complete (Playwright validation passing)
-- All RLS issues fixed
-- All critical workflows verified via Playwright
+**Prerequisites:** ✅ ALL MET
+- ✅ Epic 11 complete (Playwright validation - 21 stories, retrospective done 2025-12-24)
+- ✅ Epic 11A complete (Testing-discovered gaps fixed)
+- ✅ Epic 12 complete (Consumer UX Enhancements - 14 stories deployed)
+- ✅ Epic 12.5 complete (Performance Optimization - 6 stories deployed)
+- ✅ Epic 12.6 complete (Auth Session Reliability - 2 stories deployed 2025-12-30)
+- ✅ All RLS issues fixed (via Epic 11 Playwright tests + migrations)
+- ✅ All critical workflows verified via Playwright (200+ E2E tests)
 
 **Why Chrome Extension Last:**
 > Chrome Extension E2E on production should come LAST, after Playwright tests and manual testing verify the app works. RLS issues cascade and make entire test sessions unproductive.
 > -- Lesson from Story 11-1 (2025-12-22)
+
+**Current State:**
+The original Chrome Extension attempt (Story 11-1) was blocked by RLS issues. Those have all been fixed via:
+- 8 RLS migrations during Epic 11
+- Role name fixes (`supplier` vs `provider`)
+- Guest access token policies
+- Consumer/provider visibility policies
+
+**Production Version:** v2.4.0 (includes session handling fixes)
 
 ---
 
@@ -101,22 +115,32 @@ This epic performs **final production validation** using Chrome Extension E2E te
 
 ## 4. Existing Test Documents
 
-These were created during Epic 11 Chrome Extension attempt:
+These were created during Epic 11 Chrome Extension attempt (2025-12-22):
 
-| File | Status |
-|------|--------|
-| `docs/testing/chrome-extension/11-1-core-transaction.md` | Created, partial execution |
+| File | Status | Notes |
+|------|--------|-------|
+| `docs/testing/chrome-extension/11-1-core-transaction.md` | Ready to re-run | RLS issues documented there have been fixed via 8 migrations |
+
+**Historical Context:**
+- Original execution blocked by RLS issues (role name mismatch, missing policies)
+- All 4 RLS issues identified in that document have been fixed
+- Document serves as test script for Story 13-1 re-execution
 
 ---
 
 ## 5. Success Criteria
 
-| Metric | Target |
-|--------|--------|
-| All workflows validated | 25 |
-| Chrome Extension tests passing | 100% |
-| No blocking RLS issues | 0 |
-| Final production sign-off | Yes |
+| Metric | Target | Current Baseline |
+|--------|--------|------------------|
+| All workflows validated | 25 | 25 (via Playwright) |
+| Chrome Extension tests passing | 100% | Ready to execute |
+| No blocking RLS issues | 0 | 0 (all fixed) |
+| Final production sign-off | Yes | Pending Chrome Extension |
+
+**Playwright Baseline (Epic 11):**
+- 200+ E2E tests passing
+- All 25 workflows validated programmatically
+- Chrome Extension provides visual/manual confirmation
 
 ---
 
@@ -124,11 +148,15 @@ These were created during Epic 11 Chrome Extension attempt:
 
 | Dependency | Status | Required For |
 |------------|--------|--------------|
-| Epic 11 complete | Required | Chrome Extension testing |
-| RLS issues fixed | Required | Tests to pass |
-| Chrome Extension access | Required | Windows testing |
+| Epic 11 complete | ✅ Complete | Chrome Extension testing |
+| Epic 11A complete | ✅ Complete | Testing gaps fixed |
+| Epic 12 complete | ✅ Complete | Consumer UX ready |
+| Epic 12.5 complete | ✅ Complete | Performance optimized |
+| Epic 12.6 complete | ✅ Complete | Session handling reliable |
+| RLS issues fixed | ✅ Complete | Tests to pass |
+| Chrome Extension access | ✅ Available | Windows testing |
 
 ---
 
 *Created 2025-12-22*
-*This epic runs AFTER Epic 11 (Playwright validation)*
+*Updated 2025-12-30 - All prerequisites now met*
