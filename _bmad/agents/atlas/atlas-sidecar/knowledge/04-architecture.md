@@ -524,4 +524,39 @@ export const OfferCard = memo(OfferCardComponent);
 
 ---
 
-*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2, 12.5-3, 12.5-4, 12.5-5 code reviews*
+### Bundle Size Budget CI Integration (Story 12.5-6)
+
+**Pattern:** CI-integrated bundle size validation with budgets and warnings.
+
+**Location:** `scripts/check-bundle-size.js`
+
+**Key Implementation:**
+
+```javascript
+const BUDGETS = {
+  totalChunks: {
+    limit: 3.5 * 1024 * 1024,  // 3.5 MB hard limit
+    warn: 3.2 * 1024 * 1024,   // 3.2 MB warning threshold
+  },
+  largestChunk: {
+    limit: 250 * 1024,  // 250 KB per chunk
+    warn: 200 * 1024,   // 200 KB warning
+  }
+};
+```
+
+**npm Script:** `npm run build:check-size`
+
+**Current Status (v2.2.0):**
+- Total chunks: 1.70 MB (well within 3.5 MB budget)
+- Largest chunk: 196.8 KB (within 250 KB budget)
+
+**Documentation:**
+- Performance guide: `docs/technical/performance-guide.md`
+- Results comparison: `docs/sprint-artifacts/epic12.5/performance-results.md`
+
+**Source:** docs/sprint-artifacts/epic12.5/12.5-6-performance-validation-documentation.md
+
+---
+
+*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2, 12.5-3, 12.5-4, 12.5-5, 12.5-6 code reviews*
