@@ -559,4 +559,68 @@ const BUDGETS = {
 
 ---
 
-*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2, 12.5-3, 12.5-4, 12.5-5, 12.5-6 code reviews*
+### Session Expiry Handling Pattern (Story 12.6-1)
+
+**Problem:** User appears logged in but server actions fail with "need to be logged in" error. Root cause: Token refresh only happens on page navigation (middleware), not on server action calls.
+
+**Solution:** Multi-layer session validation:
+
+1. **Client-side proactive refresh** (`src/lib/auth/session.ts`)
+```typescript
+// ensureValidSession() - call before critical actions
+const REFRESH_BUFFER_MS = 5 * 60 * 1000; // 5 minutes
+
+export async function ensureValidSession(): Promise<SessionValidationResult> {
+  const supabase = createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) return { valid: false };
+
+  const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
+  if (Date.now() > expiresAt - REFRESH_BUFFER_MS) {
+    await supabase.auth.refreshSession();
+  }
+  return { valid: true, userId: session.user.id };
+}
+```
+
+2. **useAuth hook enhancements** (`src/hooks/use-auth.ts`)
+   - Visibility change handler: Validates session when app resumes from background
+   - Periodic check: Polls session every 5 minutes when tab is active
+   - Auto-redirect: Redirects to `/login?expired=true&returnTo=<path>` on expiry
+
+3. **Server action `requiresLogin` flag**
+```typescript
+// Return type for auth-required server actions
+interface SubscribeResult {
+  success: boolean;
+  error?: string;
+  requiresLogin?: boolean;  // Client should redirect to login
+}
+
+// In server action
+if (!user) {
+  return { success: false, requiresLogin: true, error: "Tu sesión expiró..." };
+}
+```
+
+4. **Login redirect flow**
+   - Login page: Accepts `?returnTo=` and `?expired=true` params
+   - OAuth callback: Preserves `returnTo` through Google OAuth flow
+   - Toast: Shows "Tu sesión expiró" when `expired=true`
+   - Post-login: Redirects to `returnTo` URL (validated as safe relative path)
+
+**Key Decision:** Client-only session utility. Server actions use direct `getUser()` calls - the `ensureValidSession()` utility is only for client-side proactive refresh before critical UI actions.
+
+**Files:**
+- `src/lib/auth/session.ts` - Session validation utilities
+- `src/components/auth/session-expired-toast.tsx` - Toast component
+- `src/hooks/use-auth.ts` - Hook with visibility change + periodic checks
+- `src/app/(auth)/login/page.tsx` - Login with returnTo/expired params
+- `src/app/auth/callback/route.ts` - OAuth callback with returnTo handling
+
+**Source:** docs/sprint-artifacts/epic12.6/12.6-1-stale-session-fix.md
+
+---
+
+*Last verified: 2025-12-30 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2, 12.5-3, 12.5-4, 12.5-5, 12.5-6, 12.6-1 code reviews*

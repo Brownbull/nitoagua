@@ -289,7 +289,7 @@ development_status:
   # Priority: P0 - User-reported bug on mobile PWA
   # Created: 2025-12-29
   epic-12.6: contexted  # Two-story tech debt epic
-  12.6-1-stale-session-fix: ready-for-dev  # P0: Fix session expiry handling on server actions (push notifications)
+  12.6-1-stale-session-fix: done  # P0: Fix session expiry handling on server actions - Atlas code review passed 2025-12-30
   12.6-2-session-handling-audit: drafted  # P1: Apply pattern to ALL server actions (admin, consumer, provider)
 
   # Epic 13: Chrome Extension Final Validation (LAST EPIC)
