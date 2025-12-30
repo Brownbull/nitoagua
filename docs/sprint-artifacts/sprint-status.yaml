@@ -278,7 +278,7 @@ development_status:
   12.5-3-data-fetching-optimization: deployed  # P1: 32 RLS policies optimized (25 user + 7 admin), 10 indexes added - production verified
   12.5-4-react-rendering-optimization: deployed  # P1: 6 components optimized (memo, useMemo, useCallback) - production verified 2025-12-29
   12.5-5-build-development-performance: deployed  # P2: Keep npm - already performant (<1s dev startup, 20s build) - deployed 2025-12-29
-  12.5-6-performance-validation-documentation: done  # P0: Before/after comparison, CI budgets, docs, version bump 2.1.0 → 2.2.0 - Atlas code review passed 2025-12-29
+  12.5-6-performance-validation-documentation: deployed  # P0: Before/after comparison, CI budgets, docs, version bump 2.1.0 → 2.2.0 - deployed 2025-12-29
   epic-12.5-retrospective: optional
 
   # Epic 13: Chrome Extension Final Validation (LAST EPIC)
