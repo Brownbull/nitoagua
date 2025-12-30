@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev -p 3005",
     "build": "next build",
+    "analyze": "ANALYZE=true next build --webpack",
+    "analyze:turbo": "next experimental-analyze",
     "start": "next start -p 3005",
     "lint": "eslint",
     "test:e2e": "playwright test",
@@ -88,6 +90,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.1.0",
+    "@next/bundle-analyzer": "^16.1.1",
     "@playwright/test": "^1.57.0",
     "@react-email/preview-server": "^5.0.5",
     "@seontechnologies/playwright-utils": "^3.10.1",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { RequestCard } from "./request-card";
 import { Button } from "@/components/ui/button";
 import type { WaterRequest } from "@/lib/supabase/types";
@@ -26,24 +26,27 @@ export function RequestList({
 }: RequestListProps) {
   const [visibleCount, setVisibleCount] = useState(pageSize);
 
-  // Sort requests: urgent first, then by created_at (oldest first)
-  const sortedRequests = [...requests].sort((a, b) => {
-    // Urgent requests first
-    if (a.is_urgent && !b.is_urgent) return -1;
-    if (!a.is_urgent && b.is_urgent) return 1;
+  // Memoize sorted requests - only recalculates when requests array changes
+  const sortedRequests = useMemo(() => {
+    return [...requests].sort((a, b) => {
+      // Urgent requests first
+      if (a.is_urgent && !b.is_urgent) return -1;
+      if (!a.is_urgent && b.is_urgent) return 1;
 
-    // Then by created_at (oldest first)
-    const dateA = new Date(a.created_at!).getTime();
-    const dateB = new Date(b.created_at!).getTime();
-    return dateA - dateB;
-  });
+      // Then by created_at (oldest first)
+      const dateA = new Date(a.created_at!).getTime();
+      const dateB = new Date(b.created_at!).getTime();
+      return dateA - dateB;
+    });
+  }, [requests]);
 
   const visibleRequests = sortedRequests.slice(0, visibleCount);
   const hasMore = visibleCount < sortedRequests.length;
 
-  const handleLoadMore = () => {
+  // Memoize load more handler
+  const handleLoadMore = useCallback(() => {
     setVisibleCount((prev) => prev + pageSize);
-  };
+  }, [pageSize]);
 
   return (
     <div className="space-y-3" data-testid="request-list">

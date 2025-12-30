@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo, useMemo } from "react";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -102,8 +102,11 @@ export function useCountdown(expiresAt: string | Date): number {
  * AC: 8.3.2 - Show time remaining countdown for pending offers
  * AC: 10.3.1, 10.3.2, 10.3.3 - Consumer urgency colors
  * NFR5: ±1 second accuracy with drift correction
+ *
+ * Performance: Wrapped in memo to prevent re-renders from parent state changes
+ * Note: This component still updates every second internally via useCountdown hook
  */
-export function CountdownTimer({
+function CountdownTimerComponent({
   expiresAt,
   onExpire,
   showPrefix = true,
@@ -129,19 +132,21 @@ export function CountdownTimer({
     hasExpiredRef.current = false;
   }, [expiresAt]);
 
-  const isExpired = remaining === 0;
-  const isWarning = isWarningState(remaining);
-  const isCritical = isCriticalState(remaining);
+  // Memoize computed state values
+  const { isExpired, isWarning, isCritical } = useMemo(() => ({
+    isExpired: remaining === 0,
+    isWarning: isWarningState(remaining),
+    isCritical: isCriticalState(remaining),
+  }), [remaining]);
 
   const timeString = formatCountdown(remaining);
 
-  // Determine style based on state
-  let stateClassName = "";
-  if (isCritical) {
-    stateClassName = criticalClassName;
-  } else if (isWarning) {
-    stateClassName = warningClassName;
-  }
+  // Memoize state className
+  const stateClassName = useMemo(() => {
+    if (isCritical) return criticalClassName;
+    if (isWarning) return warningClassName;
+    return "";
+  }, [isCritical, isWarning, criticalClassName, warningClassName]);
 
   if (isExpired) {
     return (
@@ -172,4 +177,7 @@ export function CountdownTimer({
   );
 }
 
+// Memoized export - prevents re-renders when parent re-renders with same props
+// The internal countdown still updates via useCountdown hook
+export const CountdownTimer = memo(CountdownTimerComponent);
 export default CountdownTimer;
