@@ -497,4 +497,31 @@ export const OfferCard = memo(OfferCardComponent);
 
 ---
 
-*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2, 12.5-3, 12.5-4 code reviews*
+### Build & Development Performance Decision (Story 12.5-5)
+
+**Problem:** Evaluate if alternative package managers (pnpm, Bun) would improve developer productivity.
+
+**Baseline Measurements:**
+| Metric | npm | pnpm | Bun |
+|--------|-----|------|-----|
+| Clean Install | 85.6s | 38.9s (2.2x) | 41.2s (2.1x) |
+| Production Build | 20.3s | - | - |
+| Dev Server Startup | 954ms | - | - |
+| Hot Reload | <100ms | - | - |
+
+**Decision:** Keep npm
+
+**Rationale:**
+1. Both alternatives only marginally exceed 2x threshold (2.2x and 2.1x)
+2. Both have minor compatibility warnings (supabase binary, blocked postinstalls)
+3. Dev server already excellent (<1s startup with Turbopack)
+4. Build time acceptable (20s)
+5. Migration risk outweighs marginal benefits
+
+**Cleanup:** Added `bun.lock` and `pnpm-lock.yaml` to `.gitignore` to prevent test artifacts from being committed.
+
+**Source:** docs/sprint-artifacts/epic12.5/12.5-5-build-development-performance.md
+
+---
+
+*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2, 12.5-3, 12.5-4, 12.5-5 code reviews*
