@@ -29,6 +29,8 @@
 | Mixed auth strategies | Pick one auth method early |
 | Hardcoded constants mismatched docs | Always check Atlas Section 4 |
 | Seed data mismatched constants | Reference source constants, not hardcode |
+| SW_VERSION drift from package.json | Build checks via `npm run version:check` |
+| NEXT_PUBLIC_* env vars not in build | Redeploy after adding Vercel env vars |
 
 ---
 
@@ -234,6 +236,47 @@ const { handleAction } = useActionHandler();
 const result = await handleAction(() => myServerAction());
 // Automatically redirects if result.requiresLogin
 ```
+
+---
+
+## PWA Version Management
+
+### Version Sync (Automated Check)
+Build will fail if versions don't match:
+```bash
+npm run version:check  # Runs automatically before build
+```
+
+Script location: `scripts/check-version.js`
+
+### Version Bump Checklist
+When bumping app version:
+1. Update `package.json` version
+2. Update `public/sw.js` SW_VERSION to match
+3. Run `npm run version:check` to verify
+4. Commit both files together
+
+---
+
+## Vercel Environment Variables
+
+### NEXT_PUBLIC_* Variables Are Build-Time Only
+- These are **baked into the JavaScript bundle** at build time
+- Adding to Vercel Dashboard does **NOT** automatically deploy
+- The app uses the values from when it was **last built**
+
+### After Adding/Changing NEXT_PUBLIC_* Vars
+1. Add the env var in Vercel Dashboard
+2. **Trigger a new deployment:**
+   - Push any commit, OR
+   - Go to Vercel → Deployments → "..." → "Redeploy"
+3. Verify the new build includes the value
+
+### Server-Side vs Client-Side Env Vars
+| Prefix | Available | When Read |
+|--------|-----------|-----------|
+| `NEXT_PUBLIC_*` | Client + Server | Build time (baked in) |
+| No prefix | Server only | Runtime |
 
 ---
 
