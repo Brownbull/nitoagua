@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, memo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -139,8 +139,8 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
     currentFilters.dateTo !== "" ||
     currentFilters.comuna !== "all";
 
-  // Toggle status filter from stats cards
-  const toggleStatusFilter = (status: string) => {
+  // Toggle status filter from stats cards (memoized)
+  const toggleStatusFilter = useCallback((status: string) => {
     const params = new URLSearchParams(searchParams.toString());
 
     // "all" or "total" always clears the filter
@@ -168,7 +168,15 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
 
     router.push(`/admin/orders?${params.toString()}`);
     setCurrentPage(1);
-  };
+  }, [searchParams, router, currentFilters.status]);
+
+  // Memoized click handlers for StatsCards to prevent recreating functions on each render
+  const handlePendingClick = useCallback(() => toggleStatusFilter("pending"), [toggleStatusFilter]);
+  const handleAssignedClick = useCallback(() => toggleStatusFilter("assigned"), [toggleStatusFilter]);
+  const handleEnRouteClick = useCallback(() => toggleStatusFilter("en_route"), [toggleStatusFilter]);
+  const handleDeliveredClick = useCallback(() => toggleStatusFilter("delivered"), [toggleStatusFilter]);
+  const handleCancelledClick = useCallback(() => toggleStatusFilter("cancelled"), [toggleStatusFilter]);
+  const handleAllClick = useCallback(() => toggleStatusFilter("all"), [toggleStatusFilter]);
 
   return (
     <div className="space-y-4">
@@ -197,42 +205,42 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
           value={stats.pending}
           color="amber"
           isActive={currentFilters.status === "pending" || currentFilters.status === "offers_pending"}
-          onClick={() => toggleStatusFilter("pending")}
+          onClick={handlePendingClick}
         />
         <StatsCard
           label="Asignados"
           value={stats.assigned}
           color="indigo"
           isActive={currentFilters.status === "assigned"}
-          onClick={() => toggleStatusFilter("assigned")}
+          onClick={handleAssignedClick}
         />
         <StatsCard
           label="En Camino"
           value={stats.en_route}
           color="purple"
           isActive={currentFilters.status === "en_route"}
-          onClick={() => toggleStatusFilter("en_route")}
+          onClick={handleEnRouteClick}
         />
         <StatsCard
           label="Entregados"
           value={stats.delivered}
           color="green"
           isActive={currentFilters.status === "delivered"}
-          onClick={() => toggleStatusFilter("delivered")}
+          onClick={handleDeliveredClick}
         />
         <StatsCard
           label="Cancelados"
           value={stats.cancelled}
           color="red"
           isActive={currentFilters.status === "cancelled"}
-          onClick={() => toggleStatusFilter("cancelled")}
+          onClick={handleCancelledClick}
         />
         <StatsCard
           label="Total"
           value={stats.total}
           color="gray"
           isActive={!hasActiveFilters}
-          onClick={() => toggleStatusFilter("all")}
+          onClick={handleAllClick}
         />
       </div>
 
@@ -439,35 +447,37 @@ interface StatsCardProps {
   onClick?: () => void;
 }
 
-function StatsCard({ label, value, color, isActive, onClick }: StatsCardProps) {
-  const colorClasses: Record<string, { normal: string; active: string }> = {
-    amber: {
-      normal: "bg-amber-50 text-amber-700",
-      active: "bg-amber-500 text-white ring-2 ring-amber-600 ring-offset-2"
-    },
-    indigo: {
-      normal: "bg-indigo-50 text-indigo-700",
-      active: "bg-indigo-500 text-white ring-2 ring-indigo-600 ring-offset-2"
-    },
-    purple: {
-      normal: "bg-purple-50 text-purple-700",
-      active: "bg-purple-500 text-white ring-2 ring-purple-600 ring-offset-2"
-    },
-    green: {
-      normal: "bg-green-50 text-green-700",
-      active: "bg-green-500 text-white ring-2 ring-green-600 ring-offset-2"
-    },
-    red: {
-      normal: "bg-red-50 text-red-700",
-      active: "bg-red-500 text-white ring-2 ring-red-600 ring-offset-2"
-    },
-    gray: {
-      normal: "bg-gray-100 text-gray-700",
-      active: "bg-gray-700 text-white ring-2 ring-gray-800 ring-offset-2"
-    },
-  };
+// Color classes defined outside component to avoid recreation
+const STATS_COLOR_CLASSES: Record<string, { normal: string; active: string }> = {
+  amber: {
+    normal: "bg-amber-50 text-amber-700",
+    active: "bg-amber-500 text-white ring-2 ring-amber-600 ring-offset-2"
+  },
+  indigo: {
+    normal: "bg-indigo-50 text-indigo-700",
+    active: "bg-indigo-500 text-white ring-2 ring-indigo-600 ring-offset-2"
+  },
+  purple: {
+    normal: "bg-purple-50 text-purple-700",
+    active: "bg-purple-500 text-white ring-2 ring-purple-600 ring-offset-2"
+  },
+  green: {
+    normal: "bg-green-50 text-green-700",
+    active: "bg-green-500 text-white ring-2 ring-green-600 ring-offset-2"
+  },
+  red: {
+    normal: "bg-red-50 text-red-700",
+    active: "bg-red-500 text-white ring-2 ring-red-600 ring-offset-2"
+  },
+  gray: {
+    normal: "bg-gray-100 text-gray-700",
+    active: "bg-gray-700 text-white ring-2 ring-gray-800 ring-offset-2"
+  },
+};
 
-  const colors = colorClasses[color] || colorClasses.gray;
+// Memoized StatsCard to prevent re-renders when parent state changes
+const StatsCard = memo(function StatsCard({ label, value, color, isActive, onClick }: StatsCardProps) {
+  const colors = STATS_COLOR_CLASSES[color] || STATS_COLOR_CLASSES.gray;
 
   return (
     <button
@@ -483,17 +493,24 @@ function StatsCard({ label, value, color, isActive, onClick }: StatsCardProps) {
       <p className={cn("text-xs font-medium", isActive ? "opacity-90" : "opacity-80")}>{label}</p>
     </button>
   );
-}
+});
 
-function OrderCard({ order }: { order: OrderSummary }) {
+// Memoized OrderCard to prevent re-renders when list re-renders
+const OrderCard = memo(function OrderCard({ order }: { order: OrderSummary }) {
+  // Memoize computed values
   const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
   const StatusIcon = statusConfig.icon;
 
-  // Format ID (truncate for display)
-  const shortId = order.id.slice(0, 8);
-
-  // Format date
-  const formattedDate = format(new Date(order.created_at), "d MMM, HH:mm", { locale: es });
+  // Memoize formatted values - these only change when order changes
+  const shortId = useMemo(() => order.id.slice(0, 8), [order.id]);
+  const formattedDate = useMemo(
+    () => format(new Date(order.created_at), "d MMM, HH:mm", { locale: es }),
+    [order.created_at]
+  );
+  const formattedAmount = useMemo(
+    () => order.amount.toLocaleString("es-CL"),
+    [order.amount]
+  );
 
   return (
     <Link
@@ -530,7 +547,7 @@ function OrderCard({ order }: { order: OrderSummary }) {
       <div className="flex flex-wrap gap-2 mb-2.5">
         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-md text-xs text-gray-600">
           <Package className="w-3 h-3" />
-          {order.amount.toLocaleString("es-CL")}L
+          {formattedAmount}L
         </span>
         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-md text-xs text-gray-600">
           <Calendar className="w-3 h-3" />
@@ -566,4 +583,4 @@ function OrderCard({ order }: { order: OrderSummary }) {
       </div>
     </Link>
   );
-}
+});

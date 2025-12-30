@@ -433,4 +433,68 @@ USING (((select auth.jwt()) ->> 'email') = admin_email);
 
 ---
 
-*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2, 12.5-3 code reviews*
+### React Rendering Optimization (Story 12.5-4)
+
+**Pattern:** Systematic memoization for React components to prevent unnecessary re-renders.
+
+**Key Implementation:**
+
+1. **React.memo for list item components**
+   - Wrap components rendered in loops (`OfferCard`, `RequestCard`, `OrderCard`, `StatsCard`)
+   - Prevents parent re-render from cascading to all children
+
+2. **useMemo for computed values**
+   - Status flags, formatted dates, sorted lists
+   - Only recalculates when dependencies change
+
+3. **useCallback for event handlers**
+   - Handlers passed as props to child components
+   - Maintains stable function references across renders
+
+4. **Constants outside components**
+   - Move static arrays/objects outside component functions (`HISTORY_STATUSES`, `NOTIFICATION_ICONS`, `STATS_COLOR_CLASSES`)
+   - Provides stable references without useMemo overhead
+
+**Example Pattern:**
+```typescript
+// Constants outside component
+const HISTORY_STATUSES = ["expired", "cancelled", "request_filled"];
+
+// Memoized component
+function OfferCardComponent({ offer, onWithdraw }: Props) {
+  // Memoize computed values
+  const { isActive, isHistoryStatus } = useMemo(() => ({
+    isActive: offer.status === "active",
+    isHistoryStatus: HISTORY_STATUSES.includes(offer.status),
+  }), [offer.status]);
+
+  // Memoize handlers passed to children
+  const handleWithdraw = useCallback(async () => {
+    await withdrawOffer(offer.id);
+    onWithdraw?.(offer.id);
+  }, [offer.id, onWithdraw]);
+
+  return (/* ... */);
+}
+
+// Memoized export
+export const OfferCard = memo(OfferCardComponent);
+```
+
+**Components Optimized:**
+- `src/components/provider/offer-card.tsx`
+- `src/components/provider/notification-bell.tsx` (NotificationItem)
+- `src/components/admin/orders-table.tsx` (StatsCard, OrderCard)
+- `src/components/supplier/request-card.tsx`
+- `src/components/supplier/request-list.tsx`
+- `src/components/shared/countdown-timer.tsx`
+
+**Key Decision:** Virtualization deferred - lists are paginated (20 items) and don't exceed 50 item threshold.
+
+**Tailwind Fix:** Deprecated `flex-shrink-0` replaced with `shrink-0`.
+
+**Source:** docs/sprint-artifacts/epic12.5/12.5-4-react-rendering-optimization.md
+
+---
+
+*Last verified: 2025-12-29 | Source: architecture.md, Story 8-6, 8-7, 8-9, 8-10, 10-3, 10-7, 11-8, 11-9, 11-21, 12-1, 12.5-1, 12.5-2, 12.5-3, 12.5-4 code reviews*

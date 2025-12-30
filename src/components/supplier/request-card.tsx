@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, memo, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -57,7 +57,7 @@ function truncateAddress(address: string, maxLength: number = 30): string {
   return address.substring(0, maxLength) + "...";
 }
 
-export function RequestCard({
+function RequestCardComponent({
   request,
   showAcceptButton = false,
   showDeliverButton = false,
@@ -69,16 +69,26 @@ export function RequestCard({
   // This avoids hydration mismatches from time-based calculations
   const isClient = useIsClient();
 
-  // Compute timeAgo only on client to avoid hydration mismatch
-  const timeAgo = isClient
-    ? formatDistanceToNow(new Date(request.created_at!), {
-        addSuffix: true,
-        locale: es,
-      })
-    : "";
+  // Memoize timeAgo calculation - only recalculates when created_at or isClient changes
+  const timeAgo = useMemo(() => {
+    if (!isClient) return "";
+    return formatDistanceToNow(new Date(request.created_at!), {
+      addSuffix: true,
+      locale: es,
+    });
+  }, [isClient, request.created_at]);
 
   const isUrgent = request.is_urgent === true;
   const customerName = request.guest_name || "Cliente";
+
+  // Memoize click handlers to prevent recreation on each render
+  const handleAcceptClick = useCallback(() => {
+    onAcceptRequest?.(request);
+  }, [onAcceptRequest, request]);
+
+  const handleDeliverClick = useCallback(() => {
+    onDeliverRequest?.(request);
+  }, [onDeliverRequest, request]);
 
   return (
     <Card
@@ -113,7 +123,7 @@ export function RequestCard({
 
             {/* Address */}
             <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
-              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <MapPin className="w-4 h-4 shrink-0" />
               <span
                 className="truncate"
                 data-testid="address"
@@ -159,7 +169,7 @@ export function RequestCard({
             {showAcceptButton && (
               <Button
                 size="lg"
-                onClick={() => onAcceptRequest?.(request)}
+                onClick={handleAcceptClick}
                 className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
                 data-testid="accept-button"
               >
@@ -170,7 +180,7 @@ export function RequestCard({
             {showDeliverButton && (
               <Button
                 size="lg"
-                onClick={() => onDeliverRequest?.(request)}
+                onClick={handleDeliverClick}
                 className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700"
                 data-testid="deliver-button"
               >
@@ -184,3 +194,6 @@ export function RequestCard({
     </Card>
   );
 }
+
+// Memoized export - prevents re-render when parent re-renders with same props
+export const RequestCard = memo(RequestCardComponent);
