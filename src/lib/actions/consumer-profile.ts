@@ -6,11 +6,7 @@ import {
   consumerOnboardingSchema,
   type ConsumerOnboardingInput,
 } from "@/lib/validations/consumer-profile";
-
-interface ActionResult {
-  success: boolean;
-  error?: string;
-}
+import { createAuthError, type ActionResult } from "@/lib/types/action-result";
 
 export interface AvailableComuna {
   id: string;
@@ -95,12 +91,10 @@ export async function createConsumerProfile(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.2: Return requiresLogin flag for auth failures
   if (userError || !user) {
     console.error("[CONSUMER-PROFILE] User not authenticated:", userError?.message);
-    return {
-      success: false,
-      error: "Debes iniciar sesión para crear un perfil",
-    };
+    return createAuthError();
   }
 
   // Check if profile already exists
@@ -176,12 +170,10 @@ export async function updateConsumerProfile(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.2: Return requiresLogin flag for auth failures
   if (userError || !user) {
     console.error("[CONSUMER-PROFILE] User not authenticated:", userError?.message);
-    return {
-      success: false,
-      error: "Debes iniciar sesión para actualizar tu perfil",
-    };
+    return createAuthError();
   }
 
   // Use admin client to bypass RLS for profile update

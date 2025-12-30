@@ -1,7 +1,7 @@
 # Historical Lessons (Retrospectives)
 
 > Section 6 of Atlas Memory
-> Last Sync: 2025-12-29
+> Last Sync: 2025-12-30
 > Sources: docs/sprint-artifacts/retrospectives/, epic retrospectives
 
 ## What Worked
@@ -42,6 +42,7 @@
 6. **Per-test seeding** - Deterministic, isolated
 7. **Centralize pricing** - Single source in `src/lib/utils/commission.ts`
 8. **aria-busy/aria-live** - Loading state accessibility
+9. **Consistent auth failure response** - Use `ActionResult<T>` with `requiresLogin` flag
 
 ## Patterns to Always Avoid
 
@@ -195,6 +196,45 @@ Only user-device-dependent items require real manual testing.
 
 > "Run Supabase security advisors after every migration to catch `function_search_path_mutable` warnings immediately."
 
+> "Two auth patterns are valid: Server actions return `{requiresLogin: true}` for client-side redirect. Layout guards use Next.js `redirect()` for automatic redirect. Don't mix within the same module."
+
 ---
 
-*Last verified: 2025-12-29 | Sources: Epic 3, 8, 10, 11, 12 retrospectives and code reviews*
+## Session Handling Pattern (Epic 12.6)
+
+### Server Actions - Use `requiresLogin` Flag
+```typescript
+// src/lib/types/action-result.ts
+import { createAuthError, type ActionResult } from "@/lib/types/action-result";
+
+export async function myServerAction(): Promise<ActionResult> {
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return createAuthError();  // { success: false, error: "...", requiresLogin: true }
+  }
+  // ... rest of action
+}
+```
+
+### Layout Guards - Use `redirect()`
+```typescript
+// src/lib/auth/guards.ts
+export async function requireAdmin(): Promise<User> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/admin/login");  // Throws, never returns
+  return user;
+}
+```
+
+### Client Handler (Gradual Adoption)
+```typescript
+// src/lib/hooks/use-action-handler.ts - Available for future use
+const { handleAction } = useActionHandler();
+const result = await handleAction(() => myServerAction());
+// Automatically redirects if result.requiresLogin
+```
+
+---
+
+*Last verified: 2025-12-30 | Sources: Epic 3, 8, 10, 11, 12, 12.6 retrospectives and code reviews*

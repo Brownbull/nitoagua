@@ -61,7 +61,7 @@ export function ConsumerOnboardingForm() {
     try {
       const result = await createConsumerProfile(data);
 
-      if (result.error) {
+      if (!result.success) {
         toast.error(result.error);
         setIsSubmitting(false);
         return;

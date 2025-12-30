@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { COMUNAS } from "@/lib/validations/provider-registration";
+import { AUTH_ERROR_MESSAGE } from "@/lib/types/action-result";
 
 export interface ServiceAreaWarning {
   comunaId: string;
@@ -15,12 +16,16 @@ export interface UpdateServiceAreasResult {
   success: boolean;
   error?: string;
   warnings?: ServiceAreaWarning[];
+  /** AC12.6.2.3: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }
 
 export interface GetServiceAreasResult {
   success: boolean;
   areas?: string[];
   error?: string;
+  /** AC12.6.2.3: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }
 
 export interface ActiveDelivery {
@@ -34,6 +39,8 @@ export interface ToggleAvailabilityResult {
   error?: string;
   needsConfirmation?: boolean;
   activeDeliveries?: ActiveDelivery[];
+  /** AC12.6.2.3: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }
 
 /**
@@ -46,10 +53,12 @@ export async function getProviderServiceAreas(): Promise<GetServiceAreasResult> 
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
     return {
       success: false,
-      error: "No autenticado",
+      error: AUTH_ERROR_MESSAGE,
+      requiresLogin: true,
     };
   }
 
@@ -180,10 +189,12 @@ export async function updateServiceAreas(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
     return {
       success: false,
-      error: "No autenticado",
+      error: AUTH_ERROR_MESSAGE,
+      requiresLogin: true,
     };
   }
 
@@ -292,10 +303,12 @@ export async function toggleAvailability(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
     return {
       success: false,
-      error: "No autenticado",
+      error: AUTH_ERROR_MESSAGE,
+      requiresLogin: true,
     };
   }
 
@@ -383,6 +396,8 @@ export async function getProviderAvailability(): Promise<{
   success: boolean;
   isAvailable?: boolean;
   error?: string;
+  /** AC12.6.2.3: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }> {
   const supabase = await createClient();
   const {
@@ -390,10 +405,12 @@ export async function getProviderAvailability(): Promise<{
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
     return {
       success: false,
-      error: "No autenticado",
+      error: AUTH_ERROR_MESSAGE,
+      requiresLogin: true,
     };
   }
 

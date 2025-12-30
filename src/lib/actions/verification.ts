@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { sendProviderVerificationNotification } from "@/lib/email";
+import { AUTH_ERROR_MESSAGE, type ActionResult } from "@/lib/types/action-result";
 
 export type VerificationDecision = "approved" | "rejected" | "more_info_needed";
 
@@ -13,12 +14,6 @@ interface VerifyProviderInput {
   reason?: string;
   notes?: string;
   missingDocs?: string[];
-}
-
-interface ActionResult<T = void> {
-  success: boolean;
-  error?: string;
-  data?: T;
 }
 
 /**
@@ -35,11 +30,13 @@ export async function verifyProvider(
       error: userError,
     } = await supabase.auth.getUser();
 
+    // AC12.6.2.4: Return requiresLogin flag for auth failures
     if (userError || !user || !user.email) {
       console.error("[VERIFICATION] User not authenticated:", userError?.message);
       return {
         success: false,
-        error: "Debes iniciar sesion como administrador",
+        error: AUTH_ERROR_MESSAGE,
+        requiresLogin: true,
       };
     }
 

@@ -16,6 +16,8 @@ export interface ProviderDocumentActionResult {
   success: boolean;
   error?: string;
   data?: unknown;
+  /** AC12.6.2.3: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }
 
 export interface GetProviderDocumentsResult {

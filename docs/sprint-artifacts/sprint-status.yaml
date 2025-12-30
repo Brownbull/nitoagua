@@ -290,7 +290,7 @@ development_status:
   # Created: 2025-12-29
   epic-12.6: contexted  # Two-story tech debt epic
   12.6-1-stale-session-fix: done  # P0: Fix session expiry handling on server actions - Atlas code review passed 2025-12-30
-  12.6-2-session-handling-audit: drafted  # P1: Apply pattern to ALL server actions (admin, consumer, provider)
+  12.6-2-session-handling-audit: done  # P1: Apply pattern to ALL server actions - Atlas code review passed 2025-12-30
 
   # Epic 13: Chrome Extension Final Validation (LAST EPIC)
   # =============================================================
