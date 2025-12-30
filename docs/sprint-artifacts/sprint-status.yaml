@@ -277,7 +277,7 @@ development_status:
   12.5-2-bundle-size-optimization: deployed  # P1: 12% bundle reduction (400KB), zod locales excluded, confetti dynamic - deployed 2025-12-29
   12.5-3-data-fetching-optimization: deployed  # P1: 32 RLS policies optimized (25 user + 7 admin), 10 indexes added - production verified
   12.5-4-react-rendering-optimization: deployed  # P1: 6 components optimized (memo, useMemo, useCallback) - production verified 2025-12-29
-  12.5-5-build-development-performance: drafted  # P2: Build time, dev server, package manager evaluation
+  12.5-5-build-development-performance: done  # P2: Keep npm - already performant (<1s dev startup, 20s build)
   12.5-6-performance-validation-documentation: drafted  # P0: Must complete last - Before/after comparison, CI budgets
   epic-12.5-retrospective: optional
 
