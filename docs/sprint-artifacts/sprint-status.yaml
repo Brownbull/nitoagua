@@ -262,7 +262,7 @@ development_status:
   # Final Validation
   # ----------------
   12-13-epic-full-local-validation: done  # 84/98 tests pass (86%), 14 skipped expected, Atlas code review passed
-  12-14-epic-full-production-validation: done  # 84/98 tests pass production (86%), Atlas code review passed 2025-12-29
+  12-14-epic-full-production-validation: deployed  # 84/98 tests pass production (86%), Atlas code review passed, deployed 2025-12-29
 
   epic-12-retrospective: optional
 
@@ -273,11 +273,11 @@ development_status:
   # Priority: HIGH - User-reported sluggishness across all pages
   # Created: 2025-12-28
   epic-12.5: contexted  # Tech spec and stories created 2025-12-28
-  12.5-1-performance-audit-baseline: drafted  # P0: Must complete first - Lighthouse, bundle, network, React profiler
-  12.5-2-bundle-size-optimization: drafted  # P1: Code splitting, dependency audit, dynamic imports
-  12.5-3-data-fetching-optimization: drafted  # P1: Query optimization, parallel fetching, caching
-  12.5-4-react-rendering-optimization: drafted  # P1: Memoization, state management, list virtualization
-  12.5-5-build-development-performance: drafted  # P2: Build time, dev server, package manager evaluation
+  12.5-1-performance-audit-baseline: deployed  # P0: Deployed to production 2025-12-29
+  12.5-2-bundle-size-optimization: deployed  # P1: 12% bundle reduction (400KB), zod locales excluded, confetti dynamic - deployed 2025-12-29
+  12.5-3-data-fetching-optimization: deployed  # P1: 32 RLS policies optimized (25 user + 7 admin), 10 indexes added - production verified
+  12.5-4-react-rendering-optimization: deployed  # P1: 6 components optimized (memo, useMemo, useCallback) - production verified 2025-12-29
+  12.5-5-build-development-performance: done  # P2: Keep npm - already performant (<1s dev startup, 20s build)
   12.5-6-performance-validation-documentation: drafted  # P0: Must complete last - Before/after comparison, CI budgets
   epic-12.5-retrospective: optional
 

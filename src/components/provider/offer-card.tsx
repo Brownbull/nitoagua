@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,30 +55,47 @@ const statusConfig = {
   },
 };
 
+// History status array defined outside component to avoid re-creation
+const HISTORY_STATUSES = ["expired", "cancelled", "request_filled"];
+
 /**
  * Offer Card Component
  * AC: 8.3.2 - Display request summary (amount, comuna), delivery window
  * AC: 8.3.3 - Integrate countdown timer for pending offers
  * AC: 8.3.4 - "Cancelar Oferta" button (pending only)
  * AC: 8.3.5 - "Ver Entrega" button (accepted only)
+ *
+ * Performance: Wrapped in memo, uses useCallback/useMemo for stable references
  */
-export function OfferCard({ offer, isNew = false, onWithdraw, onExpire }: OfferCardProps) {
+function OfferCardComponent({ offer, isNew = false, onWithdraw, onExpire }: OfferCardProps) {
   const router = useRouter();
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
-  const isActive = offer.status === "active";
-  const isAccepted = offer.status === "accepted";
-  const isCancelled = offer.status === "cancelled";
-  const isHistoryStatus = ["expired", "cancelled", "request_filled"].includes(offer.status);
+  // Memoize computed status flags
+  const { isActive, isAccepted, isCancelled, isHistoryStatus } = useMemo(() => ({
+    isActive: offer.status === "active",
+    isAccepted: offer.status === "accepted",
+    isCancelled: offer.status === "cancelled",
+    isHistoryStatus: HISTORY_STATUSES.includes(offer.status),
+  }), [offer.status]);
 
-  const statusBadge = statusConfig[offer.status] || {
-    label: offer.status,
-    className: "bg-gray-100 text-gray-800",
-  };
+  // Memoize status badge lookup
+  const statusBadge = useMemo(() =>
+    statusConfig[offer.status] || {
+      label: offer.status,
+      className: "bg-gray-100 text-gray-800",
+    },
+  [offer.status]);
 
-  // AC: 8.4.2 - Handle offer withdrawal
-  const handleWithdraw = async () => {
+  // Memoize formatted delivery window
+  const formattedDeliveryWindow = useMemo(() => ({
+    start: format(new Date(offer.delivery_window_start), "d MMM, HH:mm", { locale: es }),
+    end: format(new Date(offer.delivery_window_end), "HH:mm", { locale: es }),
+  }), [offer.delivery_window_start, offer.delivery_window_end]);
+
+  // AC: 8.4.2 - Handle offer withdrawal (memoized)
+  const handleWithdraw = useCallback(async () => {
     setIsWithdrawing(true);
     try {
       const result = await withdrawOffer(offer.id);
@@ -97,13 +114,13 @@ export function OfferCard({ offer, isNew = false, onWithdraw, onExpire }: OfferC
       setIsWithdrawing(false);
       setShowCancelDialog(false);
     }
-  };
+  }, [offer.id, onWithdraw, router]);
 
-  // Handle countdown expiration
-  const handleExpire = () => {
+  // Handle countdown expiration (memoized)
+  const handleExpire = useCallback(() => {
     onExpire?.(offer.id);
     router.refresh();
-  };
+  }, [offer.id, onExpire, router]);
 
   return (
     <Card
@@ -141,7 +158,7 @@ export function OfferCard({ offer, isNew = false, onWithdraw, onExpire }: OfferC
           {offer.request && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
                 <span className="text-gray-700">
                   {offer.request.comuna_name || "Ubicación desconocida"}
                 </span>
@@ -152,7 +169,7 @@ export function OfferCard({ offer, isNew = false, onWithdraw, onExpire }: OfferC
                 )}
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Droplets className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                <Droplets className="h-4 w-4 text-blue-500 shrink-0" />
                 <span className="text-gray-700">{formatLiters(offer.request.amount)}</span>
               </div>
             </div>
@@ -161,8 +178,7 @@ export function OfferCard({ offer, isNew = false, onWithdraw, onExpire }: OfferC
           {/* Delivery window - AC: 8.3.2 */}
           <div className="text-xs text-gray-500 bg-gray-50 rounded p-2">
             <span className="font-medium">Entrega propuesta:</span>{" "}
-            {format(new Date(offer.delivery_window_start), "d MMM, HH:mm", { locale: es })} -{" "}
-            {format(new Date(offer.delivery_window_end), "HH:mm", { locale: es })}
+            {formattedDeliveryWindow.start} - {formattedDeliveryWindow.end}
           </div>
 
           {/* Message if exists */}
@@ -258,4 +274,6 @@ export function OfferCard({ offer, isNew = false, onWithdraw, onExpire }: OfferC
   );
 }
 
+// Memoized export - prevents re-render when parent re-renders with same props
+export const OfferCard = memo(OfferCardComponent);
 export default OfferCard;

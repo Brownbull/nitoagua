@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, memo, useMemo } from "react";
 import { Bell, CheckCircle2, Truck, FileText, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,10 +15,82 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
+// Icon components moved outside to avoid recreation - stable references
+const NOTIFICATION_ICONS: Record<string, React.ReactNode> = {
+  offer_accepted: <Truck className="h-5 w-5 text-green-500" />,
+  new_offer: <FileText className="h-5 w-5 text-blue-500" />,
+  verification_approved: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+  default: <Package className="h-5 w-5 text-gray-500" />,
+};
+
+// Memoized notification item to prevent re-renders
+const NotificationItem = memo(function NotificationItem({
+  notification,
+  onClick,
+}: {
+  notification: Notification;
+  onClick: (notification: Notification) => void;
+}) {
+  // Memoize the formatted time - only recalculates when created_at changes
+  const timeAgo = useMemo(
+    () =>
+      formatDistanceToNow(new Date(notification.created_at), {
+        addSuffix: true,
+        locale: es,
+      }),
+    [notification.created_at]
+  );
+
+  const handleClick = useCallback(() => {
+    onClick(notification);
+  }, [onClick, notification]);
+
+  const icon = NOTIFICATION_ICONS[notification.type] || NOTIFICATION_ICONS.default;
+
+  return (
+    <button
+      onClick={handleClick}
+      className={cn(
+        "w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors",
+        !notification.read && "bg-orange-50"
+      )}
+      data-testid={`notification-item-${notification.id}`}
+    >
+      {/* Icon */}
+      <div className="shrink-0 mt-0.5">{icon}</div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <p
+          className={cn(
+            "text-sm",
+            !notification.read ? "font-semibold text-gray-900" : "text-gray-700"
+          )}
+        >
+          {notification.title}
+        </p>
+        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+          {notification.message}
+        </p>
+        <p className="text-xs text-gray-400 mt-1">{timeAgo}</p>
+      </div>
+
+      {/* Unread indicator */}
+      {!notification.read && (
+        <div className="shrink-0">
+          <div className="h-2 w-2 rounded-full bg-orange-500" />
+        </div>
+      )}
+    </button>
+  );
+});
+
 /**
  * Notification bell with dropdown for in-app notifications
  * AC: 8.5.1 - Provider receives in-app notification: "¡Tu oferta fue aceptada!"
  * AC: 8.5.4 - "Ver Detalles" button links to delivery page
+ *
+ * Performance: Uses memoized NotificationItem, stable callbacks
  */
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,26 +102,18 @@ export function NotificationBell() {
     navigateToNotification,
   } = useNotifications();
 
-  // Get icon based on notification type
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case "offer_accepted":
-        return <Truck className="h-5 w-5 text-green-500" />;
-      case "new_offer":
-        return <FileText className="h-5 w-5 text-blue-500" />;
-      case "verification_approved":
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-      default:
-        return <Package className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  // Handle notification click
+  // Handle notification click (memoized)
   // AC: 8.5.4 - Mark as read on click, navigate to delivery
-  const handleNotificationClick = (notification: Notification) => {
-    setIsOpen(false);
-    navigateToNotification(notification);
-  };
+  const handleNotificationClick = useCallback(
+    (notification: Notification) => {
+      setIsOpen(false);
+      navigateToNotification(notification);
+    },
+    [navigateToNotification]
+  );
+
+  // Memoize the close handler
+  const handleClose = useCallback(() => setIsOpen(false), []);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -64,7 +128,7 @@ export function NotificationBell() {
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center text-xs"
+              className="absolute -top-1 -right-1 h-5 min-w-5 px-1 flex items-center justify-center text-xs"
               data-testid="notification-badge"
             >
               {unreadCount > 9 ? "9+" : unreadCount}
@@ -94,7 +158,7 @@ export function NotificationBell() {
         </div>
 
         {/* Notification list */}
-        <ScrollArea className="h-[320px]">
+        <ScrollArea className="h-80">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-orange-500" />
@@ -107,48 +171,11 @@ export function NotificationBell() {
           ) : (
             <div className="divide-y">
               {notifications.map((notification) => (
-                <button
+                <NotificationItem
                   key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  className={cn(
-                    "w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors",
-                    !notification.read && "bg-orange-50"
-                  )}
-                  data-testid={`notification-item-${notification.id}`}
-                >
-                  {/* Icon */}
-                  <div className="flex-shrink-0 mt-0.5">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={cn(
-                        "text-sm",
-                        !notification.read ? "font-semibold text-gray-900" : "text-gray-700"
-                      )}
-                    >
-                      {notification.title}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatDistanceToNow(new Date(notification.created_at), {
-                        addSuffix: true,
-                        locale: es,
-                      })}
-                    </p>
-                  </div>
-
-                  {/* Unread indicator */}
-                  {!notification.read && (
-                    <div className="flex-shrink-0">
-                      <div className="h-2 w-2 rounded-full bg-orange-500" />
-                    </div>
-                  )}
-                </button>
+                  notification={notification}
+                  onClick={handleNotificationClick}
+                />
               ))}
             </div>
           )}
@@ -161,7 +188,7 @@ export function NotificationBell() {
               variant="ghost"
               size="sm"
               className="w-full text-xs text-gray-600"
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
             >
               Cerrar
             </Button>
