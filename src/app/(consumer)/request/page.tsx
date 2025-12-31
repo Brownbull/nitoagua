@@ -146,20 +146,30 @@ export default function RequestPage() {
     };
   };
 
-  // Step 1 handlers - now goes to map step (Story 12-1)
+  // Step 1 handlers - goes directly to step 2 (map is optional via icon)
   const handleStep1Next = (data: Step1Data) => {
     setWizardData(prev => ({ ...prev, step1: data }));
-    setState("map"); // Go to map pinpoint step
+    setState("step2"); // Go directly to amount step
   };
+
+  // Open map from Step 1 when user clicks the location icon
+  const handleOpenMap = useCallback((currentData: Partial<Step1Data>) => {
+    // Save current form data before opening map
+    setWizardData(prev => ({
+      ...prev,
+      step1: { ...prev.step1, ...currentData } as Step1Data,
+    }));
+    setState("map");
+  }, []);
 
   // Map step handlers - AC12.1.3
   const handleMapConfirm = useCallback((latitude: number, longitude: number) => {
-    // Update step1 data with confirmed coordinates
+    // Update step1 data with confirmed coordinates and return to step1
     setWizardData(prev => ({
       ...prev,
       step1: prev.step1 ? { ...prev.step1, latitude, longitude } : undefined,
     }));
-    setState("step2");
+    setState("step1"); // Return to step 1 with coordinates set
   }, []);
 
   const handleMapBack = useCallback(() => {
@@ -167,8 +177,8 @@ export default function RequestPage() {
   }, []);
 
   const handleMapSkip = useCallback(() => {
-    // Skip without coordinates - graceful degradation AC12.1.4
-    setState("step2");
+    // Skip without coordinates - return to step 1
+    setState("step1");
   }, []);
 
   // Step 2 handlers
@@ -178,7 +188,7 @@ export default function RequestPage() {
   };
 
   const handleStep2Back = () => {
-    setState("map"); // Go back to map step, not step1
+    setState("step1"); // Go back to step 1
   };
 
   // Handle step 2 "Siguiente" click from header
@@ -427,8 +437,11 @@ export default function RequestPage() {
               comunaId: profileData.comunaId,
               address: profileData.address,
               specialInstructions: profileData.specialInstructions,
+              latitude: profileData.latitude,
+              longitude: profileData.longitude,
             }}
             onNext={handleStep1Next}
+            onOpenMap={handleOpenMap}
           />
         )}
 
