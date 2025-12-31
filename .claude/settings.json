@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_superpowers-chrome_*",
+      "mcp__vercel__*"
+    ]
+  }
+}
