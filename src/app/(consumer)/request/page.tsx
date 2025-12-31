@@ -380,9 +380,12 @@ export default function RequestPage() {
   const stepInfo = getStepInfo();
 
   // Map step is full-screen without header - Story 12-1
+  // BUG-001 FIX: Use h-dvh (explicit height) instead of min-h-dvh (min height)
+  // Leaflet requires explicit container height for tile rendering
+  // min-height doesn't provide a computed height for h-full children in all browsers
   if (state === "map") {
     return (
-      <div className="min-h-dvh bg-gray-50 flex flex-col" data-testid="map-step">
+      <div className="h-dvh bg-gray-50 flex flex-col" data-testid="map-step">
         <LocationPinpointWrapper
           address={wizardData.step1?.address || ""}
           initialLatitude={wizardData.step1?.latitude}

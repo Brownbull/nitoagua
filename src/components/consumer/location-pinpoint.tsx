@@ -217,8 +217,10 @@ export function LocationPinpoint({
 
   return (
     <div className="flex flex-col h-full" data-testid="location-pinpoint">
-      {/* Map container - fills available space */}
-      <div className="flex-1 relative min-h-[300px]">
+      {/* Map container - fills available space
+          BUG-001 FIX: Use absolute positioning to ensure map container has explicit dimensions
+          This works more reliably than flex-1 + h-full in all browsers */}
+      <div className="flex-1 relative" style={{ minHeight: '300px' }}>
         {!mapLoaded && (
           <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
             <div className="flex flex-col items-center gap-2">
@@ -227,10 +229,13 @@ export function LocationPinpoint({
             </div>
           </div>
         )}
+        {/* BUG-001 FIX: Use absolute positioning instead of h-full w-full
+            This ensures the container has explicit computed dimensions
+            h-full/w-full can fail when parent height is flex-based in some browsers */}
         <MapContainer
           center={position}
           zoom={DEFAULT_ZOOM}
-          className="h-full w-full"
+          className="absolute inset-0"
           zoomControl={true}
         >
           {/* MapResizeHandler fixes BUG-001: tiles not rendering in PWA wizard */}
