@@ -13,22 +13,40 @@ function MapResizeHandler({ onReady }: { onReady: () => void }) {
   const map = useMap();
 
   useEffect(() => {
-    // Invalidate size after a brief delay to ensure container is fully rendered
-    // This fixes the blank tile issue on PWA/mobile where CSS may load async
-    const resizeTimer = setTimeout(() => {
+    // Multiple invalidateSize calls at different intervals to handle
+    // various mobile browser timing issues (BUG-001)
+    const timers: NodeJS.Timeout[] = [];
+
+    // Immediate call
+    map.invalidateSize();
+
+    // Short delay for initial layout
+    timers.push(setTimeout(() => {
+      map.invalidateSize();
+    }, 100));
+
+    // Medium delay for CSS/font loading
+    timers.push(setTimeout(() => {
+      map.invalidateSize();
+    }, 300));
+
+    // Longer delay for slow mobile connections
+    timers.push(setTimeout(() => {
       map.invalidateSize();
       onReady();
-    }, 100);
+    }, 500));
 
-    // Also handle window resize events
+    // Also handle window resize and orientation change events
     const handleResize = () => {
       map.invalidateSize();
     };
     window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
 
     return () => {
-      clearTimeout(resizeTimer);
+      timers.forEach(clearTimeout);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
     };
   }, [map, onReady]);
 
