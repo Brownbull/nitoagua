@@ -64,6 +64,31 @@ function MapCenterController({ center }: { center: [number, number] }) {
   return null;
 }
 
+// Component to handle map resize when container becomes visible
+// Fixes: Map tiles not rendering in PWA context (BUG-001)
+function MapResizeHandler() {
+  const map = useMap();
+
+  useEffect(() => {
+    // Invalidate size after a brief delay to ensure container is fully rendered
+    const resizeTimer = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [map]);
+
+  return null;
+}
+
 // Component to handle provider location
 function ProviderLocationMarker() {
   const [position, setPosition] = useState<[number, number] | null>(null);
@@ -192,6 +217,9 @@ export function MapClient({
         ref={mapRef}
         zoomControl={false}
       >
+        {/* MapResizeHandler fixes BUG-001: tiles not rendering in PWA */}
+        <MapResizeHandler />
+
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

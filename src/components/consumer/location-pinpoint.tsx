@@ -1,11 +1,39 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import { MapPin, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import "leaflet/dist/leaflet.css";
+
+// Component to handle map resize when container becomes visible
+// Fixes: Map tiles not rendering when map appears in wizard step (BUG-001)
+function MapResizeHandler({ onReady }: { onReady: () => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    // Invalidate size after a brief delay to ensure container is fully rendered
+    // This fixes the blank tile issue on PWA/mobile where CSS may load async
+    const resizeTimer = setTimeout(() => {
+      map.invalidateSize();
+      onReady();
+    }, 100);
+
+    // Also handle window resize events
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [map, onReady]);
+
+  return null;
+}
 
 // Villarrica region default - consistent with provider map (Story 8-10)
 const VILLARRICA_CENTER: [number, number] = [-39.2768, -72.2274];
@@ -186,8 +214,10 @@ export function LocationPinpoint({
           zoom={DEFAULT_ZOOM}
           className="h-full w-full"
           zoomControl={true}
-          whenReady={() => setMapLoaded(true)}
         >
+          {/* MapResizeHandler fixes BUG-001: tiles not rendering in PWA wizard */}
+          <MapResizeHandler onReady={() => setMapLoaded(true)} />
+
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -321,3 +321,48 @@ test.describe("AC12.1.4: Graceful Degradation", () => {
     await expect(page.getByTestId("map-back-button")).toBeVisible();
   });
 });
+
+test.describe("Story 12.7-1: Map Tile Rendering Fix", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/request");
+    await assertNoErrorState(page);
+  });
+
+  test("AC12.7.1.1: Map tiles should render correctly", async ({ page }) => {
+    // Fill step 1 form
+    await fillStep1Form(page);
+
+    // Click next button to go to map step
+    await page.getByTestId("next-button").click();
+
+    // Wait for map to load
+    await expect(page.getByTestId("location-pinpoint")).toBeVisible({ timeout: 15000 });
+
+    // Wait for tile images to load from OpenStreetMap
+    // The Leaflet map creates img elements for tiles with src containing tile.openstreetmap.org
+    const tileImages = page.locator("img[src*='tile.openstreetmap.org']");
+
+    // Wait for at least one tile to be visible (indicating tiles are rendering)
+    await expect(tileImages.first()).toBeVisible({ timeout: 20000 });
+
+    // Verify multiple tiles loaded (map should have several tile images)
+    const tileCount = await tileImages.count();
+    expect(tileCount).toBeGreaterThan(0);
+  });
+
+  test("AC12.7.1.2: Confirm button should be enabled after map loads", async ({ page }) => {
+    // Fill step 1 form
+    await fillStep1Form(page);
+
+    // Click next button
+    await page.getByTestId("next-button").click();
+
+    // Wait for map to fully load
+    await expect(page.getByTestId("location-pinpoint")).toBeVisible({ timeout: 15000 });
+
+    // Verify confirm button is enabled (not disabled)
+    const confirmButton = page.getByTestId("map-confirm-button");
+    await expect(confirmButton).toBeVisible();
+    await expect(confirmButton).toBeEnabled({ timeout: 5000 });
+  });
+});
