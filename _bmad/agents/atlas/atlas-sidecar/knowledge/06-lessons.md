@@ -58,10 +58,14 @@
 - Edge Functions: Deploy explicitly (no auto-deploy)
 
 ### Leaflet Maps (Epic 12.7)
+- **Explicit Height Required**: Leaflet requires explicit container dimensions - `h-full` may fail with flex-based parents
+- **Robust Pattern**: Use `h-dvh` (not `min-h-dvh`) on parent + `absolute inset-0` on MapContainer
 - Call `map.invalidateSize()` after container becomes visible (wizard steps, tabs)
 - Use `MapResizeHandler` component inside `<MapContainer>` to fix tile rendering in PWA
-- Pattern: 100ms delay after mount, plus window resize listener
+- Pattern: Staggered delays (0ms, 100ms, 300ms, 500ms) + window resize listener
 - Test tiles with `img[src*='tile.openstreetmap.org']` locator
+- **Why `min-h-dvh` fails**: Sets minimum, not explicit height - some browsers don't compute height for `h-full` children
+- **Why `absolute inset-0` works**: Absolute positioning guarantees explicit computed dimensions regardless of parent flex chain
 
 ### Version Management
 - `npm run version:check` - Build fails if SW_VERSION ≠ package.json
@@ -86,6 +90,8 @@
 
 > "Two auth patterns: Server actions → `{requiresLogin: true}`. Layouts → `redirect()`. Don't mix."
 
+> "Leaflet map tiles render when `mapLoaded=true` but appear blank? Use `h-dvh` on parent + `absolute inset-0` on MapContainer. Don't trust `min-h-dvh` with `h-full` children."
+
 ---
 
 ## Session Handling (Epic 12.6)
@@ -101,4 +107,4 @@
 
 ---
 
-*Last verified: 2025-12-30 | Sources: Epic 3, 8, 10, 11, 12, 12.6*
+*Last verified: 2025-12-31 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7*
