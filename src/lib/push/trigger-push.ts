@@ -137,6 +137,9 @@ export async function triggerRequestTimeoutPush(
   consumerId: string,
   requestId: string
 ): Promise<void> {
+  console.log(
+    `[TriggerPush] triggerRequestTimeoutPush called - consumer: ${consumerId}, request: ${requestId}`
+  );
   const notification: PushPayload = {
     title: "Solicitud sin ofertas",
     body: "No recibimos ofertas para tu solicitud. Puedes crear una nueva cuando lo necesites.",
@@ -165,6 +168,9 @@ export async function triggerRequestTimeoutPush(
 export async function triggerVerificationApprovedPush(
   providerId: string
 ): Promise<void> {
+  console.log(
+    `[TriggerPush] triggerVerificationApprovedPush called - provider: ${providerId}`
+  );
   const notification: PushPayload = {
     title: "¡Cuenta verificada!",
     body: "Tu cuenta ha sido aprobada. Ya puedes empezar a recibir solicitudes.",
@@ -196,6 +202,9 @@ export async function triggerInTransitPush(
   requestId: string,
   providerName: string
 ): Promise<void> {
+  console.log(
+    `[TriggerPush] triggerInTransitPush called - consumer: ${consumerId}, request: ${requestId}`
+  );
   const notification: PushPayload = {
     title: "¡Proveedor en camino!",
     body: `${providerName} está en camino con tu pedido`,
@@ -226,6 +235,9 @@ export async function triggerRequestFilledPush(
   providerId: string,
   requestId: string
 ): Promise<void> {
+  console.log(
+    `[TriggerPush] triggerRequestFilledPush called - provider: ${providerId}, request: ${requestId}`
+  );
   const notification: PushPayload = {
     title: "Solicitud asignada",
     body: "La solicitud ya fue asignada a otro repartidor",
@@ -256,6 +268,9 @@ export async function triggerRequestCancelledPush(
   providerId: string,
   requestId: string
 ): Promise<void> {
+  console.log(
+    `[TriggerPush] triggerRequestCancelledPush called - provider: ${providerId}, request: ${requestId}`
+  );
   const notification: PushPayload = {
     title: "Solicitud cancelada",
     body: "El cliente ha cancelado la solicitud",

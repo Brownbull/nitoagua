@@ -133,12 +133,15 @@ async function seedUser(
 
   // Create or update profile (if defined)
   if (userData.profile) {
+    // Extract service_area before inserting (it's not a column in profiles table)
+    const { service_area, ...profileData } = userData.profile as typeof userData.profile & { service_area?: string };
+
     const { error: profileError } = await supabase
       .from("profiles")
       .upsert({
         id: userId,
         email: userData.email,
-        ...userData.profile,
+        ...profileData,
       })
       .eq("id", userId);
 
@@ -146,6 +149,26 @@ async function seedUser(
       console.error(`   ❌ Error upserting profile: ${profileError.message}`);
     } else {
       console.log(`   ✓ Profile upserted (role: ${userData.profile.role})`);
+    }
+
+    // If supplier, add service areas
+    if (userData.profile.role === "supplier" && service_area) {
+      // Add service areas for Villarrica, Pucón, and Licán Ray
+      const serviceAreas = [
+        { provider_id: userId, comuna_id: "villarrica" },
+        { provider_id: userId, comuna_id: "pucon" },
+        { provider_id: userId, comuna_id: "lican-ray" },
+      ];
+
+      const { error: areasError } = await supabase
+        .from("provider_service_areas")
+        .upsert(serviceAreas, { onConflict: "provider_id,comuna_id" });
+
+      if (areasError) {
+        console.error(`   ❌ Error adding service areas: ${areasError.message}`);
+      } else {
+        console.log(`   ✓ Service areas added (villarrica, pucon, lican-ray)`);
+      }
     }
   } else {
     console.log(`   ⏭️  No profile (onboarding test user)`);

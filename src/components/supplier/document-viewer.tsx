@@ -26,7 +26,7 @@ export function DocumentViewer({ document, onClose }: DocumentViewerProps) {
   const label = DOCUMENT_LABELS[document.type] || document.type;
   const isPdf = document.storage_path.toLowerCase().endsWith(".pdf");
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   useEffect(() => {
     // If we don't have a URL, fetch one
     if (!url) {

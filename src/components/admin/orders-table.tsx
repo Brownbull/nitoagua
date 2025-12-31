@@ -37,20 +37,22 @@ interface OrdersTableProps {
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string; icon: React.ElementType }> = {
   pending: { label: "Pendiente", color: "text-amber-700", bgColor: "bg-amber-100", icon: Clock },
   offers_pending: { label: "Esperando Ofertas", color: "text-blue-700", bgColor: "bg-blue-100", icon: Package },
-  assigned: { label: "Asignado", color: "text-indigo-700", bgColor: "bg-indigo-100", icon: Truck },
+  accepted: { label: "Aceptado", color: "text-indigo-700", bgColor: "bg-indigo-100", icon: Truck },
   en_route: { label: "En Camino", color: "text-purple-700", bgColor: "bg-purple-100", icon: Truck },
   delivered: { label: "Entregado", color: "text-green-700", bgColor: "bg-green-100", icon: CheckCircle },
   cancelled: { label: "Cancelado", color: "text-red-700", bgColor: "bg-red-100", icon: XCircle },
+  no_offers: { label: "Sin Ofertas", color: "text-gray-700", bgColor: "bg-gray-100", icon: Clock },
 };
 
 const STATUS_OPTIONS = [
   { value: "all", label: "Todos" },
   { value: "pending", label: "Pendientes" },
   { value: "offers_pending", label: "Esperando Ofertas" },
-  { value: "assigned", label: "Asignados" },
+  { value: "accepted", label: "Aceptados" },
   { value: "en_route", label: "En Camino" },
   { value: "delivered", label: "Entregados" },
   { value: "cancelled", label: "Cancelados" },
+  { value: "no_offers", label: "Sin Ofertas" },
 ];
 
 const ITEMS_PER_PAGE = 25;
@@ -65,7 +67,7 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
   const [isMounted, setIsMounted] = useState(false);
 
   // Track when component is mounted to avoid hydration mismatch
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -172,7 +174,7 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
 
   // Memoized click handlers for StatsCards to prevent recreating functions on each render
   const handlePendingClick = useCallback(() => toggleStatusFilter("pending"), [toggleStatusFilter]);
-  const handleAssignedClick = useCallback(() => toggleStatusFilter("assigned"), [toggleStatusFilter]);
+  const handleAcceptedClick = useCallback(() => toggleStatusFilter("accepted"), [toggleStatusFilter]);
   const handleEnRouteClick = useCallback(() => toggleStatusFilter("en_route"), [toggleStatusFilter]);
   const handleDeliveredClick = useCallback(() => toggleStatusFilter("delivered"), [toggleStatusFilter]);
   const handleCancelledClick = useCallback(() => toggleStatusFilter("cancelled"), [toggleStatusFilter]);
@@ -208,11 +210,11 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
           onClick={handlePendingClick}
         />
         <StatsCard
-          label="Asignados"
-          value={stats.assigned}
+          label="Aceptados"
+          value={stats.accepted}
           color="indigo"
-          isActive={currentFilters.status === "assigned"}
-          onClick={handleAssignedClick}
+          isActive={currentFilters.status === "accepted"}
+          onClick={handleAcceptedClick}
         />
         <StatsCard
           label="En Camino"
@@ -515,8 +517,9 @@ const OrderCard = memo(function OrderCard({ order }: { order: OrderSummary }) {
   return (
     <Link
       href={`/admin/orders/${order.id}`}
-      className="block bg-white rounded-xl p-3.5 shadow-sm hover:shadow-md transition-shadow"
+      className="block bg-white rounded-xl p-3.5 shadow-sm hover:shadow-md hover:bg-gray-50 active:bg-gray-100 transition-all cursor-pointer"
       data-testid={`order-card-${order.id}`}
+      prefetch={true}
     >
       {/* Top row: ID/Name, Status Badge */}
       <div className="flex items-center justify-between gap-3 mb-2.5">

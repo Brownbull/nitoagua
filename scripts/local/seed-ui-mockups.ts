@@ -1084,7 +1084,7 @@ async function cleanMockupData(supabase: any) {
     ...MOCKUP_APPROVED_PROVIDERS.map((p) => p.email),
   ];
   const { data: existingUsers } = await supabase.auth.admin.listUsers();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const mockupUserIds = existingUsers?.users
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ?.filter((u: any) => mockupEmails.includes(u.email))
@@ -1142,7 +1142,7 @@ async function verifyMockupData(supabase: any) {
 
   console.log(`  ✓ Verification queue: ${pendingCount || 0} providers`);
   if (pendingProviders) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     for (const p of pendingProviders) {
       console.log(`    - [${p.verification_status}] ${p.name} (${p.service_area})`);
     }
@@ -1157,7 +1157,7 @@ async function verifyMockupData(supabase: any) {
 
   console.log(`  ✓ Provider Directory: ${totalCount || 0} providers`);
   if (allProviders) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     for (const p of allProviders) {
       const commissionInfo = p.commission_override ? `${p.commission_override}% custom` : "default";
       console.log(`    - [${p.verification_status}] ${p.name} (${p.service_area}) - ${commissionInfo}`);

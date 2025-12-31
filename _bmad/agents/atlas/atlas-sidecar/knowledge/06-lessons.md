@@ -18,6 +18,7 @@
 | `map.invalidateSize()` in wizard | Map tiles blank in PWA → MapResizeHandler |
 | DB status query investigation | Assumed status values → Query actual DB |
 | Enhanced logging for push triggers | Assumed triggers missing → Verify call sites |
+| Debounced realtime refresh (500ms) | `router.refresh()` on Realtime interrupts clicks → Debounce |
 
 ---
 
@@ -106,6 +107,8 @@
 
 > "Push notifications not received? Verify subscription exists BEFORE transaction. Code calls trigger correctly but user had no subscription at transaction time."
 
+> "Clicks intermittently fail on realtime-enabled pages? `router.refresh()` during Realtime events can re-render components mid-click. Debounce refresh calls (500ms) to let user interactions complete."
+
 ---
 
 ## Push Notification Debugging (Epic 12.7)
@@ -114,18 +117,29 @@
 - Triggers ARE called (contrary to original bug assumption)
 - Edge Function NOT used for push - web-push npm library is used directly from server actions
 - Key log patterns: `[TriggerPush]` (entry), `[Push]` (send result)
+- All 8 trigger functions have consistent entry-point logging (added in code review)
 
 | Log Message | Meaning |
 |-------------|---------|
-| `[TriggerPush] triggerNewOfferPush called` | Server action invoked trigger |
+| `[TriggerPush] trigger*Push called` | Server action invoked trigger (all 8 functions logged) |
 | `[Push] No subscriptions found for user` | User never enabled push on device |
 | `[Push] Found N subscription(s)` | User has active subscription(s) |
 | `[Push] Sent M/N push notifications` | Delivery attempted |
 
+**All 8 Trigger Functions (with logging):**
+1. `triggerNewOfferPush` - Consumer receives when offer submitted
+2. `triggerOfferAcceptedPush` - Provider receives when offer accepted
+3. `triggerDeliveryCompletedPush` - Consumer receives on delivery
+4. `triggerRequestTimeoutPush` - Consumer receives when request times out
+5. `triggerVerificationApprovedPush` - Provider receives when verified
+6. `triggerInTransitPush` - Consumer receives when provider en route
+7. `triggerRequestFilledPush` - Provider receives when another provider selected
+8. `triggerRequestCancelledPush` - Provider receives when consumer cancels
+
 **Verification Steps:**
 1. Check `push_subscriptions` table for user
 2. Verify subscription `created_at` is BEFORE transaction
-3. Check Vercel logs for `[Push]` messages
+3. Check Vercel logs for `[TriggerPush]` and `[Push]` messages
 4. VAPID keys: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` must be in Vercel env
 
 ---
@@ -157,4 +171,38 @@
 
 ---
 
-*Last verified: 2025-12-31 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Story 12.7-4 BUG-011), Local Dev Setup*
+## Realtime & Click Interactions (Epic 12.7)
+
+**Story 12.7-3 Findings:**
+- `useRealtimeOrders` hook calls `router.refresh()` on every Supabase Realtime event
+- If Realtime event fires during/just before user click, React re-renders interrupt navigation
+- **Solution**: Debounce refresh with 500ms delay using `useRef` + `setTimeout`
+
+**Pattern: Debounced Realtime Refresh**
+```typescript
+const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+const debouncedRefresh = useCallback(() => {
+  if (refreshTimeoutRef.current) {
+    clearTimeout(refreshTimeoutRef.current);
+  }
+  refreshTimeoutRef.current = setTimeout(() => {
+    router.refresh();
+    refreshTimeoutRef.current = null;
+  }, 500); // 500ms debounce
+}, [router]);
+```
+
+**Also Applied:**
+- Enhanced OrderCard: `hover:shadow-md hover:bg-gray-50 active:bg-gray-100` + `prefetch={true}`
+- Fixed E2E selector mismatches: `order-row-` → `order-card-` (12+ instances)
+- Fixed ambiguous text selectors: `getByText('Total')` → `getByTestId('stats-card-total')`
+
+**Code Review Finding (12.7-3):**
+- `useRealtimeOrder` (singular, for detail page) was missing debounce - fixed in code review
+- Both hooks now have consistent `debounceMs` option (default 500ms)
+- Upgraded `admin-orders.spec.ts` to use `merged-fixtures` + `assertNoErrorState()`
+
+---
+
+*Last verified: 2025-12-31 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-3, 12.7-4), Local Dev Setup*
