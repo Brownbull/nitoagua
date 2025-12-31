@@ -99,9 +99,16 @@ export async function sendPushToUser(
   }
 
   if (!subscriptions || subscriptions.length === 0) {
-    // No subscriptions - this is not an error
+    // No subscriptions - this is not an error, but log for debugging
+    console.log(
+      `[Push] No subscriptions found for user ${userId} - notification: "${notification.title}"`
+    );
     return { success: true, sent: 0, total: 0, cleaned: 0 };
   }
+
+  console.log(
+    `[Push] Found ${subscriptions.length} subscription(s) for user ${userId} - sending: "${notification.title}"`
+  );
 
   // Prepare payload
   const payload = JSON.stringify(notification);

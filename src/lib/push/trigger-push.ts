@@ -31,6 +31,9 @@ export async function triggerOfferAcceptedPush(
   amount: number,
   comuna: string
 ): Promise<void> {
+  console.log(
+    `[TriggerPush] triggerOfferAcceptedPush called - provider: ${providerId}, request: ${requestId}`
+  );
   const notification: PushPayload = {
     title: "¡Tu oferta fue aceptada!",
     body: `Solicitud de ${amount.toLocaleString("es-CL")}L en ${comuna || "tu área"}`,
@@ -65,6 +68,9 @@ export async function triggerNewOfferPush(
   amount: number,
   offerCount: number
 ): Promise<void> {
+  console.log(
+    `[TriggerPush] triggerNewOfferPush called - consumer: ${consumerId}, request: ${requestId}, offerCount: ${offerCount}`
+  );
   const notification: PushPayload = {
     title: "Nueva oferta recibida",
     body: `Un proveedor ha enviado una oferta para tu solicitud de ${amount.toLocaleString("es-CL")}L`,
@@ -98,6 +104,9 @@ export async function triggerDeliveryCompletedPush(
   requestId: string,
   amount: number
 ): Promise<void> {
+  console.log(
+    `[TriggerPush] triggerDeliveryCompletedPush called - consumer: ${consumerId}, request: ${requestId}`
+  );
   const notification: PushPayload = {
     title: "¡Entrega completada!",
     body: `Tu pedido de ${amount.toLocaleString("es-CL")} litros ha sido entregado`,
