@@ -333,11 +333,16 @@ export async function sendServerTestPush(): Promise<{
   const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
   const vapidConfigured = !!(vapidPublicKey && vapidPrivateKey);
 
+  // Include any errors from sendPushToUser
+  const pushErrors = result.errors?.join(", ") || "";
+
   return {
     success: result.success && result.sent > 0,
     error: result.sent === 0
       ? (result.total === 0
-          ? "No tienes suscripciones activas. Habilita notificaciones primero."
+          ? pushErrors
+            ? `Error: ${pushErrors}`
+            : "No tienes suscripciones activas. Habilita notificaciones primero."
           : vapidConfigured
             ? `Enviado a ${result.sent}/${result.total} dispositivos. ${result.cleaned} limpiados.`
             : "VAPID keys no configuradas en el servidor.")
@@ -347,7 +352,7 @@ export async function sendServerTestPush(): Promise<{
       total: result.total,
       cleaned: result.cleaned,
       vapidConfigured,
-      debug: `ENV: url=${hasSupabaseUrl}, role_key=${hasServiceRoleKey}, service_key=${hasServiceKey}`,
+      debug: `ENV: url=${hasSupabaseUrl}, role_key=${hasServiceRoleKey}, service_key=${hasServiceKey}${pushErrors ? ` | Errors: ${pushErrors}` : ""}`,
     },
   };
 }

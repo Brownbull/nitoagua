@@ -79,13 +79,29 @@ export async function sendPushToUser(
     return { success: true, sent: 0, total: 0, cleaned: 0 };
   }
 
-  const adminClient = createAdminClient();
+  let adminClient;
+  try {
+    adminClient = createAdminClient();
+    console.log("[Push] Admin client created successfully");
+  } catch (err) {
+    console.error("[Push] Failed to create admin client:", err);
+    return {
+      success: false,
+      sent: 0,
+      total: 0,
+      cleaned: 0,
+      errors: ["Failed to create admin client: " + String(err)],
+    };
+  }
 
   // Query user's push subscriptions
-  const { data: subscriptions, error: queryError } = await adminClient
+  console.log(`[Push] Querying subscriptions for user: ${userId}`);
+  const { data: subscriptions, error: queryError, status, statusText } = await adminClient
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
     .eq("user_id", userId);
+
+  console.log(`[Push] Query result - status: ${status}, statusText: ${statusText}, data length: ${subscriptions?.length ?? 'null'}, error: ${queryError?.message ?? 'none'}`);
 
   if (queryError) {
     console.error("[Push] Error querying subscriptions:", queryError);
