@@ -292,10 +292,20 @@ export async function sendServerTestPush(): Promise<{
   const hasServiceKey = !!process.env.SUPABASE_SERVICE_KEY;
   const hasSupabaseUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
 
+  // Also check VAPID keys
+  const hasVapidPublic = !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const hasVapidPrivate = !!process.env.VAPID_PRIVATE_KEY;
+  const vapidPublicLen = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0;
+  const vapidPrivateLen = process.env.VAPID_PRIVATE_KEY?.length || 0;
+
   console.log(`[ServerTestPush] Env check:`, {
     hasSupabaseUrl,
     hasServiceRoleKey,
     hasServiceKey,
+    hasVapidPublic,
+    hasVapidPrivate,
+    vapidPublicLen,
+    vapidPrivateLen,
   });
 
   // If neither service key is available, return early with detailed error
@@ -352,7 +362,7 @@ export async function sendServerTestPush(): Promise<{
       total: result.total,
       cleaned: result.cleaned,
       vapidConfigured,
-      debug: `ENV: url=${hasSupabaseUrl}, role_key=${hasServiceRoleKey}, service_key=${hasServiceKey}${pushErrors ? ` | Errors: ${pushErrors}` : ""}`,
+      debug: `ENV: url=${hasSupabaseUrl}, role_key=${hasServiceRoleKey}, vapid_pub=${hasVapidPublic}(${vapidPublicLen}), vapid_priv=${hasVapidPrivate}(${vapidPrivateLen})${pushErrors ? ` | Errors: ${pushErrors}` : ""}`,
     },
   };
 }

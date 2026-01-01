@@ -22,20 +22,34 @@ let vapidInitialized = false;
  * This prevents build-time errors when env vars are not available
  */
 function initVapid(): boolean {
-  if (vapidInitialized) return true;
+  if (vapidInitialized) {
+    console.log("[Push] VAPID already initialized");
+    return true;
+  }
 
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
   const privateKey = process.env.VAPID_PRIVATE_KEY || "";
   const subject = process.env.VAPID_SUBJECT || "mailto:soporte@nitoagua.cl";
 
+  // Debug: Log key presence and lengths (not actual values for security)
+  console.log("[Push] initVapid() checking keys:", {
+    hasPublicKey: !!publicKey,
+    publicKeyLength: publicKey.length,
+    hasPrivateKey: !!privateKey,
+    privateKeyLength: privateKey.length,
+    subject,
+  });
+
   if (!publicKey || !privateKey) {
-    console.warn("[Push] VAPID keys not configured");
+    console.warn("[Push] VAPID keys not configured - publicKey:", !!publicKey, "privateKey:", !!privateKey);
     return false;
   }
 
   try {
+    console.log("[Push] Calling webpush.setVapidDetails...");
     webpush.setVapidDetails(subject, publicKey, privateKey);
     vapidInitialized = true;
+    console.log("[Push] VAPID initialized successfully");
     return true;
   } catch (error) {
     console.error("[Push] Error initializing VAPID:", error);
