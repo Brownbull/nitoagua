@@ -269,6 +269,7 @@ export async function sendServerTestPush(): Promise<{
     total: number;
     cleaned: number;
     vapidConfigured: boolean;
+    debug?: string;
   };
 }> {
   const supabase = await createClient();
@@ -283,6 +284,32 @@ export async function sendServerTestPush(): Promise<{
     return {
       success: false,
       error: "Tu sesión expiró. Por favor, inicia sesión nuevamente.",
+    };
+  }
+
+  // Check admin client env vars BEFORE trying to use it
+  const hasServiceRoleKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const hasServiceKey = !!process.env.SUPABASE_SERVICE_KEY;
+  const hasSupabaseUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  console.log(`[ServerTestPush] Env check:`, {
+    hasSupabaseUrl,
+    hasServiceRoleKey,
+    hasServiceKey,
+  });
+
+  // If neither service key is available, return early with detailed error
+  if (!hasServiceRoleKey && !hasServiceKey) {
+    return {
+      success: false,
+      error: "Error de configuración: Service key no configurada en el servidor.",
+      details: {
+        sent: 0,
+        total: 0,
+        cleaned: 0,
+        vapidConfigured: false,
+        debug: `ENV: url=${hasSupabaseUrl}, role_key=${hasServiceRoleKey}, service_key=${hasServiceKey}`,
+      },
     };
   }
 
@@ -320,6 +347,7 @@ export async function sendServerTestPush(): Promise<{
       total: result.total,
       cleaned: result.cleaned,
       vapidConfigured,
+      debug: `ENV: url=${hasSupabaseUrl}, role_key=${hasServiceRoleKey}, service_key=${hasServiceKey}`,
     },
   };
 }

@@ -286,7 +286,9 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       if (result.success) {
         setServerTestResult("success");
       } else {
-        setServerTestResult(result.error || "Error desconocido");
+        // Include debug info in error message for diagnostics
+        const debugInfo = result.details?.debug ? ` [${result.details.debug}]` : "";
+        setServerTestResult((result.error || "Error desconocido") + debugInfo);
       }
 
       // Log details for debugging
@@ -294,16 +296,16 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
         console.log("[ServerTestPush] Details:", result.details);
       }
 
-      // Reset after 5 seconds
+      // Reset after 8 seconds (longer to read debug info)
       setTimeout(() => {
         setServerTestResult(null);
-      }, 5000);
+      }, 8000);
     } catch (error) {
       console.error("Server push test error:", error);
       setServerTestResult("Error al enviar desde servidor");
       setTimeout(() => {
         setServerTestResult(null);
-      }, 5000);
+      }, 8000);
     } finally {
       setServerTestSending(false);
     }
