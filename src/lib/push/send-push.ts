@@ -27,8 +27,9 @@ function initVapid(): boolean {
     return true;
   }
 
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
-  const privateKey = process.env.VAPID_PRIVATE_KEY || "";
+  // Trim whitespace from keys - env vars can have trailing newlines
+  const publicKey = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "").trim();
+  const privateKey = (process.env.VAPID_PRIVATE_KEY || "").trim();
   const subject = process.env.VAPID_SUBJECT || "mailto:soporte@nitoagua.cl";
 
   // Debug: Log key presence and lengths (not actual values for security)
