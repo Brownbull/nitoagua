@@ -5,12 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { getDeliveryPrice, formatCLP } from "@/lib/utils/commission";
-
-interface ActionResult<T = void> {
-  success: boolean;
-  error?: string;
-  data?: T;
-}
+import { createAuthError, type ActionResult } from "@/lib/types/action-result";
 
 // Types for earnings dashboard
 export type EarningsPeriod = "today" | "week" | "month";
@@ -66,8 +61,9 @@ export async function getEarningsSummary(
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+    // AC12.6.2.3: Return requiresLogin flag for auth failures
     if (userError || !user) {
-      return { success: false, error: "No autenticado" };
+      return createAuthError();
     }
 
     // Verify user is a provider
@@ -208,8 +204,9 @@ export async function getDeliveryHistory(
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+    // AC12.6.2.3: Return requiresLogin flag for auth failures
     if (userError || !user) {
-      return { success: false, error: "No autenticado" };
+      return createAuthError();
     }
 
     // Verify user is a provider
@@ -347,7 +344,7 @@ export async function verifyPayment(
   try {
     const auth = await verifyAdminAccess();
     if (!auth.isAdmin) {
-      return { success: false, error: auth.error };
+      return { success: false, error: auth.error || "Error de autenticación" };
     }
 
     const adminClient = createAdminClient();
@@ -426,7 +423,7 @@ export async function rejectPayment(
   try {
     const auth = await verifyAdminAccess();
     if (!auth.isAdmin) {
-      return { success: false, error: auth.error };
+      return { success: false, error: auth.error || "Error de autenticación" };
     }
 
     if (!reason.trim()) {
@@ -497,7 +494,7 @@ export async function getProviderLedgerHistory(
   try {
     const auth = await verifyAdminAccess();
     if (!auth.isAdmin) {
-      return { success: false, error: auth.error };
+      return { success: false, error: auth.error || "Error de autenticación" };
     }
 
     const adminClient = createAdminClient();
@@ -536,7 +533,7 @@ export async function getReceiptUrl(
   try {
     const auth = await verifyAdminAccess();
     if (!auth.isAdmin) {
-      return { success: false, error: auth.error };
+      return { success: false, error: auth.error || "Error de autenticación" };
     }
 
     const adminClient = createAdminClient();
@@ -594,9 +591,10 @@ export async function getPlatformBankDetails(): Promise<ActionResult<PlatformBan
     const supabase = await createClient();
 
     // Verify user is authenticated
+    // AC12.6.2.3: Return requiresLogin flag for auth failures
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return { success: false, error: "No autenticado" };
+      return createAuthError();
     }
 
     const adminClient = createAdminClient();
@@ -647,9 +645,10 @@ export async function getPendingWithdrawal(): Promise<ActionResult<PendingWithdr
     const supabase = await createClient();
 
     // Verify user is authenticated
+    // AC12.6.2.3: Return requiresLogin flag for auth failures
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return { success: false, error: "No autenticado" };
+      return createAuthError();
     }
 
     // Verify user is a provider
@@ -712,9 +711,10 @@ export async function submitCommissionPayment(
     const supabase = await createClient();
 
     // Verify user is authenticated
+    // AC12.6.2.3: Return requiresLogin flag for auth failures
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      return { success: false, error: "No autenticado" };
+      return createAuthError();
     }
 
     // Verify user is a provider

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { Bell, BellRing, Send, CheckCircle, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array, isVapidConfigured } from "@/lib/push/vapid";
+import { createLoginRedirectUrl } from "@/lib/auth/session";
 import {
   subscribeToPush,
   unsubscribeFromPush,
@@ -42,6 +44,10 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
   const [pushState, setPushState] = useState<PushState>("idle");
   const [pushError, setPushError] = useState<string | null>(null);
   const [pushSupported, setPushSupported] = useState(true);
+
+  // Story 12.6-1: Router for login redirect
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Check notification support and permission on mount
   useEffect(() => {
@@ -147,6 +153,14 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       if (result.success) {
         setPushState("subscribed");
       } else {
+        // AC12.6.1.2: Handle requiresLogin flag - redirect to login
+        if (result.requiresLogin) {
+          console.log("[NotificationSettings] Session expired, redirecting to login...");
+          const loginUrl = createLoginRedirectUrl(pathname);
+          router.push(loginUrl);
+          return;
+        }
+
         setPushState("error");
         setPushError(result.error || "Error al activar notificaciones push");
       }
@@ -155,7 +169,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       setPushState("error");
       setPushError("Error al activar notificaciones push");
     }
-  }, [pushSupported]);
+  }, [pushSupported, pathname, router]);
 
   // AC12.6.3: Unsubscribe from push notifications
   const handlePushUnsubscribe = useCallback(async () => {
@@ -177,6 +191,14 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       if (result.success) {
         setPushState("idle");
       } else {
+        // AC12.6.1.2: Handle requiresLogin flag - redirect to login
+        if (result.requiresLogin) {
+          console.log("[NotificationSettings] Session expired, redirecting to login...");
+          const loginUrl = createLoginRedirectUrl(pathname);
+          router.push(loginUrl);
+          return;
+        }
+
         setPushState("error");
         setPushError(result.error || "Error al desactivar notificaciones push");
       }
@@ -185,7 +207,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       setPushState("error");
       setPushError("Error al desactivar notificaciones push");
     }
-  }, []);
+  }, [pathname, router]);
 
   // Handle toggle change
   const handleToggle = useCallback(

@@ -1,4 +1,4 @@
-# generated: 2025-12-16
+# generated: 2025-12-30
 # project: nitoagua
 # project_key: nitoagua
 # tracking_system: file-system
@@ -30,7 +30,7 @@
 # - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
 # - RECOMMENDED: Run test-design workflow after Epic 1, before Epic 2
 
-generated: 2025-12-16
+generated: 2025-12-30
 project: nitoagua
 project_key: nitoagua
 tracking_system: file-system
@@ -38,7 +38,7 @@ story_location: docs/sprint-artifacts
 
 development_status:
   # Epic 1: Foundation & Infrastructure
-  epic-1: contexted
+  epic-1: done
   1-1-project-initialization: done
   1-2-supabase-database-setup: done
   1-3-supabase-authentication-integration: done
@@ -47,7 +47,7 @@ development_status:
   epic-1-retrospective: completed
 
   # Epic 2: Consumer Water Request
-  epic-2: contexted
+  epic-2: done
   2-1-consumer-home-screen-with-big-action-button: done
   2-2-water-request-form-guest-flow: done
   2-3-request-review-and-submission: done
@@ -58,7 +58,7 @@ development_status:
   epic-2-retrospective: completed
 
   # Epic 3: Supplier Dashboard & Request Management
-  epic-3: contexted
+  epic-3: done
   3-1-supplier-registration: done
   3-2-supplier-login: done
   3-3-supplier-request-dashboard: done
@@ -70,7 +70,7 @@ development_status:
   epic-3-retrospective: completed
 
   # Epic 4: User Accounts & Profiles
-  epic-4: contexted
+  epic-4: done
   4-1-consumer-registration: done  # APPROVED: Extended to include login, profile, history, pre-fill
   4-2-consumer-login: done  # APPROVED: Implemented in 4-1 extension, reviewed with 4-1
   4-3-pre-filled-request-form-for-registered-users: done  # APPROVED: Implemented in 4-1 extension, reviewed with 4-1
@@ -83,7 +83,7 @@ development_status:
   # =============================
   # Purpose: Address technical debt and prepare foundation before Epic 5
   # Decision: Made during Epic 4 retrospective to ensure clean slate
-  prep-5: contexted
+  prep-5: done
   prep-5-1-fix-dashboard-data-freshness: done  # CRITICAL - Approved 2025-12-05
   prep-5-2-fix-tab-count-inconsistency: done  # CRITICAL - Approved 2025-12-07
   prep-5-3-seeded-test-data-setup: done  # IMPORTANT - Enable E2E integration tests - APPROVED 2025-12-07
@@ -92,7 +92,7 @@ development_status:
   prep-5-retrospective: completed  # Quick retro 2025-12-07
 
   # Epic 5: Notifications & Communication
-  epic-5: contexted
+  epic-5: done
   5-1-email-notification-setup-with-resend: done  # Completed via prep-5-4 spike - 2025-12-07
   5-2-guest-email-notifications: done  # APPROVED - Senior Dev Review passed 2025-12-08
   5-3-in-app-notifications-for-registered-users: done  # APPROVED - Re-implemented and merged 2025-12-08
@@ -105,7 +105,7 @@ development_status:
   # =============================================
 
   # Epic 6: Admin Operations Panel (FIRST V2 EPIC - no dependencies)
-  epic-6: contexted  # Tech spec created 2025-12-12
+  epic-6: done  # Tech spec created 2025-12-12, completed 2025-12-14
   6-1-admin-authentication-and-access: done  # APPROVED 2025-12-12 - Re-review passed, all ACs verified
   6-2-offer-system-configuration: done  # APPROVED 2025-12-12 - Senior Dev Review passed
   6-3-provider-verification-queue: done  # APPROVED 2025-12-13 - Senior Dev Review passed
@@ -119,7 +119,7 @@ development_status:
   epic-6-retrospective: optional  # Epic 6 complete - Admin Operations Panel live
 
   # Epic 7: Provider Onboarding (depends on Epic 6 admin verification queue)
-  epic-7: contexted  # Tech spec created 2025-12-15
+  epic-7: done  # Tech spec created 2025-12-15, completed 2025-12-16
   7-1-provider-registration-flow: done  # APPROVED - Senior Dev Review passed 2025-12-15
   7-2-verification-status-screen: done  # APPROVED - Senior Dev Review passed 2025-12-15
   7-3-service-area-configuration: done  # APPROVED - Senior Dev Review passed 2025-12-15
@@ -135,7 +135,7 @@ development_status:
   epic-7-retrospective: optional  # Epic 7 complete - Provider Onboarding with UX alignment
 
   # Epic 8: Provider Offer System (depends on Epic 7 for approved providers)
-  epic-8: contexted  # Tech spec created 2025-12-16
+  epic-8: done  # Tech spec created 2025-12-16, completed 2025-12-19
   8-1-provider-request-browser: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 6 ACs verified
   8-2-submit-offer-on-request: done  # APPROVED 2025-12-16 - Re-review passed, all action items addressed
   8-3-providers-active-offers-list: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 5 ACs verified
@@ -152,7 +152,7 @@ development_status:
   # Type: Business Development
   # Timeline: CRITICAL - Deadline December 18, 2025 15:00 hrs Chile
   # NOTE: All output documents must be in Spanish (Chilean)
-  epic-9: contexted  # Stories drafted 2025-12-16
+  epic-9: done  # Stories drafted 2025-12-16, submitted 2025-12-17 (ID: 861156)
   9-1-national-scalability-narrative: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 6 ACs verified
   9-2-innovation-differentiation-brief: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 7 ACs verified
   9-3-team-capabilities-profile: done  # APPROVED 2025-12-16 - Senior Dev Review passed, all 8 ACs verified
@@ -173,7 +173,7 @@ development_status:
   testing-3-playwright-utils-integration: deployed  # DEPLOYED 2025-12-19 - Production release, merged fixtures + persona tests
 
   # Epic 10: Consumer Offer Selection (depends on Epic 8 offers system)
-  epic-10: contexted  # Tech spec created 2025-12-19
+  epic-10: done  # Tech spec created 2025-12-19, completed 2025-12-22
   10-1-offer-list-view-for-consumers: deployed  # DEPLOYED 2025-12-19 - Production release, 26 E2E tests
   10-2-select-provider-offer: deployed  # DEPLOYED 2025-12-19 - Production release, security fix applied, 14 E2E tests
   10-3-offer-countdown-timer-consumer-view: deployed  # DEPLOYED 2025-12-21 - Production release, 2 code review fixes, 12 E2E + 33 unit tests  # APPROVED 2025-12-21 - Atlas code review passed, 2 fixes applied, 12 E2E + 33 unit tests
@@ -189,7 +189,7 @@ development_status:
   # Approach: Local first → Production second → Fix issues as found
   # Source: Revised 2025-12-22 after Chrome Extension RLS issues
   # Priority: CRITICAL - Fix RLS issues before Chrome Extension testing
-  epic-11: contexted  # Tech spec revised 2025-12-22 - Playwright approach
+  epic-11: done  # Tech spec revised 2025-12-22, completed 2025-12-24
   11-1-chain1-local: done  # 5/5 tests pass - Atlas code review complete 2025-12-22
   11-2-chain1-production: done  # CHAIN-1 production - 5/5 PASS, 8 migrations, Atlas code review 2025-12-22
   11-3-provider-visibility-local: deployed  # P7, P8, P9 - Provider tracking - 8/8 tests passing, deployed 2025-12-23
@@ -226,7 +226,7 @@ development_status:
   # Purpose: Fix gaps discovered during Playwright workflow validation
   # Origin: Story 11-1 found P10 delivery completion not working
   # Priority: P0 - Critical (blocks CHAIN-1 completion)
-  epic-11a: contexted  # Tech spec created 2025-12-22
+  epic-11a: done  # Tech spec created 2025-12-22, completed 2025-12-24
   11a-1-p10-delivery-completion: done  # FR31: Mark request as delivered - APPROVED 2025-12-22 Atlas code review passed
   11a-2-c11-provider-cancellation-notification: done  # C11: Provider notified when consumer cancels request with offers - Atlas code review passed 2025-12-24
 
@@ -236,7 +236,7 @@ development_status:
   # Type: UI/UX improvements, minimal backend changes
   # Active: 2025-12-24
   # Structure: 3 phases + final validation, each with local/production pair
-  epic-12: contexted  # Activated 2025-12-24 - No new architecture needed, uses existing V2 patterns
+  epic-12: done  # Activated 2025-12-24, completed 2025-12-29
 
   # Phase 1: Quick Wins (UI-only changes)
   # -------------------------------------
@@ -272,22 +272,63 @@ development_status:
   # Approach: Diagnostic-first - measure before optimizing
   # Priority: HIGH - User-reported sluggishness across all pages
   # Created: 2025-12-28
-  epic-12.5: contexted  # Tech spec and stories created 2025-12-28
+  epic-12.5: done  # Tech spec created 2025-12-28, completed 2025-12-29
   12.5-1-performance-audit-baseline: deployed  # P0: Deployed to production 2025-12-29
   12.5-2-bundle-size-optimization: deployed  # P1: 12% bundle reduction (400KB), zod locales excluded, confetti dynamic - deployed 2025-12-29
   12.5-3-data-fetching-optimization: deployed  # P1: 32 RLS policies optimized (25 user + 7 admin), 10 indexes added - production verified
   12.5-4-react-rendering-optimization: deployed  # P1: 6 components optimized (memo, useMemo, useCallback) - production verified 2025-12-29
-  12.5-5-build-development-performance: done  # P2: Keep npm - already performant (<1s dev startup, 20s build)
-  12.5-6-performance-validation-documentation: drafted  # P0: Must complete last - Before/after comparison, CI budgets
+  12.5-5-build-development-performance: deployed  # P2: Keep npm - already performant (<1s dev startup, 20s build) - deployed 2025-12-29
+  12.5-6-performance-validation-documentation: deployed  # P0: Before/after comparison, CI budgets, docs, version bump 2.1.0 → 2.2.0 - deployed 2025-12-29
   epic-12.5-retrospective: optional
+
+  # Epic 12.6: Auth Session Reliability (Tech Debt)
+  # =============================================================
+  # Purpose: Fix stale session issues on server actions
+  # Problem: User appears logged in but actions fail with "need to be logged in"
+  # Root Cause: Token refresh only on navigation, not on server action calls
+  # Priority: P0 - User-reported bug on mobile PWA
+  # Created: 2025-12-29
+  epic-12.6: done  # Two-story tech debt epic, completed 2025-12-30
+  12.6-1-stale-session-fix: done  # P0: Fix session expiry handling on server actions - Atlas code review passed 2025-12-30
+  12.6-2-session-handling-audit: done  # P1: Apply pattern to ALL server actions - Atlas code review passed 2025-12-30
+
+  # Epic 12.7: Manual Testing Bug Fixes
+  # =============================================================
+  # Purpose: Fix 22 bugs discovered during live multi-device testing
+  # Source: Round 1 Testing (2024-12-30) - docs/testing/manual/bugs/live-test-bugs-2024-12-30.md
+  # Priority: P0-P3 based on bug severity
+  # Created: 2025-12-30
+  epic-12.7: contexted  # Bug fixes from live testing - NEXT EPIC - Tech context created 2025-12-30
+
+  # Phase 1: Critical Fixes (P0/P1)
+  12.7-1-fix-map-tile-rendering: done  # BUG-001: Map tiles not rendering - CSS height chain + invalidateSize() fix - DONE 2025-12-31
+  12.7-2-push-notification-triggers: done  # BUG-005, 008, 013: Triggers verified existing, logging enhanced, E2E tests fixed - DONE 2026-01-01
+  12.7-3-admin-orders-click-fix: done  # BUG-007: Admin orders click fix - Debounced realtime refresh, E2E fixed, Atlas code review passed - 2025-12-31
+  12.7-4-admin-status-sync: review  # BUG-011: Admin status enum fix (assigned→accepted) - 7/7 E2E tests passing
+  12.7-5-consumer-dispute-option: ready-for-dev  # BUG-015: Consumer cannot dispute delivery
+  12.7-6-admin-dispute-resolution: ready-for-dev  # BUG-016: Admin needs dispute resolution tools (depends on 12.7-5)
+  12.7-7-admin-responsive-ui-fixes: ready-for-dev  # BUG-020: Admin provider details buttons cut off
+  12.7-8-offer-cancellation-flow: review  # BUG-021, 022: VERIFIED WORKING - E2E tests added, code analysis shows correct implementation
+
+  # Phase 2: Medium Priority (P2)
+  12.7-9-admin-panel-ux-improvements: ready-for-dev  # BUG-002, 006, 017: Stale data, no sorting, nav issues
+  12.7-10-provider-ux-redesign: ready-for-dev  # BUG-003, 010: Request detail overload, not driver-friendly
+  12.7-11-en-camino-delivery-status: ready-for-dev  # BUG-009: Missing "En Camino" status
+  12.7-12-commission-payment-screenshot: ready-for-dev  # BUG-012: No screenshot upload for commission
+  12.7-13-rating-review-system: ready-for-dev  # BUG-014: No rating/review system
+
+  # Phase 3: Polish (P3)
+  12.7-14-ui-polish-pwa-fixes: ready-for-dev  # BUG-004, 018, 019: Toast contrast, icon blank, flash
+
+  epic-12.7-retrospective: optional
 
   # Epic 13: Chrome Extension Final Validation (LAST EPIC)
   # =============================================================
   # Purpose: Final production validation via Chrome Extension E2E
-  # Prerequisites: Epic 11 complete, all RLS issues fixed
+  # Prerequisites: Epic 12.7 complete, all bug fixes deployed
   # Approach: Document → Execute (Windows) → Report
-  # Note: Moved from original Epic 11 after RLS issues discovered
-  epic-13: backlog  # Will be contexted after Epic 11 complete
+  # Note: Moved after Epic 12.7 to validate bug fixes first
+  epic-13: backlog  # Will be contexted after Epic 12.7 complete
   13-1-core-transaction-chrome: backlog  # CHAIN-1 final validation
   13-2-trust-visibility-chrome: backlog  # C3, C4, P7, P8, P9
   13-3-provider-onboarding-chrome: backlog  # CHAIN-2: P1-P4, A1-A3

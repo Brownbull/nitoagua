@@ -36,7 +36,7 @@ export interface OrderSummary {
 export interface OrderStats {
   total: number;
   pending: number;
-  assigned: number;
+  accepted: number;
   en_route: number;
   delivered: number;
   cancelled: number;
@@ -208,7 +208,7 @@ function getEmptyStats(): OrderStats {
   return {
     total: 0,
     pending: 0,
-    assigned: 0,
+    accepted: 0,
     en_route: 0,
     delivered: 0,
     cancelled: 0,
@@ -223,10 +223,11 @@ function calculateStats(requests: Array<{ status: string }>): OrderStats {
     switch (r.status) {
       case "pending":
       case "offers_pending":
+      case "no_offers":
         stats.pending++;
         break;
-      case "assigned":
-        stats.assigned++;
+      case "accepted":
+        stats.accepted++;
         break;
       case "en_route":
         stats.en_route++;

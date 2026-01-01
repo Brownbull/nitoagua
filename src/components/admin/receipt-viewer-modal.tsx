@@ -30,8 +30,8 @@ export function ReceiptViewerModal({
       const result = await getReceiptUrl(payment.receipt_path!);
       if (result.success && result.data) {
         setImageUrl(result.data);
-      } else {
-        setError(result.error || "Error al cargar comprobante");
+      } else if (!result.success) {
+        setError(result.error);
       }
     });
   }, [isOpen, payment.receipt_path]);

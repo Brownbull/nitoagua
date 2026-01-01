@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { MapPin, Loader2 } from "lucide-react";
+import { MapPinPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -58,13 +58,12 @@ export type Step1Data = z.infer<typeof step1Schema>;
 interface Step1Props {
   initialData?: Partial<Step1Data>;
   onNext: (data: Step1Data) => void;
+  onOpenMap: (currentData: Partial<Step1Data>) => void;
 }
 
-export function RequestStep1Details({ initialData, onNext }: Step1Props) {
+export function RequestStep1Details({ initialData, onNext, onOpenMap }: Step1Props) {
   const [comunas, setComunas] = useState<AvailableComuna[]>([]);
   const [loadingComunas, setLoadingComunas] = useState(true);
-  const [gettingLocation, setGettingLocation] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
 
   const form = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -95,39 +94,10 @@ export function RequestStep1Details({ initialData, onNext }: Step1Props) {
     onNext(data);
   };
 
-  const handleGeolocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError("Tu navegador no soporta geolocalización");
-      return;
-    }
-
-    setGettingLocation(true);
-    setLocationError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        form.setValue("latitude", position.coords.latitude);
-        form.setValue("longitude", position.coords.longitude);
-        setGettingLocation(false);
-      },
-      (error) => {
-        setGettingLocation(false);
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            setLocationError("Permiso de ubicación denegado");
-            break;
-          case error.POSITION_UNAVAILABLE:
-            setLocationError("Ubicación no disponible");
-            break;
-          case error.TIMEOUT:
-            setLocationError("Tiempo de espera agotado");
-            break;
-          default:
-            setLocationError("Error al obtener ubicación");
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+  // Open map to select location - passes current form data so it can be preserved
+  const handleOpenMap = () => {
+    const currentData = form.getValues();
+    onOpenMap(currentData);
   };
 
   const hasLocation = form.watch("latitude") && form.watch("longitude");
@@ -284,26 +254,18 @@ export function RequestStep1Details({ initialData, onNext }: Step1Props) {
               type="button"
               variant="outline"
               size="icon"
-              onClick={handleGeolocation}
-              disabled={gettingLocation}
+              onClick={handleOpenMap}
               className={cn(
                 "h-11 w-11 rounded-xl border-gray-200 shrink-0",
                 hasLocation && "border-green-500 text-green-600 bg-green-50"
               )}
-              data-testid="geolocation-button"
-              title="Usar mi ubicación"
+              data-testid="open-map-button"
+              title="Seleccionar ubicación en mapa"
             >
-              {gettingLocation ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <MapPin className={cn("h-4 w-4", hasLocation && "fill-current")} />
-              )}
+              <MapPinPlus className={cn("h-4 w-4", hasLocation && "fill-current")} />
             </Button>
           </div>
 
-          {locationError && (
-            <p className="text-xs text-red-500">{locationError}</p>
-          )}
           {hasLocation && (
             <p className="text-xs text-green-600">Ubicación capturada</p>
           )}

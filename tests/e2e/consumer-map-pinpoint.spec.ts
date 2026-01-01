@@ -1,11 +1,12 @@
 /**
  * E2E Tests for Story 12-1: Map Location Pinpoint
  *
- * Tests the map pinpoint feature in the consumer water request flow.
+ * Tests the OPTIONAL map pinpoint feature in the consumer water request flow.
+ * Map is accessed via the location icon (MapPinPlus) on Step 1, not automatically.
  * Uses Leaflet + OpenStreetMap for interactive location confirmation.
  *
  * Test Coverage:
- * - AC12.1.1: Map displays after address entry
+ * - AC12.1.1: Map displays when location icon clicked
  * - AC12.1.2: Draggable pin for fine-tuning
  * - AC12.1.3: Confirmation actions
  * - AC12.1.4: Graceful degradation
@@ -14,7 +15,7 @@
 
 import { test, expect, assertNoErrorState } from "../fixtures/error-detection";
 
-// Helper to fill step 1 form
+// Helper to fill step 1 form (without clicking next)
 async function fillStep1Form(page: import("@playwright/test").Page) {
   // Fill name
   await page.getByTestId("name-input").fill("Juan Test");
@@ -43,23 +44,29 @@ async function fillStep1Form(page: import("@playwright/test").Page) {
     .fill("Casa azul con portón verde");
 }
 
-test.describe("Story 12-1: Map Location Pinpoint", () => {
+// Helper to open the map via location icon
+async function openMapViaIcon(page: import("@playwright/test").Page) {
+  // Click the map pin plus button to open map
+  await page.getByTestId("open-map-button").click();
+
+  // Wait for map step to appear
+  await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
+}
+
+test.describe("Story 12-1: Map Location Pinpoint (Optional)", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to request page
     await page.goto("/request");
     await assertNoErrorState(page);
   });
 
-  test.describe("AC12.1.1: Map Display After Address Entry", () => {
-    test("should show map step after completing step 1", async ({ page }) => {
+  test.describe("AC12.1.1: Map Display When Location Icon Clicked", () => {
+    test("should show map step when location icon clicked", async ({ page }) => {
       // Fill step 1 form
       await fillStep1Form(page);
 
-      // Click next button
-      await page.getByTestId("next-button").click();
-
-      // Wait for map step to appear
-      await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
+      // Click the location icon to open map
+      await openMapViaIcon(page);
 
       // Verify map component is rendered
       await expect(
@@ -69,10 +76,7 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
 
     test("should display address text below map", async ({ page }) => {
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
-
-      // Wait for map step
-      await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
+      await openMapViaIcon(page);
 
       // Check address display
       const addressDisplay = page.getByTestId("address-display");
@@ -80,20 +84,21 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
       await expect(addressDisplay).toContainText("Camino Los Robles 123");
     });
 
-    test("should show loading state while map loads", async ({ page }) => {
+    test("should go directly to Step 2 if Next clicked without opening map", async ({ page }) => {
       await fillStep1Form(page);
+
+      // Click next button WITHOUT opening map
       await page.getByTestId("next-button").click();
 
-      // Map loading skeleton should appear briefly
-      // Note: This may be too fast to catch, but we check the map eventually loads
-      await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
+      // Should go directly to amount step (step 2)
+      await expect(page.getByText("¿Cuánta agua?")).toBeVisible({ timeout: 5000 });
     });
   });
 
   test.describe("AC12.1.2: Draggable Pin for Fine-tuning", () => {
     test("should display coordinates that update", async ({ page }) => {
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
+      await openMapViaIcon(page);
 
       // Wait for map to be visible
       await expect(
@@ -110,7 +115,7 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
 
     test("should show map instruction overlay", async ({ page }) => {
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
+      await openMapViaIcon(page);
 
       await expect(
         page.getByTestId("location-pinpoint")
@@ -126,7 +131,7 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
   test.describe("AC12.1.3: Confirmation Actions", () => {
     test("should have confirm and back buttons", async ({ page }) => {
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
+      await openMapViaIcon(page);
 
       await expect(
         page.getByTestId("location-pinpoint")
@@ -143,9 +148,9 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
       await expect(page.getByTestId("map-back-button")).toContainText("Volver");
     });
 
-    test("confirm button should advance to amount step", async ({ page }) => {
+    test("confirm button should return to step 1 with location set", async ({ page }) => {
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
+      await openMapViaIcon(page);
 
       await expect(
         page.getByTestId("location-pinpoint")
@@ -154,14 +159,16 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
       // Click confirm
       await page.getByTestId("map-confirm-button").click();
 
-      // Should now be on amount step (step 2)
-      // Check for amount selection elements
-      await expect(page.getByText("¿Cuánta agua?")).toBeVisible({ timeout: 5000 });
+      // Should return to step 1 with location indicator showing
+      await expect(page.getByTestId("name-input")).toBeVisible({ timeout: 5000 });
+
+      // Location should be captured (green indicator)
+      await expect(page.getByText("Ubicación capturada")).toBeVisible();
     });
 
     test("back button should return to step 1", async ({ page }) => {
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
+      await openMapViaIcon(page);
 
       await expect(
         page.getByTestId("location-pinpoint")
@@ -175,23 +182,18 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
       await expect(page.getByTestId("name-input")).toHaveValue("Juan Test");
     });
 
-    test("step 2 back button should return to map step", async ({ page }) => {
+    test("step 2 back button should return to step 1", async ({ page }) => {
       await fillStep1Form(page);
+
+      // Go directly to step 2 (skip map)
       await page.getByTestId("next-button").click();
-
-      await expect(
-        page.getByTestId("location-pinpoint")
-      ).toBeVisible({ timeout: 15000 });
-
-      // Confirm to go to step 2
-      await page.getByTestId("map-confirm-button").click();
       await expect(page.getByText("¿Cuánta agua?")).toBeVisible({ timeout: 5000 });
 
       // Click back in step 2 header
       await page.getByRole("button", { name: "Volver" }).first().click();
 
-      // Should be back on map step
-      await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 5000 });
+      // Should be back on step 1
+      await expect(page.getByTestId("name-input")).toBeVisible({ timeout: 5000 });
     });
   });
 
@@ -204,7 +206,7 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
 
     test("map should fit mobile viewport", async ({ page }) => {
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
+      await openMapViaIcon(page);
 
       await expect(
         page.getByTestId("location-pinpoint")
@@ -218,7 +220,7 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
 
     test("buttons should be touch-friendly on mobile", async ({ page }) => {
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
+      await openMapViaIcon(page);
 
       await expect(
         page.getByTestId("location-pinpoint")
@@ -234,24 +236,55 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
     });
   });
 
-  test.describe("Full Request Flow with Map", () => {
-    test("should complete full request flow including map step", async ({
+  test.describe("Full Request Flow with Optional Map", () => {
+    test("should complete request flow using map for location", async ({
       page,
     }) => {
       // Step 1: Fill contact and location
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
 
-      // Map step: Confirm location
+      // Open map to set precise location
+      await openMapViaIcon(page);
+
+      // Confirm location on map
       await expect(
         page.getByTestId("location-pinpoint")
       ).toBeVisible({ timeout: 15000 });
       await page.getByTestId("map-confirm-button").click();
 
+      // Back on step 1 with location set
+      await expect(page.getByText("Ubicación capturada")).toBeVisible({ timeout: 5000 });
+
+      // Now click next to proceed to step 2
+      await page.getByTestId("next-button").click();
+
       // Step 2: Select amount
       await expect(page.getByText("¿Cuánta agua?")).toBeVisible({ timeout: 5000 });
 
-      // Select 1000L option (testid is amount-{value}, not amount-option-{value})
+      // Select 1000L option
+      await page.getByTestId("amount-1000").click();
+
+      // Click next in header
+      await page.getByRole("button", { name: "Siguiente" }).click();
+
+      // Step 3: Review
+      await expect(page.getByText("Revisa tu pedido")).toBeVisible({ timeout: 5000 });
+
+      // Verify address is shown in review
+      await expect(page.getByText("Camino Los Robles 123")).toBeVisible();
+    });
+
+    test("should complete request flow without using map", async ({
+      page,
+    }) => {
+      // Step 1: Fill contact and location (skip map)
+      await fillStep1Form(page);
+      await page.getByTestId("next-button").click();
+
+      // Step 2: Select amount
+      await expect(page.getByText("¿Cuánta agua?")).toBeVisible({ timeout: 5000 });
+
+      // Select 1000L option
       await page.getByTestId("amount-1000").click();
 
       // Click next in header
@@ -268,7 +301,7 @@ test.describe("Story 12-1: Map Location Pinpoint", () => {
   test.describe("Spanish Language Verification", () => {
     test("all UI elements should be in Spanish", async ({ page }) => {
       await fillStep1Form(page);
-      await page.getByTestId("next-button").click();
+      await openMapViaIcon(page);
 
       await expect(
         page.getByTestId("location-pinpoint")
@@ -293,7 +326,7 @@ test.describe("AC12.1.4: Graceful Degradation", () => {
     await page.goto("/request");
     await assertNoErrorState(page);
 
-    // Navigate to map step
+    // Fill step 1 form
     await page.getByTestId("name-input").fill("Juan Test");
     await page.getByTestId("phone-input").fill("+56912345678");
     await page.getByTestId("comuna-select").click();
@@ -305,13 +338,14 @@ test.describe("AC12.1.4: Graceful Degradation", () => {
       .getByTestId("address-input")
       .fill("Camino Los Robles 123");
     await page.getByTestId("instructions-input").fill("Casa azul");
-    await page.getByTestId("next-button").click();
+
+    // Open map via icon
+    await page.getByTestId("open-map-button").click();
 
     // Wait for map step container
     await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
 
-    // Wait for either map or loading state to resolve
-    // The map should load successfully in normal conditions
+    // Wait for map to load successfully
     await expect(
       page.getByTestId("location-pinpoint")
     ).toBeVisible({ timeout: 15000 });
@@ -319,5 +353,50 @@ test.describe("AC12.1.4: Graceful Degradation", () => {
     // Verify the map loaded successfully
     await expect(page.getByTestId("map-confirm-button")).toBeVisible();
     await expect(page.getByTestId("map-back-button")).toBeVisible();
+  });
+});
+
+test.describe("Story 12.7-1: Map Tile Rendering Fix", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/request");
+    await assertNoErrorState(page);
+  });
+
+  test("AC12.7.1.1: Map tiles should render correctly", async ({ page }) => {
+    // Fill step 1 form
+    await fillStep1Form(page);
+
+    // Open map via icon
+    await page.getByTestId("open-map-button").click();
+
+    // Wait for map to load
+    await expect(page.getByTestId("location-pinpoint")).toBeVisible({ timeout: 15000 });
+
+    // Wait for tile images to load from OpenStreetMap
+    // The Leaflet map creates img elements for tiles with src containing tile.openstreetmap.org
+    const tileImages = page.locator("img[src*='tile.openstreetmap.org']");
+
+    // Wait for at least one tile to be visible (indicating tiles are rendering)
+    await expect(tileImages.first()).toBeVisible({ timeout: 20000 });
+
+    // Verify multiple tiles loaded (map should have several tile images)
+    const tileCount = await tileImages.count();
+    expect(tileCount).toBeGreaterThan(0);
+  });
+
+  test("AC12.7.1.2: Confirm button should be enabled after map loads", async ({ page }) => {
+    // Fill step 1 form
+    await fillStep1Form(page);
+
+    // Open map via icon
+    await page.getByTestId("open-map-button").click();
+
+    // Wait for map to fully load
+    await expect(page.getByTestId("location-pinpoint")).toBeVisible({ timeout: 15000 });
+
+    // Verify confirm button is enabled (not disabled)
+    const confirmButton = page.getByTestId("map-confirm-button");
+    await expect(confirmButton).toBeVisible();
+    await expect(confirmButton).toBeEnabled({ timeout: 5000 });
   });
 });

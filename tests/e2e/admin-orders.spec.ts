@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/fixtures/merged-fixtures";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Story 6.6: Orders Management
@@ -44,6 +45,7 @@ test.describe("Orders Page - Navigation and Layout", () => {
 
   test("AC6.6.1 - Orders page displays correctly", async ({ page }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
     // Page header should be visible
     const pageTitle = page.getByTestId("orders-title");
@@ -53,6 +55,7 @@ test.describe("Orders Page - Navigation and Layout", () => {
 
   test("AC6.6.1 - Back button returns to dashboard", async ({ page }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
     const backButton = page.getByTestId("back-to-dashboard");
     await expect(backButton).toBeVisible();
@@ -65,14 +68,15 @@ test.describe("Orders Page - Navigation and Layout", () => {
     page,
   }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
-    // Stats cards should be visible (Pendientes, Asignados, En Camino, Entregados, Cancelados, Total)
+    // Stats cards should be visible (Pendientes, Aceptados, En Camino, Entregados, Cancelados, Total)
     await expect(page.getByText("Pendientes")).toBeVisible();
-    await expect(page.getByText("Asignados")).toBeVisible();
+    await expect(page.getByText("Aceptados")).toBeVisible();
     await expect(page.getByText("En Camino")).toBeVisible();
     await expect(page.getByText("Entregados")).toBeVisible();
     await expect(page.getByText("Cancelados")).toBeVisible();
-    await expect(page.getByText("Total")).toBeVisible();
+    await expect(page.getByTestId("stats-card-total")).toBeVisible();
   });
 });
 
@@ -87,6 +91,7 @@ test.describe("Orders Page - Search and Filters", () => {
     await page.getByTestId("admin-dev-login-button").click();
     await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
   });
 
   test("AC6.6.1 - Search input is available", async ({ page }) => {
@@ -178,17 +183,18 @@ test.describe("Orders Page - Orders Table", () => {
     await page.getByTestId("admin-dev-login-button").click();
     await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
   });
 
   test("AC6.6.1 - Orders table or empty state is displayed", async ({
     page,
   }) => {
     // Either show orders table or empty state
-    const hasOrders = await page.locator("[data-testid^='order-row-']").count();
+    const hasOrders = await page.locator("[data-testid^='order-card-']").count();
 
     if (hasOrders > 0) {
       // Orders exist - verify first row is clickable
-      const firstOrder = page.locator("[data-testid^='order-row-']").first();
+      const firstOrder = page.locator("[data-testid^='order-card-']").first();
       await expect(firstOrder).toBeVisible();
     } else {
       // No orders - should show empty state
@@ -199,7 +205,7 @@ test.describe("Orders Page - Orders Table", () => {
   test("AC6.6.3 - Clicking order navigates to detail page", async ({
     page,
   }) => {
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -227,7 +233,7 @@ test.describe("Order Detail Page", () => {
     // First go to orders list
     await page.goto("/admin/orders");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -244,7 +250,7 @@ test.describe("Order Detail Page", () => {
   test("AC6.6.4 - Order detail shows timeline", async ({ page }) => {
     await page.goto("/admin/orders");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -263,7 +269,7 @@ test.describe("Order Detail Page", () => {
   }) => {
     await page.goto("/admin/orders");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -283,7 +289,7 @@ test.describe("Order Detail Page", () => {
   test("AC6.6.7 - Order detail shows offer analytics", async ({ page }) => {
     await page.goto("/admin/orders");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -305,7 +311,7 @@ test.describe("Order Detail Page", () => {
   }) => {
     await page.goto("/admin/orders");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -319,7 +325,7 @@ test.describe("Order Detail Page", () => {
   test("AC6.6.3 - Back to orders button returns to list", async ({ page }) => {
     await page.goto("/admin/orders");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -355,7 +361,7 @@ test.describe("Order Detail Page - Cancel Order", () => {
     // Find a pending or in-progress order
     await page.goto("/admin/orders?status=pending");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -370,7 +376,7 @@ test.describe("Order Detail Page - Cancel Order", () => {
   test("AC6.6.6 - Cancel button opens reason modal", async ({ page }) => {
     await page.goto("/admin/orders?status=pending");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -380,8 +386,8 @@ test.describe("Order Detail Page - Cancel Order", () => {
       if (await cancelButton.isVisible()) {
         await cancelButton.click();
 
-        // Modal should appear
-        await expect(page.getByText("Cancelar Pedido")).toBeVisible();
+        // Modal should appear - use role selector to avoid matching button text
+        await expect(page.getByRole("heading", { name: "Cancelar Pedido" })).toBeVisible();
 
         // Reason input should be visible
         const reasonInput = page.getByTestId("cancel-reason-input");
@@ -393,7 +399,7 @@ test.describe("Order Detail Page - Cancel Order", () => {
   test("AC6.6.6 - Cancel requires reason to be entered", async ({ page }) => {
     await page.goto("/admin/orders?status=pending");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -420,7 +426,7 @@ test.describe("Order Detail Page - Cancel Order", () => {
   test("AC6.6.6 - Cancel modal can be closed", async ({ page }) => {
     await page.goto("/admin/orders?status=pending");
 
-    const firstOrder = page.locator("[data-testid^='order-row-']").first();
+    const firstOrder = page.locator("[data-testid^='order-card-']").first();
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
@@ -430,8 +436,8 @@ test.describe("Order Detail Page - Cancel Order", () => {
       if (await cancelButton.isVisible()) {
         await cancelButton.click();
 
-        // Modal should be visible
-        await expect(page.getByText("Cancelar Pedido")).toBeVisible();
+        // Modal should be visible - use role selector to avoid matching button text
+        await expect(page.getByRole("heading", { name: "Cancelar Pedido" })).toBeVisible();
 
         // Click close button
         const closeButton = page.getByTestId("cancel-modal-close");
@@ -457,20 +463,32 @@ test.describe("Orders Page - Mobile Navigation", () => {
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
     await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await assertNoErrorState(page);
   });
 
-  test("AC6.6.1 - Bottom nav shows Pedidos link on mobile", async ({
+  test("AC6.6.1 - Bottom nav shows Operations menu on mobile", async ({
     page,
   }) => {
     const bottomNav = page.getByTestId("admin-bottom-nav");
     await expect(bottomNav).toBeVisible();
 
-    const pedidosLink = page.getByTestId("bottom-nav-pedidos");
+    // Pedidos is inside Operations menu, so we need to open it first
+    const operationsButton = page.getByTestId("bottom-nav-operations");
+    await expect(operationsButton).toBeVisible();
+    await operationsButton.click();
+
+    // Now Pedidos should be visible in the slide-up menu
+    const pedidosLink = page.getByTestId("operations-pedidos");
     await expect(pedidosLink).toBeVisible();
   });
 
   test("AC6.6.1 - Mobile nav navigates to orders page", async ({ page }) => {
-    const pedidosLink = page.getByTestId("bottom-nav-pedidos");
+    // Click Operations menu first
+    const operationsButton = page.getByTestId("bottom-nav-operations");
+    await operationsButton.click();
+
+    // Click Pedidos from the menu
+    const pedidosLink = page.getByTestId("operations-pedidos");
     await pedidosLink.click();
 
     await page.waitForURL("**/admin/orders", { timeout: 10000 });
@@ -479,6 +497,7 @@ test.describe("Orders Page - Mobile Navigation", () => {
 
   test("AC6.6.1 - Mobile layout shows orders correctly", async ({ page }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
     // Page title should be visible
     const pageTitle = page.getByTestId("orders-title");
@@ -486,7 +505,7 @@ test.describe("Orders Page - Mobile Navigation", () => {
 
     // Stats cards should be visible on mobile
     await expect(page.getByText("Pendientes")).toBeVisible();
-    await expect(page.getByText("Total")).toBeVisible();
+    await expect(page.getByTestId("stats-card-total")).toBeVisible();
   });
 });
 

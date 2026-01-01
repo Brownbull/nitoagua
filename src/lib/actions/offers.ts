@@ -9,6 +9,7 @@ import {
   triggerNewOfferPush,
   triggerRequestFilledPush,
 } from "@/lib/push/trigger-push";
+import { createAuthError } from "@/lib/types/action-result";
 
 // Types for the request browser
 export interface AvailableRequest {
@@ -48,11 +49,9 @@ export async function getAvailableRequests(): Promise<GetAvailableRequestsResult
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return {
-      success: false,
-      error: "No autenticado",
-    };
+    return createAuthError();
   }
 
   // Get provider profile and verify status
@@ -209,11 +208,9 @@ export async function getProviderBrowserStatus(): Promise<{
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return {
-      success: false,
-      error: "No autenticado",
-    };
+    return createAuthError();
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -287,11 +284,9 @@ export async function getRequestDetail(requestId: string): Promise<GetRequestDet
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return {
-      success: false,
-      error: "No autenticado",
-    };
+    return createAuthError();
   }
 
   // Get provider profile and verify status
@@ -490,11 +485,9 @@ export async function createOffer(
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return {
-      success: false,
-      error: "No autenticado",
-    };
+    return createAuthError();
   }
 
   // Verify provider is approved
@@ -736,11 +729,9 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return {
-      success: false,
-      error: "No autenticado",
-    };
+    return createAuthError();
   }
 
   // Verify user is a provider
@@ -856,11 +847,9 @@ export async function withdrawOffer(offerId: string): Promise<{
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return {
-      success: false,
-      error: "No autenticado",
-    };
+    return createAuthError();
   }
 
   // Verify offer exists, belongs to this provider, and is active

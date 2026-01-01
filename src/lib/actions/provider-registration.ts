@@ -6,11 +6,7 @@ import {
   providerRegistrationSchema,
   type ProviderRegistrationData,
 } from "@/lib/validations/provider-registration";
-
-interface ActionResult {
-  success: boolean;
-  error?: string;
-}
+import { createAuthError, type ActionResult } from "@/lib/types/action-result";
 
 export async function submitProviderRegistration(
   input: ProviderRegistrationData
@@ -38,12 +34,10 @@ export async function submitProviderRegistration(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
     console.error("[Provider Registration] User not authenticated:", userError?.message);
-    return {
-      success: false,
-      error: "Debes iniciar sesión para registrarte como proveedor",
-    };
+    return createAuthError();
   }
 
   // Use admin client for database operations
@@ -239,12 +233,10 @@ export async function resubmitDocuments(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
     console.error("[Provider Resubmit] User not authenticated:", userError?.message);
-    return {
-      success: false,
-      error: "Debes iniciar sesión para enviar documentos",
-    };
+    return createAuthError();
   }
 
   // Use admin client for database operations

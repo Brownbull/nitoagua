@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
@@ -9,23 +9,51 @@ interface UseRealtimeOrdersOptions {
   enabled?: boolean;
   onOrderChange?: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void;
   onOfferChange?: (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => void;
+  /** Debounce delay in ms before triggering refresh (default: 500ms) */
+  debounceMs?: number;
 }
 
 export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
-  const { enabled = true, onOrderChange, onOfferChange } = options;
+  const { enabled = true, onOrderChange, onOfferChange, debounceMs = 500 } = options;
   const router = useRouter();
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Use ref to track pending refresh to avoid interrupting user interactions
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced refresh to prevent rapid refreshes during user interactions
+  const debouncedRefresh = useCallback(() => {
+    // Clear any pending refresh
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    // Schedule a new refresh after debounce delay
+    refreshTimeoutRef.current = setTimeout(() => {
+      console.log("[Realtime] Debounced refresh triggered");
+      router.refresh();
+      refreshTimeoutRef.current = null;
+    }, debounceMs);
+  }, [router, debounceMs]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleOrderChange = useCallback(
     (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
       console.log("[Realtime] Order change:", payload.eventType);
       setLastUpdate(new Date());
       onOrderChange?.(payload);
-      // Refresh the page to get updated data
-      router.refresh();
+      // Use debounced refresh to avoid interrupting user clicks
+      debouncedRefresh();
     },
-    [onOrderChange, router]
+    [onOrderChange, debouncedRefresh]
   );
 
   const handleOfferChange = useCallback(
@@ -33,10 +61,10 @@ export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
       console.log("[Realtime] Offer change:", payload.eventType);
       setLastUpdate(new Date());
       onOfferChange?.(payload);
-      // Refresh the page to get updated data
-      router.refresh();
+      // Use debounced refresh to avoid interrupting user clicks
+      debouncedRefresh();
     },
-    [onOfferChange, router]
+    [onOfferChange, debouncedRefresh]
   );
 
   useEffect(() => {
@@ -103,15 +131,39 @@ export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
 
 // Simplified hook for single order detail page
 export function useRealtimeOrder(orderId: string, options: Omit<UseRealtimeOrdersOptions, "onOrderChange" | "onOfferChange"> = {}) {
-  const { enabled = true } = options;
+  const { enabled = true, debounceMs = 500 } = options;
   const router = useRouter();
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
+  // Use ref to track pending refresh to avoid interrupting user interactions
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced refresh to prevent rapid refreshes during user interactions
+  const debouncedRefresh = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    refreshTimeoutRef.current = setTimeout(() => {
+      console.log("[Realtime] Debounced refresh triggered for order:", orderId);
+      router.refresh();
+      refreshTimeoutRef.current = null;
+    }, debounceMs);
+  }, [router, debounceMs, orderId]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleChange = useCallback(() => {
     setLastUpdate(new Date());
-    router.refresh();
-  }, [router]);
+    debouncedRefresh();
+  }, [debouncedRefresh]);
 
   useEffect(() => {
     if (!enabled || !orderId) return;

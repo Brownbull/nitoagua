@@ -56,7 +56,7 @@ export function EarningsDashboardClient({ initialSummary, initialHistory, initia
       if (summaryResult.success && summaryResult.data) {
         setSummary(summaryResult.data);
         setError(undefined);
-      } else {
+      } else if (!summaryResult.success) {
         setError(summaryResult.error);
       }
 

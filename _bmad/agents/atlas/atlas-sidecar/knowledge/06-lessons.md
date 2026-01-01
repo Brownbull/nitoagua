@@ -1,200 +1,216 @@
 # Historical Lessons (Retrospectives)
 
 > Section 6 of Atlas Memory
-> Last Sync: 2025-12-29
-> Sources: docs/sprint-artifacts/retrospectives/, epic retrospectives
+> Last Sync: 2025-12-30
+> Sources: Epic retrospectives, code reviews
 
-## What Worked
+## What Worked / What Failed
 
-| Pattern | Context | Epic |
-|---------|---------|------|
-| Per-test seeding | Deterministic, isolated tests | Epic 8+ |
-| shadcn/ui AlertDialog | Consistent UX, accessible by default | 3-6 |
-| Optimistic UI with Set tracking | Fast perceived performance | 3-5 |
-| Tab preservation via `?from=` | Maintains context on navigation | 3-4 |
-| Admin client for RLS bypass | Clean separation of concerns | 2-7, 3-1 |
-| Server component for guest access | Guest token pages need RLS bypass | 10-1 |
-| Google OAuth only | Simpler auth, no password management | ADR-004 |
-| Consumer-choice offers | Simpler than push assignment | Epic 8 |
-| Supabase Realtime | Zero cost, instant notifications | Epic 8 |
-| Leaflet + OpenStreetMap | Free, works with `dynamic()` import | Epic 12 |
-
-## What Failed
-
-| Failure | Prevention |
-|---------|------------|
-| Manual click testing bottleneck | Adopt Playwright early |
-| Complex table-based layouts | Use card-based designs |
-| WebKit test flakiness | Focus on Chromium, accept some flakiness |
-| Mixed auth strategies | Pick one auth method early |
-| Hardcoded constants mismatched docs | Always check Atlas Section 4 |
-| Seed data mismatched constants | Reference source constants, not hardcode |
+| ✅ Worked | ❌ Failed → Fix |
+|-----------|-----------------|
+| Per-test seeding | Manual click testing → Playwright |
+| shadcn/ui components | Complex tables → Card layouts |
+| Optimistic UI (Set tracking) | WebKit flakiness → Focus Chromium |
+| Admin client RLS bypass | Mixed auth strategies → OAuth only |
+| Consumer-choice offers | Hardcoded constants → Reference source |
+| Supabase Realtime | SW_VERSION drift → Build checks |
+| Leaflet + dynamic import | NEXT_PUBLIC_* stale → Redeploy after changes |
+| `map.invalidateSize()` in wizard | Map tiles blank in PWA → MapResizeHandler |
+| DB status query investigation | Assumed status values → Query actual DB |
+| Enhanced logging for push triggers | Assumed triggers missing → Verify call sites |
+| Debounced realtime refresh (500ms) | `router.refresh()` on Realtime interrupts clicks → Debounce |
+| `merged-fixtures` import | `@playwright/test` import → Use merged-fixtures |
+| `waitForSettingsLoaded()` helper | `waitForTimeout(1000)` → Element-based waits |
 
 ---
 
-## Patterns to Always Follow
+## Patterns: Always Follow / Always Avoid
 
-1. **shadcn/ui components** - Accessible, customizable
-2. **Server Actions for mutations** - Type-safe, composable
-3. **Admin client for elevated access** - Clear separation
-4. **Optimistic UI with Set tracking** - Track pending by ID
-5. **Card-based dashboards** - Works on mobile
-6. **Per-test seeding** - Deterministic, isolated
-7. **Centralize pricing** - Single source in `src/lib/utils/commission.ts`
-8. **aria-busy/aria-live** - Loading state accessibility
+**Follow:**
+1. shadcn/ui components (accessible)
+2. Server Actions for mutations
+3. Admin client for elevated access
+4. Per-test seeding (isolated)
+5. Card-based dashboards
+6. `getDeliveryPrice()` for pricing
+7. `ActionResult<T>` with `requiresLogin`
 
-## Patterns to Always Avoid
-
-1. Complex table layouts → Use cards
-2. Mixed auth methods → Pick OAuth or email
-3. Skip E2E tests → Manual doesn't scale
-4. Share test state → Each test seeds own data
-5. Hardcode pricing → Use `getDeliveryPrice()`
-
----
-
-## Security Patterns
-
-### PostgreSQL Functions
-ALL functions MUST include `SET search_path`:
-```sql
-CREATE OR REPLACE FUNCTION my_function()
-RETURNS ... SECURITY DEFINER
-SET search_path = public  -- REQUIRED
-AS $$ ... $$;
-```
-
-**After every migration:** Run `mcp__supabase__get_advisors type=security`
-
-### RLS Policy Verification
-- Test policies with Playwright before production
-- Verify role names match across policies (`'supplier'` not `'provider'`)
-- Guest access flows need early debugging
+**Avoid:**
+1. Complex table layouts
+2. Mixed auth methods
+3. Skipping E2E tests
+4. Shared test state
+5. Hardcoded pricing
 
 ---
 
-## UI/Component Patterns
+## Critical Rules
 
-### Force-Dynamic for Admin Pages
-Pages with real-time database queries MUST disable Vercel caching:
-```typescript
-// src/app/admin/verification/page.tsx
-export const dynamic = "force-dynamic";
-```
+### Security
+- ALL PostgreSQL functions: `SET search_path = public`
+- After every migration: `mcp__supabase__get_advisors type=security`
+- RLS: Verify role names match (`'supplier'` not `'provider'`)
 
-**Required on:** `/admin/verification`, `/admin/orders`, `/admin/dashboard`
+### Testing
+- `assertNoErrorState(page)` after EVERY `page.goto()`
+- Replace `waitForTimeout()` → element assertions
+- Expected skip rate: 86% pass, 14 provider skips
 
-### Dynamic Import for SSR Bypass (Leaflet)
-```typescript
-const LocationPinpoint = dynamic(
-  () => import("./location-pinpoint").then((mod) => mod.LocationPinpoint),
-  { ssr: false, loading: () => <MapLoadingSkeleton /> }
-);
-```
+### PWA/Push (Epic 12)
+- Use `registration.showNotification()` not `new Notification()` (Android PWA)
+- Lazy VAPID init (env vars unavailable at module load)
+- Toggle based on `pushState`, not `permission`
+- Edge Functions: Deploy explicitly (no auto-deploy)
 
-### Mobile Screen Adaptability
-- `min-h-dvh` for dynamic viewport height
-- `safe-area-bottom` for notched devices
-- `flex-1 overflow-y-auto` for scrollable content
-- Standalone fallback components use `min-h-dvh` directly, NOT `flex-1`
+### Leaflet Maps (Epic 12.7)
+- **Explicit Height Required**: Leaflet requires explicit container dimensions - `h-full` may fail with flex-based parents
+- **Robust Pattern**: Use `h-dvh` (not `min-h-dvh`) on parent + `absolute inset-0` on MapContainer
+- Call `map.invalidateSize()` after container becomes visible (wizard steps, tabs)
+- Use `MapResizeHandler` component inside `<MapContainer>` to fix tile rendering in PWA
+- Pattern: Staggered delays (0ms, 100ms, 300ms, 500ms) + window resize listener
+- Test tiles with `img[src*='tile.openstreetmap.org']` locator
+- **Why `min-h-dvh` fails**: Sets minimum, not explicit height - some browsers don't compute height for `h-full` children
+- **Why `absolute inset-0` works**: Absolute positioning guarantees explicit computed dimensions regardless of parent flex chain
 
----
+### Version Management
+- `npm run version:check` - Build fails if SW_VERSION ≠ package.json
+- Version bump: Update `package.json` + `public/sw.js` together
 
-## Testing Lessons (Consolidated)
+### Vercel Env Vars
+- `NEXT_PUBLIC_*` = Build-time only (baked in)
+- After adding: Must redeploy to take effect
+- Server-only vars = Runtime read
 
-### assertNoErrorState
-- Call after EVERY `page.goto()`
-- Import from `../fixtures/error-detection`
-- NOT needed for: pure unit tests, regex validation, auth redirects
-- NEEDED for: page navigation, `.isVisible().catch(() => false)` patterns
-
-### Selector Strict Mode
-- `getByText()` matches multiple? Use `{ exact: true }` or `getByTestId()`
-- Dynamic testids? Use `[data-testid^="notification-item-"]` prefix selector
-- Text in multiple places? Use `.first()` or more specific selector
-
-### Wait Patterns
-- Replace `waitForTimeout()` with element-visible assertions
-- Use `page.waitForLoadState("networkidle")` for AJAX completion
-
-### Seed Script Rules
-- ALL FK fields must be mapped to actual user IDs
-- Verify column existence before including in production seeds
-- Exit with error code if seeded data is missing
-
----
-
-## Push Notifications (Epic 12)
-
-### Lazy VAPID Initialization
-```typescript
-let vapidInitialized = false;
-function initVapid(): boolean {
-  if (vapidInitialized) return true;
-  webpush.setVapidDetails(subject, publicKey, privateKey);
-  vapidInitialized = true;
-  return true;
-}
-```
-**Why:** `setVapidDetails()` at module load fails when env vars unavailable
-
-### PWA Notification Pattern
-```typescript
-// ❌ Fails in Android PWA standalone mode
-new Notification("Title", options);
-
-// ✅ Works everywhere
-const registration = await navigator.serviceWorker.ready;
-await registration.showNotification("Title", options);
-```
-
-### Toggle State Logic
-Base toggle on `pushState === "subscribed"`, not `permission === "granted"`.
-Permission persists even after unsubscribe.
-
-### Edge Function Deployment
-- Edge Functions don't auto-deploy with code pushes
-- Deploy explicitly: `mcp__supabase__deploy_edge_function`
-- Configure secrets in Supabase Dashboard, not Vercel
-
----
-
-## Validation Story Patterns
-
-### Test File Tracking
-Before marking validation stories complete:
-```bash
-git status tests/e2e/  # Check for untracked files
-```
-
-### Expected Skip Rates
-| Environment | Rate | Skips |
-|-------------|------|-------|
-| Local | ~86% | 14 (provider auth) |
-| Production | ~86% | 14 (same) |
-
-### Manual Verification
-Cross-reference E2E test counts instead of clicking every button:
-> "E2E verified: 14 tests for map step"
-
-Only user-device-dependent items require real manual testing.
+### Local Development Setup
+- After `npx supabase db reset`: Run `npm run seed:dev-login` to create test users
+- **Comunas require verified providers**: `getAvailableComunas()` only returns comunas with at least one provider where `verification_status='approved'` AND `is_available=true` AND has entry in `provider_service_areas`
+- Seed script now auto-creates service areas for supplier (villarrica, pucon, lican-ray)
+- Test users: admin@nitoagua.cl, consumer@nitoagua.cl, supplier@nitoagua.cl (all use `.123` suffix passwords)
 
 ---
 
 ## Hard-Won Wisdom
 
-> "The `new Notification()` API silently fails in Android PWA standalone mode. Always use Service Worker's `showNotification()`."
+> "The `new Notification()` API silently fails in Android PWA standalone mode."
 
-> "VAPID validation happens at `setVapidDetails()` call time, not at send time."
+> "VAPID validation happens at `setVapidDetails()` call time, not send time."
 
-> "Local validation stories have predictable skip rates. 86% pass with 14 provider skips is expected, not a failure."
+> "86% pass with 14 provider skips is expected, not a failure."
 
-> "Manual verification doesn't mean clicking every button. Cross-reference E2E test counts to prove coverage exists."
+> "Edge Functions don't auto-deploy. Always explicitly deploy."
 
-> "Edge Functions don't auto-deploy. Always explicitly deploy via MCP or CLI after changes."
+> "Two auth patterns: Server actions → `{requiresLogin: true}`. Layouts → `redirect()`. Don't mix."
 
-> "Run Supabase security advisors after every migration to catch `function_search_path_mutable` warnings immediately."
+> "Leaflet map tiles render when `mapLoaded=true` but appear blank? Use `h-dvh` on parent + `absolute inset-0` on MapContainer. Don't trust `min-h-dvh` with `h-full` children."
+
+> "No comunas in dropdown after db reset? Run `npm run seed:dev-login` - comunas only show if a verified provider has service areas configured."
+
+> "Admin uses 'assigned' but DB has 'accepted'? Always query actual DB status values before assuming enum mappings. Provider code was correct, Admin had legacy incorrect values."
+
+> "Push notifications not received? Verify subscription exists BEFORE transaction. Code calls trigger correctly but user had no subscription at transaction time."
+
+> "Clicks intermittently fail on realtime-enabled pages? `router.refresh()` during Realtime events can re-render components mid-click. Debounce refresh calls (500ms) to let user interactions complete."
 
 ---
 
-*Last verified: 2025-12-29 | Sources: Epic 3, 8, 10, 11, 12 retrospectives and code reviews*
+## Push Notification Debugging (Epic 12.7)
+
+**Story 12.7-2 Findings:**
+- Triggers ARE called (contrary to original bug assumption)
+- Edge Function NOT used for push - web-push npm library is used directly from server actions
+- Key log patterns: `[TriggerPush]` (entry), `[Push]` (send result)
+- All 8 trigger functions have consistent entry-point logging (added in code review)
+
+| Log Message | Meaning |
+|-------------|---------|
+| `[TriggerPush] trigger*Push called` | Server action invoked trigger (all 8 functions logged) |
+| `[Push] No subscriptions found for user` | User never enabled push on device |
+| `[Push] Found N subscription(s)` | User has active subscription(s) |
+| `[Push] Sent M/N push notifications` | Delivery attempted |
+
+**All 8 Trigger Functions (with logging):**
+1. `triggerNewOfferPush` - Consumer receives when offer submitted
+2. `triggerOfferAcceptedPush` - Provider receives when offer accepted
+3. `triggerDeliveryCompletedPush` - Consumer receives on delivery
+4. `triggerRequestTimeoutPush` - Consumer receives when request times out
+5. `triggerVerificationApprovedPush` - Provider receives when verified
+6. `triggerInTransitPush` - Consumer receives when provider en route
+7. `triggerRequestFilledPush` - Provider receives when another provider selected
+8. `triggerRequestCancelledPush` - Provider receives when consumer cancels
+
+**Verification Steps:**
+1. Check `push_subscriptions` table for user
+2. Verify subscription `created_at` is BEFORE transaction
+3. Check Vercel logs for `[TriggerPush]` and `[Push]` messages
+4. VAPID keys: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` must be in Vercel env
+
+---
+
+## Status Enum Alignment (Epic 12.7)
+
+| Status | DB Value | Admin Display | Notes |
+|--------|----------|---------------|-------|
+| Pending | `pending`, `offers_pending`, `no_offers` | Pendiente | Grouped for stats |
+| Accepted | `accepted` | Aceptados | NOT `assigned` |
+| En Route | `en_route` | En Camino | Future status |
+| Delivered | `delivered` | Entregados | Completed |
+| Cancelled | `cancelled` | Cancelados | By consumer |
+
+> **Key Insight**: When Admin/Provider views show different statuses for the same order, query the actual database to find the correct value. Don't assume one view's enum mapping is correct.
+
+---
+
+## Session Handling (Epic 12.6)
+
+| Layer | Pattern | Location |
+|-------|---------|----------|
+| Client | `ensureValidSession()` proactive refresh | `src/lib/auth/session.ts` |
+| Hook | Visibility change + 5-min polls | `src/hooks/use-auth.ts` |
+| Server | Return `{ requiresLogin: true }` | `src/lib/types/action-result.ts` |
+| Login | `?returnTo=` + `?expired=true` params | OAuth flow preserved |
+
+> Code examples moved to Section 4 (Architecture)
+
+---
+
+## Realtime & Click Interactions (Epic 12.7)
+
+**Story 12.7-3 Findings:**
+- `useRealtimeOrders` hook calls `router.refresh()` on every Supabase Realtime event
+- If Realtime event fires during/just before user click, React re-renders interrupt navigation
+- **Solution**: Debounce refresh with 500ms delay using `useRef` + `setTimeout`
+
+**Pattern: Debounced Realtime Refresh**
+```typescript
+const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+const debouncedRefresh = useCallback(() => {
+  if (refreshTimeoutRef.current) {
+    clearTimeout(refreshTimeoutRef.current);
+  }
+  refreshTimeoutRef.current = setTimeout(() => {
+    router.refresh();
+    refreshTimeoutRef.current = null;
+  }, 500); // 500ms debounce
+}, [router]);
+```
+
+**Also Applied:**
+- Enhanced OrderCard: `hover:shadow-md hover:bg-gray-50 active:bg-gray-100` + `prefetch={true}`
+- Fixed E2E selector mismatches: `order-row-` → `order-card-` (12+ instances)
+- Fixed ambiguous text selectors: `getByText('Total')` → `getByTestId('stats-card-total')`
+
+**Code Review Finding (12.7-3):**
+- `useRealtimeOrder` (singular, for detail page) was missing debounce - fixed in code review
+- Both hooks now have consistent `debounceMs` option (default 500ms)
+- Upgraded `admin-orders.spec.ts` to use `merged-fixtures` + `assertNoErrorState()`
+
+**Code Review Finding (12.7-2):**
+- `push-subscription.spec.ts` was using `@playwright/test` instead of `merged-fixtures`
+- Had 10+ instances of `waitForTimeout(1000)` anti-pattern
+- **Fix:** Created `waitForSettingsLoaded()` helper with `waitForLoadState("networkidle")` + element visibility wait
+- **Fix:** Login helpers now wait for email field to populate instead of fixed timeout
+
+---
+
+*Last verified: 2026-01-01 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Local Dev Setup*

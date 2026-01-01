@@ -6,14 +6,18 @@ import { revalidatePath } from "next/cache";
 import { getDeliveryPrice } from "@/lib/utils/commission";
 import { isGuestRequest, sendGuestNotification } from "@/lib/email";
 import { triggerDeliveryCompletedPush } from "@/lib/push/trigger-push";
+import { createAuthError } from "@/lib/types/action-result";
 
 /**
  * Result type for completeDelivery action
  * Follows Atlas Section 4: API Response Format
+ * AC12.6.2.3: Includes requiresLogin flag for session expiry handling
  */
 interface CompleteDeliveryResult {
   success: boolean;
   error?: string;
+  /** AC12.6.2.3: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }
 
 /**
@@ -42,8 +46,9 @@ export async function completeDelivery(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return { success: false, error: "No autenticado" };
+    return createAuthError();
   }
 
   // Get offer with request details

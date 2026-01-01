@@ -8,6 +8,8 @@ export async function GET(request: Request) {
   const errorDescription = requestUrl.searchParams.get("error_description");
   // Get role from query param - defaults to consumer if not specified
   const intendedRole = requestUrl.searchParams.get("role") || "consumer";
+  // Story 12.6-1: Get returnTo param for post-login redirect
+  const returnTo = requestUrl.searchParams.get("returnTo");
   const origin = requestUrl.origin;
 
   // Handle OAuth errors from Google (user cancels, Google error, etc.)
@@ -61,8 +63,17 @@ export async function GET(request: Request) {
       }
     }
 
-    // Existing user - redirect based on role
-    console.log("[AUTH] Existing user with role:", profile.role);
+    // Existing user - redirect based on role or returnTo
+    console.log("[AUTH] Existing user with role:", profile.role, "returnTo:", returnTo);
+
+    // Story 12.6-1: If returnTo is provided and is a valid relative path, use it
+    if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) {
+      // Validate returnTo is a safe path (no external redirects)
+      console.log("[AUTH] Redirecting to returnTo:", returnTo);
+      return NextResponse.redirect(`${origin}${returnTo}`);
+    }
+
+    // Default redirect based on role
     if (profile.role === "supplier") {
       return NextResponse.redirect(`${origin}/dashboard`);
     } else {

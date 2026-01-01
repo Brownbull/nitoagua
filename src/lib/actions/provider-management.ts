@@ -3,17 +3,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
-
-interface ActionResult<T = void> {
-  success: boolean;
-  error?: string;
-  data?: T;
-}
+import { AUTH_ERROR_MESSAGE, type ActionResult } from "@/lib/types/action-result";
 
 /**
  * Check if current user is admin
+ * AC12.6.2.4: Return requiresLogin flag for auth failures
  */
-async function verifyAdminAccess(): Promise<{ isAdmin: boolean; email?: string; error?: string }> {
+async function verifyAdminAccess(): Promise<{ isAdmin: boolean; email?: string; error?: string; requiresLogin?: boolean }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,7 +17,7 @@ async function verifyAdminAccess(): Promise<{ isAdmin: boolean; email?: string; 
   } = await supabase.auth.getUser();
 
   if (userError || !user || !user.email) {
-    return { isAdmin: false, error: "Debes iniciar sesion como administrador" };
+    return { isAdmin: false, error: AUTH_ERROR_MESSAGE, requiresLogin: true };
   }
 
   const { data: adminEmail } = await supabase
@@ -47,7 +43,7 @@ export async function suspendProvider(
   try {
     const auth = await verifyAdminAccess();
     if (!auth.isAdmin) {
-      return { success: false, error: auth.error };
+      return { success: false, error: auth.error || "Error de autenticación", requiresLogin: auth.requiresLogin };
     }
 
     if (!reason.trim()) {
@@ -94,7 +90,7 @@ export async function unsuspendProvider(providerId: string): Promise<ActionResul
   try {
     const auth = await verifyAdminAccess();
     if (!auth.isAdmin) {
-      return { success: false, error: auth.error };
+      return { success: false, error: auth.error || "Error de autenticación", requiresLogin: auth.requiresLogin };
     }
 
     const adminClient = createAdminClient();
@@ -135,7 +131,7 @@ export async function banProvider(providerId: string): Promise<ActionResult> {
   try {
     const auth = await verifyAdminAccess();
     if (!auth.isAdmin) {
-      return { success: false, error: auth.error };
+      return { success: false, error: auth.error || "Error de autenticación", requiresLogin: auth.requiresLogin };
     }
 
     const adminClient = createAdminClient();
@@ -179,7 +175,7 @@ export async function updateCommissionOverride(
   try {
     const auth = await verifyAdminAccess();
     if (!auth.isAdmin) {
-      return { success: false, error: auth.error };
+      return { success: false, error: auth.error || "Error de autenticación", requiresLogin: auth.requiresLogin };
     }
 
     // Validate rate if provided
