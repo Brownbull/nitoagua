@@ -4,7 +4,7 @@
 
 // Version should be updated with each deploy for update detection
 // IMPORTANT: Increment version when push handlers change
-const SW_VERSION = "2.5.0";
+const SW_VERSION = "2.5.1";
 const CACHE_NAME = `nitoagua-v${SW_VERSION}`;
 
 // Assets to pre-cache on install
@@ -212,17 +212,22 @@ self.addEventListener("notificationclick", (event) => {
   // AC12.6.4: Navigate to correct URL using clients.openWindow()
   event.waitUntil(
     clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((windowClients) => {
-        // Check if there's already a window open
+      .matchAll({ type: "window", includeUncontrolled: false })
+      .then(async (windowClients) => {
+        // Try to find a controlled client to navigate
         for (const client of windowClients) {
           if (client.url.includes(self.location.origin) && "focus" in client) {
-            // Navigate existing window to the URL
-            client.navigate(urlToOpen);
-            return client.focus();
+            try {
+              // Navigate existing controlled window to the URL
+              await client.navigate(urlToOpen);
+              return client.focus();
+            } catch (e) {
+              // client.navigate() can fail if client is not controlled
+              console.log("[SW] Navigate failed, will open new window:", e.message);
+            }
           }
         }
-        // Open new window if none exists
+        // Open new window if no controlled client exists or navigate failed
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
         }
