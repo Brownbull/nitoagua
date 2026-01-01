@@ -1,86 +1,74 @@
 # Atlas Memory - Application Knowledge Base
 
-> Last Sync: Not yet synced
+> Last Sync: 2025-12-30
 > Project: nitoagua
 
 ---
 
-## 1. App Purpose & Core Principles
+## IMPORTANT: Use Sharded Knowledge
 
-<!-- Synced from: PRD -->
-<!-- What is this application's mission? What core principles guide all decisions? -->
+This file is a **legacy reference**. Atlas now uses sharded knowledge stored in `knowledge/` folder:
 
-_Awaiting initial sync from PRD documentation._
+| Fragment | Content |
+|----------|---------|
+| [01-purpose.md](knowledge/01-purpose.md) | App mission, principles, target market, currency |
+| [02-features.md](knowledge/02-features.md) | Feature inventory with intent and connections |
+| [03-personas.md](knowledge/03-personas.md) | User personas, goals, behaviors |
+| [04-architecture.md](knowledge/04-architecture.md) | Tech stack, patterns, decisions |
+| [05-testing.md](knowledge/05-testing.md) | Test strategy, seeds, coverage expectations |
+| [06-lessons.md](knowledge/06-lessons.md) | Retrospective insights, patterns to avoid/follow |
+| [07-process.md](knowledge/07-process.md) | Branching, deployment, team decisions |
+| [08-workflow-chains.md](knowledge/08-workflow-chains.md) | User journeys and dependencies |
+| [09-sync-history.md](knowledge/09-sync-history.md) | Sync log, drift tracking |
 
----
-
-## 2. Feature Inventory + Intent
-
-<!-- Synced from: PRD, Stories -->
-<!-- What features exist? Why does each exist? How do they connect? -->
-
-_Awaiting initial sync from feature documentation._
-
----
-
-## 3. User Personas & Goals
-
-<!-- Synced from: PRD, UX Documentation -->
-<!-- Who uses this app? What are they trying to accomplish? -->
-
-_Awaiting initial sync from user documentation._
+**Consult `atlas-index.csv` to identify which fragments to load for any given task.**
 
 ---
 
-## 4. Architectural Decisions & Patterns
+## Quick Reference (Cached)
 
-<!-- Synced from: Architecture Documentation -->
-<!-- System boundaries, data flows, tech choices, patterns adopted -->
+### Critical Facts
 
-_Awaiting initial sync from architecture documentation._
+| Fact | Value | Source |
+|------|-------|--------|
+| **Target Market** | Rural Chile (Villarrica pilot) | prd.md:11 |
+| **Currency** | CLP (Chilean Peso, no decimals) | architecture.md:675 |
+| **Primary Language** | Spanish (Chilean) | prd.md:198 |
+| **Consumer Persona** | Doña María, 58yo, NOT tech-savvy | ux-spec:13 |
+| **Provider Persona** | Don Pedro, 42yo, tech-comfortable | ux-spec:16 |
 
----
+### Tech Stack
 
-## 5. Testing Patterns & Coverage Expectations
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 15 (App Router) |
+| UI | shadcn/ui + Tailwind |
+| Database | Supabase (PostgreSQL) |
+| Auth | Supabase Auth (Google OAuth only) |
+| Email | Resend + React Email |
+| Deploy | Vercel |
 
-<!-- Synced from: Test documentation, Stories -->
-<!-- What to test, how to test, seed data strategies, workflow validations -->
+### MVP Status
 
-_Awaiting initial sync from test documentation._
+**Complete** (Epic 5 finished 2025-12-08)
 
----
+All core flows working:
+- ✅ Guest water requests
+- ✅ Registered user requests
+- ✅ Provider dashboard
+- ✅ Email notifications
+- ✅ In-app notifications
+- ✅ Request tracking
 
-## 6. Historical Lessons (Retrospectives)
-
-<!-- Synced from: Retrospective notes -->
-<!-- What worked, what failed, patterns to avoid, hard-won wisdom -->
-
-_Awaiting initial sync from retrospective documentation._
-
----
-
-## 7. Process & Strategy
-
-<!-- Synced from: Team documentation, sprint artifacts -->
-<!-- Branching strategy, testing approach, team decisions on how we work -->
-
-_Awaiting initial sync from process documentation._
-
----
-
-## Workflow Chains
-
-<!-- Key user journeys and their component steps -->
-
-_Awaiting initial mapping of workflow chains._
+**Production URL:** https://nitoagua.vercel.app
 
 ---
 
 ## Sync History
 
-| Date      | Documents Synced        | Notes                    |
-| --------- | ----------------------- | ------------------------ |
-| _pending_ | _initial sync required_ | Atlas memory initialized |
+| Date | Documents Synced | Notes |
+|------|-----------------|-------|
+| 2025-12-18 | PRD, Architecture, UX Spec, Epics, Retrospectives (1-5) | Initial full sync - all 9 fragments populated |
 
 ---
 

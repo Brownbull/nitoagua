@@ -5,13 +5,21 @@ import { createClient } from "@/lib/supabase/server";
 import { GoogleSignIn } from "@/components/auth/google-sign-in";
 import { DevLogin } from "@/components/auth/dev-login";
 import { LoginErrorHandler } from "@/components/auth/login-error-handler";
+import { SessionExpiredToast } from "@/components/auth/session-expired-toast";
 import { Truck } from "lucide-react";
 
 // Show dev login when explicitly enabled via env var
 const showDevLogin = process.env.NEXT_PUBLIC_DEV_LOGIN === "true";
 
 interface LoginPageProps {
-  searchParams: Promise<{ role?: string; error?: string }>;
+  searchParams: Promise<{
+    role?: string;
+    error?: string;
+    /** Story 12.6-1: Return URL after login */
+    returnTo?: string;
+    /** Story 12.6-1: Flag indicating session expired */
+    expired?: string;
+  }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -19,6 +27,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   // Get role from query param - defaults to consumer
   const role = (params.role === "supplier" ? "supplier" : "consumer") as "consumer" | "supplier";
   const isSupplierLogin = role === "supplier";
+  // Story 12.6-1: Get returnTo and expired params
+  const returnTo = params.returnTo;
+  const expired = params.expired === "true";
 
   // Check if user is already authenticated
   const supabase = await createClient();
@@ -56,9 +67,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <LoginErrorHandler />
       </Suspense>
 
+      {/* Story 12.6-1: Show toast when session expired */}
+      {expired && (
+        <Suspense fallback={null}>
+          <SessionExpiredToast />
+        </Suspense>
+      )}
+
       {/* Google Sign In Button - mockup styled */}
       <div className="w-full max-w-[320px]">
-        <GoogleSignIn role={role} />
+        <GoogleSignIn role={role} returnTo={returnTo} />
       </div>
 
       {/* Terms text */}

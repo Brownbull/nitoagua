@@ -16,9 +16,14 @@
  *
  * IMPORTANT: Tests use explicit error detection to fail on DB issues.
  * Tests require seeded test users - run `npm run seed:test` before running.
+ *
+ * Code Review Fix (Story 12.7-2):
+ * - Updated to use merged-fixtures per Atlas Section 5
+ * - Replaced waitForTimeout() with element-based waits
  */
 
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "../support/fixtures/merged-fixtures";
+import { Page } from "@playwright/test";
 import { assertNoErrorState } from "../fixtures/error-detection";
 
 // Dev login is required for these tests - they will be skipped if login page
@@ -42,11 +47,11 @@ async function loginAsSupplier(page: Page) {
   const supplierButton = page.getByRole("button", { name: "Supplier", exact: true });
   await supplierButton.click();
 
-  // Wait a moment for the email/password to auto-fill
-  await page.waitForTimeout(100);
+  // Wait for email field to be populated (element-based wait)
+  const emailInput = page.locator('input[name="email"], input[type="email"]').first();
+  await expect(emailInput).not.toHaveValue("");
 
   // Check if we need to use seeded test credentials
-  const emailInput = page.locator('input[name="email"], input[type="email"]').first();
   const currentEmail = await emailInput.inputValue();
   if (currentEmail === "supplier@nitoagua.cl") {
     // The auto-fill is using production credentials - we need seeded data
@@ -73,12 +78,22 @@ async function loginAsConsumer(page: Page) {
   const consumerButton = page.getByRole("button", { name: "Consumer", exact: true });
   await consumerButton.click();
 
-  // Wait a moment for the email/password to auto-fill
-  await page.waitForTimeout(100);
+  // Wait for email field to be populated (element-based wait)
+  const emailInput = page.locator('input[name="email"], input[type="email"]').first();
+  await expect(emailInput).not.toHaveValue("");
 
   // Click login
   await page.getByTestId("dev-login-button").click();
   await page.waitForURL(/\/home/, { timeout: 15000 });
+}
+
+/**
+ * Wait for settings page to fully load with notification settings visible
+ */
+async function waitForSettingsLoaded(page: Page) {
+  await page.waitForLoadState("networkidle");
+  const notificationSettings = page.getByTestId("notification-settings");
+  await notificationSettings.waitFor({ state: "visible", timeout: 10000 });
 }
 
 test.describe("Push Subscription UI @push @seeded", () => {
@@ -96,8 +111,8 @@ test.describe("Push Subscription UI @push @seeded", () => {
 
       await page.goto("/provider/settings");
 
-      // Wait for page to load
-      await page.waitForTimeout(1000);
+      // Wait for page to load with element-based wait
+      await waitForSettingsLoaded(page);
 
       // FIRST: Check for error states
       await assertNoErrorState(page);
@@ -119,7 +134,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
       }
 
       await page.goto("/provider/settings");
-      await page.waitForTimeout(1000);
+      await waitForSettingsLoaded(page);
 
       await assertNoErrorState(page);
 
@@ -139,7 +154,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
       }
 
       await page.goto("/provider/settings");
-      await page.waitForTimeout(1000);
+      await waitForSettingsLoaded(page);
 
       await assertNoErrorState(page);
 
@@ -162,7 +177,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
       }
 
       await page.goto("/provider/settings");
-      await page.waitForTimeout(1000);
+      await waitForSettingsLoaded(page);
 
       await assertNoErrorState(page);
 
@@ -187,7 +202,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
       }
 
       await page.goto("/provider/settings");
-      await page.waitForTimeout(1000);
+      await waitForSettingsLoaded(page);
 
       await assertNoErrorState(page);
 
@@ -206,7 +221,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
       }
 
       await page.goto("/provider/settings");
-      await page.waitForTimeout(1000);
+      await waitForSettingsLoaded(page);
 
       await assertNoErrorState(page);
 
@@ -233,8 +248,8 @@ test.describe("Push Subscription UI @push @seeded", () => {
 
       await page.goto("/settings");
 
-      // Wait for page to load
-      await page.waitForTimeout(1000);
+      // Wait for page to load with element-based wait
+      await waitForSettingsLoaded(page);
 
       // FIRST: Check for error states
       await assertNoErrorState(page);
@@ -279,7 +294,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
 
       // Navigate to admin settings
       await page.goto("/admin/settings");
-      await page.waitForTimeout(1000);
+      await waitForSettingsLoaded(page);
 
       await assertNoErrorState(page);
 
@@ -301,7 +316,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
       }
 
       await page.goto("/provider/settings");
-      await page.waitForTimeout(1000);
+      await waitForSettingsLoaded(page);
 
       await assertNoErrorState(page);
 
@@ -328,7 +343,7 @@ test.describe("Push Subscription UI @push @seeded", () => {
       }
 
       await page.goto("/provider/settings");
-      await page.waitForTimeout(1000);
+      await waitForSettingsLoaded(page);
 
       await assertNoErrorState(page);
 

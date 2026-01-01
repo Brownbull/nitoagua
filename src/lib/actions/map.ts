@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { AUTH_ERROR_MESSAGE } from "@/lib/types/action-result";
 
 // Types for the map view
 export interface MapRequest {
@@ -37,6 +38,8 @@ export interface GetMapDataResult {
   serviceAreas?: ProviderServiceArea[];
   providerStatus?: MapProviderStatus;
   error?: string;
+  /** AC12.6.2.3: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }
 
 /**
@@ -49,10 +52,12 @@ export async function getMapData(): Promise<GetMapDataResult> {
   // Get current user
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
     return {
       success: false,
-      error: "No autenticado",
+      error: AUTH_ERROR_MESSAGE,
+      requiresLogin: true,
     };
   }
 

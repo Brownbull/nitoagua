@@ -6,11 +6,7 @@ import {
   supplierProfileSchema,
   type SupplierProfileInput,
 } from "@/lib/validations/supplier-profile";
-
-interface ActionResult {
-  success: boolean;
-  error?: string;
-}
+import { createAuthError, type ActionResult } from "@/lib/types/action-result";
 
 export async function createSupplierProfile(
   input: SupplierProfileInput
@@ -36,12 +32,10 @@ export async function createSupplierProfile(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
     console.error("[PROFILE] User not authenticated:", userError?.message);
-    return {
-      success: false,
-      error: "Debes iniciar sesión para crear un perfil",
-    };
+    return createAuthError();
   }
 
   // Check if profile already exists

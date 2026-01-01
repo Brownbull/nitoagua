@@ -322,7 +322,7 @@ async function getTestProvider(supabase: any): Promise<string> {
 
   // Find the dev login provider
   const { data: existingUsers } = await supabase.auth.admin.listUsers();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const devProvider = existingUsers?.users?.find(
     (u: any) => u.email === DEV_PROVIDER_EMAIL
   );

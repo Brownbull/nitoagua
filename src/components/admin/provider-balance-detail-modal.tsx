@@ -47,8 +47,8 @@ export function ProviderBalanceDetailModal({
       const result = await getProviderLedgerHistory(provider.provider_id);
       if (result.success && result.data) {
         setEntries(result.data);
-      } else {
-        setError(result.error || "Error al cargar historial");
+      } else if (!result.success) {
+        setError(result.error);
       }
     });
   }, [isOpen, provider.provider_id]);

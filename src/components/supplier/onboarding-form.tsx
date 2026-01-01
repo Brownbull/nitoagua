@@ -56,7 +56,7 @@ export function OnboardingForm() {
     try {
       const result = await createSupplierProfile(data);
 
-      if (result.error) {
+      if (!result.success) {
         toast.error(result.error);
         setIsSubmitting(false);
         return;

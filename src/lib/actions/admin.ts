@@ -10,11 +10,19 @@ import {
   DEFAULT_PRICING_SETTINGS,
   type PricingSettingsInput,
 } from "@/lib/validations/admin";
+import { AUTH_ERROR_MESSAGE } from "@/lib/types/action-result";
 
+/**
+ * Local ActionResult interface that maintains backward compatibility
+ * while adding requiresLogin flag for session expiry handling
+ * AC12.6.2.4: Added requiresLogin flag for admin actions
+ */
 interface ActionResult<T = void> {
   success: boolean;
   error?: string;
   data?: T;
+  /** AC12.6.2.4: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }
 
 /**
@@ -31,10 +39,12 @@ export async function getSettings(): Promise<ActionResult<AdminSettingsInput>> {
       error: userError,
     } = await supabase.auth.getUser();
 
+    // AC12.6.2.4: Return requiresLogin flag for auth failures
     if (userError || !user) {
       return {
         success: false,
-        error: "Debes iniciar sesion",
+        error: AUTH_ERROR_MESSAGE,
+        requiresLogin: true,
       };
     }
 
@@ -121,11 +131,13 @@ export async function updateSettings(
       error: userError,
     } = await supabase.auth.getUser();
 
+    // AC12.6.2.4: Return requiresLogin flag for auth failures
     if (userError || !user) {
       console.error("[ADMIN] User not authenticated:", userError?.message);
       return {
         success: false,
-        error: "Debes iniciar sesion como administrador",
+        error: AUTH_ERROR_MESSAGE,
+        requiresLogin: true,
       };
     }
 
@@ -230,10 +242,12 @@ export async function getPricingSettings(): Promise<ActionResult<PricingSettings
       error: userError,
     } = await supabase.auth.getUser();
 
+    // AC12.6.2.4: Return requiresLogin flag for auth failures
     if (userError || !user) {
       return {
         success: false,
-        error: "Debes iniciar sesion",
+        error: AUTH_ERROR_MESSAGE,
+        requiresLogin: true,
       };
     }
 
@@ -322,11 +336,13 @@ export async function updatePricingSettings(
       error: userError,
     } = await supabase.auth.getUser();
 
+    // AC12.6.2.4: Return requiresLogin flag for auth failures
     if (userError || !user) {
       console.error("[ADMIN] User not authenticated:", userError?.message);
       return {
         success: false,
-        error: "Debes iniciar sesion como administrador",
+        error: AUTH_ERROR_MESSAGE,
+        requiresLogin: true,
       };
     }
 

@@ -1,11 +1,57 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import { MapPin, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import "leaflet/dist/leaflet.css";
+
+// Component to handle map resize when container becomes visible
+// Fixes: Map tiles not rendering when map appears in wizard step (BUG-001)
+function MapResizeHandler({ onReady }: { onReady: () => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    // Multiple invalidateSize calls at different intervals to handle
+    // various mobile browser timing issues (BUG-001)
+    const timers: NodeJS.Timeout[] = [];
+
+    // Immediate call
+    map.invalidateSize();
+
+    // Short delay for initial layout
+    timers.push(setTimeout(() => {
+      map.invalidateSize();
+    }, 100));
+
+    // Medium delay for CSS/font loading
+    timers.push(setTimeout(() => {
+      map.invalidateSize();
+    }, 300));
+
+    // Longer delay for slow mobile connections
+    timers.push(setTimeout(() => {
+      map.invalidateSize();
+      onReady();
+    }, 500));
+
+    // Also handle window resize and orientation change events
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
+  }, [map, onReady]);
+
+  return null;
+}
 
 // Villarrica region default - consistent with provider map (Story 8-10)
 const VILLARRICA_CENTER: [number, number] = [-39.2768, -72.2274];
@@ -171,8 +217,10 @@ export function LocationPinpoint({
 
   return (
     <div className="flex flex-col h-full" data-testid="location-pinpoint">
-      {/* Map container - fills available space */}
-      <div className="flex-1 relative min-h-[300px]">
+      {/* Map container - fills available space
+          BUG-001 FIX: Use absolute positioning to ensure map container has explicit dimensions
+          This works more reliably than flex-1 + h-full in all browsers */}
+      <div className="flex-1 relative" style={{ minHeight: '300px' }}>
         {!mapLoaded && (
           <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
             <div className="flex flex-col items-center gap-2">
@@ -181,13 +229,18 @@ export function LocationPinpoint({
             </div>
           </div>
         )}
+        {/* BUG-001 FIX: Use absolute positioning instead of h-full w-full
+            This ensures the container has explicit computed dimensions
+            h-full/w-full can fail when parent height is flex-based in some browsers */}
         <MapContainer
           center={position}
           zoom={DEFAULT_ZOOM}
-          className="h-full w-full"
+          className="absolute inset-0"
           zoomControl={true}
-          whenReady={() => setMapLoaded(true)}
         >
+          {/* MapResizeHandler fixes BUG-001: tiles not rendering in PWA wizard */}
+          <MapResizeHandler onReady={() => setMapLoaded(true)} />
+
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -207,11 +260,11 @@ export function LocationPinpoint({
           <MapClickHandler onPositionChange={handlePositionChange} />
         </MapContainer>
 
-        {/* Instruction overlay */}
-        <div className="absolute top-4 left-4 right-4 z-[1000]">
-          <div className="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-3 shadow-md">
-            <p className="text-sm text-gray-700 text-center">
-              Arrastra el marcador o toca el mapa para ajustar tu ubicación exacta
+        {/* Instruction overlay - positioned below zoom controls (top-24 = 96px) to clear +/- buttons */}
+        <div className="absolute top-24 left-4 right-4 z-[1000]">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-md">
+            <p className="text-xs text-gray-700 text-center">
+              Arrastra el marcador o toca el mapa para ajustar tu ubicación
             </p>
           </div>
         </div>

@@ -19,14 +19,22 @@ export interface PushSubscriptionData {
   };
 }
 
+/**
+ * Story 12.6-1: Enhanced result types with requiresLogin flag
+ * AC12.6.1.2: On auth failure, return { success: false, requiresLogin: true }
+ */
 export interface SubscribeResult {
   success: boolean;
   error?: string;
+  /** AC12.6.1.2: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }
 
 export interface UnsubscribeResult {
   success: boolean;
   error?: string;
+  /** AC12.6.1.2: True when user needs to re-authenticate */
+  requiresLogin?: boolean;
 }
 
 export interface SubscriptionStatus {
@@ -51,10 +59,13 @@ export async function subscribeToPush(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.1.2: Return requiresLogin flag for auth failures
   if (userError || !user) {
+    console.log("[PushSubscription] Auth required for subscribeToPush");
     return {
       success: false,
-      error: "Debes iniciar sesión para activar notificaciones push",
+      error: "Tu sesión expiró. Por favor, inicia sesión nuevamente.",
+      requiresLogin: true,
     };
   }
 
@@ -111,10 +122,13 @@ export async function unsubscribeFromPush(endpoint?: string): Promise<Unsubscrib
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.1.2: Return requiresLogin flag for auth failures
   if (userError || !user) {
+    console.log("[PushSubscription] Auth required for unsubscribeFromPush");
     return {
       success: false,
-      error: "No autenticado",
+      error: "Tu sesión expiró. Por favor, inicia sesión nuevamente.",
+      requiresLogin: true,
     };
   }
 

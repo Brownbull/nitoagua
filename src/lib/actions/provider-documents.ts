@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { type DocumentType, DOCUMENT_LABELS } from "@/lib/validations/provider-registration";
 import { getExpirationStatus } from "@/lib/utils/document-expiration";
 import type { ProviderDocument, ProviderDocumentActionResult } from "@/lib/types/provider-documents";
+import { createAuthError, AUTH_ERROR_MESSAGE } from "@/lib/types/action-result";
 
 /**
  * Get all documents for the current provider with signed URLs
@@ -19,8 +20,9 @@ export async function getProviderDocuments(): Promise<{
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return { documents: [], error: "No autenticado" };
+    return { documents: [], error: AUTH_ERROR_MESSAGE };
   }
 
   const { data: documents, error: docsError } = await supabase
@@ -68,8 +70,9 @@ export async function getDocumentViewUrl(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return { error: "No autenticado" };
+    return { error: AUTH_ERROR_MESSAGE };
   }
 
   // Fetch document and verify ownership
@@ -117,8 +120,9 @@ export async function updateDocument(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return { success: false, error: "No autenticado" };
+    return createAuthError();
   }
 
   // Fetch existing document and verify ownership
@@ -199,8 +203,9 @@ export async function addDocument(
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return { success: false, error: "No autenticado" };
+    return createAuthError();
   }
 
   // Verify user is an approved provider
@@ -259,8 +264,9 @@ export async function deleteDocument(documentId: string): Promise<ProviderDocume
     error: userError,
   } = await supabase.auth.getUser();
 
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
   if (userError || !user) {
-    return { success: false, error: "No autenticado" };
+    return createAuthError();
   }
 
   // Fetch document and verify ownership

@@ -46,7 +46,7 @@ export function useOnboardingProgress() {
   const [data, setData] = useState<PartialRegistrationData>(INITIAL_DATA);
 
   // Load from localStorage on mount
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+   
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);

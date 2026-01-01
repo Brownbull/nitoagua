@@ -98,7 +98,7 @@ export function ConsumerProfileForm({ initialData, email }: ConsumerProfileFormP
     try {
       const result = await updateConsumerProfile(data);
 
-      if (result.error) {
+      if (!result.success) {
         toast.error(result.error);
         setIsSubmitting(false);
         return;

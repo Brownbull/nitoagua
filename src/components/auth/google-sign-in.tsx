@@ -8,9 +8,15 @@ import { Loader2 } from "lucide-react";
 interface GoogleSignInProps {
   redirectTo?: string;
   role?: "consumer" | "supplier";
+  /** Story 12.6-1: Optional return URL after login */
+  returnTo?: string;
 }
 
-export function GoogleSignIn({ redirectTo = "/auth/callback", role = "consumer" }: GoogleSignInProps) {
+export function GoogleSignIn({
+  redirectTo = "/auth/callback",
+  role = "consumer",
+  returnTo,
+}: GoogleSignInProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,6 +29,10 @@ export function GoogleSignIn({ redirectTo = "/auth/callback", role = "consumer" 
       // Pass role to callback URL so auth callback can route to correct onboarding
       const callbackUrl = new URL(`${window.location.origin}${redirectTo}`);
       callbackUrl.searchParams.set("role", role);
+      // Story 12.6-1: Pass returnTo URL for post-login redirect
+      if (returnTo) {
+        callbackUrl.searchParams.set("returnTo", returnTo);
+      }
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
