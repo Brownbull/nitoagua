@@ -96,10 +96,21 @@ export async function sendPushToUser(
 
   // Query user's push subscriptions
   console.log(`[Push] Querying subscriptions for user: ${userId}`);
+  console.log(`[Push] Admin client URL check:`, process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30));
+
   const { data: subscriptions, error: queryError, status, statusText } = await adminClient
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
     .eq("user_id", userId);
+
+  // Extra debug: log raw response
+  console.log(`[Push] Raw query response:`, JSON.stringify({
+    dataType: typeof subscriptions,
+    dataIsArray: Array.isArray(subscriptions),
+    dataLength: subscriptions?.length,
+    errorCode: queryError?.code,
+    errorMsg: queryError?.message
+  }));
 
   console.log(`[Push] Query result - status: ${status}, statusText: ${statusText}, data length: ${subscriptions?.length ?? 'null'}, error: ${queryError?.message ?? 'none'}`);
 
