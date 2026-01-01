@@ -19,6 +19,8 @@
 | DB status query investigation | Assumed status values → Query actual DB |
 | Enhanced logging for push triggers | Assumed triggers missing → Verify call sites |
 | Debounced realtime refresh (500ms) | `router.refresh()` on Realtime interrupts clicks → Debounce |
+| `merged-fixtures` import | `@playwright/test` import → Use merged-fixtures |
+| `waitForSettingsLoaded()` helper | `waitForTimeout(1000)` → Element-based waits |
 
 ---
 
@@ -203,6 +205,12 @@ const debouncedRefresh = useCallback(() => {
 - Both hooks now have consistent `debounceMs` option (default 500ms)
 - Upgraded `admin-orders.spec.ts` to use `merged-fixtures` + `assertNoErrorState()`
 
+**Code Review Finding (12.7-2):**
+- `push-subscription.spec.ts` was using `@playwright/test` instead of `merged-fixtures`
+- Had 10+ instances of `waitForTimeout(1000)` anti-pattern
+- **Fix:** Created `waitForSettingsLoaded()` helper with `waitForLoadState("networkidle")` + element visibility wait
+- **Fix:** Login helpers now wait for email field to populate instead of fixed timeout
+
 ---
 
-*Last verified: 2025-12-31 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-3, 12.7-4), Local Dev Setup*
+*Last verified: 2026-01-01 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Local Dev Setup*

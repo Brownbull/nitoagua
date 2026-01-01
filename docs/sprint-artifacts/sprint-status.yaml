@@ -302,7 +302,7 @@ development_status:
 
   # Phase 1: Critical Fixes (P0/P1)
   12.7-1-fix-map-tile-rendering: done  # BUG-001: Map tiles not rendering - CSS height chain + invalidateSize() fix - DONE 2025-12-31
-  12.7-2-push-notification-triggers: review  # BUG-005, 008, 013: Triggers verified existing, logging enhanced - REVIEW 2025-12-31
+  12.7-2-push-notification-triggers: done  # BUG-005, 008, 013: Triggers verified existing, logging enhanced, E2E tests fixed - DONE 2026-01-01
   12.7-3-admin-orders-click-fix: done  # BUG-007: Admin orders click fix - Debounced realtime refresh, E2E fixed, Atlas code review passed - 2025-12-31
   12.7-4-admin-status-sync: review  # BUG-011: Admin status enum fix (assigned→accepted) - 7/7 E2E tests passing
   12.7-5-consumer-dispute-option: ready-for-dev  # BUG-015: Consumer cannot dispute delivery
