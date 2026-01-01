@@ -11,6 +11,7 @@ import {
   subscribeToPush,
   unsubscribeFromPush,
   getSubscriptionStatus,
+  sendServerTestPush,
 } from "@/lib/actions/push-subscription";
 
 type NotificationPermission = "default" | "granted" | "denied";
@@ -44,6 +45,10 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
   const [pushState, setPushState] = useState<PushState>("idle");
   const [pushError, setPushError] = useState<string | null>(null);
   const [pushSupported, setPushSupported] = useState(true);
+
+  // Server-side push test state
+  const [serverTestSending, setServerTestSending] = useState(false);
+  const [serverTestResult, setServerTestResult] = useState<string | null>(null);
 
   // Story 12.6-1: Router for login redirect
   const router = useRouter();
@@ -268,6 +273,42 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
     }
   }, [permission]);
 
+  // Handle server-side push test - tests web-push library delivery
+  const handleServerTestPush = useCallback(async () => {
+    if (permission !== "granted" || pushState !== "subscribed") return;
+
+    setServerTestSending(true);
+    setServerTestResult(null);
+
+    try {
+      const result = await sendServerTestPush();
+
+      if (result.success) {
+        setServerTestResult("success");
+      } else {
+        setServerTestResult(result.error || "Error desconocido");
+      }
+
+      // Log details for debugging
+      if (result.details) {
+        console.log("[ServerTestPush] Details:", result.details);
+      }
+
+      // Reset after 5 seconds
+      setTimeout(() => {
+        setServerTestResult(null);
+      }, 5000);
+    } catch (error) {
+      console.error("Server push test error:", error);
+      setServerTestResult("Error al enviar desde servidor");
+      setTimeout(() => {
+        setServerTestResult(null);
+      }, 5000);
+    } finally {
+      setServerTestSending(false);
+    }
+  }, [permission, pushState]);
+
   // Get status text and icon based on permission and push state
   const getStatusInfo = () => {
     // AC12.6.3: Show push subscription status
@@ -459,7 +500,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
       </div>
 
       {/* Test Notification - AC10.6.8 */}
-      <div className="px-4 py-3">
+      <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-900">Probar Notificación</p>
@@ -500,6 +541,64 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
             )}
           </button>
         </div>
+      </div>
+
+      {/* Server-side Push Test - Tests web-push library delivery */}
+      <div className="px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-900">Probar Push del Servidor</p>
+            <p className="text-xs text-gray-500">
+              Verifica que el servidor puede enviarte notificaciones
+            </p>
+          </div>
+
+          <button
+            onClick={handleServerTestPush}
+            disabled={permission !== "granted" || pushState !== "subscribed" || serverTestSending}
+            className={cn(
+              "flex items-center gap-1 px-2 py-1 rounded-lg transition-colors text-xs font-medium",
+              permission === "granted" && pushState === "subscribed"
+                ? serverTestResult === "success"
+                  ? "bg-green-100 text-green-700"
+                  : serverTestResult && serverTestResult !== "success"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            )}
+            data-testid="server-push-test-button"
+            aria-disabled={permission !== "granted" || pushState !== "subscribed"}
+          >
+            {serverTestResult === "success" ? (
+              <>
+                <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Recibida</span>
+              </>
+            ) : serverTestResult && serverTestResult !== "success" ? (
+              <>
+                <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Error</span>
+              </>
+            ) : serverTestSending ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                <span>Enviando...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Probar</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Show error message if server test failed */}
+        {serverTestResult && serverTestResult !== "success" && (
+          <div className="mt-2 p-2 bg-red-50 rounded-lg border border-red-100">
+            <p className="text-xs text-red-800">{serverTestResult}</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -256,3 +256,70 @@ export async function getUserSubscriptions(
     },
   }));
 }
+
+/**
+ * Send a server-side test push notification
+ * This actually tests the web-push library and VAPID configuration
+ */
+export async function sendServerTestPush(): Promise<{
+  success: boolean;
+  error?: string;
+  details?: {
+    sent: number;
+    total: number;
+    cleaned: number;
+    vapidConfigured: boolean;
+  };
+}> {
+  const supabase = await createClient();
+
+  // Get current user
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return {
+      success: false,
+      error: "Tu sesión expiró. Por favor, inicia sesión nuevamente.",
+    };
+  }
+
+  // Import sendPushToUser dynamically to avoid circular dependency
+  const { sendPushToUser } = await import("@/lib/push/send-push");
+
+  console.log(`[ServerTestPush] Sending test push to user ${user.id}`);
+
+  const result = await sendPushToUser(user.id, {
+    title: "Notificación de prueba (servidor)",
+    body: "Esta notificación fue enviada desde el servidor usando web-push",
+    icon: "/icons/icon-192.png",
+    url: "/",
+    tag: "server-test-push",
+  });
+
+  console.log(`[ServerTestPush] Result:`, result);
+
+  // Check VAPID configuration
+  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+  const vapidConfigured = !!(vapidPublicKey && vapidPrivateKey);
+
+  return {
+    success: result.success && result.sent > 0,
+    error: result.sent === 0
+      ? (result.total === 0
+          ? "No tienes suscripciones activas. Habilita notificaciones primero."
+          : vapidConfigured
+            ? `Enviado a ${result.sent}/${result.total} dispositivos. ${result.cleaned} limpiados.`
+            : "VAPID keys no configuradas en el servidor.")
+      : undefined,
+    details: {
+      sent: result.sent,
+      total: result.total,
+      cleaned: result.cleaned,
+      vapidConfigured,
+    },
+  };
+}
