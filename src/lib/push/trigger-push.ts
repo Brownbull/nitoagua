@@ -47,7 +47,8 @@ export async function triggerOfferAcceptedPush(
   };
 
   try {
-    await sendPushToUser(providerId, notification);
+    const result = await sendPushToUser(providerId, notification);
+    console.log(`[TriggerPush] offer_accepted push result:`, JSON.stringify(result));
   } catch (error) {
     console.error("[TriggerPush] Error sending offer_accepted push:", error);
   }

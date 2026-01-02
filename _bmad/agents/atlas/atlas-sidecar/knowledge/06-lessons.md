@@ -19,6 +19,7 @@
 | DB status query investigation | Assumed status values → Query actual DB |
 | Enhanced logging for push triggers | Assumed triggers missing → Verify call sites |
 | Debounced realtime refresh (500ms) | `router.refresh()` on Realtime interrupts clicks → Debounce |
+| `.trim()` on VAPID keys | Whitespace in env vars → Silent VAPID init failure |
 | `merged-fixtures` import | `@playwright/test` import → Use merged-fixtures |
 | `waitForSettingsLoaded()` helper | `waitForTimeout(1000)` → Element-based waits |
 
@@ -59,6 +60,7 @@
 ### PWA/Push (Epic 12)
 - Use `registration.showNotification()` not `new Notification()` (Android PWA)
 - Lazy VAPID init (env vars unavailable at module load)
+- **VAPID keys must be `.trim()`ed** - Vercel copy-paste often adds trailing whitespace
 - Toggle based on `pushState`, not `permission`
 - Edge Functions: Deploy explicitly (no auto-deploy)
 
@@ -109,6 +111,8 @@
 
 > "Push notifications not received? Verify subscription exists BEFORE transaction. Code calls trigger correctly but user had no subscription at transaction time."
 
+> "VAPID keys look right but push fails silently? Check key lengths - public=87, private=43. If longer (88/44), trailing whitespace. Add `.trim()` to env vars."
+
 > "Clicks intermittently fail on realtime-enabled pages? `router.refresh()` during Realtime events can re-render components mid-click. Debounce refresh calls (500ms) to let user interactions complete."
 
 ---
@@ -143,6 +147,18 @@
 2. Verify subscription `created_at` is BEFORE transaction
 3. Check Vercel logs for `[TriggerPush]` and `[Push]` messages
 4. VAPID keys: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` must be in Vercel env
+5. **Check VAPID key lengths**: Public=87 chars, Private=43 chars. If 88/44, trailing whitespace exists
+
+**VAPID Whitespace Bug (Fixed 2026-01-01):**
+- Symptom: `vapidConfigured: true` but `total: 0` subscriptions queried
+- Debug showed `vapid_pub=true(88)` instead of `vapid_pub=true(87)` - one char too long
+- Root cause: Vercel env vars had trailing newline from copy-paste
+- Fix: Added `.trim()` in `send-push.ts`:
+  ```typescript
+  const publicKey = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "").trim();
+  const privateKey = (process.env.VAPID_PRIVATE_KEY || "").trim();
+  ```
+- `webpush.setVapidDetails()` silently fails with malformed keys (doesn't throw)
 
 ---
 
@@ -213,4 +229,4 @@ const debouncedRefresh = useCallback(() => {
 
 ---
 
-*Last verified: 2026-01-01 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Local Dev Setup*
+*Last verified: 2026-01-01 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Local Dev Setup, VAPID Whitespace Fix*

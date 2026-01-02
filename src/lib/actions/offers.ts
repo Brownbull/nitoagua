@@ -1236,9 +1236,10 @@ export async function notifyProviderOfferAccepted(
   }
 
   // AC12.6.7: Send push notification for offer accepted
-  triggerOfferAcceptedPush(providerId, request.id, request.amount, comunaName).catch(
-    (err) => console.error("[Offers] Push notification error:", err)
-  );
+  console.log(`[Offers] About to trigger offer_accepted push for provider: ${providerId}`);
+  triggerOfferAcceptedPush(providerId, request.id, request.amount, comunaName)
+    .then(() => console.log(`[Offers] Push trigger completed for provider: ${providerId}`))
+    .catch((err) => console.error("[Offers] Push notification error:", err));
 
   console.log(`[Offers] Notified provider ${providerId} of offer acceptance: ${offerId}`);
 
