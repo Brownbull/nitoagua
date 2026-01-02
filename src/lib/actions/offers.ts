@@ -1235,11 +1235,8 @@ export async function notifyProviderOfferAccepted(
     }
   }
 
-  // AC12.6.7: Send push notification for offer accepted
-  console.log(`[Offers] About to trigger offer_accepted push for provider: ${providerId}`);
-  triggerOfferAcceptedPush(providerId, request.id, request.amount, comunaName)
-    .then(() => console.log(`[Offers] Push trigger completed for provider: ${providerId}`))
-    .catch((err) => console.error("[Offers] Push notification error:", err));
+  // Note: Push notification is now triggered directly in selectOffer() for reliability
+  // This function only handles in-app notification and email
 
   console.log(`[Offers] Notified provider ${providerId} of offer acceptance: ${offerId}`);
 
@@ -1309,7 +1306,11 @@ export async function selectOffer(
         consumer_id,
         tracking_token,
         status,
-        amount
+        amount,
+        comuna_id,
+        comunas!water_requests_comuna_id_fkey (
+          name
+        )
       )
     `
     )
@@ -1330,6 +1331,8 @@ export async function selectOffer(
     tracking_token: string | null;
     status: string;
     amount: number;
+    comuna_id: string | null;
+    comunas: { name: string } | null;
   };
 
   const provider = offer.profiles as unknown as {
@@ -1385,8 +1388,17 @@ export async function selectOffer(
     };
   }
 
+  // AC12.6.7: Send push notification IMMEDIATELY (same pattern as submitOffer)
+  // This must be called directly here, not nested in notifyProviderOfferAccepted,
+  // to ensure it executes before the serverless function returns
+  const comunaName = request.comunas?.name || "";
+  triggerOfferAcceptedPush(offer.provider_id, request.id, request.amount, comunaName).catch(
+    (err) => console.error("[SelectOffer] Push notification error:", err)
+  );
+
   // AC10.2.9: Notify selected provider (in-app + email)
   // Fire and forget - don't block the response
+  // Note: Push is now handled above, this only does in-app notification and email
   notifyProviderOfferAccepted(offerId, offer.provider_id).catch((err) => {
     console.error("[SelectOffer] Failed to notify selected provider:", err);
   });
