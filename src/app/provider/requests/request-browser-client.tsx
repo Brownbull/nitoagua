@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { Wifi, WifiOff, RefreshCw, AlertCircle, Settings, InboxIcon } from "lucide-react";
+import { Wifi, WifiOff, RefreshCw, AlertCircle, Settings, InboxIcon, ArrowUpDown, X, ChevronDown } from "lucide-react";
 import { RequestCard } from "@/components/provider/request-card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useProviderRealtimeRequests } from "@/hooks/use-realtime-requests";
 import { getAvailableRequests } from "@/lib/actions/offers";
 import type { AvailableRequest, ProviderStatus } from "@/lib/actions/offers";
+
+type SortOrder = "oldest" | "newest";
 
 interface RequestBrowserClientProps {
   initialRequests: AvailableRequest[];
@@ -29,6 +31,40 @@ export function RequestBrowserClient({
 }: RequestBrowserClientProps) {
   const [requests, setRequests] = useState(initialRequests);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sortOrder, setSortOrder] = useState<SortOrder>("oldest");
+  const [selectedComuna, setSelectedComuna] = useState<string | null>(null);
+
+  // Extract unique comunas from requests for filter dropdown
+  const availableComunas = useMemo(() => {
+    const comunaMap = new Map<string, string>();
+    requests.forEach((r) => {
+      if (r.comuna_id && r.comuna_name) {
+        comunaMap.set(r.comuna_id, r.comuna_name);
+      }
+    });
+    return Array.from(comunaMap.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [requests]);
+
+  // Apply sorting and filtering
+  const filteredAndSortedRequests = useMemo(() => {
+    let result = [...requests];
+
+    // Filter by comuna if selected
+    if (selectedComuna) {
+      result = result.filter((r) => r.comuna_id === selectedComuna);
+    }
+
+    // Sort by created_at
+    result.sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return sortOrder === "oldest" ? dateA - dateB : dateB - dateA;
+    });
+
+    return result;
+  }, [requests, sortOrder, selectedComuna]);
 
   // Set up real-time updates
   const {
@@ -99,12 +135,28 @@ export function RequestBrowserClient({
         isLoading={realtimeLoading || isRefreshing}
       />
 
+      {/* Sort and Filter controls */}
+      {requests.length > 0 && (
+        <SortFilterControls
+          sortOrder={sortOrder}
+          onSortChange={setSortOrder}
+          selectedComuna={selectedComuna}
+          onComunaChange={setSelectedComuna}
+          availableComunas={availableComunas}
+        />
+      )}
+
       {/* Request list */}
       {requests.length === 0 ? (
         <EmptyRequestsState onRefresh={handleRefresh} isLoading={isRefreshing} />
+      ) : filteredAndSortedRequests.length === 0 ? (
+        <NoMatchingRequestsState
+          selectedComuna={availableComunas.find((c) => c.id === selectedComuna)?.name}
+          onClearFilter={() => setSelectedComuna(null)}
+        />
       ) : (
         <div className="space-y-3" data-testid="request-list">
-          {requests.map((request) => (
+          {filteredAndSortedRequests.map((request) => (
             <RequestCard key={request.id} request={request} />
           ))}
         </div>
@@ -275,6 +327,109 @@ function EmptyRequestsState({ onRefresh, isLoading }: { onRefresh: () => void; i
       >
         <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
         {isLoading ? "Actualizando..." : "Actualizar"}
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * Sort and filter controls for the request list
+ */
+function SortFilterControls({
+  sortOrder,
+  onSortChange,
+  selectedComuna,
+  onComunaChange,
+  availableComunas,
+}: {
+  sortOrder: SortOrder;
+  onSortChange: (order: SortOrder) => void;
+  selectedComuna: string | null;
+  onComunaChange: (comunaId: string | null) => void;
+  availableComunas: { id: string; name: string }[];
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row gap-3" data-testid="sort-filter-controls">
+      {/* Sort toggle */}
+      <button
+        onClick={() => onSortChange(sortOrder === "oldest" ? "newest" : "oldest")}
+        className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        data-testid="sort-toggle"
+      >
+        <ArrowUpDown className="h-4 w-4 text-orange-500" />
+        <span>{sortOrder === "oldest" ? "Más antiguos" : "Más recientes"}</span>
+      </button>
+
+      {/* Comuna filter dropdown */}
+      <div className="relative flex-1 sm:flex-initial">
+        {selectedComuna ? (
+          <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg">
+            <span className="text-sm font-medium text-orange-700">
+              {availableComunas.find((c) => c.id === selectedComuna)?.name}
+            </span>
+            <button
+              onClick={() => onComunaChange(null)}
+              className="p-0.5 hover:bg-orange-100 rounded-full transition-colors"
+              aria-label="Limpiar filtro"
+              data-testid="clear-comuna-filter"
+            >
+              <X className="h-4 w-4 text-orange-600" />
+            </button>
+          </div>
+        ) : (
+          <div className="relative">
+            <select
+              value=""
+              onChange={(e) => onComunaChange(e.target.value || null)}
+              className="appearance-none w-full px-3 py-2 pr-8 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              data-testid="comuna-filter"
+            >
+              <option value="">Filtrar por comuna</option>
+              {availableComunas.map((comuna) => (
+                <option key={comuna.id} value={comuna.id}>
+                  {comuna.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * State when filter results in no matching requests
+ */
+function NoMatchingRequestsState({
+  selectedComuna,
+  onClearFilter,
+}: {
+  selectedComuna?: string;
+  onClearFilter: () => void;
+}) {
+  return (
+    <div
+      className="flex flex-col items-center justify-center py-12 px-4 text-center"
+      data-testid="no-matching-requests-state"
+    >
+      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <InboxIcon className="h-8 w-8 text-gray-400" />
+      </div>
+      <h2 className="text-lg font-semibold text-gray-900 mb-2">
+        No hay solicitudes en {selectedComuna}
+      </h2>
+      <p className="text-gray-600 mb-6 max-w-xs">
+        No hay solicitudes pendientes en esta comuna. Prueba con otra área o quita el filtro.
+      </p>
+      <Button
+        onClick={onClearFilter}
+        variant="outline"
+        className="flex items-center gap-2"
+      >
+        <X className="h-4 w-4" />
+        Quitar filtro
       </Button>
     </div>
   );
