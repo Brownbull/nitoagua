@@ -17,6 +17,7 @@ import {
   Calendar,
   MapPin,
   Radio,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRealtimeOrders } from "@/hooks/use-realtime-orders";
@@ -72,8 +73,17 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
     setIsMounted(true);
   }, []);
 
-  // Enable real-time updates
-  const { isConnected, lastUpdate } = useRealtimeOrders({ enabled: true });
+  // Enable real-time updates with manual refresh capability
+  const { isConnected, lastUpdate, refresh } = useRealtimeOrders({ enabled: true });
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Manual refresh handler with loading state
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    refresh();
+    // Add a small delay to show the loading state
+    setTimeout(() => setIsRefreshing(false), 500);
+  }, [refresh]);
 
   // Filter orders by search query (local filter)
   const filteredOrders = useMemo(() => {
@@ -182,22 +192,44 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
 
   return (
     <div className="space-y-4">
-      {/* Real-time Indicator - only show dynamic content after mount to avoid hydration mismatch */}
-      <div className="flex items-center justify-end gap-2">
-        <span className={cn(
-          "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium",
-          isMounted && isConnected
-            ? "bg-green-50 text-green-700"
-            : "bg-gray-100 text-gray-500"
-        )}>
-          <Radio className={cn("w-3 h-3", isMounted && isConnected && "animate-pulse")} />
-          {isMounted ? (isConnected ? "En vivo" : "Conectando...") : "Conectando..."}
-        </span>
-        {isMounted && lastUpdate && (
-          <span className="text-xs text-gray-400">
-            Actualizado: {format(lastUpdate, "HH:mm:ss")}
+      {/* Real-time Indicator with Refresh Button */}
+      <div className="flex items-center justify-between text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2">
+          {isRefreshing ? (
+            <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />
+          ) : isMounted && isConnected ? (
+            <Radio className="h-3 w-3 text-green-500 animate-pulse" />
+          ) : (
+            <Radio className="h-3 w-3 text-gray-400" />
+          )}
+          <span>
+            {isRefreshing
+              ? "Actualizando..."
+              : isMounted && isConnected
+              ? "En vivo"
+              : "Conectando..."}
           </span>
-        )}
+          {isMounted && lastUpdate && !isRefreshing && (
+            <span className="text-gray-400">
+              · {format(lastUpdate, "HH:mm:ss")}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className={cn(
+            "flex items-center gap-1",
+            isRefreshing
+              ? "text-gray-400 cursor-not-allowed"
+              : "text-blue-600 hover:text-blue-700"
+          )}
+          title="Actualizar pedidos"
+          data-testid="refresh-orders"
+        >
+          <RefreshCw className={cn("h-3 w-3", isRefreshing && "animate-spin")} />
+          <span>{isRefreshing ? "Actualizando..." : "Actualizar"}</span>
+        </button>
       </div>
 
       {/* Stats Cards - Scrollable (not sticky), Clickable Filters */}

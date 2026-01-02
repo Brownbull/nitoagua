@@ -123,9 +123,17 @@ export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
     };
   }, [enabled, handleOrderChange, handleOfferChange]);
 
+  // Manual refresh function for user-triggered updates
+  const refresh = useCallback(() => {
+    console.log("[Realtime] Manual refresh triggered");
+    router.refresh();
+    setLastUpdate(new Date());
+  }, [router]);
+
   return {
     isConnected,
     lastUpdate,
+    refresh,
   };
 }
 
