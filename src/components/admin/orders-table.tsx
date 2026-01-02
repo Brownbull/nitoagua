@@ -21,7 +21,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRealtimeOrders } from "@/hooks/use-realtime-orders";
-import type { OrderSummary, OrderStats } from "@/app/admin/orders/page";
+import { getAdminOrders } from "@/lib/actions/admin-orders";
+import type { OrderSummary, OrderStats } from "@/lib/actions/admin-orders";
 
 interface OrdersTableProps {
   orders: OrderSummary[];
@@ -58,7 +59,7 @@ const STATUS_OPTIONS = [
 
 const ITEMS_PER_PAGE = 25;
 
-export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTableProps) {
+export function OrdersTable({ orders: initialOrders, stats: initialStats, comunas: initialComunas, currentFilters }: OrdersTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,23 +68,63 @@ export function OrdersTable({ orders, stats, comunas, currentFilters }: OrdersTa
   const [localFilters, setLocalFilters] = useState(currentFilters);
   const [isMounted, setIsMounted] = useState(false);
 
+  // Local state for orders and stats - allows client-side refresh
+  const [orders, setOrders] = useState(initialOrders);
+  const [stats, setStats] = useState(initialStats);
+  const [comunas, setComunas] = useState(initialComunas);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   // Track when component is mounted to avoid hydration mismatch
-   
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Enable real-time updates with manual refresh capability
-  const { isConnected, lastUpdate, refresh } = useRealtimeOrders({ enabled: true });
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  // Update local state when initial props change (e.g., from URL filter changes)
+  useEffect(() => {
+    setOrders(initialOrders);
+    setStats(initialStats);
+    setComunas(initialComunas);
+  }, [initialOrders, initialStats, initialComunas]);
 
-  // Manual refresh handler with loading state
+  // Manual refresh handler - calls server action directly
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    refresh();
-    // Add a small delay to show the loading state
-    setTimeout(() => setIsRefreshing(false), 500);
-  }, [refresh]);
+    try {
+      console.log("[OrdersTable] Fetching fresh data...");
+      const result = await getAdminOrders({
+        status: currentFilters.status !== "all" ? currentFilters.status : undefined,
+        dateFrom: currentFilters.dateFrom || undefined,
+        dateTo: currentFilters.dateTo || undefined,
+        comuna: currentFilters.comuna !== "all" ? currentFilters.comuna : undefined,
+      });
+
+      if (result.success) {
+        console.log("[OrdersTable] Refreshed:", result.orders.length, "orders, stats:", result.stats);
+        setOrders(result.orders);
+        setStats(result.stats);
+        setComunas(result.comunas);
+      } else {
+        console.error("[OrdersTable] Refresh failed:", result.error);
+      }
+    } catch (err) {
+      console.error("[OrdersTable] Refresh error:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [currentFilters]);
+
+  // Enable real-time updates - now triggers handleRefresh instead of router.refresh
+  const { isConnected, lastUpdate } = useRealtimeOrders({
+    enabled: true,
+    onOrderChange: () => {
+      console.log("[OrdersTable] Realtime order change detected");
+      handleRefresh();
+    },
+    onOfferChange: () => {
+      console.log("[OrdersTable] Realtime offer change detected");
+      handleRefresh();
+    },
+  });
 
   // Filter orders by search query (local filter)
   const filteredOrders = useMemo(() => {
