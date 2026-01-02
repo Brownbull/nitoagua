@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { Wifi, WifiOff, RefreshCw, AlertCircle, Settings, InboxIcon, ArrowUpDown, X, ChevronDown } from "lucide-react";
+import { Wifi, WifiOff, RefreshCw, AlertCircle, Settings, InboxIcon, ArrowUpDown, X, ChevronDown, Calendar, ArrowUp, ArrowDown } from "lucide-react";
 import { RequestCard } from "@/components/provider/request-card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -334,6 +334,7 @@ function EmptyRequestsState({ onRefresh, isLoading }: { onRefresh: () => void; i
 
 /**
  * Sort and filter controls for the request list
+ * Layout: Comuna filter takes 3/4 width, sort toggle takes 1/4 width
  */
 function SortFilterControls({
   sortOrder,
@@ -349,27 +350,17 @@ function SortFilterControls({
   availableComunas: { id: string; name: string }[];
 }) {
   return (
-    <div className="flex flex-col sm:flex-row gap-3" data-testid="sort-filter-controls">
-      {/* Sort toggle */}
-      <button
-        onClick={() => onSortChange(sortOrder === "oldest" ? "newest" : "oldest")}
-        className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        data-testid="sort-toggle"
-      >
-        <ArrowUpDown className="h-4 w-4 text-orange-500" />
-        <span>{sortOrder === "oldest" ? "Más antiguos" : "Más recientes"}</span>
-      </button>
-
-      {/* Comuna filter dropdown */}
-      <div className="relative flex-1 sm:flex-initial">
+    <div className="flex gap-2" data-testid="sort-filter-controls">
+      {/* Comuna filter dropdown - takes 3/4 of the space */}
+      <div className="relative flex-3">
         {selectedComuna ? (
-          <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg">
-            <span className="text-sm font-medium text-orange-700">
+          <div className="flex items-center justify-between gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg h-10">
+            <span className="text-sm font-medium text-orange-700 truncate">
               {availableComunas.find((c) => c.id === selectedComuna)?.name}
             </span>
             <button
               onClick={() => onComunaChange(null)}
-              className="p-0.5 hover:bg-orange-100 rounded-full transition-colors"
+              className="p-0.5 hover:bg-orange-100 rounded-full transition-colors shrink-0"
               aria-label="Limpiar filtro"
               data-testid="clear-comuna-filter"
             >
@@ -381,7 +372,7 @@ function SortFilterControls({
             <select
               value=""
               onChange={(e) => onComunaChange(e.target.value || null)}
-              className="appearance-none w-full px-3 py-2 pr-8 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="appearance-none w-full px-3 py-2 pr-8 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent h-10"
               data-testid="comuna-filter"
             >
               <option value="">Filtrar por comuna</option>
@@ -395,6 +386,21 @@ function SortFilterControls({
           </div>
         )}
       </div>
+
+      {/* Sort toggle - compact with icons only, takes 1/4 of the space */}
+      <button
+        onClick={() => onSortChange(sortOrder === "oldest" ? "newest" : "oldest")}
+        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors h-10"
+        data-testid="sort-toggle"
+        title={sortOrder === "oldest" ? "Ordenado por más antiguos" : "Ordenado por más recientes"}
+      >
+        <Calendar className="h-4 w-4 text-orange-500 shrink-0" />
+        {sortOrder === "oldest" ? (
+          <ArrowUp className="h-4 w-4 text-gray-600 shrink-0" />
+        ) : (
+          <ArrowDown className="h-4 w-4 text-gray-600 shrink-0" />
+        )}
+      </button>
     </div>
   );
 }
