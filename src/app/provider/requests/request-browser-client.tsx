@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Wifi, WifiOff, RefreshCw, AlertCircle, Settings, InboxIcon } from "lucide-react";
 import { RequestCard } from "@/components/provider/request-card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useProviderRealtimeRequests } from "@/hooks/use-realtime-requests";
+import { getAvailableRequests } from "@/lib/actions/offers";
 import type { AvailableRequest, ProviderStatus } from "@/lib/actions/offers";
 
 interface RequestBrowserClientProps {
@@ -27,16 +28,36 @@ export function RequestBrowserClient({
   error,
 }: RequestBrowserClientProps) {
   const [requests, setRequests] = useState(initialRequests);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Set up real-time updates
   const {
     isConnected,
     connectionError,
-    refresh,
+    refresh: realtimeRefresh,
     isLoading: realtimeLoading,
   } = useProviderRealtimeRequests({
     enabled: providerStatus?.isVerified && providerStatus?.isAvailable,
   });
+
+  // Manual refresh that directly calls the server action
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      console.log("[RequestBrowser] Manual refresh triggered");
+      const result = await getAvailableRequests();
+      if (result.success && result.requests) {
+        console.log("[RequestBrowser] Fetched", result.requests.length, "requests");
+        setRequests(result.requests);
+      } else if (result.error) {
+        console.error("[RequestBrowser] Refresh error:", result.error);
+      }
+    } catch (err) {
+      console.error("[RequestBrowser] Refresh failed:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
 
   // Update requests when initial data changes (from router.refresh())
   useEffect(() => {
@@ -74,13 +95,13 @@ export function RequestBrowserClient({
       <ConnectionStatus
         isConnected={isConnected}
         connectionError={connectionError}
-        onRefresh={refresh}
-        isLoading={realtimeLoading}
+        onRefresh={handleRefresh}
+        isLoading={realtimeLoading || isRefreshing}
       />
 
       {/* Request list */}
       {requests.length === 0 ? (
-        <EmptyRequestsState onRefresh={refresh} />
+        <EmptyRequestsState onRefresh={handleRefresh} isLoading={isRefreshing} />
       ) : (
         <div className="space-y-3" data-testid="request-list">
           {requests.map((request) => (
@@ -110,7 +131,7 @@ function ConnectionStatus({
     <div className="flex items-center justify-between text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
       <div className="flex items-center gap-2">
         {isLoading ? (
-          <RefreshCw className="h-3 w-3 animate-spin" />
+          <RefreshCw className="h-3 w-3 animate-spin text-orange-500" />
         ) : isConnected ? (
           <Wifi className="h-3 w-3 text-green-500" />
         ) : (
@@ -118,7 +139,7 @@ function ConnectionStatus({
         )}
         <span>
           {isLoading
-            ? "Conectando..."
+            ? "Actualizando..."
             : isConnected
             ? "Actualizaciones en tiempo real"
             : connectionError
@@ -128,11 +149,16 @@ function ConnectionStatus({
       </div>
       <button
         onClick={onRefresh}
-        className="flex items-center gap-1 text-orange-600 hover:text-orange-700"
+        disabled={isLoading}
+        className={`flex items-center gap-1 ${
+          isLoading
+            ? "text-gray-400 cursor-not-allowed"
+            : "text-orange-600 hover:text-orange-700"
+        }`}
         title="Actualizar lista"
       >
-        <RefreshCw className="h-3 w-3" />
-        <span>Actualizar</span>
+        <RefreshCw className={`h-3 w-3 ${isLoading ? "animate-spin" : ""}`} />
+        <span>{isLoading ? "Actualizando..." : "Actualizar"}</span>
       </button>
     </div>
   );
@@ -225,7 +251,7 @@ function NoServiceAreasState() {
 /**
  * Empty state when no requests available
  */
-function EmptyRequestsState({ onRefresh }: { onRefresh: () => void }) {
+function EmptyRequestsState({ onRefresh, isLoading }: { onRefresh: () => void; isLoading?: boolean }) {
   return (
     <div
       className="flex flex-col items-center justify-center py-12 px-4 text-center"
@@ -245,9 +271,10 @@ function EmptyRequestsState({ onRefresh }: { onRefresh: () => void }) {
         onClick={onRefresh}
         variant="outline"
         className="flex items-center gap-2"
+        disabled={isLoading}
       >
-        <RefreshCw className="h-4 w-4" />
-        Actualizar
+        <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+        {isLoading ? "Actualizando..." : "Actualizar"}
       </Button>
     </div>
   );
