@@ -38,7 +38,7 @@ export async function triggerOfferAcceptedPush(
     title: "¡Tu oferta fue aceptada!",
     body: `Solicitud de ${amount.toLocaleString("es-CL")}L en ${comuna || "tu área"}`,
     icon: DEFAULT_ICON,
-    url: `/provider/offers`,
+    url: `/provider/deliveries/${requestId}`,
     tag: `offer-accepted-${requestId}`,
     data: {
       type: "offer_accepted",

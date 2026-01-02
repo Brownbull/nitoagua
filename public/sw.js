@@ -4,7 +4,7 @@
 
 // Version should be updated with each deploy for update detection
 // IMPORTANT: Increment version when push handlers change
-const SW_VERSION = "2.5.1";
+const SW_VERSION = "2.5.2";
 const CACHE_NAME = `nitoagua-v${SW_VERSION}`;
 
 // Assets to pre-cache on install
@@ -201,33 +201,52 @@ self.addEventListener("notificationclick", (event) => {
   // AC12.6.4: Close notification after click
   event.notification.close();
 
-  // Get the URL to navigate to
-  const urlToOpen = event.notification.data?.url || "/";
+  // Get the URL to navigate to (relative path)
+  const urlPath = event.notification.data?.url || "/";
+  // Build full URL
+  const urlToOpen = new URL(urlPath, self.location.origin).href;
+
+  console.log("[SW] Will navigate to:", urlToOpen);
 
   // Handle action clicks
   if (event.action === "view") {
     // "Ver detalles" action - same as clicking notification
   }
 
-  // AC12.6.4: Navigate to correct URL using clients.openWindow()
+  // AC12.6.4: Navigate to correct URL
+  // Strategy: Focus existing window and use postMessage to navigate,
+  // or open new window if no existing window found
   event.waitUntil(
     clients
-      .matchAll({ type: "window", includeUncontrolled: false })
+      .matchAll({ type: "window", includeUncontrolled: true })
       .then(async (windowClients) => {
-        // Try to find a controlled client to navigate
+        console.log("[SW] Found", windowClients.length, "window client(s)");
+
+        // First, try to find an existing window at our origin
         for (const client of windowClients) {
-          if (client.url.includes(self.location.origin) && "focus" in client) {
-            try {
-              // Navigate existing controlled window to the URL
-              await client.navigate(urlToOpen);
-              return client.focus();
-            } catch (e) {
-              // client.navigate() can fail if client is not controlled
-              console.log("[SW] Navigate failed, will open new window:", e.message);
+          const clientUrl = new URL(client.url);
+          if (clientUrl.origin === self.location.origin) {
+            console.log("[SW] Found existing window:", client.url);
+
+            // Try to focus the window first
+            if ("focus" in client) {
+              await client.focus();
             }
+
+            // Use postMessage to tell the app to navigate
+            // This works even for uncontrolled clients
+            client.postMessage({
+              type: "NOTIFICATION_CLICK",
+              url: urlPath,
+            });
+
+            console.log("[SW] Sent NOTIFICATION_CLICK message to client");
+            return;
           }
         }
-        // Open new window if no controlled client exists or navigate failed
+
+        // No existing window found, open new one
+        console.log("[SW] No existing window found, opening new one");
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
         }
