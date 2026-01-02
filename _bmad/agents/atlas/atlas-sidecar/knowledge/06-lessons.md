@@ -20,6 +20,8 @@
 | Enhanced logging for push triggers | Assumed triggers missing → Verify call sites |
 | Debounced realtime refresh (500ms) | `router.refresh()` on Realtime interrupts clicks → Debounce |
 | `.trim()` on VAPID keys | Whitespace in env vars → Silent VAPID init failure |
+| Refs pattern for realtime callbacks | useEffect re-runs on callback identity change → Connection loop |
+| "Render then Refresh" pattern | `force-dynamic` still serves cached HTML → Fetch on mount |
 | `merged-fixtures` import | `@playwright/test` import → Use merged-fixtures |
 | `waitForSettingsLoaded()` helper | `waitForTimeout(1000)` → Element-based waits |
 
@@ -408,4 +410,104 @@ grep -r "STATUS_CONFIG\|statusConfig" src/
 
 ---
 
-*Last verified: 2026-01-02 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix, Code Review 12.7-4*
+## Realtime Hook Connection Loop (Epic 12.7 Admin)
+
+**Problem:** Admin orders page showed "Conectando..." in an endless loop, and provider requests page had similar re-subscription issues.
+
+**Root Cause:** React useEffect dependency arrays included callback functions that were recreated on every render, causing the subscription effect to cleanup and re-run continuously.
+
+```typescript
+// ❌ WRONG - Callbacks recreated each render → infinite re-subscription
+useEffect(() => {
+  // ... setup subscription using handleChange
+  return () => cleanup();
+}, [enabled, handleChange]); // handleChange recreates → effect re-runs
+
+// ❌ WRONG - useCallback doesn't help if dependencies change
+const handleChange = useCallback(() => {
+  onOrderChange?.(); // onOrderChange is NEW on every parent render
+}, [onOrderChange]); // Still recreates when parent re-renders
+```
+
+**Solution:** Use refs pattern to keep callbacks stable:
+
+```typescript
+// ✅ CORRECT - Refs for callbacks, stable dependency array
+const onOrderChangeRef = useRef(onOrderChange);
+const onOfferChangeRef = useRef(onOfferChange);
+
+// Keep refs updated (doesn't trigger effect re-run)
+useEffect(() => {
+  onOrderChangeRef.current = onOrderChange;
+}, [onOrderChange]);
+
+useEffect(() => {
+  onOfferChangeRef.current = onOfferChange;
+}, [onOfferChange]);
+
+useEffect(() => {
+  if (!enabled) return;
+
+  // Handler uses refs - stable reference
+  const handleChange = () => {
+    onOrderChangeRef.current?.();
+  };
+
+  // ... setup subscription with handleChange
+  return () => cleanup();
+}, [enabled, router, debounceMs]); // Only re-subscribe when NEEDED
+```
+
+**Files Fixed:**
+- `src/hooks/use-realtime-orders.ts` - Admin orders hook
+- `src/hooks/use-realtime-requests.ts` - Provider requests hook
+
+**Key Insight:** When passing callbacks to custom hooks with Supabase Realtime subscriptions, the callback identity matters. Parent components create new function references on every render, which triggers useEffect re-runs. Use refs to decouple callback identity from subscription lifecycle.
+
+---
+
+## Stale Data on Page Load (Next.js Caching)
+
+**Problem:** Provider requests page showed "old requests" on initial load, but correct data after pressing refresh button.
+
+**Root Cause:** Even with `export const dynamic = "force-dynamic"`, Next.js can serve cached HTML from CDN. Server components render with stale data baked in.
+
+**Solution:** Fetch fresh data on component mount in addition to initial server render:
+
+```typescript
+// Page renders with initialRequests from server (fast initial paint)
+const [requests, setRequests] = useState(initialRequests);
+
+// Then immediately fetch fresh data
+useEffect(() => {
+  if (providerStatus?.isVerified && providerStatus?.isAvailable) {
+    handleRefresh(); // Call server action directly
+  }
+}, []); // Run once on mount
+
+const handleRefresh = useCallback(async () => {
+  const result = await getAvailableRequests(); // Server action
+  if (result.success && result.requests) {
+    setRequests(result.requests);
+  }
+}, []);
+```
+
+**Pattern:** "Render then Refresh"
+1. Render immediately with server data (avoids loading skeleton)
+2. Fetch fresh data on mount (guarantees current state)
+3. Update local state with fresh data
+
+**Why This Works:**
+- Server actions bypass CDN cache
+- User sees content immediately (no loading state)
+- Fresh data appears within milliseconds
+- Subsequent realtime updates maintain freshness
+
+**Applied To:**
+- `src/app/provider/requests/request-browser-client.tsx`
+- `src/components/admin/orders-table.tsx` (already had this pattern)
+
+---
+
+*Last verified: 2026-01-02 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix, Code Review 12.7-4, Realtime Connection Loop Fix Session*
