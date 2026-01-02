@@ -229,4 +229,148 @@ const debouncedRefresh = useCallback(() => {
 
 ---
 
-*Last verified: 2026-01-01 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Local Dev Setup, VAPID Whitespace Fix*
+---
+
+## Push Notification Reliability (Epic 12.7 Final)
+
+### Trigger Call Placement Matters
+
+**Problem:** `triggerOfferAcceptedPush` was inconsistent while `triggerNewOfferPush` worked reliably.
+
+**Root Cause:** Push was nested inside `notifyProviderOfferAccepted()` which performed multiple async DB queries before triggering the push. By the time push was triggered, the serverless function could terminate.
+
+**Solution:** Call push trigger directly in the parent function, not nested in fire-and-forget helpers:
+
+```typescript
+// ❌ WRONG - Push nested deep in async chain
+async function selectOffer(offerId) {
+  const dbResult = await supabase.rpc("accept_offer", ...);
+  if (dbResult.success) {
+    notifyProviderOfferAccepted(offerId).catch(...); // Push is inside here, 2+ async calls deep
+  }
+}
+
+// ✅ CORRECT - Push at top level, same as submitOffer pattern
+async function selectOffer(offerId) {
+  const dbResult = await supabase.rpc("accept_offer", ...);
+  if (dbResult.success) {
+    // Push immediately after success, before fire-and-forget helpers
+    triggerOfferAcceptedPush(offer.provider_id, request.id, request.amount, comunaName)
+      .catch((err) => console.error("[SelectOffer] Push error:", err));
+    // Then fire-and-forget the rest (in-app + email)
+    notifyProviderOfferAccepted(offerId).catch(...);
+  }
+}
+```
+
+**Key Insight:** `submitOffer()` works because it calls `triggerNewOfferPush()` directly after RPC success. Copy this pattern for all notification triggers.
+
+---
+
+## Notification Click Navigation (Epic 12.7 Final)
+
+### Service Worker + App Communication
+
+**Problem:** Clicking push notification opened new tab OR navigated to wrong page.
+
+**Root Cause:**
+1. `client.navigate()` fails on uncontrolled clients (when SW updates)
+2. URL in notification payload was wrong (`/provider/deliveries` instead of `/provider/deliveries/${requestId}`)
+
+**Solution:** Use `postMessage` pattern for reliable navigation:
+
+**Service Worker (sw.js):**
+```javascript
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const urlPath = event.notification.data?.url || "/";
+  const urlToOpen = new URL(urlPath, self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true })
+      .then(async (windowClients) => {
+        // Find existing window at our origin
+        for (const client of windowClients) {
+          if (new URL(client.url).origin === self.location.origin) {
+            if ("focus" in client) await client.focus();
+            // Use postMessage instead of client.navigate()
+            client.postMessage({ type: "NOTIFICATION_CLICK", url: urlPath });
+            return;
+          }
+        }
+        // No existing window, open new one
+        if (clients.openWindow) return clients.openWindow(urlToOpen);
+      })
+  );
+});
+```
+
+**App Component (ServiceWorkerRegistration.tsx):**
+```typescript
+"use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export function ServiceWorkerRegistration() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js");
+
+      const handleSWMessage = (event: MessageEvent) => {
+        if (event.data?.type === "NOTIFICATION_CLICK") {
+          router.push(event.data.url);
+        }
+      };
+
+      navigator.serviceWorker.addEventListener("message", handleSWMessage);
+      return () => navigator.serviceWorker.removeEventListener("message", handleSWMessage);
+    }
+  }, [router]);
+
+  return null;
+}
+```
+
+**Key Points:**
+- Use `includeUncontrolled: true` in `clients.matchAll()` - handles SW version mismatch
+- `postMessage` works even when client isn't controlled by SW
+- App uses Next.js `router.push()` for proper client-side navigation
+- Always include full path with ID in notification URL: `/provider/deliveries/${requestId}`
+
+---
+
+## Request Refresh Not Working (Epic 12.7)
+
+**Problem:** Provider requests page refresh button showed no indication and data stayed stale.
+
+**Root Cause:** `router.refresh()` was cached by Next.js, returning stale data.
+
+**Solution:** Call server action directly instead of relying on router refresh:
+
+```typescript
+// ❌ WRONG - Next.js may serve cached response
+const handleRefresh = () => {
+  router.refresh();
+};
+
+// ✅ CORRECT - Bypass cache by calling server action directly
+const handleRefresh = useCallback(async () => {
+  setIsRefreshing(true);
+  try {
+    const result = await getAvailableRequests(); // Server action
+    if (result.success && result.requests) {
+      setRequests(result.requests);
+    }
+  } finally {
+    setIsRefreshing(false);
+  }
+}, []);
+```
+
+**Added:** Visual feedback with spinner and "Actualizando..." text.
+
+---
+
+*Last verified: 2026-01-02 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix*
