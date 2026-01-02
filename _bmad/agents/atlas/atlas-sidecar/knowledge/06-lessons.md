@@ -1,7 +1,7 @@
 # Historical Lessons (Retrospectives)
 
 > Section 6 of Atlas Memory
-> Last Sync: 2025-12-30
+> Last Sync: 2026-01-02
 > Sources: Epic retrospectives, code reviews
 
 ## What Worked / What Failed
@@ -24,6 +24,9 @@
 | "Render then Refresh" pattern | `force-dynamic` still serves cached HTML → Fetch on mount |
 | `merged-fixtures` import | `@playwright/test` import → Use merged-fixtures |
 | `waitForSettingsLoaded()` helper | `waitForTimeout(1000)` → Element-based waits |
+| API routes for client calls | Server actions in client components → RSC render errors |
+| `.limit(1)` for existence checks | `.single()` returns 406 when no rows → Use `.limit(1)` |
+| RLS policies for inserts | Admin client requires env var → Use RLS if policy allows |
 
 ---
 
@@ -510,4 +513,157 @@ const handleRefresh = useCallback(async () => {
 
 ---
 
-*Last verified: 2026-01-02 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix, Code Review 12.7-4, Realtime Connection Loop Fix Session*
+---
+
+## Type Generation After Schema Changes (Epic 12.7)
+
+**Problem:** TypeScript build failed with "Argument of type 'disputes' is not assignable to parameter of type..." after adding new database table.
+
+**Root Cause:** `src/types/database.ts` wasn't updated after applying migration. Supabase client couldn't recognize the new table.
+
+**Solution:** Always regenerate types after schema changes:
+
+```bash
+# Via MCP tool
+mcp__supabase__generate_typescript_types
+
+# Then update src/types/database.ts with generated types
+```
+
+**Pattern:** Schema change → Generate types → Update database.ts → Build
+
+**Key Files:**
+- `supabase/migrations/` - Schema source of truth
+- `src/types/database.ts` - TypeScript types for Supabase client
+
+**Applied In:** Story 12.7-5 (Consumer Dispute Option)
+
+---
+
+## Consumer Dispute System (Story 12.7-5)
+
+**Pattern:** Dispute table with time window validation
+
+**Database Schema:**
+- `disputes` table with one-to-one constraint on `request_id` (UNIQUE)
+- 5 dispute types: `not_delivered`, `wrong_quantity`, `late_delivery`, `quality_issue`, `other`
+- 5 statuses: `open`, `under_review`, `resolved_consumer`, `resolved_provider`, `closed`
+- `dispute_window_hours` in `admin_settings` (default 48h)
+
+**RLS Pattern:** Optimized `(select auth.uid())` for performance:
+```sql
+CREATE POLICY "Consumers can create disputes"
+  ON disputes FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    consumer_id = (select auth.uid())
+    AND EXISTS (
+      SELECT 1 FROM water_requests wr
+      WHERE wr.id = disputes.request_id
+      AND wr.consumer_id = (select auth.uid())
+      AND wr.status = 'delivered'
+    )
+  );
+```
+
+**UI Pattern:** Two-step dialog flow
+1. Select dispute type (required)
+2. Confirm before submit (prevents accidental submissions)
+
+### Server Actions vs API Routes (Key Learning)
+
+**Problem:** Server actions called from client components caused "Server Components render" errors in production (Vercel), even with try-catch wrappers.
+
+**Root Cause:** Server action exports from `"use server"` files can cause RSC hydration issues when imported into client components, especially when the server action internally uses cookies/auth.
+
+**Solution:** Use Next.js API routes (`/api/disputes`) instead of server actions for client-side calls:
+
+```typescript
+// ❌ WRONG - Server action in client component
+import { createDispute } from "@/lib/actions/disputes";
+const result = await createDispute({ ... }); // RSC error in production
+
+// ✅ CORRECT - API route from client component
+const response = await fetch("/api/disputes", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ request_id, dispute_type, description }),
+});
+const result = await response.json();
+```
+
+**When to Use:**
+- **Server Actions:** Server components, form actions, server-to-server calls
+- **API Routes:** Client components making async calls (onClick handlers, useEffect)
+
+### Supabase `.single()` vs `.limit(1)` (Key Learning)
+
+**Problem:** Checking for existing dispute returned 406 Not Acceptable error.
+
+**Root Cause:** `.single()` returns HTTP 406 when no rows are found (expects exactly one row).
+
+**Solution:** Use `.limit(1)` and check array length for "maybe exists" queries:
+
+```typescript
+// ❌ WRONG - Returns 406 error when no dispute exists
+const { data: existingDispute, error } = await supabase
+  .from("disputes")
+  .select("id")
+  .eq("request_id", requestId)
+  .single(); // Throws 406 if no rows!
+
+// ✅ CORRECT - Returns empty array when no dispute exists
+const { data: existingDisputeArray } = await supabase
+  .from("disputes")
+  .select("id")
+  .eq("request_id", requestId)
+  .limit(1);
+
+if (existingDisputeArray && existingDisputeArray.length > 0) {
+  // Dispute exists
+}
+```
+
+**When to Use:**
+- **`.single()`:** Query MUST return exactly one row (e.g., by primary key)
+- **`.maybeSingle()`:** Query may return 0 or 1 row (returns null if none)
+- **`.limit(1)`:** Query may return 0+ rows, you only need first (safest for existence checks)
+
+### RLS vs Admin Client for Inserts
+
+**Problem:** Insert with admin client failed in Vercel preview (missing `SUPABASE_SERVICE_ROLE_KEY`).
+
+**Solution:** If RLS policy allows the operation, use regular authenticated client:
+
+```typescript
+// ❌ WRONG - Requires SERVICE_ROLE_KEY env var
+const adminClient = createAdminClientSafe();
+if (!adminClient) return { success: false, error: "Config error" };
+await adminClient.from("disputes").insert({ ... });
+
+// ✅ CORRECT - RLS policy already allows consumer inserts
+await supabase.from("disputes").insert({
+  request_id,
+  consumer_id: user.id, // RLS validates this matches auth.uid()
+  provider_id: waterRequest.supplier_id,
+  dispute_type,
+  description,
+  status: "open",
+});
+```
+
+**Key Insight:** Review RLS policies before reaching for admin client. If policy permits the operation, use regular client - it's more portable across environments.
+
+### Code Review Finding (12.7-5)
+
+**Problem:** Server action `canFileDispute()` used `.single()` for existence check, while API route correctly used `.limit(1)`.
+
+**Detection:** Atlas-enhanced code review compared implementation against Section 6 patterns and caught the violation.
+
+**Fix Applied:** Changed [src/lib/actions/disputes.ts:152](src/lib/actions/disputes.ts#L152) from `.single()` to `.limit(1)` pattern.
+
+**Prevention:** When implementing existence checks, always use `.limit(1)` pattern. Add this to code review checklist.
+
+---
+
+*Last verified: 2026-01-02 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4, 12.7-5), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix, Code Review 12.7-4, Code Review 12.7-5, Realtime Connection Loop Fix Session, Consumer Dispute Implementation*

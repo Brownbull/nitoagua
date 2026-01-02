@@ -163,6 +163,83 @@ export type Database = {
         }
         Relationships: []
       }
+      disputes: {
+        Row: {
+          consumer_id: string
+          created_at: string
+          description: string | null
+          dispute_type: string
+          evidence_url: string | null
+          id: string
+          provider_id: string
+          request_id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          consumer_id: string
+          created_at?: string
+          description?: string | null
+          dispute_type: string
+          evidence_url?: string | null
+          id?: string
+          provider_id: string
+          request_id: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          consumer_id?: string
+          created_at?: string
+          description?: string | null
+          dispute_type?: string
+          evidence_url?: string | null
+          id?: string
+          provider_id?: string
+          request_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "water_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Droplets,
@@ -10,6 +10,8 @@ import {
   RotateCcw,
   Loader2,
   MessageCircle,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,7 @@ import { CancelRequestButton } from "@/components/consumer/cancel-request-button
 import { NegativeStatusCard } from "@/components/consumer/negative-status-card";
 import { OfferList } from "@/components/consumer/offer-list";
 import { OfferSelectionModal } from "@/components/consumer/offer-selection-modal";
+import { DisputeDialog } from "@/components/consumer/dispute-dialog";
 import {
   formatDateSpanish,
   formatShortDate,
@@ -29,6 +32,33 @@ import { useRequestPolling } from "@/hooks/use-request-polling";
 import { useConsumerOffers, ConsumerOffer } from "@/hooks/use-consumer-offers";
 import { selectOffer } from "@/lib/actions/offers";
 import { notifyStatusChange } from "@/lib/notifications";
+import { type DisputeStatus } from "@/lib/actions/disputes";
+
+// Dispute interface for API response
+interface Dispute {
+  id: string;
+  request_id: string;
+  consumer_id: string;
+  provider_id: string;
+  dispute_type: string;
+  description: string | null;
+  evidence_url: string | null;
+  status: DisputeStatus;
+  resolution_notes: string | null;
+  resolved_by: string | null;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+}
+
+// Display labels for dispute status (Spanish) - defined locally to avoid server action export issues
+const DISPUTE_STATUS_LABELS: Record<DisputeStatus, string> = {
+  open: "Abierta",
+  under_review: "En revisión",
+  resolved_consumer: "Resuelta (a tu favor)",
+  resolved_provider: "Resuelta (a favor del proveedor)",
+  closed: "Cerrada",
+};
 
 interface RequestWithSupplier {
   id: string;
@@ -74,6 +104,14 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
 
+  // Dispute state - AC12.7.5.1
+  const [isDisputeDialogOpen, setIsDisputeDialogOpen] = useState(false);
+  const [canDispute, setCanDispute] = useState(false);
+  const [disputeReason, setDisputeReason] = useState<string | null>(null);
+  const [existingDispute, setExistingDispute] = useState<Dispute | null>(null);
+  const [disputeLoading, setDisputeLoading] = useState(true); // Start as loading
+  const [disputeError, setDisputeError] = useState(false);
+
   const { status: polledStatus, isPolling, data: polledData } = useRequestPolling(
     initialRequest.id,
     initialRequest.status,
@@ -95,6 +133,56 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
   } = useConsumerOffers(initialRequest.id, {
     enabled: isPendingStatus,
   });
+
+  // Check dispute eligibility for delivered requests - AC12.7.5.1
+  useEffect(() => {
+    const currentStatus = polledStatus || initialRequest.status;
+    if (currentStatus !== "delivered") {
+      setCanDispute(false);
+      setExistingDispute(null);
+      setDisputeLoading(false);
+      setDisputeError(false);
+      return;
+    }
+
+    const checkDispute = async () => {
+      setDisputeLoading(true);
+      setDisputeError(false);
+      try {
+        // Use API route instead of server action
+        const response = await fetch(`/api/disputes?requestId=${initialRequest.id}`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          if (result.data.existingDispute) {
+            setExistingDispute(result.data.existingDispute);
+            setCanDispute(false);
+          } else {
+            setCanDispute(result.data.canFile);
+            setDisputeReason(result.data.reason || null);
+          }
+        } else {
+          // API returned error, allow filing by default within window
+          console.warn("[RequestStatusClient] Dispute API error:", result.error);
+          setCanDispute(true);
+        }
+      } catch (err) {
+        console.error("[RequestStatusClient] Dispute check error:", err);
+        // On error, show the button anyway - let the dialog handle validation
+        setCanDispute(true);
+        setDisputeError(true);
+      } finally {
+        setDisputeLoading(false);
+      }
+    };
+
+    checkDispute();
+  }, [initialRequest.id, polledStatus, initialRequest.status]);
+
+  // Handle dispute created - reload to show updated state
+  const handleDisputeCreated = () => {
+    window.location.reload();
+  };
 
   // Merge polled data with initial request
   const request: RequestWithSupplier = polledData
@@ -379,16 +467,91 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
                 : "Entrega completada"}
             />
 
-            {/* Reorder button */}
+            {/* Reorder button - primary action */}
             <Button
               asChild
-              className="w-full bg-[#10B981] hover:bg-[#059669] rounded-xl py-4 text-base font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.3)]"
+              className="w-full bg-[#10B981] hover:bg-[#059669] rounded-xl py-4 text-base font-semibold shadow-[0_4px_14px_rgba(16,185,129,0.3)] mb-4"
             >
               <Link href="/">
                 <RotateCcw className="mr-2 h-5 w-5" />
                 Solicitar Agua de Nuevo
               </Link>
             </Button>
+
+            {/* Dispute Section - AC12.7.5.1, AC12.7.5.4 - at the end after primary action */}
+            <div className="bg-white rounded-xl p-4 shadow-sm" data-testid="dispute-section">
+              {disputeLoading ? (
+                // Loading state
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                  <span className="ml-2 text-sm text-gray-500">Cargando...</span>
+                </div>
+              ) : existingDispute ? (
+                // Show existing dispute status
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900" data-testid="dispute-status-label">
+                      Disputa en revisión
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5" data-testid="dispute-status-value">
+                      Estado: {DISPUTE_STATUS_LABELS[existingDispute.status]}
+                    </p>
+                  </div>
+                  <CheckCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                </div>
+              ) : canDispute ? (
+                // Show dispute button - AC12.7.5.1
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-amber-600">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="text-sm font-medium">¿Hay algún problema?</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                    onClick={() => setIsDisputeDialogOpen(true)}
+                    data-testid="dispute-button"
+                  >
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Reportar Problema
+                  </Button>
+                </div>
+              ) : disputeReason ? (
+                // Show reason why can't dispute
+                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                  <span data-testid="dispute-unavailable-reason">{disputeReason}</span>
+                </div>
+              ) : (
+                // Default fallback - show button anyway
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-amber-600">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="text-sm font-medium">¿Hay algún problema?</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                    onClick={() => setIsDisputeDialogOpen(true)}
+                    data-testid="dispute-button"
+                  >
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Reportar Problema
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Dispute Dialog */}
+            <DisputeDialog
+              requestId={request.id}
+              open={isDisputeDialogOpen}
+              onOpenChange={setIsDisputeDialogOpen}
+              onDisputeCreated={handleDisputeCreated}
+            />
           </>
         )}
 
