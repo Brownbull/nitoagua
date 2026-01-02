@@ -373,4 +373,39 @@ const handleRefresh = useCallback(async () => {
 
 ---
 
-*Last verified: 2026-01-02 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix*
+---
+
+## Status Config Duplication (Code Review 12.7-4)
+
+**Problem:** Status enum fix was incomplete - bug existed in TWO files but only ONE was fixed.
+
+**Root Cause:** Admin pages have duplicate `statusConfig` objects:
+- `src/components/admin/orders-table.tsx` - List view
+- `src/app/admin/orders/[id]/page.tsx` - Detail view
+
+Original fix only updated list page. Detail page still had `assigned` (wrong) instead of `accepted` (correct).
+
+**Solution:**
+1. **Always grep for ALL occurrences** when fixing enum/status mismatches
+2. Added `no_offers` status to both configs for consistency
+
+**Pattern to Follow:**
+```bash
+# When fixing status bugs, ALWAYS search all files
+grep -r "assigned" src/app/admin src/components/admin
+grep -r "STATUS_CONFIG\|statusConfig" src/
+```
+
+**Prevention:**
+- Consider extracting shared STATUS_CONFIG to `src/lib/constants/status.ts`
+- Add "search ALL files" to code review checklist for enum/status fixes
+
+**Code Review Also Found:**
+- Test file missing `assertNoErrorState(page)` after `page.goto()` - fixed by adding import + calls
+- Atlas Section 5 pattern violation corrected
+
+> **Key Insight:** Partial fixes are worse than no fix - they create inconsistent behavior that's hard to debug. When fixing enum mismatches, use grep to find ALL occurrences before considering the fix complete.
+
+---
+
+*Last verified: 2026-01-02 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix, Code Review 12.7-4*
