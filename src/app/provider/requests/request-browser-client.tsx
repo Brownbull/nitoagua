@@ -100,6 +100,17 @@ export function RequestBrowserClient({
     setRequests(initialRequests);
   }, [initialRequests]);
 
+  // Fetch fresh data on mount to avoid stale cache issues
+  // This ensures we always show current data even if Next.js serves cached HTML
+  useEffect(() => {
+    // Only auto-refresh if provider is verified and available
+    if (providerStatus?.isVerified && providerStatus?.isAvailable) {
+      console.log("[RequestBrowser] Initial fetch to ensure fresh data");
+      handleRefresh();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
+
   // Show error state
   if (error) {
     return (
