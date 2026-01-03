@@ -724,6 +724,20 @@ export interface GetMyOffersResult {
   error?: string;
 }
 
+// Types for the flat list view (v2.6.0 unified list)
+export type OfferFilterStatus = "pending" | "active_delivery" | "disputed" | "delivered";
+
+export interface FlatOfferWithRequest extends OfferWithRequest {
+  // Computed filter category for easy filtering
+  filterCategory: OfferFilterStatus;
+}
+
+export interface GetAllOffersResult {
+  success: boolean;
+  offers?: FlatOfferWithRequest[];
+  error?: string;
+}
+
 /**
  * Get provider's offers grouped by status
  * AC: 8.3.1 - Provider sees offers grouped: Pendientes, Aceptadas, Expiradas/Rechazadas
@@ -860,6 +874,138 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
   return {
     success: true,
     offers: grouped,
+  };
+}
+
+/**
+ * Get provider's offers as a flat list with filter categories
+ * Used for the unified offers list view (v2.6.0)
+ * Returns all offers with computed filter category for client-side filtering
+ */
+export async function getAllOffers(): Promise<GetAllOffersResult> {
+  const supabase = await createClient();
+  const adminClient = createAdminClient();
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
+  if (userError || !user) {
+    return createAuthError();
+  }
+
+  // Verify user is a provider
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return {
+      success: false,
+      error: "No se pudo obtener el perfil",
+    };
+  }
+
+  if (profile.role !== "supplier") {
+    return {
+      success: false,
+      error: "Esta funcionalidad es solo para proveedores",
+    };
+  }
+
+  // Query provider's offers with request details
+  const { data: offers, error: offersError } = await adminClient
+    .from("offers")
+    .select(`
+      id,
+      request_id,
+      status,
+      delivery_window_start,
+      delivery_window_end,
+      expires_at,
+      created_at,
+      message,
+      water_requests!offers_request_id_fkey(
+        id,
+        amount,
+        address,
+        is_urgent,
+        status,
+        comunas!water_requests_comuna_id_fkey(name),
+        disputes!disputes_request_id_fkey(id, status, dispute_type)
+      )
+    `)
+    .eq("provider_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (offersError) {
+    console.error("[Offers] Error fetching offers:", offersError);
+    return {
+      success: false,
+      error: "Error al cargar ofertas",
+    };
+  }
+
+  // Transform offers with computed filter category
+  const flatOffers: FlatOfferWithRequest[] = (offers || []).map((offer) => {
+    const request = offer.water_requests as unknown as {
+      id: string;
+      amount: number;
+      address: string;
+      is_urgent: boolean;
+      status: string;
+      comunas: { name: string } | null;
+      disputes: Array<{ id: string; status: string; dispute_type: string }> | null;
+    } | null;
+
+    // Get the first dispute if any exist
+    const dispute = request?.disputes?.[0] ?? null;
+
+    // Compute filter category based on status and dispute
+    let filterCategory: OfferFilterStatus;
+
+    if (offer.status === "active") {
+      filterCategory = "pending";
+    } else if (dispute && ["open", "under_review", "resolved_consumer", "resolved_provider"].includes(dispute.status)) {
+      filterCategory = "disputed";
+    } else if (offer.status === "accepted" && request?.status !== "delivered") {
+      filterCategory = "active_delivery";
+    } else {
+      // expired, cancelled, request_filled, or delivered
+      filterCategory = "delivered";
+    }
+
+    return {
+      id: offer.id,
+      request_id: offer.request_id,
+      status: offer.status as OfferWithRequest["status"],
+      delivery_window_start: offer.delivery_window_start,
+      delivery_window_end: offer.delivery_window_end,
+      expires_at: offer.expires_at,
+      created_at: offer.created_at,
+      message: offer.message,
+      request: request ? {
+        id: request.id,
+        amount: request.amount,
+        address: request.address,
+        is_urgent: request.is_urgent,
+        status: request.status,
+        comuna_name: request.comunas?.name ?? null,
+      } : null,
+      dispute: dispute ? {
+        id: dispute.id,
+        status: dispute.status,
+        disputeType: dispute.dispute_type,
+      } : null,
+      filterCategory,
+    };
+  });
+
+  return {
+    success: true,
+    offers: flatOffers,
   };
 }
 

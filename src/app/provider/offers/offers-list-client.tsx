@@ -1,61 +1,99 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   FileQuestion,
-  Clock,
-  CheckCircle2,
-  History,
   Send,
   Wifi,
   WifiOff,
   RefreshCw,
-  ChevronDown,
+  ChevronLeft,
   ChevronRight,
+  X,
+  ArrowUpDown,
+  Filter,
+  Clock,
+  Truck,
   AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 import { OfferCard } from "@/components/provider/offer-card";
 import { useProviderRealtimeOffers } from "@/hooks/use-realtime-offers";
 import { cn } from "@/lib/utils";
-import type { GroupedOffers } from "@/lib/actions/offers";
+import type { FlatOfferWithRequest, OfferFilterStatus } from "@/lib/actions/offers";
 
 interface OffersListClientProps {
-  initialOffers: GroupedOffers;
+  initialOffers: FlatOfferWithRequest[];
   newOfferId?: string;
   providerId: string;
 }
 
-const HISTORY_PAGE_SIZE = 10;
+const PAGE_SIZE = 10;
+
+// Filter status configuration
+const FILTER_OPTIONS: {
+  value: OfferFilterStatus;
+  label: string;
+  icon: React.ElementType;
+  activeClass: string;
+}[] = [
+  {
+    value: "pending",
+    label: "Pendientes",
+    icon: Clock,
+    activeClass: "bg-orange-500 text-white border-orange-500",
+  },
+  {
+    value: "active_delivery",
+    label: "Entregas activas",
+    icon: Truck,
+    activeClass: "bg-green-500 text-white border-green-500",
+  },
+  {
+    value: "disputed",
+    label: "En disputa",
+    icon: AlertTriangle,
+    activeClass: "bg-red-500 text-white border-red-500",
+  },
+  {
+    value: "delivered",
+    label: "Historial",
+    icon: CheckCircle,
+    activeClass: "bg-gray-500 text-white border-gray-500",
+  },
+];
+
+type SortOrder = "newest" | "oldest";
 
 /**
- * Client component for offers list with realtime updates
- * AC: 8.3.1 - Display offers grouped by status
- * AC: 8.3.5 - Real-time updates via Supabase Realtime
- * AC: 8.3.6 (Task 6) - Empty states for each section
+ * Unified Offers List Client (v2.6.0)
+ * Single list with multi-select filters, sorting, and pagination
+ * Default: Shows active_delivery filter selected
  */
 export function OffersListClient({
   initialOffers,
   newOfferId,
   providerId: _providerId,
 }: OffersListClientProps) {
-  const [offers, setOffers] = useState<GroupedOffers>(initialOffers);
+  const [offers, setOffers] = useState<FlatOfferWithRequest[]>(initialOffers);
   const [highlightedOfferId, setHighlightedOfferId] = useState<string | undefined>(newOfferId);
 
-  // Collapsible section states
-  const [pendingExpanded, setPendingExpanded] = useState(true);
-  const [acceptedExpanded, setAcceptedExpanded] = useState(true);
-  const [disputedExpanded, setDisputedExpanded] = useState(true);
-  const [historyExpanded, setHistoryExpanded] = useState(true);
+  // Filter state - default to active_delivery
+  const [selectedFilters, setSelectedFilters] = useState<Set<OfferFilterStatus>>(
+    new Set(["active_delivery"])
+  );
 
-  // History pagination
-  const [historyPage, setHistoryPage] = useState(1);
+  // Sort state
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Set up realtime subscription
-  // AC: 8.3.5 - Offers update in real-time (acceptance, expiration)
   const { isConnected, refresh } = useProviderRealtimeOffers({
     enabled: true,
   });
@@ -75,100 +113,109 @@ export function OffersListClient({
     }
   }, [highlightedOfferId]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedFilters, sortOrder]);
+
   // Handle offer withdrawal (optimistic update)
   const handleWithdraw = (offerId: string) => {
-    setOffers((prev) => ({
-      ...prev,
-      pending: prev.pending.filter((o) => o.id !== offerId),
-      history: [
-        {
-          ...prev.pending.find((o) => o.id === offerId)!,
-          status: "cancelled" as const,
-        },
-        ...prev.history,
-      ],
-    }));
+    setOffers((prev) =>
+      prev.map((o) =>
+        o.id === offerId
+          ? { ...o, status: "cancelled" as const, filterCategory: "delivered" as const }
+          : o
+      )
+    );
   };
 
   // Handle offer expiration (optimistic update)
   const handleExpire = (offerId: string) => {
-    setOffers((prev) => {
-      const expiredOffer = prev.pending.find((o) => o.id === offerId);
-      if (!expiredOffer) return prev;
+    setOffers((prev) =>
+      prev.map((o) =>
+        o.id === offerId
+          ? { ...o, status: "expired" as const, filterCategory: "delivered" as const }
+          : o
+      )
+    );
+  };
 
-      return {
-        ...prev,
-        pending: prev.pending.filter((o) => o.id !== offerId),
-        history: [
-          {
-            ...expiredOffer,
-            status: "expired" as const,
-          },
-          ...prev.history,
-        ],
-      };
+  // Toggle filter selection
+  const toggleFilter = (filter: OfferFilterStatus) => {
+    setSelectedFilters((prev) => {
+      const newFilters = new Set(prev);
+      if (newFilters.has(filter)) {
+        newFilters.delete(filter);
+      } else {
+        newFilters.add(filter);
+      }
+      return newFilters;
     });
   };
 
-  const totalOffers = offers.pending.length + offers.accepted.length + offers.disputed.length + offers.history.length;
-  const hasNoOffers = totalOffers === 0;
+  // Clear all filters
+  const clearFilters = () => {
+    setSelectedFilters(new Set());
+  };
 
-  // History pagination
-  const totalHistoryPages = Math.ceil(offers.history.length / HISTORY_PAGE_SIZE);
-  const paginatedHistory = offers.history.slice(
-    (historyPage - 1) * HISTORY_PAGE_SIZE,
-    historyPage * HISTORY_PAGE_SIZE
+  // Toggle sort order
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === "newest" ? "oldest" : "newest"));
+  };
+
+  // Filter and sort offers
+  const filteredAndSortedOffers = useMemo(() => {
+    let result = [...offers];
+
+    // Apply filters if any are selected
+    if (selectedFilters.size > 0) {
+      result = result.filter((o) => selectedFilters.has(o.filterCategory));
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
+    return result;
+  }, [offers, selectedFilters, sortOrder]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredAndSortedOffers.length / PAGE_SIZE);
+  const paginatedOffers = filteredAndSortedOffers.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
   );
 
-  // Section header component
-  const SectionHeader = ({
-    icon: Icon,
-    iconColor,
-    title,
-    count,
-    badgeColor,
-    expanded,
-    onToggle,
-  }: {
-    icon: React.ElementType;
-    iconColor: string;
-    title: string;
-    count: number;
-    badgeColor?: string;
-    expanded: boolean;
-    onToggle: () => void;
-  }) => (
-    <button
-      onClick={onToggle}
-      className="w-full flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg transition-colors"
-    >
-      <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-        <Icon className={cn("h-5 w-5", iconColor)} />
-        {title}
-        {count > 0 && (
-          <Badge className={cn("ml-1", badgeColor || "bg-gray-100 text-gray-600")}>
-            {count}
-          </Badge>
-        )}
-      </h2>
-      {expanded ? (
-        <ChevronDown className="h-5 w-5 text-gray-400" />
-      ) : (
-        <ChevronRight className="h-5 w-5 text-gray-400" />
-      )}
-    </button>
-  );
+  // Count offers by category for badges
+  const categoryCounts = useMemo(() => {
+    const counts: Record<OfferFilterStatus, number> = {
+      pending: 0,
+      active_delivery: 0,
+      disputed: 0,
+      delivered: 0,
+    };
+    offers.forEach((o) => {
+      counts[o.filterCategory]++;
+    });
+    return counts;
+  }, [offers]);
+
+  const hasNoOffers = offers.length === 0;
+  const hasNoFilteredResults = filteredAndSortedOffers.length === 0 && !hasNoOffers;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
       <div className="max-w-lg mx-auto px-4 py-6">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Mis Ofertas</h1>
               <p className="text-sm text-gray-600 mt-1">
-                Gestiona tus ofertas enviadas
+                {filteredAndSortedOffers.length} de {offers.length} ofertas
               </p>
             </div>
             {/* Connection status indicator */}
@@ -211,8 +258,74 @@ export function OffersListClient({
           </div>
         </div>
 
+        {/* Filters and Sort */}
+        <div className="mb-4 space-y-3">
+          {/* Filter chips */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-400 shrink-0" />
+            <div className="flex flex-wrap gap-2">
+              {FILTER_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                const isSelected = selectedFilters.has(option.value);
+                const count = categoryCounts[option.value];
+
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => toggleFilter(option.value)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all",
+                      isSelected
+                        ? option.activeClass
+                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{option.label}</span>
+                    {count > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "h-5 min-w-5 flex items-center justify-center text-xs px-1.5",
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-gray-100 text-gray-600"
+                        )}
+                      >
+                        {count}
+                      </Badge>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sort and Clear filters row */}
+          <div className="flex items-center justify-between">
+            {/* Sort button */}
+            <button
+              onClick={toggleSortOrder}
+              className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+              <span>{sortOrder === "newest" ? "Más recientes" : "Más antiguos"}</span>
+            </button>
+
+            {/* Clear filters */}
+            {selectedFilters.size > 0 && (
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-3.5 w-3.5" />
+                <span>Limpiar filtros</span>
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Global empty state - when no offers at all */}
-        {/* AC: Task 6 - Empty state when no offers exist */}
         {hasNoOffers && (
           <Card className="text-center py-12" data-testid="empty-state-global">
             <CardContent>
@@ -235,207 +348,70 @@ export function OffersListClient({
           </Card>
         )}
 
-        {/* Sections - only show if there are some offers */}
-        {!hasNoOffers && (
+        {/* No results for current filters */}
+        {hasNoFilteredResults && (
+          <Card className="text-center py-12" data-testid="empty-state-filtered">
+            <CardContent>
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Filter className="h-8 w-8 text-gray-400" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                Sin resultados
+              </h2>
+              <p className="text-gray-600 mb-4 max-w-xs mx-auto">
+                No hay ofertas que coincidan con los filtros seleccionados
+              </p>
+              <Button variant="outline" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-2" />
+                Limpiar filtros
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Offers list */}
+        {!hasNoOffers && !hasNoFilteredResults && (
           <>
-            {/* Pending Offers Section */}
-            {/* AC: 8.3.1 - "Pendientes" section */}
-            <section className="mb-6" data-testid="section-pending">
-              <SectionHeader
-                icon={Clock}
-                iconColor="text-orange-500"
-                title="Pendientes"
-                count={offers.pending.length}
-                badgeColor="bg-orange-100 text-orange-700"
-                expanded={pendingExpanded}
-                onToggle={() => setPendingExpanded(!pendingExpanded)}
-              />
+            <div className="space-y-3">
+              {paginatedOffers.map((offer) => (
+                <OfferCard
+                  key={offer.id}
+                  offer={offer}
+                  isNew={offer.id === highlightedOfferId}
+                  onWithdraw={handleWithdraw}
+                  onExpire={handleExpire}
+                />
+              ))}
+            </div>
 
-              {pendingExpanded && (
-                <>
-                  {offers.pending.length > 0 ? (
-                    <div className="space-y-3 mt-3">
-                      {offers.pending.map((offer) => (
-                        <OfferCard
-                          key={offer.id}
-                          offer={offer}
-                          isNew={offer.id === highlightedOfferId}
-                          onWithdraw={handleWithdraw}
-                          onExpire={handleExpire}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    /* AC: Task 6 - "No tienes ofertas pendientes" empty state */
-                    <Card
-                      className="text-center py-8 border-dashed mt-3"
-                      data-testid="empty-state-pending"
-                    >
-                      <CardContent>
-                        <p className="text-gray-500 text-sm mb-3">
-                          No tienes ofertas pendientes
-                        </p>
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
-                        >
-                          <Link href="/provider/requests">
-                            <Send className="h-4 w-4 mr-1" />
-                            Ver solicitudes disponibles
-                          </Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              )}
-            </section>
-
-            {/* Active Deliveries Section - AC: 8.5.5 */}
-            {/* AC: 8.3.1, AC: 8.5.5 - "Entregas Activas" section */}
-            <section className="mb-6" data-testid="section-accepted">
-              <SectionHeader
-                icon={CheckCircle2}
-                iconColor="text-green-500"
-                title="Entregas Activas"
-                count={offers.accepted.length}
-                badgeColor="bg-green-500 text-white"
-                expanded={acceptedExpanded}
-                onToggle={() => setAcceptedExpanded(!acceptedExpanded)}
-              />
-
-              {acceptedExpanded && (
-                <>
-                  {offers.accepted.length > 0 ? (
-                    <div className="space-y-3 mt-3">
-                      {offers.accepted.map((offer) => (
-                        <OfferCard key={offer.id} offer={offer} />
-                      ))}
-                    </div>
-                  ) : (
-                    /* AC: Task 6 - "Aún no tienes entregas activas" empty state */
-                    <Card
-                      className="text-center py-8 border-dashed mt-3"
-                      data-testid="empty-state-accepted"
-                    >
-                      <CardContent>
-                        <p className="text-gray-500 text-sm">
-                          Aún no tienes entregas activas
-                        </p>
-                        <p className="text-gray-400 text-xs mt-1">
-                          Cuando un consumidor acepte tu oferta, aparecerá aquí
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              )}
-            </section>
-
-            {/* Disputed Deliveries Section */}
-            <section className="mb-6" data-testid="section-disputed">
-              <SectionHeader
-                icon={AlertTriangle}
-                iconColor="text-red-500"
-                title="Disputas"
-                count={offers.disputed.length}
-                badgeColor="bg-red-100 text-red-700"
-                expanded={disputedExpanded}
-                onToggle={() => setDisputedExpanded(!disputedExpanded)}
-              />
-
-              {disputedExpanded && (
-                <>
-                  {offers.disputed.length > 0 ? (
-                    <div className="space-y-3 mt-3">
-                      {offers.disputed.map((offer) => (
-                        <OfferCard key={offer.id} offer={offer} />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card
-                      className="text-center py-8 border-dashed mt-3"
-                      data-testid="empty-state-disputed"
-                    >
-                      <CardContent>
-                        <p className="text-gray-500 text-sm">
-                          No tienes entregas disputadas
-                        </p>
-                        <p className="text-gray-400 text-xs mt-1">
-                          Las disputas de consumidores aparecerán aquí
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              )}
-            </section>
-
-            {/* History Section */}
-            {/* AC: 8.3.1 - "Historial" section (expired/cancelled/request_filled) */}
-            <section data-testid="section-history">
-              <SectionHeader
-                icon={History}
-                iconColor="text-gray-400"
-                title="Historial"
-                count={offers.history.length}
-                expanded={historyExpanded}
-                onToggle={() => setHistoryExpanded(!historyExpanded)}
-              />
-
-              {historyExpanded && (
-                <>
-                  {offers.history.length > 0 ? (
-                    <>
-                      <div className="space-y-3 mt-3">
-                        {paginatedHistory.map((offer) => (
-                          <OfferCard key={offer.id} offer={offer} />
-                        ))}
-                      </div>
-
-                      {/* Pagination controls */}
-                      {totalHistoryPages > 1 && (
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
-                            disabled={historyPage === 1}
-                          >
-                            Anterior
-                          </Button>
-                          <span className="text-sm text-gray-500">
-                            Página {historyPage} de {totalHistoryPages}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))}
-                            disabled={historyPage === totalHistoryPages}
-                          >
-                            Siguiente
-                          </Button>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    /* AC: Task 6 - "No tienes historial de ofertas" empty state */
-                    <Card
-                      className="text-center py-8 border-dashed opacity-75 mt-3"
-                      data-testid="empty-state-history"
-                    >
-                      <CardContent>
-                        <p className="text-gray-500 text-sm">
-                          No tienes historial de ofertas
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              )}
-            </section>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
+                <span className="text-sm text-gray-500">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1"
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

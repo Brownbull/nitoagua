@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getMyOffers } from "@/lib/actions/offers";
+import { getAllOffers } from "@/lib/actions/offers";
 import { OffersListClient } from "./offers-list-client";
 
 export const dynamic = "force-dynamic";
@@ -10,8 +10,8 @@ interface PageProps {
 }
 
 /**
- * Provider's Active Offers List Page
- * AC: 8.3.1 - Provider sees offers grouped: Pendientes, Aceptadas, Expiradas/Rechazadas
+ * Provider's Offers List Page (v2.6.0 - Unified List)
+ * Single filterable/sortable list with pagination
  */
 export default async function ProviderOffersPage({ searchParams }: PageProps) {
   const { new: newOfferId } = await searchParams;
@@ -42,8 +42,8 @@ export default async function ProviderOffersPage({ searchParams }: PageProps) {
     redirect("/provider/onboarding/pending");
   }
 
-  // Get provider's offers grouped by status using the server action
-  const result = await getMyOffers();
+  // Get provider's offers as flat list for unified view
+  const result = await getAllOffers();
 
   if (!result.success || !result.offers) {
     // Handle error case
