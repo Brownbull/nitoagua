@@ -88,6 +88,11 @@
 | 12.6 | Session handling | `requiresLogin` flag + client visibility checks |
 | 12.7 | Fixed panel layout | `flex flex-col` + `shrink-0` header/footer, `flex-1 overflow-y-auto` content |
 | 12.7 | Admin safe areas | `pb-safe` on bottom nav, `pb-20` on layout for mobile |
+| 12.7 | Pre-validation pattern | `withdrawOffer()` validates status BEFORE mutation - prevents race conditions |
+| 12.7 | Realtime query filtering | Consumer hook uses `.in("status", [...])` at query level, not client-side |
+| 12.7 | localStorage with URL priority | URL params take priority, then localStorage fallback, then defaults |
+| 12.7 | Dynamic year arrays | Generate year options dynamically: `Array.from({ length: currentYear - 2022 }, ...)` |
+| 12.7 | Silent refresh failures | Realtime refresh errors fail silently - user can retry manually |
 
 ---
 

@@ -18,6 +18,9 @@ import {
   MapPin,
   Radio,
   RefreshCw,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRealtimeOrders } from "@/hooks/use-realtime-orders";
@@ -59,6 +62,28 @@ const STATUS_OPTIONS = [
 
 const ITEMS_PER_PAGE = 25;
 
+// Sort options
+type SortField = "created_at" | "status" | "amount" | "comuna";
+type SortDirection = "asc" | "desc";
+
+const SORT_OPTIONS: { value: SortField; label: string }[] = [
+  { value: "created_at", label: "Fecha" },
+  { value: "status", label: "Estado" },
+  { value: "amount", label: "Cantidad" },
+  { value: "comuna", label: "Comuna" },
+];
+
+// Status order for sorting
+const STATUS_ORDER: Record<string, number> = {
+  pending: 1,
+  offers_pending: 2,
+  accepted: 3,
+  en_route: 4,
+  delivered: 5,
+  cancelled: 6,
+  no_offers: 7,
+};
+
 export function OrdersTable({ orders: initialOrders, stats: initialStats, comunas: initialComunas, currentFilters }: OrdersTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -67,6 +92,10 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState(currentFilters);
   const [isMounted, setIsMounted] = useState(false);
+
+  // Sorting state - default to newest first
+  const [sortField, setSortField] = useState<SortField>("created_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Local state for orders and stats - allows client-side refresh
   const [orders, setOrders] = useState(initialOrders);
@@ -90,7 +119,6 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      console.log("[OrdersTable] Fetching fresh data...");
       const result = await getAdminOrders({
         status: currentFilters.status !== "all" ? currentFilters.status : undefined,
         dateFrom: currentFilters.dateFrom || undefined,
@@ -99,15 +127,12 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
       });
 
       if (result.success) {
-        console.log("[OrdersTable] Refreshed:", result.orders.length, "orders, stats:", result.stats);
         setOrders(result.orders);
         setStats(result.stats);
         setComunas(result.comunas);
-      } else {
-        console.error("[OrdersTable] Refresh failed:", result.error);
       }
-    } catch (err) {
-      console.error("[OrdersTable] Refresh error:", err);
+    } catch {
+      // Silently fail - user can retry with refresh button
     } finally {
       setIsRefreshing(false);
     }
@@ -116,27 +141,59 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
   // Enable real-time updates - now triggers handleRefresh instead of router.refresh
   const { isConnected, lastUpdate } = useRealtimeOrders({
     enabled: true,
-    onOrderChange: () => {
-      console.log("[OrdersTable] Realtime order change detected");
-      handleRefresh();
-    },
-    onOfferChange: () => {
-      console.log("[OrdersTable] Realtime offer change detected");
-      handleRefresh();
-    },
+    onOrderChange: handleRefresh,
+    onOfferChange: handleRefresh,
   });
 
-  // Filter orders by search query (local filter)
+  // Filter and sort orders
   const filteredOrders = useMemo(() => {
-    if (!searchQuery.trim()) return orders;
-    const query = searchQuery.toLowerCase();
-    return orders.filter(order =>
-      order.id.toLowerCase().includes(query) ||
-      order.consumer_name.toLowerCase().includes(query) ||
-      order.consumer_phone.includes(query) ||
-      order.address.toLowerCase().includes(query)
-    );
-  }, [orders, searchQuery]);
+    // First filter by search query
+    let result = orders;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = orders.filter(order =>
+        order.id.toLowerCase().includes(query) ||
+        order.consumer_name.toLowerCase().includes(query) ||
+        order.consumer_phone.includes(query) ||
+        order.address.toLowerCase().includes(query)
+      );
+    }
+
+    // Then sort
+    return [...result].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortField) {
+        case "created_at":
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case "status":
+          comparison = (STATUS_ORDER[a.status] || 99) - (STATUS_ORDER[b.status] || 99);
+          break;
+        case "amount":
+          comparison = a.amount - b.amount;
+          break;
+        case "comuna":
+          comparison = (a.comuna || "").localeCompare(b.comuna || "");
+          break;
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [orders, searchQuery, sortField, sortDirection]);
+
+  // Handle sort change
+  const handleSort = useCallback((field: SortField) => {
+    if (field === sortField) {
+      // Toggle direction if same field
+      setSortDirection(d => d === "asc" ? "desc" : "asc");
+    } else {
+      // New field, default to desc (newest/highest first)
+      setSortField(field);
+      setSortDirection("desc");
+    }
+    setCurrentPage(1);
+  }, [sortField]);
 
   // Paginate
   const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
@@ -336,6 +393,35 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
               className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
               data-testid="orders-search"
             />
+          </div>
+
+          {/* Sort Selector */}
+          <div className="relative">
+            <select
+              value={sortField}
+              onChange={(e) => handleSort(e.target.value as SortField)}
+              className="appearance-none pl-8 pr-8 py-2.5 border border-gray-200 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 cursor-pointer"
+              data-testid="sort-field"
+            >
+              {SORT_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <button
+              onClick={() => setSortDirection(d => d === "asc" ? "desc" : "asc")}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+              title={sortDirection === "asc" ? "Ascendente" : "Descendente"}
+              data-testid="sort-direction"
+            >
+              {sortDirection === "asc" ? (
+                <ArrowUp className="w-3.5 h-3.5 text-gray-600" />
+              ) : (
+                <ArrowDown className="w-3.5 h-3.5 text-gray-600" />
+              )}
+            </button>
           </div>
 
           {/* Filter Toggle Button */}
