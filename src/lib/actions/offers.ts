@@ -948,6 +948,17 @@ export async function getAllOffers(): Promise<GetAllOffersResult> {
     };
   }
 
+  // Debug: Log first few offers to check disputes
+  console.log("[Offers] Sample offers with disputes:", JSON.stringify(
+    (offers || []).slice(0, 3).map(o => ({
+      id: o.id,
+      status: o.status,
+      request: o.water_requests,
+    })),
+    null,
+    2
+  ));
+
   // Transform offers with computed filter category
   const flatOffers: FlatOfferWithRequest[] = (offers || []).map((offer) => {
     const request = offer.water_requests as unknown as {
