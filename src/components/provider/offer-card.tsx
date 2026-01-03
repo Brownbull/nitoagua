@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { MapPin, Droplets, Sparkles, XCircle, Eye, Loader2, Send, AlertTriangle } from "lucide-react";
+import { MapPin, Droplets, Sparkles, XCircle, Eye, Loader2, Send, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
@@ -141,29 +141,47 @@ function OfferCardComponent({ offer, isNew = false, onWithdraw, onExpire }: Offe
                   Nueva
                 </Badge>
               )}
-              {/* Dispute indicator */}
+              {/* Dispute indicator - shows status with appropriate icon and color */}
               {offer.dispute && (
                 <Badge
                   className={
-                    offer.dispute.status === "open" || offer.dispute.status === "under_review"
+                    offer.dispute.status === "open"
                       ? "bg-red-100 text-red-700 flex items-center gap-1"
-                      : offer.dispute.status === "resolved_provider"
-                        ? "bg-blue-100 text-blue-700 flex items-center gap-1"
-                        : offer.dispute.status === "resolved_consumer"
-                          ? "bg-amber-100 text-amber-700 flex items-center gap-1"
-                          : "bg-gray-100 text-gray-700 flex items-center gap-1"
+                      : offer.dispute.status === "under_review"
+                        ? "bg-amber-100 text-amber-700 flex items-center gap-1"
+                        : offer.dispute.status === "resolved_provider"
+                          ? "bg-green-100 text-green-700 flex items-center gap-1"
+                          : offer.dispute.status === "resolved_consumer"
+                            ? "bg-gray-100 text-gray-600 flex items-center gap-1"
+                            : "bg-gray-100 text-gray-700 flex items-center gap-1"
                   }
                 >
-                  <AlertTriangle className="h-3 w-3" />
-                  {offer.dispute.status === "open"
-                    ? "Disputa"
-                    : offer.dispute.status === "under_review"
-                      ? "En Revisión"
-                      : offer.dispute.status === "resolved_provider"
-                        ? "Resuelta ✓"
-                        : offer.dispute.status === "resolved_consumer"
-                          ? "Disputa resuelta"
-                          : "Disputa"}
+                  {offer.dispute.status === "open" ? (
+                    <>
+                      <AlertTriangle className="h-3 w-3" />
+                      Disputa abierta
+                    </>
+                  ) : offer.dispute.status === "under_review" ? (
+                    <>
+                      <Clock className="h-3 w-3" />
+                      En revisión
+                    </>
+                  ) : offer.dispute.status === "resolved_provider" ? (
+                    <>
+                      <CheckCircle className="h-3 w-3" />
+                      A tu favor
+                    </>
+                  ) : offer.dispute.status === "resolved_consumer" ? (
+                    <>
+                      <XCircle className="h-3 w-3" />
+                      En contra
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="h-3 w-3" />
+                      Disputa
+                    </>
+                  )}
                 </Badge>
               )}
             </div>
