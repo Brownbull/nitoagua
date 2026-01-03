@@ -86,6 +86,8 @@
 | 12.5 | React memoization | `memo()`, `useMemo()`, `useCallback()` for list items |
 | 12.5 | Bundle aliasing | Zod locale exclusion in `next.config.ts` |
 | 12.6 | Session handling | `requiresLogin` flag + client visibility checks |
+| 12.7 | Fixed panel layout | `flex flex-col` + `shrink-0` header/footer, `flex-1 overflow-y-auto` content |
+| 12.7 | Admin safe areas | `pb-safe` on bottom nav, `pb-20` on layout for mobile |
 
 ---
 
@@ -100,6 +102,24 @@
 ### Vercel Caching Prevention
 Pages with realtime DB queries need: `export const dynamic = "force-dynamic";`
 - `/admin/verification`, `/admin/orders`, `/admin/dashboard`
+
+### Fixed Slide-in Panel Pattern (Story 12.7-7)
+When creating slide-in panels with action buttons at bottom:
+```tsx
+<div className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl z-60 flex flex-col">
+  {/* Header - shrink-0 prevents shrinking */}
+  <div className="shrink-0 border-b px-5 py-4">Header</div>
+
+  {/* Scrollable content - flex-1 takes remaining space */}
+  <div className="flex-1 overflow-y-auto p-5">Content</div>
+
+  {/* Sticky footer with safe area - shrink-0 prevents shrinking */}
+  <div className="shrink-0 border-t p-4 safe-area-bottom">Actions</div>
+</div>
+```
+- Used in: `ProviderDetailPanel`
+- Key: `flex flex-col` on container, `shrink-0` on fixed height elements
+- Note: Use `z-60` to layer above bottom nav (`z-50`)
 
 ### RLS Policy Performance
 ```sql
@@ -133,4 +153,4 @@ Current (v2.4.0): 1.70 MB total, 196.8 KB largest
 
 ---
 
-*Last verified: 2025-12-30 | Sources: architecture.md, Epic 8-12.6 code reviews*
+*Last verified: 2026-01-03 | Sources: architecture.md, Epic 8-12.7 code reviews*

@@ -109,7 +109,7 @@ export function AdminBottomNav() {
 
       {/* Main bottom navigation */}
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50"
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50 pb-safe"
         data-testid="admin-bottom-nav"
       >
         <div className="grid grid-cols-5 w-full">

@@ -28,8 +28,8 @@ export default async function AdminLayout({
       {/* Sidebar - desktop only, show if authenticated AND admin */}
       {showNav && <AdminSidebar userEmail={userEmail} />}
 
-      {/* Main content - add bottom padding on mobile for bottom nav */}
-      <main className={showNav ? "flex-1 overflow-auto pb-16 lg:pb-0" : "flex-1"}>
+      {/* Main content - add bottom padding on mobile for bottom nav + safe area */}
+      <main className={showNav ? "flex-1 overflow-auto pb-20 lg:pb-0" : "flex-1"}>
         {children}
       </main>
 

@@ -191,13 +191,13 @@ export function ProviderDetailPanel({
         data-testid="panel-backdrop"
       />
 
-      {/* Panel */}
+      {/* Panel - z-60 to be above bottom nav (z-50) */}
       <div
-        className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl z-50 overflow-y-auto"
+        className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl z-60 flex flex-col"
         data-testid="provider-detail-panel"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+        <div className="shrink-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900">Detalles del Proveedor</h2>
           <button
             onClick={onClose}
@@ -208,7 +208,8 @@ export function ProviderDetailPanel({
           </button>
         </div>
 
-        <div className="p-5 space-y-6">
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-6">
           {/* Profile Header */}
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
@@ -318,53 +319,53 @@ export function ProviderDetailPanel({
               Ver documentos y perfil completo
             </a>
           </section>
+        </div>
 
-          {/* Actions */}
-          <section className="space-y-3 pt-2">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Acciones
-            </h4>
+        {/* Sticky Action Buttons - Always visible at bottom, with padding for mobile bottom nav */}
+        <div className="shrink-0 bg-white border-t border-gray-100 p-4 pb-20 lg:pb-4 space-y-3 safe-area-bottom">
+          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Acciones
+          </h4>
 
-            {canUnsuspend && (
-              <button
-                onClick={handleUnsuspend}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
-                data-testid="unsuspend-btn"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RotateCcw className="w-4 h-4" />
-                )}
-                Reactivar Proveedor
-              </button>
-            )}
+          {canUnsuspend && (
+            <button
+              onClick={handleUnsuspend}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
+              data-testid="unsuspend-btn"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RotateCcw className="w-4 h-4" />
+              )}
+              Reactivar Proveedor
+            </button>
+          )}
 
-            {canSuspend && (
-              <button
-                onClick={() => setShowSuspendDialog(true)}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 text-white rounded-xl text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 transition-colors"
-                data-testid="suspend-btn"
-              >
-                <AlertTriangle className="w-4 h-4" />
-                Suspender Proveedor
-              </button>
-            )}
+          {canSuspend && (
+            <button
+              onClick={() => setShowSuspendDialog(true)}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 text-white rounded-xl text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 transition-colors"
+              data-testid="suspend-btn"
+            >
+              <AlertTriangle className="w-4 h-4" />
+              Suspender Proveedor
+            </button>
+          )}
 
-            {canBan && (
-              <button
-                onClick={() => setShowBanDialog(true)}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
-                data-testid="ban-btn"
-              >
-                <Ban className="w-4 h-4" />
-                Banear Proveedor
-              </button>
-            )}
-          </section>
+          {canBan && (
+            <button
+              onClick={() => setShowBanDialog(true)}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+              data-testid="ban-btn"
+            >
+              <Ban className="w-4 h-4" />
+              Banear Proveedor
+            </button>
+          )}
         </div>
       </div>
 
