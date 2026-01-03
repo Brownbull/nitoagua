@@ -11,6 +11,7 @@ import {
   XCircle,
   TrendingUp,
   RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { formatPrice } from "@/lib/validations/request";
 import { MetricCard } from "./metric-card";
@@ -250,6 +251,37 @@ export function DashboardMetrics({
           </div>
         </div>
       </div>
+
+      {/* Disputes Section */}
+      {metrics.disputes && metrics.disputes.totalActiveCount > 0 && (
+        <div data-testid="disputes-section">
+          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+            Disputas Activas
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <MetricCard
+              icon={AlertTriangle}
+              iconBgColor="bg-red-100"
+              iconColor="text-red-600"
+              label="Nuevas"
+              value={metrics.disputes.openCount}
+              subtext="por revisar"
+              href="/admin/disputes"
+              testId="metric-disputes-open"
+            />
+            <MetricCard
+              icon={Clock}
+              iconBgColor="bg-amber-100"
+              iconColor="text-amber-600"
+              label="En Revisión"
+              value={metrics.disputes.underReviewCount}
+              subtext="en progreso"
+              href="/admin/disputes"
+              testId="metric-disputes-review"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Provider Metrics Section */}
       <div data-testid="providers-section">

@@ -75,10 +75,11 @@ export default function HistoryPage() {
       }
 
       // Fetch all requests for this consumer with dispute info
+      // Note: Explicit FK hint required for nested join to work correctly
       const { data: requestsData, error } = await supabase
         .from("water_requests")
         .select(
-          "id, status, amount, address, is_urgent, created_at, delivered_at, disputes(id)"
+          "id, status, amount, address, is_urgent, created_at, delivered_at, disputes!disputes_request_id_fkey(id)"
         )
         .eq("consumer_id", user.id)
         .order("created_at", { ascending: false });
