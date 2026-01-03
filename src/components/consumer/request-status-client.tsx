@@ -489,18 +489,26 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
               ) : existingDispute ? (
                 // Show existing dispute status
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" aria-hidden="true" />
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    existingDispute.status.startsWith("resolved") ? "bg-green-100" : "bg-amber-100"
+                  }`}>
+                    {existingDispute.status.startsWith("resolved") ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-amber-600" aria-hidden="true" />
+                    )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900" data-testid="dispute-status-label">
-                      Disputa en revisión
+                      {existingDispute.status.startsWith("resolved") ? "Disputa resuelta" : "Disputa en revisión"}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5" data-testid="dispute-status-value">
-                      Estado: {DISPUTE_STATUS_LABELS[existingDispute.status]}
+                      {DISPUTE_STATUS_LABELS[existingDispute.status]}
                     </p>
                   </div>
-                  <CheckCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                  <CheckCircle className={`h-5 w-5 flex-shrink-0 ${
+                    existingDispute.status.startsWith("resolved") ? "text-green-500" : "text-amber-500"
+                  }`} />
                 </div>
               ) : canDispute ? (
                 // Show dispute button - AC12.7.5.1

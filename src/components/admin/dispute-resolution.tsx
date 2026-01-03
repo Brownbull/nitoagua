@@ -55,9 +55,9 @@ export function DisputeResolution({ disputeId }: DisputeResolutionProps) {
         return;
       }
 
-      // Refresh the page to show updated status
-      router.refresh();
+      // Redirect to disputes list to show updated status
       setShowConfirmDialog(false);
+      router.push("/admin/disputes");
     } catch (err) {
       console.error("Error resolving dispute:", err);
       setError("Error inesperado. Intenta de nuevo.");

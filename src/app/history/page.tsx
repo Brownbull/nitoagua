@@ -89,14 +89,6 @@ export default function HistoryPage() {
         return;
       }
 
-      // Debug: log first request with dispute data
-      if (requestsData && requestsData.length > 0) {
-        const withDisputes = requestsData.filter((r) => r.disputes && (r.disputes as unknown[]).length > 0);
-        if (withDisputes.length > 0) {
-          console.log("[History] Requests with disputes:", withDisputes.length);
-        }
-      }
-
       // Transform data to include has_dispute flag
       const typedRequests = (requestsData || []).map((r) => ({
         id: r.id,
