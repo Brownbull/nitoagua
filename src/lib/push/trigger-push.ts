@@ -290,3 +290,44 @@ export async function triggerRequestCancelledPush(
     console.error("[TriggerPush] Error sending request_cancelled push:", error);
   }
 }
+
+/**
+ * Send push for dispute resolved notification
+ * Both consumer and provider receive push when admin resolves a dispute
+ *
+ * @param userId - The user ID (consumer or provider)
+ * @param requestId - The request ID
+ * @param message - The resolution message
+ * @param isProvider - Whether this is for a provider (affects URL)
+ */
+export async function triggerDisputeResolvedPush(
+  userId: string,
+  requestId: string,
+  message: string,
+  isProvider: boolean
+): Promise<void> {
+  console.log(
+    `[TriggerPush] triggerDisputeResolvedPush called - user: ${userId}, request: ${requestId}, isProvider: ${isProvider}`
+  );
+
+  // Route to appropriate view based on user type
+  const url = isProvider ? `/provider/offers` : `/request/${requestId}`;
+
+  const notification: PushPayload = {
+    title: "Disputa Resuelta",
+    body: message,
+    icon: DEFAULT_ICON,
+    url,
+    tag: `dispute-resolved-${requestId}`,
+    data: {
+      type: "dispute_resolved",
+      request_id: requestId,
+    },
+  };
+
+  try {
+    await sendPushToUser(userId, notification);
+  } catch (error) {
+    console.error("[TriggerPush] Error sending dispute_resolved push:", error);
+  }
+}

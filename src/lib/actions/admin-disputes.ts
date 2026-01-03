@@ -9,6 +9,7 @@ import {
   RESOLVABLE_STATUSES,
   type ResolutionType,
 } from "@/lib/utils/dispute-constants";
+import { triggerDisputeResolvedPush } from "@/lib/push/trigger-push";
 
 // Re-export the type for use by components
 export type { ResolutionType } from "@/lib/utils/dispute-constants";
@@ -125,6 +126,27 @@ export async function resolveDispute(
   if (notifyError) {
     // Log but don't fail - dispute is already resolved
     console.error("[ADMIN-DISPUTES] Error creating notifications:", notifyError.message);
+  }
+
+  // Send push notifications to both consumer and provider
+  try {
+    await Promise.all([
+      triggerDisputeResolvedPush(
+        dispute.consumer_id,
+        dispute.request_id,
+        consumerMessage,
+        false // isProvider = false
+      ),
+      triggerDisputeResolvedPush(
+        dispute.provider_id,
+        dispute.request_id,
+        providerMessage,
+        true // isProvider = true
+      ),
+    ]);
+  } catch (pushError) {
+    // Log but don't fail - dispute is already resolved
+    console.error("[ADMIN-DISPUTES] Error sending push notifications:", pushError);
   }
 
   console.log(

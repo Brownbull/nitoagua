@@ -74,13 +74,10 @@ export default function HistoryPage() {
         setUserName(profile.name);
       }
 
-      // Fetch all requests for this consumer with dispute info
-      // Note: Explicit FK hint required for nested join to work correctly
+      // Fetch all requests for this consumer
       const { data: requestsData, error } = await supabase
         .from("water_requests")
-        .select(
-          "id, status, amount, address, is_urgent, created_at, delivered_at, disputes!disputes_request_id_fkey(id)"
-        )
+        .select("id, status, amount, address, is_urgent, created_at, delivered_at")
         .eq("consumer_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -89,6 +86,17 @@ export default function HistoryPage() {
         setLoading(false);
         return;
       }
+
+      // Fetch consumer's disputes separately (RLS allows consumers to see their own disputes)
+      const { data: disputesData } = await supabase
+        .from("disputes")
+        .select("request_id")
+        .eq("consumer_id", user.id);
+
+      // Create a set of request IDs that have disputes
+      const requestsWithDisputes = new Set(
+        (disputesData || []).map((d) => d.request_id)
+      );
 
       // Transform data to include has_dispute flag
       const typedRequests = (requestsData || []).map((r) => ({
@@ -99,7 +107,7 @@ export default function HistoryPage() {
         is_urgent: r.is_urgent,
         created_at: r.created_at,
         delivered_at: r.delivered_at,
-        has_dispute: Array.isArray(r.disputes) && r.disputes.length > 0,
+        has_dispute: requestsWithDisputes.has(r.id),
       })) as WaterRequest[];
       setRequests(typedRequests);
 
