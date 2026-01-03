@@ -10,6 +10,7 @@ import {
   History,
   ChevronRight,
   Check,
+  AlertTriangle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ConsumerNav } from "@/components/layout/consumer-nav";
@@ -25,6 +26,7 @@ interface WaterRequest {
   is_urgent: boolean;
   created_at: string;
   delivered_at: string | null;
+  has_dispute?: boolean;
 }
 
 interface Statistics {
@@ -72,11 +74,11 @@ export default function HistoryPage() {
         setUserName(profile.name);
       }
 
-      // Fetch all requests for this consumer
+      // Fetch all requests for this consumer with dispute info
       const { data: requestsData, error } = await supabase
         .from("water_requests")
         .select(
-          "id, status, amount, address, is_urgent, created_at, delivered_at"
+          "id, status, amount, address, is_urgent, created_at, delivered_at, disputes(id)"
         )
         .eq("consumer_id", user.id)
         .order("created_at", { ascending: false });
@@ -87,7 +89,17 @@ export default function HistoryPage() {
         return;
       }
 
-      const typedRequests = (requestsData || []) as WaterRequest[];
+      // Transform data to include has_dispute flag
+      const typedRequests = (requestsData || []).map((r) => ({
+        id: r.id,
+        status: r.status,
+        amount: r.amount,
+        address: r.address,
+        is_urgent: r.is_urgent,
+        created_at: r.created_at,
+        delivered_at: r.delivered_at,
+        has_dispute: Array.isArray(r.disputes) && r.disputes.length > 0,
+      })) as WaterRequest[];
       setRequests(typedRequests);
 
       // Calculate statistics
@@ -294,12 +306,16 @@ export default function HistoryPage() {
                   {/* Status icon */}
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      request.status === "delivered"
-                        ? "bg-green-100"
-                        : "bg-amber-100"
+                      request.has_dispute
+                        ? "bg-red-100"
+                        : request.status === "delivered"
+                          ? "bg-green-100"
+                          : "bg-amber-100"
                     }`}
                   >
-                    {request.status === "delivered" ? (
+                    {request.has_dispute ? (
+                      <AlertTriangle className="h-5 w-5 text-red-600" />
+                    ) : request.status === "delivered" ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <Clock className="h-5 w-5 text-amber-600" />
@@ -321,6 +337,12 @@ export default function HistoryPage() {
 
                   {/* Status and arrow */}
                   <div className="flex items-center gap-2">
+                    {request.has_dispute && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                        <AlertTriangle className="h-3 w-3" />
+                        Disputa
+                      </span>
+                    )}
                     <StatusBadge status={request.status as RequestStatus} size="sm" />
                     <ChevronRight className="h-4 w-4 text-gray-400" />
                   </div>
