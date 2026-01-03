@@ -14,16 +14,16 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  ArrowUpDown,
-  Filter,
-  Clock,
-  Truck,
-  AlertTriangle,
-  CheckCircle,
+  ChevronDown,
+  Check,
+  Calendar,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { OfferCard } from "@/components/provider/offer-card";
 import { useProviderRealtimeOffers } from "@/hooks/use-realtime-offers";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { FlatOfferWithRequest, OfferFilterStatus } from "@/lib/actions/offers";
 
 interface OffersListClientProps {
@@ -35,43 +35,21 @@ interface OffersListClientProps {
 const PAGE_SIZE = 10;
 
 // Filter status configuration
-const FILTER_OPTIONS: {
+const STATUS_OPTIONS: {
   value: OfferFilterStatus;
   label: string;
-  icon: React.ElementType;
-  activeClass: string;
 }[] = [
-  {
-    value: "pending",
-    label: "Pendientes",
-    icon: Clock,
-    activeClass: "bg-orange-500 text-white border-orange-500",
-  },
-  {
-    value: "active_delivery",
-    label: "Entregas activas",
-    icon: Truck,
-    activeClass: "bg-green-500 text-white border-green-500",
-  },
-  {
-    value: "disputed",
-    label: "En disputa",
-    icon: AlertTriangle,
-    activeClass: "bg-red-500 text-white border-red-500",
-  },
-  {
-    value: "delivered",
-    label: "Historial",
-    icon: CheckCircle,
-    activeClass: "bg-gray-500 text-white border-gray-500",
-  },
+  { value: "pending", label: "Pendientes" },
+  { value: "active_delivery", label: "Entregas activas" },
+  { value: "disputed", label: "Con disputa" },
+  { value: "delivered", label: "Historial" },
 ];
 
 type SortOrder = "newest" | "oldest";
 
 /**
- * Unified Offers List Client (v2.6.0)
- * Single list with multi-select filters, sorting, and pagination
+ * Unified Offers List Client (v2.6.1)
+ * Single list with dropdown multi-select filters for Estado and Comuna
  * Default: Shows active_delivery filter selected
  */
 export function OffersListClient({
@@ -83,9 +61,14 @@ export function OffersListClient({
   const [highlightedOfferId, setHighlightedOfferId] = useState<string | undefined>(newOfferId);
 
   // Filter state - default to active_delivery
-  const [selectedFilters, setSelectedFilters] = useState<Set<OfferFilterStatus>>(
+  const [selectedStatuses, setSelectedStatuses] = useState<Set<OfferFilterStatus>>(
     new Set(["active_delivery"])
   );
+  const [selectedComunas, setSelectedComunas] = useState<Set<string>>(new Set());
+
+  // Popover open states
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [comunaOpen, setComunaOpen] = useState(false);
 
   // Sort state
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
@@ -116,7 +99,7 @@ export function OffersListClient({
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedFilters, sortOrder]);
+  }, [selectedStatuses, selectedComunas, sortOrder]);
 
   // Handle offer withdrawal (optimistic update)
   const handleWithdraw = (offerId: string) => {
@@ -140,22 +123,36 @@ export function OffersListClient({
     );
   };
 
-  // Toggle filter selection
-  const toggleFilter = (filter: OfferFilterStatus) => {
-    setSelectedFilters((prev) => {
-      const newFilters = new Set(prev);
-      if (newFilters.has(filter)) {
-        newFilters.delete(filter);
+  // Toggle status filter selection
+  const toggleStatus = (status: OfferFilterStatus) => {
+    setSelectedStatuses((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(status)) {
+        newSet.delete(status);
       } else {
-        newFilters.add(filter);
+        newSet.add(status);
       }
-      return newFilters;
+      return newSet;
+    });
+  };
+
+  // Toggle comuna filter selection
+  const toggleComuna = (comuna: string) => {
+    setSelectedComunas((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(comuna)) {
+        newSet.delete(comuna);
+      } else {
+        newSet.add(comuna);
+      }
+      return newSet;
     });
   };
 
   // Clear all filters
-  const clearFilters = () => {
-    setSelectedFilters(new Set());
+  const clearAllFilters = () => {
+    setSelectedStatuses(new Set());
+    setSelectedComunas(new Set());
   };
 
   // Toggle sort order
@@ -163,13 +160,29 @@ export function OffersListClient({
     setSortOrder((prev) => (prev === "newest" ? "oldest" : "newest"));
   };
 
+  // Extract unique comunas from offers
+  const availableComunas = useMemo(() => {
+    const comunaSet = new Set<string>();
+    offers.forEach((o) => {
+      if (o.request?.comuna_name) {
+        comunaSet.add(o.request.comuna_name);
+      }
+    });
+    return Array.from(comunaSet).sort();
+  }, [offers]);
+
   // Filter and sort offers
   const filteredAndSortedOffers = useMemo(() => {
     let result = [...offers];
 
-    // Apply filters if any are selected
-    if (selectedFilters.size > 0) {
-      result = result.filter((o) => selectedFilters.has(o.filterCategory));
+    // Apply status filters if any are selected
+    if (selectedStatuses.size > 0) {
+      result = result.filter((o) => selectedStatuses.has(o.filterCategory));
+    }
+
+    // Apply comuna filters if any are selected
+    if (selectedComunas.size > 0) {
+      result = result.filter((o) => o.request?.comuna_name && selectedComunas.has(o.request.comuna_name));
     }
 
     // Apply sorting
@@ -180,7 +193,7 @@ export function OffersListClient({
     });
 
     return result;
-  }, [offers, selectedFilters, sortOrder]);
+  }, [offers, selectedStatuses, selectedComunas, sortOrder]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedOffers.length / PAGE_SIZE);
@@ -205,6 +218,7 @@ export function OffersListClient({
 
   const hasNoOffers = offers.length === 0;
   const hasNoFilteredResults = filteredAndSortedOffers.length === 0 && !hasNoOffers;
+  const hasActiveFilters = selectedStatuses.size > 0 || selectedComunas.size > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
@@ -258,72 +272,165 @@ export function OffersListClient({
           </div>
         </div>
 
-        {/* Filters and Sort */}
-        <div className="mb-4 space-y-3">
-          {/* Filter chips */}
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-400 shrink-0" />
-            <div className="flex flex-wrap gap-2">
-              {FILTER_OPTIONS.map((option) => {
-                const Icon = option.icon;
-                const isSelected = selectedFilters.has(option.value);
-                const count = categoryCounts[option.value];
-
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => toggleFilter(option.value)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all",
-                      isSelected
-                        ? option.activeClass
-                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-                    )}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span>{option.label}</span>
-                    {count > 0 && (
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "h-5 min-w-5 flex items-center justify-center text-xs px-1.5",
-                          isSelected
-                            ? "bg-white/20 text-white"
-                            : "bg-gray-100 text-gray-600"
-                        )}
-                      >
+        {/* Filters Row - Estado and Comuna dropdowns */}
+        <div className="mb-4 flex gap-2">
+          {/* Estado dropdown */}
+          <Popover open={statusOpen} onOpenChange={setStatusOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className={cn(
+                  "flex-1 flex items-center justify-between px-3 py-2 rounded-lg border text-sm font-medium transition-colors h-10",
+                  selectedStatuses.size > 0
+                    ? "bg-orange-50 border-orange-200 text-orange-700"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  Estado
+                  {selectedStatuses.size > 0 && (
+                    <Badge className="h-5 min-w-5 px-1.5 bg-orange-500 text-white">
+                      {selectedStatuses.size}
+                    </Badge>
+                  )}
+                </span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="start">
+              <div className="space-y-1">
+                {STATUS_OPTIONS.map((option) => {
+                  const isSelected = selectedStatuses.has(option.value);
+                  const count = categoryCounts[option.value];
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => toggleStatus(option.value)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                        isSelected
+                          ? "bg-orange-100 text-orange-800"
+                          : "hover:bg-gray-100 text-gray-700"
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        {isSelected && <Check className="h-4 w-4 text-orange-600" />}
+                        {!isSelected && <span className="w-4" />}
+                        {option.label}
+                      </span>
+                      <Badge variant="secondary" className="h-5 px-1.5 text-xs">
                         {count}
                       </Badge>
-                    )}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedStatuses.size > 0 && (
+                <div className="border-t mt-2 pt-2">
+                  <button
+                    onClick={() => setSelectedStatuses(new Set())}
+                    className="w-full flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Limpiar estado
                   </button>
-                );
-              })}
-            </div>
-          </div>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
 
-          {/* Sort and Clear filters row */}
-          <div className="flex items-center justify-between">
-            {/* Sort button */}
-            <button
-              onClick={toggleSortOrder}
-              className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900"
-            >
-              <ArrowUpDown className="h-4 w-4" />
-              <span>{sortOrder === "newest" ? "Más recientes" : "Más antiguos"}</span>
-            </button>
-
-            {/* Clear filters */}
-            {selectedFilters.size > 0 && (
+          {/* Comuna dropdown */}
+          <Popover open={comunaOpen} onOpenChange={setComunaOpen}>
+            <PopoverTrigger asChild>
               <button
-                onClick={clearFilters}
-                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+                className={cn(
+                  "flex-1 flex items-center justify-between px-3 py-2 rounded-lg border text-sm font-medium transition-colors h-10",
+                  selectedComunas.size > 0
+                    ? "bg-orange-50 border-orange-200 text-orange-700"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                )}
               >
-                <X className="h-3.5 w-3.5" />
-                <span>Limpiar filtros</span>
+                <span className="flex items-center gap-2">
+                  Comuna
+                  {selectedComunas.size > 0 && (
+                    <Badge className="h-5 min-w-5 px-1.5 bg-orange-500 text-white">
+                      {selectedComunas.size}
+                    </Badge>
+                  )}
+                </span>
+                <ChevronDown className="h-4 w-4" />
               </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2" align="start">
+              {availableComunas.length > 0 ? (
+                <>
+                  <div className="space-y-1 max-h-64 overflow-y-auto">
+                    {availableComunas.map((comuna) => {
+                      const isSelected = selectedComunas.has(comuna);
+                      return (
+                        <button
+                          key={comuna}
+                          onClick={() => toggleComuna(comuna)}
+                          className={cn(
+                            "w-full flex items-center px-3 py-2 rounded-md text-sm transition-colors",
+                            isSelected
+                              ? "bg-orange-100 text-orange-800"
+                              : "hover:bg-gray-100 text-gray-700"
+                          )}
+                        >
+                          {isSelected && <Check className="h-4 w-4 text-orange-600 mr-2" />}
+                          {!isSelected && <span className="w-6" />}
+                          {comuna}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedComunas.size > 0 && (
+                    <div className="border-t mt-2 pt-2">
+                      <button
+                        onClick={() => setSelectedComunas(new Set())}
+                        className="w-full flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Limpiar comuna
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="px-3 py-2 text-sm text-gray-500">
+                  No hay comunas disponibles
+                </p>
+              )}
+            </PopoverContent>
+          </Popover>
+
+          {/* Sort toggle */}
+          <button
+            onClick={toggleSortOrder}
+            className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors h-10"
+            title={sortOrder === "newest" ? "Ordenado por más recientes" : "Ordenado por más antiguos"}
+          >
+            <Calendar className="h-4 w-4 text-orange-500 shrink-0" />
+            {sortOrder === "newest" ? (
+              <ArrowDown className="h-4 w-4 text-gray-600 shrink-0" />
+            ) : (
+              <ArrowUp className="h-4 w-4 text-gray-600 shrink-0" />
             )}
-          </div>
+          </button>
         </div>
+
+        {/* Clear all filters link */}
+        {hasActiveFilters && (
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={clearAllFilters}
+              className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+            >
+              <X className="h-3.5 w-3.5" />
+              Limpiar todos los filtros
+            </button>
+          </div>
+        )}
 
         {/* Global empty state - when no offers at all */}
         {hasNoOffers && (
@@ -353,7 +460,7 @@ export function OffersListClient({
           <Card className="text-center py-12" data-testid="empty-state-filtered">
             <CardContent>
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Filter className="h-8 w-8 text-gray-400" />
+                <FileQuestion className="h-8 w-8 text-gray-400" />
               </div>
               <h2 className="text-lg font-semibold text-gray-900 mb-2">
                 Sin resultados
@@ -361,7 +468,7 @@ export function OffersListClient({
               <p className="text-gray-600 mb-4 max-w-xs mx-auto">
                 No hay ofertas que coincidan con los filtros seleccionados
               </p>
-              <Button variant="outline" onClick={clearFilters}>
+              <Button variant="outline" onClick={clearAllFilters}>
                 <X className="h-4 w-4 mr-2" />
                 Limpiar filtros
               </Button>

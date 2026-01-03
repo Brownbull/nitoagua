@@ -968,7 +968,8 @@ export async function getAllOffers(): Promise<GetAllOffersResult> {
 
     if (offer.status === "active") {
       filterCategory = "pending";
-    } else if (dispute && ["open", "under_review", "resolved_consumer", "resolved_provider"].includes(dispute.status)) {
+    } else if (dispute && ["open", "under_review", "resolved_consumer", "resolved_provider", "closed"].includes(dispute.status)) {
+      // Any offer with a dispute (active or resolved) goes to disputed category
       filterCategory = "disputed";
     } else if (offer.status === "accepted" && request?.status !== "delivered") {
       filterCategory = "active_delivery";
