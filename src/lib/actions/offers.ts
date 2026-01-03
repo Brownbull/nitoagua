@@ -784,7 +784,7 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
         is_urgent,
         status,
         comunas!water_requests_comuna_id_fkey(name),
-        disputes(id, status, dispute_type)
+        disputes!disputes_request_id_fkey(id, status, dispute_type)
       )
     `)
     .eq("provider_id", user.id)
