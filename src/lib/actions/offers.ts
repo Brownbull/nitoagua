@@ -714,6 +714,7 @@ export interface OfferWithRequest {
 export interface GroupedOffers {
   pending: OfferWithRequest[];
   accepted: OfferWithRequest[];
+  disputed: OfferWithRequest[];
   history: OfferWithRequest[];
 }
 
@@ -839,11 +840,20 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
   });
 
   // Group by status
+  // Disputed: accepted offers with an open/under_review dispute
+  // History: completed deliveries (delivered status) without active disputes, plus expired/cancelled
   const grouped: GroupedOffers = {
     pending: transformedOffers.filter(o => o.status === "active"),
-    accepted: transformedOffers.filter(o => o.status === "accepted"),
+    accepted: transformedOffers.filter(o =>
+      o.status === "accepted" &&
+      (!o.dispute || !["open", "under_review"].includes(o.dispute.status))
+    ),
+    disputed: transformedOffers.filter(o =>
+      o.dispute && ["open", "under_review", "resolved_consumer", "resolved_provider"].includes(o.dispute.status)
+    ),
     history: transformedOffers.filter(o =>
-      ["expired", "cancelled", "request_filled"].includes(o.status)
+      ["expired", "cancelled", "request_filled"].includes(o.status) ||
+      (o.request?.status === "delivered" && !o.dispute)
     ),
   };
 

@@ -14,6 +14,9 @@ import {
   Wifi,
   WifiOff,
   RefreshCw,
+  ChevronDown,
+  ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 import { OfferCard } from "@/components/provider/offer-card";
 import { useProviderRealtimeOffers } from "@/hooks/use-realtime-offers";
@@ -25,6 +28,8 @@ interface OffersListClientProps {
   newOfferId?: string;
   providerId: string;
 }
+
+const HISTORY_PAGE_SIZE = 10;
 
 /**
  * Client component for offers list with realtime updates
@@ -39,6 +44,15 @@ export function OffersListClient({
 }: OffersListClientProps) {
   const [offers, setOffers] = useState<GroupedOffers>(initialOffers);
   const [highlightedOfferId, setHighlightedOfferId] = useState<string | undefined>(newOfferId);
+
+  // Collapsible section states
+  const [pendingExpanded, setPendingExpanded] = useState(true);
+  const [acceptedExpanded, setAcceptedExpanded] = useState(true);
+  const [disputedExpanded, setDisputedExpanded] = useState(true);
+  const [historyExpanded, setHistoryExpanded] = useState(true);
+
+  // History pagination
+  const [historyPage, setHistoryPage] = useState(1);
 
   // Set up realtime subscription
   // AC: 8.3.5 - Offers update in real-time (acceptance, expiration)
@@ -96,8 +110,54 @@ export function OffersListClient({
     });
   };
 
-  const totalOffers = offers.pending.length + offers.accepted.length + offers.history.length;
+  const totalOffers = offers.pending.length + offers.accepted.length + offers.disputed.length + offers.history.length;
   const hasNoOffers = totalOffers === 0;
+
+  // History pagination
+  const totalHistoryPages = Math.ceil(offers.history.length / HISTORY_PAGE_SIZE);
+  const paginatedHistory = offers.history.slice(
+    (historyPage - 1) * HISTORY_PAGE_SIZE,
+    historyPage * HISTORY_PAGE_SIZE
+  );
+
+  // Section header component
+  const SectionHeader = ({
+    icon: Icon,
+    iconColor,
+    title,
+    count,
+    badgeColor,
+    expanded,
+    onToggle,
+  }: {
+    icon: React.ElementType;
+    iconColor: string;
+    title: string;
+    count: number;
+    badgeColor?: string;
+    expanded: boolean;
+    onToggle: () => void;
+  }) => (
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg transition-colors"
+    >
+      <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+        <Icon className={cn("h-5 w-5", iconColor)} />
+        {title}
+        {count > 0 && (
+          <Badge className={cn("ml-1", badgeColor || "bg-gray-100 text-gray-600")}>
+            {count}
+          </Badge>
+        )}
+      </h2>
+      {expanded ? (
+        <ChevronDown className="h-5 w-5 text-gray-400" />
+      ) : (
+        <ChevronRight className="h-5 w-5 text-gray-400" />
+      )}
+    </button>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
@@ -180,123 +240,200 @@ export function OffersListClient({
           <>
             {/* Pending Offers Section */}
             {/* AC: 8.3.1 - "Pendientes" section */}
-            <section className="mb-8" data-testid="section-pending">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <Clock className="h-5 w-5 text-orange-500" />
-                Pendientes
-                {offers.pending.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {offers.pending.length}
-                  </Badge>
-                )}
-              </h2>
+            <section className="mb-6" data-testid="section-pending">
+              <SectionHeader
+                icon={Clock}
+                iconColor="text-orange-500"
+                title="Pendientes"
+                count={offers.pending.length}
+                badgeColor="bg-orange-100 text-orange-700"
+                expanded={pendingExpanded}
+                onToggle={() => setPendingExpanded(!pendingExpanded)}
+              />
 
-              {offers.pending.length > 0 ? (
-                <div className="space-y-3">
-                  {offers.pending.map((offer) => (
-                    <OfferCard
-                      key={offer.id}
-                      offer={offer}
-                      isNew={offer.id === highlightedOfferId}
-                      onWithdraw={handleWithdraw}
-                      onExpire={handleExpire}
-                    />
-                  ))}
-                </div>
-              ) : (
-                /* AC: Task 6 - "No tienes ofertas pendientes" empty state */
-                <Card
-                  className="text-center py-8 border-dashed"
-                  data-testid="empty-state-pending"
-                >
-                  <CardContent>
-                    <p className="text-gray-500 text-sm mb-3">
-                      No tienes ofertas pendientes
-                    </p>
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="text-orange-600 border-orange-200 hover:bg-orange-50"
+              {pendingExpanded && (
+                <>
+                  {offers.pending.length > 0 ? (
+                    <div className="space-y-3 mt-3">
+                      {offers.pending.map((offer) => (
+                        <OfferCard
+                          key={offer.id}
+                          offer={offer}
+                          isNew={offer.id === highlightedOfferId}
+                          onWithdraw={handleWithdraw}
+                          onExpire={handleExpire}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    /* AC: Task 6 - "No tienes ofertas pendientes" empty state */
+                    <Card
+                      className="text-center py-8 border-dashed mt-3"
+                      data-testid="empty-state-pending"
                     >
-                      <Link href="/provider/requests">
-                        <Send className="h-4 w-4 mr-1" />
-                        Ver solicitudes disponibles
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                      <CardContent>
+                        <p className="text-gray-500 text-sm mb-3">
+                          No tienes ofertas pendientes
+                        </p>
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                        >
+                          <Link href="/provider/requests">
+                            <Send className="h-4 w-4 mr-1" />
+                            Ver solicitudes disponibles
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
               )}
             </section>
 
             {/* Active Deliveries Section - AC: 8.5.5 */}
             {/* AC: 8.3.1, AC: 8.5.5 - "Entregas Activas" section */}
-            <section className="mb-8" data-testid="section-accepted">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Entregas Activas
-                {offers.accepted.length > 0 && (
-                  <Badge className="bg-green-500 ml-1">
-                    {offers.accepted.length}
-                  </Badge>
-                )}
-              </h2>
+            <section className="mb-6" data-testid="section-accepted">
+              <SectionHeader
+                icon={CheckCircle2}
+                iconColor="text-green-500"
+                title="Entregas Activas"
+                count={offers.accepted.length}
+                badgeColor="bg-green-500 text-white"
+                expanded={acceptedExpanded}
+                onToggle={() => setAcceptedExpanded(!acceptedExpanded)}
+              />
 
-              {offers.accepted.length > 0 ? (
-                <div className="space-y-3">
-                  {offers.accepted.map((offer) => (
-                    <OfferCard key={offer.id} offer={offer} />
-                  ))}
-                </div>
-              ) : (
-                /* AC: Task 6 - "Aún no tienes entregas activas" empty state */
-                <Card
-                  className="text-center py-8 border-dashed"
-                  data-testid="empty-state-accepted"
-                >
-                  <CardContent>
-                    <p className="text-gray-500 text-sm">
-                      Aún no tienes entregas activas
-                    </p>
-                    <p className="text-gray-400 text-xs mt-1">
-                      Cuando un consumidor acepte tu oferta, aparecerá aquí
-                    </p>
-                  </CardContent>
-                </Card>
+              {acceptedExpanded && (
+                <>
+                  {offers.accepted.length > 0 ? (
+                    <div className="space-y-3 mt-3">
+                      {offers.accepted.map((offer) => (
+                        <OfferCard key={offer.id} offer={offer} />
+                      ))}
+                    </div>
+                  ) : (
+                    /* AC: Task 6 - "Aún no tienes entregas activas" empty state */
+                    <Card
+                      className="text-center py-8 border-dashed mt-3"
+                      data-testid="empty-state-accepted"
+                    >
+                      <CardContent>
+                        <p className="text-gray-500 text-sm">
+                          Aún no tienes entregas activas
+                        </p>
+                        <p className="text-gray-400 text-xs mt-1">
+                          Cuando un consumidor acepte tu oferta, aparecerá aquí
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </section>
+
+            {/* Disputed Deliveries Section */}
+            <section className="mb-6" data-testid="section-disputed">
+              <SectionHeader
+                icon={AlertTriangle}
+                iconColor="text-red-500"
+                title="Disputas"
+                count={offers.disputed.length}
+                badgeColor="bg-red-100 text-red-700"
+                expanded={disputedExpanded}
+                onToggle={() => setDisputedExpanded(!disputedExpanded)}
+              />
+
+              {disputedExpanded && (
+                <>
+                  {offers.disputed.length > 0 ? (
+                    <div className="space-y-3 mt-3">
+                      {offers.disputed.map((offer) => (
+                        <OfferCard key={offer.id} offer={offer} />
+                      ))}
+                    </div>
+                  ) : (
+                    <Card
+                      className="text-center py-8 border-dashed mt-3"
+                      data-testid="empty-state-disputed"
+                    >
+                      <CardContent>
+                        <p className="text-gray-500 text-sm">
+                          No tienes entregas disputadas
+                        </p>
+                        <p className="text-gray-400 text-xs mt-1">
+                          Las disputas de consumidores aparecerán aquí
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
               )}
             </section>
 
             {/* History Section */}
             {/* AC: 8.3.1 - "Historial" section (expired/cancelled/request_filled) */}
             <section data-testid="section-history">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <History className="h-5 w-5 text-gray-400" />
-                Historial
-                {offers.history.length > 0 && (
-                  <Badge variant="outline" className="ml-1">
-                    {offers.history.length}
-                  </Badge>
-                )}
-              </h2>
+              <SectionHeader
+                icon={History}
+                iconColor="text-gray-400"
+                title="Historial"
+                count={offers.history.length}
+                expanded={historyExpanded}
+                onToggle={() => setHistoryExpanded(!historyExpanded)}
+              />
 
-              {offers.history.length > 0 ? (
-                <div className="space-y-3">
-                  {offers.history.map((offer) => (
-                    <OfferCard key={offer.id} offer={offer} />
-                  ))}
-                </div>
-              ) : (
-                /* AC: Task 6 - "No tienes historial de ofertas" empty state */
-                <Card
-                  className="text-center py-8 border-dashed opacity-75"
-                  data-testid="empty-state-history"
-                >
-                  <CardContent>
-                    <p className="text-gray-500 text-sm">
-                      No tienes historial de ofertas
-                    </p>
-                  </CardContent>
-                </Card>
+              {historyExpanded && (
+                <>
+                  {offers.history.length > 0 ? (
+                    <>
+                      <div className="space-y-3 mt-3">
+                        {paginatedHistory.map((offer) => (
+                          <OfferCard key={offer.id} offer={offer} />
+                        ))}
+                      </div>
+
+                      {/* Pagination controls */}
+                      {totalHistoryPages > 1 && (
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                            disabled={historyPage === 1}
+                          >
+                            Anterior
+                          </Button>
+                          <span className="text-sm text-gray-500">
+                            Página {historyPage} de {totalHistoryPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setHistoryPage((p) => Math.min(totalHistoryPages, p + 1))}
+                            disabled={historyPage === totalHistoryPages}
+                          >
+                            Siguiente
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    /* AC: Task 6 - "No tienes historial de ofertas" empty state */
+                    <Card
+                      className="text-center py-8 border-dashed opacity-75 mt-3"
+                      data-testid="empty-state-history"
+                    >
+                      <CardContent>
+                        <p className="text-gray-500 text-sm">
+                          No tienes historial de ofertas
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
               )}
             </section>
           </>
