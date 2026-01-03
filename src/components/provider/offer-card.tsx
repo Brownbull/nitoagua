@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { MapPin, Droplets, Sparkles, XCircle, Eye, Loader2, Send } from "lucide-react";
+import { MapPin, Droplets, Sparkles, XCircle, Eye, Loader2, Send, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
@@ -133,12 +133,37 @@ function OfferCardComponent({ offer, isNew = false, onWithdraw, onExpire }: Offe
         <div className="flex flex-col gap-3">
           {/* Header: Status + Countdown/New Badge */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
               {isNew && (
                 <Badge className="bg-orange-500 text-white flex items-center gap-1">
                   <Sparkles className="h-3 w-3" />
                   Nueva
+                </Badge>
+              )}
+              {/* Dispute indicator */}
+              {offer.dispute && (
+                <Badge
+                  className={
+                    offer.dispute.status === "open" || offer.dispute.status === "under_review"
+                      ? "bg-red-100 text-red-700 flex items-center gap-1"
+                      : offer.dispute.status === "resolved_provider"
+                        ? "bg-blue-100 text-blue-700 flex items-center gap-1"
+                        : offer.dispute.status === "resolved_consumer"
+                          ? "bg-amber-100 text-amber-700 flex items-center gap-1"
+                          : "bg-gray-100 text-gray-700 flex items-center gap-1"
+                  }
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                  {offer.dispute.status === "open"
+                    ? "Disputa"
+                    : offer.dispute.status === "under_review"
+                      ? "En Revisión"
+                      : offer.dispute.status === "resolved_provider"
+                        ? "Resuelta ✓"
+                        : offer.dispute.status === "resolved_consumer"
+                          ? "Disputa resuelta"
+                          : "Disputa"}
                 </Badge>
               )}
             </div>

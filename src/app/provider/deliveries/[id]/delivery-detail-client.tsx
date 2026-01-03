@@ -35,6 +35,14 @@ import { toast } from "sonner";
 import { formatLiters } from "@/lib/utils/commission";
 import { completeDelivery } from "@/lib/actions/delivery";
 
+interface DisputeInfo {
+  id: string;
+  status: string;
+  disputeType: string;
+  createdAt: string;
+  resolutionNotes: string | null;
+}
+
 interface DeliveryData {
   offerId: string;
   requestId: string;
@@ -49,6 +57,7 @@ interface DeliveryData {
   deliveryWindowEnd: string;
   acceptedAt: string | null;
   requestStatus: string;
+  dispute: DisputeInfo | null;
 }
 
 interface DeliveryDetailClientProps {
@@ -264,6 +273,80 @@ export function DeliveryDetailClient({ delivery }: DeliveryDetailClientProps) {
             )}
           </CardContent>
         </Card>
+
+        {/* Dispute Info Card - Show if there's a dispute */}
+        {delivery.dispute && (
+          <Card className="mb-4 border-red-200 bg-red-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+                Disputa Reportada
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Dispute Type */}
+              <div>
+                <p className="text-sm text-gray-500">Tipo de problema</p>
+                <p className="font-medium text-gray-900">
+                  {delivery.dispute.disputeType === "not_delivered"
+                    ? "No recibí mi pedido"
+                    : delivery.dispute.disputeType === "wrong_quantity"
+                      ? "Cantidad incorrecta"
+                      : delivery.dispute.disputeType === "late_delivery"
+                        ? "Llegó tarde"
+                        : delivery.dispute.disputeType === "quality_issue"
+                          ? "Mala calidad"
+                          : "Otro problema"}
+                </p>
+              </div>
+
+              {/* Dispute Status */}
+              <div>
+                <p className="text-sm text-gray-500">Estado</p>
+                <Badge
+                  className={
+                    delivery.dispute.status === "open"
+                      ? "bg-red-100 text-red-700"
+                      : delivery.dispute.status === "under_review"
+                        ? "bg-amber-100 text-amber-700"
+                        : delivery.dispute.status === "resolved_consumer"
+                          ? "bg-green-100 text-green-700"
+                          : delivery.dispute.status === "resolved_provider"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-700"
+                  }
+                >
+                  {delivery.dispute.status === "open"
+                    ? "Abierta"
+                    : delivery.dispute.status === "under_review"
+                      ? "En Revisión"
+                      : delivery.dispute.status === "resolved_consumer"
+                        ? "Resuelta (Consumidor)"
+                        : delivery.dispute.status === "resolved_provider"
+                          ? "Resuelta (a tu favor)"
+                          : "Cerrada"}
+                </Badge>
+              </div>
+
+              {/* Resolution Notes (if resolved) */}
+              {delivery.dispute.resolutionNotes &&
+                delivery.dispute.status.startsWith("resolved") && (
+                  <div className="pt-2 border-t border-red-200">
+                    <p className="text-sm text-gray-500">Resolución</p>
+                    <p className="text-sm text-gray-700">{delivery.dispute.resolutionNotes}</p>
+                  </div>
+                )}
+
+              {/* Dispute Date */}
+              <p className="text-xs text-gray-400">
+                Reportada el{" "}
+                {format(new Date(delivery.dispute.createdAt), "d 'de' MMMM", {
+                  locale: es,
+                })}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Action Buttons - AC 11A-1.1, 11A-1.2 */}
         <div className="space-y-3">

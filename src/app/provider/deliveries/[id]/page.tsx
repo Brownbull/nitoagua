@@ -126,6 +126,15 @@ export default async function DeliveryDetailPage({ params }: PageProps) {
     ? `${request.address}, ${comunaName}`
     : request.address;
 
+  // Fetch any disputes for this request
+  const { data: disputeData } = await adminClient
+    .from("disputes")
+    .select("id, status, dispute_type, created_at, resolution_notes")
+    .eq("request_id", requestId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const deliveryData = {
     offerId: offer.id,
     requestId: request.id,
@@ -140,6 +149,15 @@ export default async function DeliveryDetailPage({ params }: PageProps) {
     deliveryWindowEnd: offer.delivery_window_end,
     acceptedAt: offer.accepted_at,
     requestStatus: request.status,
+    dispute: disputeData
+      ? {
+          id: disputeData.id,
+          status: disputeData.status,
+          disputeType: disputeData.dispute_type,
+          createdAt: disputeData.created_at,
+          resolutionNotes: disputeData.resolution_notes,
+        }
+      : null,
   };
 
   return <DeliveryDetailClient delivery={deliveryData} />;

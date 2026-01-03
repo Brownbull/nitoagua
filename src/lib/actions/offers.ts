@@ -702,6 +702,12 @@ export interface OfferWithRequest {
     address: string;
     is_urgent: boolean;
     comuna_name: string | null;
+    status: string;
+  } | null;
+  dispute: {
+    id: string;
+    status: string;
+    disputeType: string;
   } | null;
 }
 
@@ -775,7 +781,9 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
         amount,
         address,
         is_urgent,
-        comunas!water_requests_comuna_id_fkey(name)
+        status,
+        comunas!water_requests_comuna_id_fkey(name),
+        disputes(id, status, dispute_type)
       )
     `)
     .eq("provider_id", user.id)
@@ -797,8 +805,13 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
       amount: number;
       address: string;
       is_urgent: boolean;
+      status: string;
       comunas: { name: string } | null;
+      disputes: Array<{ id: string; status: string; dispute_type: string }> | null;
     } | null;
+
+    // Get the first dispute if any exist
+    const dispute = request?.disputes?.[0] ?? null;
 
     return {
       id: offer.id,
@@ -814,7 +827,13 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
         amount: request.amount,
         address: request.address,
         is_urgent: request.is_urgent,
+        status: request.status,
         comuna_name: request.comunas?.name ?? null,
+      } : null,
+      dispute: dispute ? {
+        id: dispute.id,
+        status: dispute.status,
+        disputeType: dispute.dispute_type,
       } : null,
     };
   });
