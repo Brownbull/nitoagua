@@ -4,7 +4,7 @@
 
 // Version should be updated with each deploy for update detection
 // IMPORTANT: Increment version when push handlers change
-const SW_VERSION = "2.6.1";
+const SW_VERSION = "2.6.2";
 const CACHE_NAME = `nitoagua-v${SW_VERSION}`;
 
 // Assets to pre-cache on install

@@ -915,7 +915,7 @@ export async function getAllOffers(): Promise<GetAllOffersResult> {
     };
   }
 
-  // Query provider's offers with request details
+  // Query provider's offers with request details (without disputes - fetch separately)
   const { data: offers, error: offersError } = await adminClient
     .from("offers")
     .select(`
@@ -933,8 +933,7 @@ export async function getAllOffers(): Promise<GetAllOffersResult> {
         address,
         is_urgent,
         status,
-        comunas!water_requests_comuna_id_fkey(name),
-        disputes!disputes_request_id_fkey(id, status, dispute_type)
+        comunas!water_requests_comuna_id_fkey(name)
       )
     `)
     .eq("provider_id", user.id)
@@ -948,16 +947,26 @@ export async function getAllOffers(): Promise<GetAllOffersResult> {
     };
   }
 
-  // Debug: Log first few offers to check disputes
-  console.log("[Offers] Sample offers with disputes:", JSON.stringify(
-    (offers || []).slice(0, 3).map(o => ({
-      id: o.id,
-      status: o.status,
-      request: o.water_requests,
-    })),
-    null,
-    2
-  ));
+  // Fetch disputes separately - nested join through RLS doesn't work reliably
+  // Get all request IDs from the offers
+  const requestIds = (offers || [])
+    .map(o => {
+      const request = o.water_requests as { id: string } | null;
+      return request?.id;
+    })
+    .filter((id): id is string => !!id);
+
+  // Fetch disputes for these requests
+  const { data: disputes } = await adminClient
+    .from("disputes")
+    .select("id, request_id, status, dispute_type")
+    .in("request_id", requestIds.length > 0 ? requestIds : ["no-results"]);
+
+  // Create a map of request_id -> dispute for quick lookup
+  const disputeMap = new Map<string, { id: string; status: string; dispute_type: string }>();
+  (disputes || []).forEach(d => {
+    disputeMap.set(d.request_id, d);
+  });
 
   // Transform offers with computed filter category
   const flatOffers: FlatOfferWithRequest[] = (offers || []).map((offer) => {
@@ -968,11 +977,10 @@ export async function getAllOffers(): Promise<GetAllOffersResult> {
       is_urgent: boolean;
       status: string;
       comunas: { name: string } | null;
-      disputes: Array<{ id: string; status: string; dispute_type: string }> | null;
     } | null;
 
-    // Get the first dispute if any exist
-    const dispute = request?.disputes?.[0] ?? null;
+    // Get the dispute from our map
+    const dispute = request ? disputeMap.get(request.id) ?? null : null;
 
     // Compute filter category based on status and dispute
     let filterCategory: OfferFilterStatus;
