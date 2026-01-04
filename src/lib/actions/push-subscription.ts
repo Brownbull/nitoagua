@@ -45,6 +45,7 @@ export interface SubscriptionStatus {
 /**
  * Subscribe a user to push notifications
  * AC12.6.3: Store subscription in database via API route
+ * Story 12.8-1: AC12.8.1.4 - Endpoint deduplication on subscribe
  *
  * @param subscription - Web Push subscription data
  */
@@ -77,6 +78,27 @@ export async function subscribeToPush(
     };
   }
 
+  // Story 12.8-1: AC12.8.1.4 - Endpoint deduplication
+  // Delete any existing subscriptions with same endpoint from OTHER users
+  // This ensures endpoint uniqueness across all users (AC12.8.1.5)
+  // When User B logs in on a device where User A was previously logged in,
+  // User A's subscription for that endpoint is removed.
+  const adminClient = createAdminClient();
+  const { error: dedupeError, data: deletedRows } = await adminClient
+    .from("push_subscriptions")
+    .delete()
+    .eq("endpoint", subscription.endpoint)
+    .neq("user_id", user.id)
+    .select("id");
+
+  if (dedupeError) {
+    console.warn("[PushSubscription] Deduplication warning:", dedupeError);
+    // Continue anyway - the upsert will still work, and we log the warning
+    // The worst case is a duplicate notification, not a failure
+  } else if (deletedRows && deletedRows.length > 0) {
+    console.log(`[PushSubscription] Deduplicated ${deletedRows.length} stale subscription(s) for endpoint`);
+  }
+
   // Insert or update subscription (upsert based on user_id + endpoint)
   const { error: insertError } = await supabase
     .from("push_subscriptions")
@@ -100,7 +122,7 @@ export async function subscribeToPush(
     };
   }
 
-  console.log(`[PushSubscription] User ${user.id} subscribed to push notifications`);
+  console.log(`[PushSubscription] User ${user.id} subscribed to push notifications (endpoint deduplicated)`);
 
   return {
     success: true,
@@ -255,4 +277,114 @@ export async function getUserSubscriptions(
       auth: sub.auth,
     },
   }));
+}
+
+/**
+ * Send a server-side test push notification
+ * This actually tests the web-push library and VAPID configuration
+ */
+export async function sendServerTestPush(): Promise<{
+  success: boolean;
+  error?: string;
+  details?: {
+    sent: number;
+    total: number;
+    cleaned: number;
+    vapidConfigured: boolean;
+    debug?: string;
+  };
+}> {
+  const supabase = await createClient();
+
+  // Get current user
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return {
+      success: false,
+      error: "Tu sesión expiró. Por favor, inicia sesión nuevamente.",
+    };
+  }
+
+  // Check admin client env vars BEFORE trying to use it
+  const hasServiceRoleKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const hasServiceKey = !!process.env.SUPABASE_SERVICE_KEY;
+  const hasSupabaseUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  // Also check VAPID keys
+  const hasVapidPublic = !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const hasVapidPrivate = !!process.env.VAPID_PRIVATE_KEY;
+  const vapidPublicLen = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0;
+  const vapidPrivateLen = process.env.VAPID_PRIVATE_KEY?.length || 0;
+
+  console.log(`[ServerTestPush] Env check:`, {
+    hasSupabaseUrl,
+    hasServiceRoleKey,
+    hasServiceKey,
+    hasVapidPublic,
+    hasVapidPrivate,
+    vapidPublicLen,
+    vapidPrivateLen,
+  });
+
+  // If neither service key is available, return early with detailed error
+  if (!hasServiceRoleKey && !hasServiceKey) {
+    return {
+      success: false,
+      error: "Error de configuración: Service key no configurada en el servidor.",
+      details: {
+        sent: 0,
+        total: 0,
+        cleaned: 0,
+        vapidConfigured: false,
+        debug: `ENV: url=${hasSupabaseUrl}, role_key=${hasServiceRoleKey}, service_key=${hasServiceKey}`,
+      },
+    };
+  }
+
+  // Import sendPushToUser dynamically to avoid circular dependency
+  const { sendPushToUser } = await import("@/lib/push/send-push");
+
+  console.log(`[ServerTestPush] Sending test push to user ${user.id}`);
+
+  const result = await sendPushToUser(user.id, {
+    title: "Notificación de prueba (servidor)",
+    body: "Esta notificación fue enviada desde el servidor usando web-push",
+    icon: "/icons/icon-192.png",
+    url: "/",
+    tag: "server-test-push",
+  });
+
+  console.log(`[ServerTestPush] Result:`, result);
+
+  // Check VAPID configuration
+  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+  const vapidConfigured = !!(vapidPublicKey && vapidPrivateKey);
+
+  // Include any errors from sendPushToUser
+  const pushErrors = result.errors?.join(", ") || "";
+
+  return {
+    success: result.success && result.sent > 0,
+    error: result.sent === 0
+      ? (result.total === 0
+          ? pushErrors
+            ? `Error: ${pushErrors}`
+            : "No tienes suscripciones activas. Habilita notificaciones primero."
+          : vapidConfigured
+            ? `Enviado a ${result.sent}/${result.total} dispositivos. ${result.cleaned} limpiados.`
+            : "VAPID keys no configuradas en el servidor.")
+      : undefined,
+    details: {
+      sent: result.sent,
+      total: result.total,
+      cleaned: result.cleaned,
+      vapidConfigured,
+      debug: `ENV: url=${hasSupabaseUrl}, role_key=${hasServiceRoleKey}, vapid_pub=${hasVapidPublic}(${vapidPublicLen}), vapid_priv=${hasVapidPrivate}(${vapidPrivateLen})${pushErrors ? ` | Errors: ${pushErrors}` : ""}`,
+    },
+  };
 }

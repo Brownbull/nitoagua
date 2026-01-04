@@ -19,22 +19,21 @@ export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
+  // Use refs for callbacks to avoid re-subscribing when callbacks change
+  const onOrderChangeRef = useRef(onOrderChange);
+  const onOfferChangeRef = useRef(onOfferChange);
+
+  // Keep refs updated
+  useEffect(() => {
+    onOrderChangeRef.current = onOrderChange;
+  }, [onOrderChange]);
+
+  useEffect(() => {
+    onOfferChangeRef.current = onOfferChange;
+  }, [onOfferChange]);
+
   // Use ref to track pending refresh to avoid interrupting user interactions
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Debounced refresh to prevent rapid refreshes during user interactions
-  const debouncedRefresh = useCallback(() => {
-    // Clear any pending refresh
-    if (refreshTimeoutRef.current) {
-      clearTimeout(refreshTimeoutRef.current);
-    }
-    // Schedule a new refresh after debounce delay
-    refreshTimeoutRef.current = setTimeout(() => {
-      console.log("[Realtime] Debounced refresh triggered");
-      router.refresh();
-      refreshTimeoutRef.current = null;
-    }, debounceMs);
-  }, [router, debounceMs]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -45,28 +44,6 @@ export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
     };
   }, []);
 
-  const handleOrderChange = useCallback(
-    (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
-      console.log("[Realtime] Order change:", payload.eventType);
-      setLastUpdate(new Date());
-      onOrderChange?.(payload);
-      // Use debounced refresh to avoid interrupting user clicks
-      debouncedRefresh();
-    },
-    [onOrderChange, debouncedRefresh]
-  );
-
-  const handleOfferChange = useCallback(
-    (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
-      console.log("[Realtime] Offer change:", payload.eventType);
-      setLastUpdate(new Date());
-      onOfferChange?.(payload);
-      // Use debounced refresh to avoid interrupting user clicks
-      debouncedRefresh();
-    },
-    [onOfferChange, debouncedRefresh]
-  );
-
   useEffect(() => {
     if (!enabled) return;
 
@@ -74,7 +51,40 @@ export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
     let ordersChannel: RealtimeChannel;
     let offersChannel: RealtimeChannel;
 
-    const setupSubscriptions = async () => {
+    // Handler that uses refs so subscription doesn't need to re-create
+    const handleOrderChange = (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
+      console.log("[Realtime] Order change:", payload.eventType);
+      setLastUpdate(new Date());
+      // Call the callback via ref
+      onOrderChangeRef.current?.(payload);
+      // Debounced router refresh as fallback
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      refreshTimeoutRef.current = setTimeout(() => {
+        console.log("[Realtime] Debounced refresh triggered");
+        router.refresh();
+        refreshTimeoutRef.current = null;
+      }, debounceMs);
+    };
+
+    const handleOfferChange = (payload: RealtimePostgresChangesPayload<Record<string, unknown>>) => {
+      console.log("[Realtime] Offer change:", payload.eventType);
+      setLastUpdate(new Date());
+      // Call the callback via ref
+      onOfferChangeRef.current?.(payload);
+      // Debounced router refresh as fallback
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      refreshTimeoutRef.current = setTimeout(() => {
+        console.log("[Realtime] Debounced refresh triggered");
+        router.refresh();
+        refreshTimeoutRef.current = null;
+      }, debounceMs);
+    };
+
+    const setupSubscriptions = () => {
       // Subscribe to water_requests table changes
       ordersChannel = supabase
         .channel("admin-orders")
@@ -121,11 +131,19 @@ export function useRealtimeOrders(options: UseRealtimeOrdersOptions = {}) {
       }
       setIsConnected(false);
     };
-  }, [enabled, handleOrderChange, handleOfferChange]);
+  }, [enabled, router, debounceMs]); // Only re-subscribe when enabled changes
+
+  // Manual refresh function for user-triggered updates
+  const refresh = useCallback(() => {
+    console.log("[Realtime] Manual refresh triggered");
+    router.refresh();
+    setLastUpdate(new Date());
+  }, [router]);
 
   return {
     isConnected,
     lastUpdate,
+    refresh,
   };
 }
 

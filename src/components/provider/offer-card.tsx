@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useMemo, memo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { MapPin, Droplets, Sparkles, XCircle, Eye, Loader2, Send } from "lucide-react";
+import { MapPin, Droplets, Sparkles, XCircle, Eye, Loader2, Send, AlertTriangle, CheckCircle, Clock, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
@@ -123,154 +122,183 @@ function OfferCardComponent({ offer, isNew = false, onWithdraw, onExpire }: Offe
   }, [offer.id, onExpire, router]);
 
   return (
-    <Card
-      className={`transition-all ${isHistoryStatus ? "opacity-60" : ""} ${
-        isNew ? "ring-2 ring-orange-500 ring-offset-2" : ""
-      }`}
+    <div
+      className={`bg-white rounded-lg border border-gray-200 px-3 py-3 ${
+        isHistoryStatus ? "opacity-60" : ""
+      } ${isNew ? "ring-2 ring-orange-500 ring-offset-2" : ""}`}
       data-testid={isNew ? "new-offer-card" : "offer-card"}
     >
-      <CardContent className="pt-4">
-        <div className="flex flex-col gap-3">
-          {/* Header: Status + Countdown/New Badge */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
-              {isNew && (
-                <Badge className="bg-orange-500 text-white flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" />
-                  Nueva
-                </Badge>
-              )}
-            </div>
-
-            {/* AC: 8.3.3 - Countdown for active offers */}
-            {isActive && (
-              <CountdownTimer
-                expiresAt={offer.expires_at}
-                onExpire={handleExpire}
-                className="text-orange-600"
-                data-testid="offer-countdown"
-              />
+      {/* Row 1: Status badges */}
+      <div className="flex items-center gap-2 flex-wrap mb-2">
+        <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
+        {isNew && (
+          <Badge className="bg-orange-500 text-white flex items-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            Nueva
+          </Badge>
+        )}
+        {/* Dispute indicator */}
+        {offer.dispute && (
+          <Badge
+            className={
+              offer.dispute.status === "open"
+                ? "bg-red-100 text-red-700 flex items-center gap-1"
+                : offer.dispute.status === "under_review"
+                  ? "bg-amber-100 text-amber-700 flex items-center gap-1"
+                  : offer.dispute.status === "resolved_provider"
+                    ? "bg-green-100 text-green-700 flex items-center gap-1"
+                    : offer.dispute.status === "resolved_consumer"
+                      ? "bg-gray-100 text-gray-600 flex items-center gap-1"
+                      : "bg-gray-100 text-gray-700 flex items-center gap-1"
+            }
+          >
+            {offer.dispute.status === "open" ? (
+              <>
+                <AlertTriangle className="h-3 w-3" />
+                Disputa
+              </>
+            ) : offer.dispute.status === "under_review" ? (
+              <>
+                <Clock className="h-3 w-3" />
+                En revisión
+              </>
+            ) : offer.dispute.status === "resolved_provider" ? (
+              <>
+                <CheckCircle className="h-3 w-3" />
+                A tu favor
+              </>
+            ) : offer.dispute.status === "resolved_consumer" ? (
+              <>
+                <XCircle className="h-3 w-3" />
+                En contra
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="h-3 w-3" />
+                Disputa
+              </>
             )}
-          </div>
+          </Badge>
+        )}
+        {/* AC: 8.3.3 - Countdown for active offers */}
+        {isActive && (
+          <CountdownTimer
+            expiresAt={offer.expires_at}
+            onExpire={handleExpire}
+            className="text-orange-600 ml-auto"
+            data-testid="offer-countdown"
+          />
+        )}
+      </div>
 
-          {/* Request info - AC: 8.3.2 */}
-          {offer.request && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
-                <span className="text-gray-700">
-                  {offer.request.comuna_name || "Ubicación desconocida"}
-                </span>
-                {offer.request.is_urgent && (
-                  <Badge variant="destructive" className="text-xs py-0">
-                    Urgente
-                  </Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Droplets className="h-4 w-4 text-blue-500 shrink-0" />
-                <span className="text-gray-700">{formatLiters(offer.request.amount)}</span>
-              </div>
-            </div>
+      {/* Row 2: Location + Amount inline */}
+      {offer.request && (
+        <div className="flex items-center gap-4 mb-2">
+          <span className="flex items-center gap-1.5 text-sm">
+            <MapPin className="h-4 w-4 text-orange-500 shrink-0" />
+            <span className="font-semibold text-gray-900">
+              {offer.request.comuna_name || "Sin ubicación"}
+            </span>
+          </span>
+          <span className="flex items-center gap-1.5 text-sm">
+            <Droplets className="h-4 w-4 text-blue-500 shrink-0" />
+            <span className="font-medium text-gray-700">{formatLiters(offer.request.amount)}</span>
+          </span>
+          {offer.request.is_urgent && (
+            <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">
+              Urgente
+            </Badge>
           )}
-
-          {/* Delivery window - AC: 8.3.2 */}
-          <div className="text-xs text-gray-500 bg-gray-50 rounded p-2">
-            <span className="font-medium">Entrega propuesta:</span>{" "}
-            {formattedDeliveryWindow.start} - {formattedDeliveryWindow.end}
-          </div>
-
-          {/* Message if exists */}
-          {offer.message && (
-            <p className="text-xs text-gray-500 italic truncate">
-              &ldquo;{offer.message}&rdquo;
-            </p>
-          )}
-
-          {/* Action buttons */}
-          <div className="flex gap-2 mt-1">
-            {/* AC: 8.3.4 - "Cancelar Oferta" button for pending offers */}
-            {isActive && (
-              <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                    disabled={isWithdrawing}
-                  >
-                    {isWithdrawing ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <XCircle className="h-4 w-4 mr-1" />
-                        Cancelar Oferta
-                      </>
-                    )}
-                  </Button>
-                </AlertDialogTrigger>
-                {/* AC: 8.4.1 - Confirmation dialog */}
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>¿Cancelar esta oferta?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Si cancelas esta oferta, ya no estarás participando por esta solicitud.
-                      Podrás enviar una nueva oferta si la solicitud sigue disponible.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isWithdrawing}>Volver</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleWithdraw}
-                      disabled={isWithdrawing}
-                      className="bg-red-500 hover:bg-red-600"
-                    >
-                      {isWithdrawing ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Sí, cancelar"
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-
-            {/* "Ver Entrega" button for accepted offers - links to delivery page */}
-            {isAccepted && (
-              <Button
-                asChild
-                variant="default"
-                size="sm"
-                className="flex-1 bg-green-500 hover:bg-green-600"
-              >
-                <Link href={`/provider/deliveries/${offer.request?.id}`}>
-                  <Eye className="h-4 w-4 mr-1" />
-                  Ver Entrega
-                </Link>
-              </Button>
-            )}
-
-            {/* AC: 8.4.5 - "Enviar nueva oferta" button for cancelled offers */}
-            {isCancelled && offer.request && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50"
-                data-testid="resubmit-offer-button"
-              >
-                <Link href={`/provider/requests/${offer.request.id}`}>
-                  <Send className="h-4 w-4 mr-1" />
-                  Enviar nueva oferta
-                </Link>
-              </Button>
-            )}
-          </div>
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {/* Row 3: Delivery window */}
+      <div className="flex items-center gap-1.5 text-xs text-gray-600 mb-3">
+        <Calendar className="h-3.5 w-3.5 text-gray-400" />
+        <span>Entrega propuesta:</span>
+        <span className="font-medium">
+          {formattedDeliveryWindow.start} - {formattedDeliveryWindow.end}
+        </span>
+      </div>
+
+      {/* Row 4: Message if exists */}
+      {offer.message && (
+        <p className="text-xs text-gray-500 italic truncate mb-3">
+          &ldquo;{offer.message}&rdquo;
+        </p>
+      )}
+
+      {/* Row 5: Action button - full width */}
+      {isActive && (
+        <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full h-10 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+              disabled={isWithdrawing}
+            >
+              {isWithdrawing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Cancelar Oferta
+                </>
+              )}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Cancelar esta oferta?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Si cancelas esta oferta, ya no estarás participando por esta solicitud.
+                Podrás enviar una nueva oferta si la solicitud sigue disponible.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isWithdrawing}>Volver</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleWithdraw}
+                disabled={isWithdrawing}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                {isWithdrawing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Sí, cancelar"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {isAccepted && (
+        <Button
+          asChild
+          className="w-full h-10 bg-green-500 hover:bg-green-600"
+        >
+          <Link href={`/provider/deliveries/${offer.request?.id}`}>
+            <Eye className="h-4 w-4 mr-2" />
+            Ver Entrega
+          </Link>
+        </Button>
+      )}
+
+      {isCancelled && offer.request && (
+        <Button
+          asChild
+          variant="outline"
+          className="w-full h-10 text-orange-600 border-orange-200 hover:bg-orange-50"
+          data-testid="resubmit-offer-button"
+        >
+          <Link href={`/provider/requests/${offer.request.id}`}>
+            <Send className="h-4 w-4 mr-2" />
+            Enviar nueva oferta
+          </Link>
+        </Button>
+      )}
+    </div>
   );
 }
 

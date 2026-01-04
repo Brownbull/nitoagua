@@ -284,14 +284,14 @@ function buildTimeline(order: OrderDetail, offers: Offer[]): TimelineEvent[] {
     });
   }
 
-  // En route (if status indicates it)
-  if (order.status === "en_route") {
+  // In transit (if status indicates it) - AC12.7.11.4: Use in_transit not en_route
+  if (order.status === "in_transit") {
     timeline.push({
-      id: "en_route",
+      id: "in_transit",
       label: "En Camino",
-      timestamp: order.accepted_at || order.created_at,
+      timestamp: order.accepted_at || order.created_at, // TODO: Use in_transit_at when available
       icon: Truck,
-      color: "bg-amber-500",
+      color: "bg-purple-500",
     });
   }
 
@@ -340,14 +340,15 @@ export default async function OrderDetailPage({
   const timeline = buildTimeline(order, offers);
   const canCancel = !["delivered", "cancelled"].includes(order.status);
 
-  // Status config for badge
+  // Status config for badge - must match database status values
   const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
     pending: { label: "Pendiente", color: "text-amber-700", bgColor: "bg-amber-100" },
     offers_pending: { label: "Esperando Ofertas", color: "text-blue-700", bgColor: "bg-blue-100" },
-    assigned: { label: "Asignado", color: "text-indigo-700", bgColor: "bg-indigo-100" },
-    en_route: { label: "En Camino", color: "text-purple-700", bgColor: "bg-purple-100" },
+    accepted: { label: "Aceptado", color: "text-indigo-700", bgColor: "bg-indigo-100" },
+    in_transit: { label: "En Camino", color: "text-purple-700", bgColor: "bg-purple-100" },
     delivered: { label: "Entregado", color: "text-green-700", bgColor: "bg-green-100" },
     cancelled: { label: "Cancelado", color: "text-red-700", bgColor: "bg-red-100" },
+    no_offers: { label: "Sin Ofertas", color: "text-gray-700", bgColor: "bg-gray-100" },
   };
   const currentStatus = statusConfig[order.status] || statusConfig.pending;
 

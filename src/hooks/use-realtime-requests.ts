@@ -44,43 +44,23 @@ export function useRealtimeRequests(options: UseRealtimeRequestsOptions = {}) {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
-  // Handler for new requests (INSERT)
-  const handleInsert = useCallback(
-    (payload: RealtimePostgresChangesPayload<WaterRequestPayload>) => {
-      const newRecord = payload.new as WaterRequestPayload;
+  // Use refs for callbacks and serviceAreaIds to avoid re-subscribing when they change
+  const onNewRequestRef = useRef(onNewRequest);
+  const onRequestUpdateRef = useRef(onRequestUpdate);
+  const serviceAreaIdsRef = useRef(serviceAreaIds);
 
-      // Only handle if request is pending and in our service areas
-      if (
-        newRecord.status === "pending" &&
-        newRecord.comuna_id &&
-        serviceAreaIds.includes(newRecord.comuna_id)
-      ) {
-        console.log("[Realtime] New request in service area:", newRecord.id);
-        setLastUpdate(new Date());
-        onNewRequest?.(payload);
-        router.refresh();
-      }
-    },
-    [serviceAreaIds, onNewRequest, router]
-  );
+  // Keep refs updated
+  useEffect(() => {
+    onNewRequestRef.current = onNewRequest;
+  }, [onNewRequest]);
 
-  // Handler for request updates (UPDATE)
-  const handleUpdate = useCallback(
-    (payload: RealtimePostgresChangesPayload<WaterRequestPayload>) => {
-      const newRecord = payload.new as WaterRequestPayload;
-      const oldRecord = payload.old as WaterRequestPayload;
+  useEffect(() => {
+    onRequestUpdateRef.current = onRequestUpdate;
+  }, [onRequestUpdate]);
 
-      // If status changed from pending to something else, request should disappear
-      // AC: 8.1.5 - Requests disappear when filled or timed out
-      if (oldRecord.status === "pending" && newRecord.status !== "pending") {
-        console.log("[Realtime] Request status changed:", newRecord.id, newRecord.status);
-        setLastUpdate(new Date());
-        onRequestUpdate?.(payload);
-        router.refresh();
-      }
-    },
-    [onRequestUpdate, router]
-  );
+  useEffect(() => {
+    serviceAreaIdsRef.current = serviceAreaIds;
+  }, [serviceAreaIds]);
 
   // Polling fallback function
   const startPolling = useCallback(() => {
@@ -110,6 +90,38 @@ export function useRealtimeRequests(options: UseRealtimeRequestsOptions = {}) {
     }
 
     const supabase = createClient();
+
+    // Handler for new requests (INSERT) - uses refs to avoid re-subscription
+    const handleInsert = (payload: RealtimePostgresChangesPayload<WaterRequestPayload>) => {
+      const newRecord = payload.new as WaterRequestPayload;
+
+      // Only handle if request is pending and in our service areas
+      if (
+        newRecord.status === "pending" &&
+        newRecord.comuna_id &&
+        serviceAreaIdsRef.current.includes(newRecord.comuna_id)
+      ) {
+        console.log("[Realtime] New request in service area:", newRecord.id);
+        setLastUpdate(new Date());
+        onNewRequestRef.current?.(payload);
+        router.refresh();
+      }
+    };
+
+    // Handler for request updates (UPDATE) - uses refs to avoid re-subscription
+    const handleUpdate = (payload: RealtimePostgresChangesPayload<WaterRequestPayload>) => {
+      const newRecord = payload.new as WaterRequestPayload;
+      const oldRecord = payload.old as WaterRequestPayload;
+
+      // If status changed from pending to something else, request should disappear
+      // AC: 8.1.5 - Requests disappear when filled or timed out
+      if (oldRecord.status === "pending" && newRecord.status !== "pending") {
+        console.log("[Realtime] Request status changed:", newRecord.id, newRecord.status);
+        setLastUpdate(new Date());
+        onRequestUpdateRef.current?.(payload);
+        router.refresh();
+      }
+    };
 
     const setupSubscription = async () => {
       // Clean up existing channel if any
@@ -170,7 +182,7 @@ export function useRealtimeRequests(options: UseRealtimeRequestsOptions = {}) {
       }
       setIsConnected(false);
     };
-  }, [enabled, serviceAreaIds, handleInsert, handleUpdate, startPolling, stopPolling]);
+  }, [enabled, serviceAreaIds.length, router, startPolling, stopPolling]); // Only re-subscribe when enabled or serviceAreaIds length changes
 
   // Force refresh function
   const refresh = useCallback(() => {

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { OrdersTable } from "@/components/admin/orders-table";
 import { Package, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import type { OrderSummary, OrderStats } from "@/lib/actions/admin-orders";
 
 // Force dynamic rendering - admin dashboards must always show current data
 export const dynamic = "force-dynamic";
@@ -12,35 +13,8 @@ export const metadata = {
   description: "Gestion de pedidos y solicitudes de agua",
 };
 
-// Types for orders data
-export interface OrderSummary {
-  id: string;
-  consumer_name: string;
-  consumer_phone: string;
-  consumer_email: string | null;
-  address: string;
-  comuna: string;
-  amount: number;
-  is_urgent: boolean;
-  status: string;
-  created_at: string;
-  accepted_at: string | null;
-  delivered_at: string | null;
-  cancelled_at: string | null;
-  cancellation_reason: string | null;
-  provider_id: string | null;
-  provider_name: string | null;
-  offers_count: number;
-}
-
-export interface OrderStats {
-  total: number;
-  pending: number;
-  accepted: number;
-  en_route: number;
-  delivered: number;
-  cancelled: number;
-}
+// Re-export types for backwards compatibility
+export type { OrderSummary, OrderStats } from "@/lib/actions/admin-orders";
 
 async function getOrdersData(filters?: {
   status?: string;
@@ -209,7 +183,7 @@ function getEmptyStats(): OrderStats {
     total: 0,
     pending: 0,
     accepted: 0,
-    en_route: 0,
+    in_transit: 0,
     delivered: 0,
     cancelled: 0,
   };
@@ -229,8 +203,8 @@ function calculateStats(requests: Array<{ status: string }>): OrderStats {
       case "accepted":
         stats.accepted++;
         break;
-      case "en_route":
-        stats.en_route++;
+      case "in_transit":
+        stats.in_transit++;
         break;
       case "delivered":
         stats.delivered++;

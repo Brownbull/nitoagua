@@ -4,7 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LogOut, Loader2 } from "lucide-react";
+import { cleanupPushBeforeLogout } from "@/lib/push/logout-cleanup";
 
+/**
+ * Admin Logout Button
+ * Story 12.8-1: AC12.8.1.3 - Admin Logout Cleanup
+ * Cleans up push subscriptions BEFORE signOut to prevent
+ * notifications being sent to wrong users on shared devices.
+ */
 export function AdminLogoutButton() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -13,6 +20,9 @@ export function AdminLogoutButton() {
     setIsLoading(true);
 
     try {
+      // AC12.8.1.3: Clean up push subscriptions FIRST
+      await cleanupPushBeforeLogout();
+
       const supabase = createClient();
       await supabase.auth.signOut();
       router.push("/admin/login");
@@ -35,7 +45,7 @@ export function AdminLogoutButton() {
       ) : (
         <LogOut className="w-4 h-4" />
       )}
-      Cerrar Sesion
+      Cerrar Sesión
     </button>
   );
 }

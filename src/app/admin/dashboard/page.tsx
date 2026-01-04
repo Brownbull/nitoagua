@@ -81,9 +81,10 @@ export default async function AdminDashboardPage() {
             </Link>
 
             {/* Reported problems */}
-            <button
-              className="flex items-center gap-3 w-full p-3.5 bg-white rounded-xl border-2 border-gray-200 text-left opacity-60"
-              disabled
+            <Link
+              href="/admin/disputes"
+              className="flex items-center gap-3 w-full p-3.5 bg-white rounded-xl border-2 border-gray-200 text-left hover:bg-gray-50 transition-colors"
+              data-testid="quick-action-disputes"
             >
               <div className="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center">
                 <AlertCircle className="w-4 h-4 text-red-600" />
@@ -97,7 +98,7 @@ export default async function AdminDashboardPage() {
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-400" />
-            </button>
+            </Link>
 
             {/* Pricing Configuration */}
             <Link

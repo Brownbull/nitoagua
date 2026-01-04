@@ -480,12 +480,20 @@ test.describe("Provider Directory - Mobile Navigation", () => {
     const bottomNav = page.getByTestId("admin-bottom-nav");
     await expect(bottomNav).toBeVisible();
 
-    const proveedoresLink = page.getByTestId("bottom-nav-proveedores");
+    // Open operations menu to see Proveedores
+    const operationsBtn = page.getByTestId("bottom-nav-operations");
+    await operationsBtn.click();
+
+    const proveedoresLink = page.getByTestId("operations-proveedores");
     await expect(proveedoresLink).toBeVisible();
   });
 
   test("AC6.4.1 - Mobile nav navigates to providers page", async ({ page }) => {
-    const proveedoresLink = page.getByTestId("bottom-nav-proveedores");
+    // Open operations menu to see Proveedores
+    const operationsBtn = page.getByTestId("bottom-nav-operations");
+    await operationsBtn.click();
+
+    const proveedoresLink = page.getByTestId("operations-proveedores");
     await proveedoresLink.click();
 
     await page.waitForURL("**/admin/providers", { timeout: 10000 });
@@ -505,6 +513,84 @@ test.describe("Provider Directory - Mobile Navigation", () => {
       // Detail panel should open
       const detailPanel = page.getByTestId("provider-detail-panel");
       await expect(detailPanel).toBeVisible();
+    }
+  });
+
+  test("BUG-020 - Provider detail panel action buttons visible on iPhone SE", async ({ page }) => {
+    // Use iPhone SE viewport (375x667)
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto("/admin/providers");
+    await page.waitForTimeout(1000);
+
+    // Find any provider card and click it
+    const providerCard = page.locator("[data-testid^='provider-card-']").first();
+
+    if (await providerCard.isVisible()) {
+      await providerCard.click();
+
+      // Detail panel should open
+      const detailPanel = page.getByTestId("provider-detail-panel");
+      await expect(detailPanel).toBeVisible();
+
+      // Wait for panel to fully render
+      await page.waitForTimeout(300);
+
+      // Action buttons should be visible without scrolling (they're now sticky at bottom)
+      // Check for Acciones header which contains the buttons
+      const actionsHeader = page.getByText("Acciones", { exact: false }).last();
+      await expect(actionsHeader).toBeVisible();
+
+      // At least one action button should be visible (Suspender or Banear for approved, Reactivar for suspended)
+      const suspendBtn = page.getByTestId("suspend-btn");
+      const banBtn = page.getByTestId("ban-btn");
+      const unsuspendBtn = page.getByTestId("unsuspend-btn");
+
+      // One of these buttons should be visible depending on provider status
+      const anyButtonVisible = await Promise.any([
+        suspendBtn.isVisible().then(v => v ? true : Promise.reject()),
+        banBtn.isVisible().then(v => v ? true : Promise.reject()),
+        unsuspendBtn.isVisible().then(v => v ? true : Promise.reject()),
+      ]).catch(() => false);
+
+      expect(anyButtonVisible).toBe(true);
+    }
+  });
+
+  test("BUG-020 - Provider detail panel action buttons visible on standard mobile (375x812)", async ({ page }) => {
+    // Use standard mobile viewport (375x812)
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/admin/providers");
+    await page.waitForTimeout(1000);
+
+    // Find any provider card and click it
+    const providerCard = page.locator("[data-testid^='provider-card-']").first();
+
+    if (await providerCard.isVisible()) {
+      await providerCard.click();
+
+      // Detail panel should open
+      const detailPanel = page.getByTestId("provider-detail-panel");
+      await expect(detailPanel).toBeVisible();
+
+      // Wait for panel to fully render
+      await page.waitForTimeout(300);
+
+      // Action buttons should be visible without scrolling (they're now sticky at bottom)
+      const actionsHeader = page.getByText("Acciones", { exact: false }).last();
+      await expect(actionsHeader).toBeVisible();
+
+      // At least one action button should be visible
+      const suspendBtn = page.getByTestId("suspend-btn");
+      const banBtn = page.getByTestId("ban-btn");
+      const unsuspendBtn = page.getByTestId("unsuspend-btn");
+
+      const anyButtonVisible = await Promise.any([
+        suspendBtn.isVisible().then(v => v ? true : Promise.reject()),
+        banBtn.isVisible().then(v => v ? true : Promise.reject()),
+        unsuspendBtn.isVisible().then(v => v ? true : Promise.reject()),
+      ]).catch(() => false);
+
+      expect(anyButtonVisible).toBe(true);
     }
   });
 });

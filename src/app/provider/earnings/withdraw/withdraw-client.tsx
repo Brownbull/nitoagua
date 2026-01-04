@@ -31,6 +31,7 @@ interface Props {
   bankDetails: PlatformBankDetails | null;
   pendingWithdrawal: PendingWithdrawal | null;
   error?: string;
+  requiresLogin?: boolean;
 }
 
 /**
@@ -45,6 +46,7 @@ export function WithdrawClient({
   bankDetails,
   pendingWithdrawal,
   error,
+  requiresLogin,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -54,6 +56,11 @@ export function WithdrawClient({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Session expired - show login prompt (no navigation, only login button)
+  if (requiresLogin) {
+    return <SessionExpiredView />;
+  }
 
   // If there's a pending withdrawal, show the pending state
   if (pendingWithdrawal) {
@@ -511,6 +518,36 @@ function SubmissionSuccessView({
       >
         Volver a Ganancias
       </button>
+    </div>
+  );
+}
+
+/**
+ * Session expired view - forces user to re-login
+ * No navigation allowed, only login button
+ */
+function SessionExpiredView() {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+        <AlertCircle className="w-8 h-8 text-orange-600" />
+      </div>
+
+      <h2 className="text-xl font-bold text-gray-800 mb-2">
+        Tu sesión expiró
+      </h2>
+
+      <p className="text-gray-600 mb-6">
+        Por favor, inicia sesión nuevamente para continuar.
+      </p>
+
+      <a
+        href="/login?returnTo=/provider/earnings/withdraw&expired=true"
+        className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+        data-testid="login-button"
+      >
+        Iniciar Sesión
+      </a>
     </div>
   );
 }

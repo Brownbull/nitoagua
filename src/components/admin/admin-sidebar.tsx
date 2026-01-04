@@ -12,6 +12,7 @@ import {
   DollarSign,
   UserCircle,
   CreditCard,
+  AlertTriangle,
 } from "lucide-react";
 
 interface NavItem {
@@ -40,6 +41,11 @@ const navItems: NavItem[] = [
     label: "Pedidos",
     href: "/admin/orders",
     icon: Package,
+  },
+  {
+    label: "Disputas",
+    href: "/admin/disputes",
+    icon: AlertTriangle,
   },
   {
     label: "Finanzas",

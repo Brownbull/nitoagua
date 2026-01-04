@@ -7,6 +7,7 @@ import {
   getPendingWithdrawal,
 } from "@/lib/actions/settlement";
 import { WithdrawClient } from "./withdraw-client";
+import { requiresLoginRedirect } from "@/lib/types/action-result";
 
 /**
  * Provider Commission Settlement Page
@@ -22,6 +23,35 @@ export default async function WithdrawPage() {
     getPlatformBankDetails(),
     getPendingWithdrawal(),
   ]);
+
+  // Check if any result requires login (session expired)
+  // Use type guard to properly check requiresLogin on failure cases
+  const requiresLogin =
+    requiresLoginRedirect(summaryResult) ||
+    requiresLoginRedirect(bankDetailsResult) ||
+    requiresLoginRedirect(pendingWithdrawalResult);
+
+  // If session expired, show full-screen login prompt that covers the entire viewport
+  // This hides the bottom navigation from the layout
+  if (requiresLogin) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col">
+        <header className="bg-white border-b px-4 py-3">
+          <div className="flex items-center gap-3 max-w-lg mx-auto">
+            <h1 className="text-lg font-bold text-gray-800">Pagar Comisión</h1>
+          </div>
+        </header>
+        <div className="flex-1 flex items-center justify-center px-4">
+          <WithdrawClient
+            commissionPending={0}
+            bankDetails={null}
+            pendingWithdrawal={null}
+            requiresLogin={true}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
