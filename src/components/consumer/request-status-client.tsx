@@ -12,6 +12,7 @@ import {
   MessageCircle,
   AlertTriangle,
   CheckCircle,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,8 @@ import { NegativeStatusCard } from "@/components/consumer/negative-status-card";
 import { OfferList } from "@/components/consumer/offer-list";
 import { OfferSelectionModal } from "@/components/consumer/offer-selection-modal";
 import { DisputeDialog } from "@/components/consumer/dispute-dialog";
+import { RatingDialog } from "@/components/consumer/rating-dialog";
+import { getRatingByRequest, type Rating } from "@/lib/actions/ratings";
 import {
   formatDateSpanish,
   formatShortDate,
@@ -112,6 +115,12 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
   const [disputeLoading, setDisputeLoading] = useState(true); // Start as loading
   const [disputeError, setDisputeError] = useState(false);
 
+  // Rating state - AC12.7.13.1
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [existingRating, setExistingRating] = useState<Rating | null>(null);
+  const [ratingLoading, setRatingLoading] = useState(true);
+  const [hasShownRatingPrompt, setHasShownRatingPrompt] = useState(false);
+
   const { status: polledStatus, isPolling, data: polledData } = useRequestPolling(
     initialRequest.id,
     initialRequest.status,
@@ -179,8 +188,45 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
     checkDispute();
   }, [initialRequest.id, polledStatus, initialRequest.status]);
 
+  // Check for existing rating and show prompt for delivered requests - AC12.7.13.1
+  useEffect(() => {
+    const currentStatus = polledStatus || initialRequest.status;
+    if (currentStatus !== "delivered") {
+      setExistingRating(null);
+      setRatingLoading(false);
+      return;
+    }
+
+    const checkRating = async () => {
+      setRatingLoading(true);
+      try {
+        const result = await getRatingByRequest(initialRequest.id);
+        if (result.success) {
+          setExistingRating(result.data ?? null);
+          // Show rating prompt automatically if no existing rating and haven't shown yet
+          if (!result.data && !hasShownRatingPrompt) {
+            setIsRatingDialogOpen(true);
+            setHasShownRatingPrompt(true);
+          }
+        }
+      } catch (err) {
+        console.error("[RequestStatusClient] Rating check error:", err);
+      } finally {
+        setRatingLoading(false);
+      }
+    };
+
+    checkRating();
+  }, [initialRequest.id, polledStatus, initialRequest.status, hasShownRatingPrompt]);
+
   // Handle dispute created - reload to show updated state
   const handleDisputeCreated = () => {
+    window.location.reload();
+  };
+
+  // Handle rating submitted - refresh to show updated state
+  const handleRatingSubmitted = () => {
+    // Reload to refresh any rating displays
     window.location.reload();
   };
 
@@ -401,7 +447,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
             {/* Delivery window display for test - visible */}
             {request.delivery_window && (
               <div className="flex items-center gap-3 bg-white rounded-xl p-3 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-[#DBEAFE] flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#DBEAFE] flex items-center justify-center shrink-0">
                   <Calendar className="h-4 w-4 text-[#1E40AF]" aria-hidden="true" />
                 </div>
                 <div>
@@ -442,7 +488,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
 
             {request.delivery_window && (
               <div className="flex items-center gap-3 bg-white rounded-xl p-3 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-[#E0E7FF] flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#E0E7FF] flex items-center justify-center shrink-0">
                   <Calendar className="h-4 w-4 text-[#3730A3]" aria-hidden="true" />
                 </div>
                 <div>
@@ -467,6 +513,65 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
                 : "Entrega completada"}
             />
 
+            {/* Rating Section - AC12.7.13.1 */}
+            <div className="bg-white rounded-xl p-4 shadow-sm mb-4" data-testid="rating-section">
+              {ratingLoading ? (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                </div>
+              ) : existingRating ? (
+                // Show existing rating with option to update
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-yellow-100 flex items-center justify-center shrink-0">
+                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-400" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Tu calificación</p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 ${
+                              star <= existingRating.rating
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsRatingDialogOpen(true)}
+                    className="text-[#0077B6] hover:text-[#005f8f]"
+                    data-testid="edit-rating-button"
+                  >
+                    Editar
+                  </Button>
+                </div>
+              ) : (
+                // Show rating prompt
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-yellow-600">
+                    <Star className="h-4 w-4 fill-yellow-400" />
+                    <span className="text-sm font-medium">¿Cómo fue tu experiencia?</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-50 hover:text-yellow-800"
+                    onClick={() => setIsRatingDialogOpen(true)}
+                    data-testid="rate-button"
+                  >
+                    <Star className="mr-2 h-4 w-4 fill-yellow-400" />
+                    Calificar Entrega
+                  </Button>
+                </div>
+              )}
+            </div>
+
             {/* Reorder button - primary action */}
             <Button
               asChild
@@ -489,7 +594,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
               ) : existingDispute ? (
                 // Show existing dispute status
                 <div className="flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                     existingDispute.status.startsWith("resolved") ? "bg-green-100" : "bg-amber-100"
                   }`}>
                     {existingDispute.status.startsWith("resolved") ? (
@@ -506,7 +611,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
                       {DISPUTE_STATUS_LABELS[existingDispute.status]}
                     </p>
                   </div>
-                  <CheckCircle className={`h-5 w-5 flex-shrink-0 ${
+                  <CheckCircle className={`h-5 w-5 shrink-0 ${
                     existingDispute.status.startsWith("resolved") ? "text-green-500" : "text-amber-500"
                   }`} />
                 </div>
@@ -530,7 +635,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
               ) : disputeReason ? (
                 // Show reason why can't dispute
                 <div className="flex items-center gap-2 text-gray-500 text-sm">
-                  <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
                   <span data-testid="dispute-unavailable-reason">{disputeReason}</span>
                 </div>
               ) : (
@@ -559,6 +664,15 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
               open={isDisputeDialogOpen}
               onOpenChange={setIsDisputeDialogOpen}
               onDisputeCreated={handleDisputeCreated}
+            />
+
+            {/* Rating Dialog - AC12.7.13.1 */}
+            <RatingDialog
+              requestId={request.id}
+              open={isRatingDialogOpen}
+              onOpenChange={setIsRatingDialogOpen}
+              onRatingSubmitted={handleRatingSubmitted}
+              providerName={request.profiles?.name}
             />
           </>
         )}
@@ -597,7 +711,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
           <div className="space-y-3">
             {/* Amount */}
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#DBEAFE] flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-[#DBEAFE] flex items-center justify-center shrink-0">
                 <Droplets className="h-4 w-4 text-[#1E40AF]" aria-hidden="true" />
               </div>
               <div className="flex items-center gap-2">
@@ -614,7 +728,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
 
             {/* Address */}
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#D1FAE5] flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-[#D1FAE5] flex items-center justify-center shrink-0">
                 <MapPin className="h-4 w-4 text-[#065F46]" aria-hidden="true" />
               </div>
               <span className="text-sm text-gray-700 pt-2">{request.address}</span>
@@ -623,7 +737,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
             {/* Date */}
             {request.created_at && (
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
                   <Calendar className="h-4 w-4 text-purple-600" aria-hidden="true" />
                 </div>
                 <span className="text-sm text-gray-700">
@@ -635,7 +749,7 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
             {/* Special Instructions */}
             {request.special_instructions && (
               <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
                   <FileText className="h-4 w-4 text-orange-600" aria-hidden="true" />
                 </div>
                 <span className="text-sm text-gray-700 pt-2">{request.special_instructions}</span>

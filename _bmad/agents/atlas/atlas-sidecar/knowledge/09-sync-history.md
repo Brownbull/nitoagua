@@ -38,10 +38,23 @@ All 9 sections initialized from PRD, architecture.md, UX spec, epics.md, retrosp
 - Key fixes: SW_VERSION drift, VAPID deployment, version sync check script
 - Memory optimization v4: ~11,800 → ~8,800 tokens (target)
 
-### Epoch 5: Epic 12.7 Bug Fixes (2025-12-31)
+### Epoch 5: Epic 12.7 Bug Fixes (2025-12-31 - 2026-01-03)
 - Story 12.7-2 code review: Added logging to all 8 push trigger functions
 - Key insight: Original bug assumption wrong - triggers existed, timing was issue
 - Pattern: Consistent `[TriggerPush]` logging across all push functions
+- Story 12.7-12 code review (2026-01-03): Commission payment screenshot tests
+  - Fixed: Wrong import, missing assertNoErrorState, waitForTimeout anti-patterns
+  - Pattern: `checkForPendingWithdrawal()` helper for state-dependent test skip
+- Story 12.7-13 (2026-01-03): Rating/Review System implementation
+  - Database: `ratings` table, `average_rating`/`rating_count` on profiles, trigger
+  - Components: RatingStars (reusable), RatingDialog, integration in request-status
+  - Hook extension: `use-consumer-offers.ts` now includes provider rating fields
+  - E2E tests: 5 test cases covering full rating flow
+  - Patterns added: Trigger aggregation, auto-prompt UX, hook field extension
+- Story 12.7-13 code review (2026-01-04): Atlas code review passed
+  - Fixed: Spanish accents (calificación, opinión, Cómo) in all UI strings
+  - Fixed: Tailwind class canonicalization (`flex-shrink-0` → `shrink-0`)
+  - Pattern validated: RLS uses `(select auth.uid())`, trigger has `SET search_path`
 
 > Detailed sync entries archived in `backups/v4/09-sync-history.md`
 
@@ -90,11 +103,11 @@ All sections synced as of 2025-12-30. Next sync after Epic 13 or source document
 | 2-Features | 2025-12-27 |
 | 3-Personas | 2025-12-18 |
 | 4-Architecture | 2025-12-30 |
-| 5-Testing | 2025-12-29 |
-| 6-Lessons | 2025-12-31 |
+| 5-Testing | 2026-01-03 |
+| 6-Lessons | 2026-01-03 |
 | 7-Process | 2025-12-18 |
 | 8-Workflow-Chains | 2025-12-22 |
-| 9-Sync-History | 2025-12-31 |
+| 9-Sync-History | 2026-01-04 |
 
 ---
 

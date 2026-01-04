@@ -27,6 +27,7 @@
 | API routes for client calls | Server actions in client components → RSC render errors |
 | `.limit(1)` for existence checks | `.single()` returns 406 when no rows → Use `.limit(1)` |
 | RLS policies for inserts | Admin client requires env var → Use RLS if policy allows |
+| Bucket name verification | Code references wrong bucket name → Verify bucket exists in DB |
 
 ---
 
@@ -666,4 +667,178 @@ await supabase.from("disputes").insert({
 
 ---
 
-*Last verified: 2026-01-02 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4, 12.7-5), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix, Code Review 12.7-4, Code Review 12.7-5, Realtime Connection Loop Fix Session, Consumer Dispute Implementation*
+## Storage Bucket Name Mismatch (Story 12.7-12)
+
+**Problem:** Commission payment screenshot upload silently failed.
+
+**Root Cause:** Migration `20251213010552_add_cash_settlement_tables.sql` created bucket named `receipts`, but code in `withdraw-client.tsx` and `settlement.ts` referenced bucket `commission-receipts`.
+
+**Detection Pattern:**
+```bash
+# Check what bucket code expects
+grep -r "\.from\([\"']" src/ | grep -E "receipts|proofs"
+
+# Check what buckets exist in migrations
+grep -r "storage.buckets" supabase/migrations/
+```
+
+**Solution:**
+1. Created new migration `20260103100000_add_commission_receipts_bucket.sql`
+2. Added `commission-receipts` bucket with correct MIME types and size limits
+3. Added RLS policies for provider upload and admin view
+
+**Prevention:**
+- When implementing storage features, verify bucket name matches in:
+  1. Migration file (bucket creation)
+  2. Code file (`.from("bucket-name")`)
+  3. RLS policies (bucket_id check)
+- Add bucket name to test setup or seed script to catch mismatches early
+
+**Key Insight:** Silent failures in file uploads are often bucket configuration issues. The upload code may look correct but fail if the bucket doesn't exist with the expected name.
+
+---
+
+---
+
+## Rating/Review System (Story 12.7-13)
+
+**Pattern:** Consumer ratings with provider average aggregation via trigger
+
+**Database Schema:**
+```sql
+-- Ratings table
+CREATE TABLE ratings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id UUID REFERENCES water_requests(id) ON DELETE CASCADE,
+  consumer_id UUID REFERENCES profiles(id),
+  provider_id UUID REFERENCES profiles(id),
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT CHECK (comment IS NULL OR length(comment) <= 500),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(request_id, consumer_id)  -- One rating per delivery
+);
+
+-- Profile aggregation columns
+ALTER TABLE profiles
+  ADD COLUMN average_rating DECIMAL(2,1) DEFAULT NULL,
+  ADD COLUMN rating_count INTEGER DEFAULT 0;
+```
+
+**Trigger Pattern:** Automatic aggregation on insert/update:
+```sql
+CREATE OR REPLACE FUNCTION update_provider_rating()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE profiles
+  SET average_rating = (
+      SELECT ROUND(AVG(rating)::numeric, 1)
+      FROM ratings WHERE provider_id = NEW.provider_id
+    ),
+    rating_count = (
+      SELECT COUNT(*) FROM ratings WHERE provider_id = NEW.provider_id
+    )
+  WHERE id = NEW.provider_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+```
+
+**RLS Pattern:** Optimized policies:
+```sql
+-- Consumers can view own and public ratings
+CREATE POLICY "Anyone can view ratings" ON ratings FOR SELECT
+  TO authenticated USING (true);
+
+-- Consumers can create ratings for their delivered requests
+CREATE POLICY "Consumers can create ratings" ON ratings FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    consumer_id = (select auth.uid())
+    AND EXISTS (
+      SELECT 1 FROM water_requests
+      WHERE id = request_id
+      AND consumer_id = (select auth.uid())
+      AND status = 'delivered'
+    )
+  );
+```
+
+### UI Pattern: Auto-prompt After Delivery
+
+**Integration:** Rating prompt auto-appears once after delivery (per session):
+```typescript
+// Track if prompt has been shown this session
+const [hasShownRatingPrompt, setHasShownRatingPrompt] = useState(false);
+
+// Auto-open rating dialog when conditions met
+useEffect(() => {
+  if (
+    status === "delivered" &&
+    !existingRating &&
+    !ratingLoading &&
+    !hasShownRatingPrompt
+  ) {
+    setIsRatingDialogOpen(true);
+    setHasShownRatingPrompt(true);
+  }
+}, [status, existingRating, ratingLoading, hasShownRatingPrompt]);
+```
+
+### Component Reuse: Rating Stars
+
+**Pattern:** Single component with interactive and readonly modes:
+```typescript
+interface RatingStarsProps {
+  rating: number;
+  onChange?: (rating: number) => void;
+  readonly?: boolean;
+  size?: "sm" | "md" | "lg";
+}
+```
+
+**Usage:**
+- Interactive: Rating dialog input (`onChange` provided)
+- Readonly: Offer cards, profile display (`readonly={true}`)
+
+### Rating Display in Offer Cards
+
+**Pattern:** Show rating only when `rating_count > 0`:
+```typescript
+const hasRating = offer.profiles?.rating_count && offer.profiles.rating_count > 0;
+
+{hasRating ? (
+  <div data-testid="provider-rating">
+    <Star className="fill-yellow-400 text-yellow-400" />
+    <span>{averageRating?.toFixed(1)}</span>
+    <span>({ratingCount})</span>
+  </div>
+) : (
+  <p>Proveedor verificado</p>
+)}
+```
+
+### Hook Extension Pattern
+
+**Pattern:** Extend existing query to include new fields:
+```typescript
+// In use-consumer-offers.ts - Add rating fields to profile join
+profiles:provider_id (
+  name,
+  avatar_url,
+  average_rating,   // NEW
+  rating_count      // NEW
+)
+```
+
+### Key Learnings:
+
+1. **Trigger aggregation** - Provider averages via DB trigger, not application code
+2. **One rating per delivery** - UNIQUE constraint on `(request_id, consumer_id)`
+3. **Graceful fallback** - Show "Proveedor verificado" when no ratings
+4. **Spanish labels** - Rating feedback: Malo, Regular, Bueno, Muy bueno, Excelente
+5. **Edit vs Create** - Check existing rating to show "Editar" or "Calificar"
+
+---
+
+*Last verified: 2026-01-03 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4, 12.7-5, 12.7-12, 12.7-13), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix, Code Review 12.7-4, Code Review 12.7-5, Realtime Connection Loop Fix Session, Consumer Dispute Implementation, Storage Bucket Mismatch Fix, Rating/Review System*

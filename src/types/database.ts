@@ -342,6 +342,7 @@ export type Database = {
         Row: {
           address: string | null
           avatar_url: string | null
+          average_rating: number | null
           bank_account: string | null
           bank_name: string | null
           commission_override: number | null
@@ -357,6 +358,7 @@ export type Database = {
           price_1000l: number | null
           price_100l: number | null
           price_5000l: number | null
+          rating_count: number | null
           rejection_reason: string | null
           role: string
           rut: string | null
@@ -373,6 +375,7 @@ export type Database = {
         Insert: {
           address?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           bank_account?: string | null
           bank_name?: string | null
           commission_override?: number | null
@@ -388,6 +391,7 @@ export type Database = {
           price_1000l?: number | null
           price_100l?: number | null
           price_5000l?: number | null
+          rating_count?: number | null
           rejection_reason?: string | null
           role: string
           rut?: string | null
@@ -404,6 +408,7 @@ export type Database = {
         Update: {
           address?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           bank_account?: string | null
           bank_name?: string | null
           commission_override?: number | null
@@ -419,6 +424,7 @@ export type Database = {
           price_1000l?: number | null
           price_100l?: number | null
           price_5000l?: number | null
+          rating_count?: number | null
           rejection_reason?: string | null
           role?: string
           rut?: string | null
@@ -557,6 +563,61 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ratings: {
+        Row: {
+          comment: string | null
+          consumer_id: string | null
+          created_at: string | null
+          id: string
+          provider_id: string | null
+          rating: number
+          request_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          comment?: string | null
+          consumer_id?: string | null
+          created_at?: string | null
+          id?: string
+          provider_id?: string | null
+          rating: number
+          request_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          comment?: string | null
+          consumer_id?: string | null
+          created_at?: string | null
+          id?: string
+          provider_id?: string | null
+          rating?: number
+          request_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ratings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ratings_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "water_requests"
             referencedColumns: ["id"]
           },
         ]

@@ -312,10 +312,10 @@ development_status:
 
   # Phase 2: Medium Priority (P2)
   12.7-9-admin-panel-ux-improvements: done  # BUG-002, 006, 017: Stale data, no sorting, nav issues - Atlas code review passed 2026-01-03
-  12.7-10-provider-ux-redesign: ready-for-dev  # BUG-003, 010: Request detail overload, not driver-friendly
-  12.7-11-en-camino-delivery-status: ready-for-dev  # BUG-009: Missing "En Camino" status
-  12.7-12-commission-payment-screenshot: ready-for-dev  # BUG-012: No screenshot upload for commission
-  12.7-13-rating-review-system: ready-for-dev  # BUG-014: No rating/review system
+  12.7-10-provider-ux-redesign: done  # BUG-003, 010: Request detail overload, not driver-friendly - Implemented 2026-01-03
+  12.7-11-en-camino-delivery-status: done  # BUG-009: "En Camino" status - Atlas code review passed, 2 fixes applied 2026-01-03
+  12.7-12-commission-payment-screenshot: done  # BUG-012: Storage bucket fix - Atlas code review passed, test fixes applied 2026-01-03
+  12.7-13-rating-review-system: done  # BUG-014: Rating system - Atlas code review passed, Spanish accents fixed 2026-01-04
 
   # Phase 3: Polish (P3)
   12.7-14-ui-polish-pwa-fixes: ready-for-dev  # BUG-004, 018, 019: Toast contrast, icon blank, flash

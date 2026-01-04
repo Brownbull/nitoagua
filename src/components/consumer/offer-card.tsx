@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Clock, User } from "lucide-react";
+import { Clock, User, Star } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { CountdownTimer } from "@/components/shared/countdown-timer";
@@ -77,13 +77,11 @@ export function OfferCard({
     .toUpperCase()
     .slice(0, 2);
 
-  // NOTE: Provider reputation metrics (rating, delivery count) intentionally removed
-  // as part of Story 12-5 to eliminate fake social proof.
-  // Future Implementation Pattern (when real data available):
-  // - Only show metrics when provider has >50 completed deliveries
-  // - Rating should come from real customer reviews
-  // - Use: const { rating, deliveryCount } = offer.profiles || {}
-  // - Condition: {deliveryCount >= 50 && <span>{rating} • {deliveryCount} entregas</span>}
+  // AC12.7.13.4: Provider rating display
+  // Only show ratings when provider has actual reviews (rating_count > 0)
+  const hasRating = offer.profiles?.rating_count && offer.profiles.rating_count > 0;
+  const averageRating = offer.profiles?.average_rating;
+  const ratingCount = offer.profiles?.rating_count || 0;
 
   return (
     <div
@@ -119,10 +117,21 @@ export function OfferCard({
             >
               {providerName}
             </p>
-            {/* Provider verified badge - factual statement only */}
-            <p className="text-xs text-gray-500">
-              Proveedor verificado
-            </p>
+            {/* AC12.7.13.4: Show rating if available, otherwise verified badge */}
+            {hasRating ? (
+              <div
+                className="flex items-center gap-1 text-xs text-gray-600"
+                data-testid="provider-rating"
+              >
+                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                <span className="font-medium">{averageRating?.toFixed(1)}</span>
+                <span className="text-gray-400">({ratingCount})</span>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">
+                Proveedor verificado
+              </p>
+            )}
           </div>
         </div>
 

@@ -183,7 +183,7 @@ function getEmptyStats(): OrderStats {
     total: 0,
     pending: 0,
     accepted: 0,
-    en_route: 0,
+    in_transit: 0,
     delivered: 0,
     cancelled: 0,
   };
@@ -203,8 +203,8 @@ function calculateStats(requests: Array<{ status: string }>): OrderStats {
       case "accepted":
         stats.accepted++;
         break;
-      case "en_route":
-        stats.en_route++;
+      case "in_transit":
+        stats.in_transit++;
         break;
       case "delivered":
         stats.delivered++;

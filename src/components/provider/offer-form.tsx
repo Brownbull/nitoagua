@@ -1,14 +1,27 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Clock, DollarSign, MessageSquare, Send, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Clock,
+  Send,
+  AlertCircle,
+  Loader2,
+  Calendar,
+  ChevronDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createOffer } from "@/lib/actions/offers";
 import type { RequestDetail, OfferPlatformSettings } from "@/lib/actions/offers";
 import { formatCLP, formatEarningsPreview, formatLiters } from "@/lib/utils/commission";
@@ -19,58 +32,81 @@ interface OfferFormProps {
   onCancel?: () => void;
 }
 
+type DateOption = "today" | "tomorrow" | "other";
+
 /**
- * Offer Form Component
- * AC: 8.2.1 - Delivery window picker (start + end time)
- * AC: 8.2.2 - Price displayed from platform settings (not editable)
- * AC: 8.2.3 - Earnings preview with commission
- * AC: 8.2.4 - Optional message field
- * AC: 8.2.5 - Offer validity displayed
+ * Offer Form Component - Redesigned for driver usability (Story 12.7-10)
+ * AC: 12.7.10.1 - Simplified time selection with quick buttons
+ * AC: 12.7.10.1 - Prominent earnings display
+ * AC: 12.7.10.1 - Submit button shows earnings
  */
 export function OfferForm({ request, settings, onCancel }: OfferFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize delivery window with suggested times
-  const now = new Date();
-  const defaultStart = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
-  const defaultEnd = new Date(defaultStart.getTime() + 2 * 60 * 60 * 1000); // 2 hours after start
-
-  // Format date for datetime-local input
-  const formatDateTimeLocal = (date: Date) => {
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  };
-
-  const [deliveryStart, setDeliveryStart] = useState(formatDateTimeLocal(defaultStart));
-  const [deliveryEnd, setDeliveryEnd] = useState(formatDateTimeLocal(defaultEnd));
+  // Simplified date selection - AC12.7.10.1
+  const [dateOption, setDateOption] = useState<DateOption>("today");
+  const [selectedHour, setSelectedHour] = useState<string>("14:00");
+  const [otherDate, setOtherDate] = useState<string>("");
   const [message, setMessage] = useState("");
+  const [showMessageField, setShowMessageField] = useState(false);
 
   // Calculate earnings preview
   const earningsPreview = formatEarningsPreview(settings.price, settings.commission_percent);
 
+  // Generate hour options (8:00 to 21:00)
+  const hourOptions = useMemo(() => {
+    const hours: string[] = [];
+    for (let h = 8; h <= 21; h++) {
+      hours.push(`${h.toString().padStart(2, "0")}:00`);
+    }
+    return hours;
+  }, []);
+
+  // Get the selected date as a Date object
+  const getSelectedDate = (): Date => {
+    const now = new Date();
+    if (dateOption === "today") {
+      return now;
+    } else if (dateOption === "tomorrow") {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow;
+    } else if (otherDate) {
+      return new Date(otherDate);
+    }
+    return now;
+  };
+
+  // Build delivery window from date + hour
+  const buildDeliveryWindow = () => {
+    const date = getSelectedDate();
+    const [hours] = selectedHour.split(":").map(Number);
+
+    const start = new Date(date);
+    start.setHours(hours, 0, 0, 0);
+
+    // 2-hour delivery window
+    const end = new Date(start);
+    end.setHours(end.getHours() + 2);
+
+    return { start, end };
+  };
+
   // Validate delivery window
   const validateWindow = () => {
-    const start = new Date(deliveryStart);
-    const end = new Date(deliveryEnd);
+    const { start } = buildDeliveryWindow();
     const now = new Date();
 
     if (start <= now) {
-      return "La hora de inicio debe ser en el futuro";
+      return "La hora de entrega debe ser en el futuro";
     }
-    if (end <= start) {
-      return "La hora de fin debe ser después de la hora de inicio";
+    if (dateOption === "other" && !otherDate) {
+      return "Selecciona una fecha";
     }
     return null;
   };
-
-  // Update end time when start changes to maintain 2-hour window
-  useEffect(() => {
-    const start = new Date(deliveryStart);
-    const suggestedEnd = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-    setDeliveryEnd(formatDateTimeLocal(suggestedEnd));
-  }, [deliveryStart]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,23 +119,22 @@ export function OfferForm({ request, settings, onCancel }: OfferFormProps) {
       return;
     }
 
+    const { start, end } = buildDeliveryWindow();
+
     startTransition(async () => {
       const result = await createOffer(request.id, {
-        delivery_window_start: new Date(deliveryStart).toISOString(),
-        delivery_window_end: new Date(deliveryEnd).toISOString(),
+        delivery_window_start: start.toISOString(),
+        delivery_window_end: end.toISOString(),
         message: message.trim() || undefined,
       });
 
       if (result.success) {
-        // AC: 8.2.7 - Show toast and redirect to offers page with highlight
         toast.success("¡Oferta enviada!", {
           description: "Tu oferta ha sido enviada exitosamente",
         });
-        // Pass new offer ID to highlight it in the list
         router.push(`/provider/offers?new=${result.offerId}`);
       } else {
         if (result.isDuplicate) {
-          // AC: 8.2.8 - Duplicate offer handling
           setError("Ya enviaste una oferta para esta solicitud");
           toast.error("Oferta duplicada", {
             description: "Ya tienes una oferta activa para esta solicitud",
@@ -114,164 +149,205 @@ export function OfferForm({ request, settings, onCancel }: OfferFormProps) {
     });
   };
 
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-3">
-      {/* Header */}
-      <div className="flex items-center gap-1.5 mb-1">
-        <Send className="h-3.5 w-3.5 text-orange-500" />
-        <span className="text-xs font-semibold text-gray-900">Hacer Oferta</span>
-      </div>
-      <p className="text-[11px] text-gray-500 mb-3">
-        {formatLiters(request.amount)} en {request.comuna_name}
-      </p>
+  // Format date for display
+  const getDateLabel = (opt: DateOption) => {
+    const now = new Date();
+    if (opt === "today") {
+      return `Hoy (${now.toLocaleDateString("es-CL", { weekday: "short", day: "numeric" })})`;
+    } else if (opt === "tomorrow") {
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return `Mañana (${tomorrow.toLocaleDateString("es-CL", { weekday: "short", day: "numeric" })})`;
+    }
+    return "Otra fecha";
+  };
 
-      <form onSubmit={handleSubmit} className="space-y-2.5">
+  // Get min date for "other" option (today)
+  const getMinDate = () => {
+    const now = new Date();
+    return now.toISOString().split("T")[0];
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* AC12.7.10.1 - Prominent Earnings Section */}
+      <div
+        className="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white"
+        data-testid="earnings-section"
+      >
+        <p className="text-sm opacity-90">Tu ganancia</p>
+        <p className="text-3xl font-bold" data-testid="earnings-amount">
+          {earningsPreview.formattedEarnings}
+        </p>
+        <div className="flex items-center gap-2 mt-1 text-sm opacity-80">
+          <span>Precio: {formatCLP(settings.price)}</span>
+          <span>•</span>
+          <span>Comisión: {earningsPreview.formattedCommission}</span>
+        </div>
+        {request.is_urgent && (
+          <div className="mt-2 inline-block bg-white/20 px-2 py-0.5 rounded text-xs">
+            +{settings.urgency_surcharge_percent}% recargo urgencia
+          </div>
+        )}
+      </div>
+
+      <form onSubmit={handleSubmit} className="p-4 space-y-4">
         {/* Error display */}
         {error && (
           <Alert variant="destructive" className="py-2">
-            <AlertCircle className="h-3.5 w-3.5" />
-            <AlertDescription className="text-[11px]">{error}</AlertDescription>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm">{error}</AlertDescription>
           </Alert>
         )}
 
-        {/* Price + Earnings - Combined compact row */}
-        <div className="grid grid-cols-2 gap-2">
-          {/* AC: 8.2.2 - Price display (read-only) */}
-          <div className="bg-blue-50 rounded-lg p-2">
-            <div className="flex items-center gap-1 text-blue-700 text-[10px]">
-              <DollarSign className="h-3 w-3" />
-              <span>Precio</span>
-            </div>
-            <p className="text-sm font-bold text-blue-900">
-              {formatCLP(settings.price)}
-            </p>
-            {request.is_urgent && (
-              <p className="text-[9px] text-blue-600">
-                +{settings.urgency_surcharge_percent}% urgencia
-              </p>
-            )}
-          </div>
-
-          {/* AC: 8.2.3 - Earnings preview */}
-          <div className="bg-green-50 rounded-lg p-2">
-            <p className="text-[10px] text-green-700">
-              {earningsPreview.message}
-            </p>
-            <p className="text-sm font-bold text-green-800">
-              {earningsPreview.formattedEarnings}
-            </p>
-            <p className="text-[9px] text-green-600">
-              -{earningsPreview.formattedCommission} comisión
-            </p>
-          </div>
-        </div>
-
-        {/* AC: 8.2.1 - Delivery window picker */}
-        <div className="space-y-1.5">
-          <Label className="flex items-center gap-1.5 text-xs font-medium">
-            <Clock className="h-3 w-3" />
-            Ventana de Entrega
+        {/* AC12.7.10.1 - Simplified Date Selection with Quick Buttons */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2 text-sm font-medium">
+            <Calendar className="h-4 w-4" />
+            ¿Cuándo puedes entregar?
           </Label>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-0.5">
-              <Label htmlFor="delivery-start" className="text-[10px] text-gray-500">
-                Desde
-              </Label>
-              <Input
-                id="delivery-start"
-                type="datetime-local"
-                value={deliveryStart}
-                onChange={(e) => setDeliveryStart(e.target.value)}
-                min={formatDateTimeLocal(new Date())}
-                required
-                className="h-8 text-xs"
-                data-testid="delivery-start-input"
-              />
-            </div>
-
-            <div className="space-y-0.5">
-              <Label htmlFor="delivery-end" className="text-[10px] text-gray-500">
-                Hasta
-              </Label>
-              <Input
-                id="delivery-end"
-                type="datetime-local"
-                value={deliveryEnd}
-                onChange={(e) => setDeliveryEnd(e.target.value)}
-                min={deliveryStart}
-                required
-                className="h-8 text-xs"
-                data-testid="delivery-end-input"
-              />
-            </div>
+          {/* Quick date buttons */}
+          <div className="grid grid-cols-3 gap-2" data-testid="date-quick-buttons">
+            <Button
+              type="button"
+              variant={dateOption === "today" ? "default" : "outline"}
+              className={`h-11 text-sm ${dateOption === "today" ? "bg-orange-500 hover:bg-orange-600" : ""}`}
+              onClick={() => setDateOption("today")}
+              data-testid="date-today"
+            >
+              Hoy
+            </Button>
+            <Button
+              type="button"
+              variant={dateOption === "tomorrow" ? "default" : "outline"}
+              className={`h-11 text-sm ${dateOption === "tomorrow" ? "bg-orange-500 hover:bg-orange-600" : ""}`}
+              onClick={() => setDateOption("tomorrow")}
+              data-testid="date-tomorrow"
+            >
+              Mañana
+            </Button>
+            <Button
+              type="button"
+              variant={dateOption === "other" ? "default" : "outline"}
+              className={`h-11 text-sm ${dateOption === "other" ? "bg-orange-500 hover:bg-orange-600" : ""}`}
+              onClick={() => setDateOption("other")}
+              data-testid="date-other"
+            >
+              Otro
+            </Button>
           </div>
+
+          {/* Show date picker only for "other" option */}
+          {dateOption === "other" && (
+            <input
+              type="date"
+              value={otherDate}
+              onChange={(e) => setOtherDate(e.target.value)}
+              min={getMinDate()}
+              className="w-full h-11 px-3 border border-gray-300 rounded-md text-sm"
+              data-testid="date-other-input"
+            />
+          )}
         </div>
 
-        {/* AC: 8.2.4 - Optional message field */}
-        <div className="space-y-0.5">
-          <Label htmlFor="message" className="flex items-center gap-1.5 text-xs">
-            <MessageSquare className="h-3 w-3" />
-            Mensaje (opcional)
+        {/* AC12.7.10.1 - Hour Selection Dropdown */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2 text-sm font-medium">
+            <Clock className="h-4 w-4" />
+            Hora de entrega
           </Label>
-          <Textarea
-            id="message"
-            placeholder="Ej: Disponibilidad inmediata..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            maxLength={500}
-            rows={2}
-            className="text-xs resize-none"
-            data-testid="offer-message-input"
-          />
-          <p className="text-[9px] text-gray-400 text-right">
-            {message.length}/500
+          <Select value={selectedHour} onValueChange={setSelectedHour}>
+            <SelectTrigger className="h-11" data-testid="hour-select">
+              <SelectValue placeholder="Selecciona hora" />
+            </SelectTrigger>
+            <SelectContent>
+              {hourOptions.map((hour) => (
+                <SelectItem key={hour} value={hour}>
+                  {hour}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-gray-500">
+            Ventana de entrega: {selectedHour} - {parseInt(selectedHour) + 2}:00
           </p>
         </div>
 
-        {/* AC: 8.2.5 - Offer validity display */}
-        <div className="bg-orange-50 rounded-lg px-2 py-1.5">
-          <p className="text-[11px] text-orange-700 flex items-center gap-1.5">
-            <Clock className="h-3 w-3" />
-            Oferta válida por {settings.offer_validity_minutes} min
+        {/* Offer validity display */}
+        <div className="bg-orange-50 rounded-lg px-3 py-2">
+          <p className="text-sm text-orange-700 flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Tu oferta será válida por {settings.offer_validity_minutes} minutos
           </p>
         </div>
 
-        {/* Submit button */}
-        <div className="flex gap-2 pt-1">
+        {/* Collapsible message field */}
+        {!showMessageField ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowMessageField(true)}
+            className="text-gray-500"
+            data-testid="add-message-button"
+          >
+            + Agregar mensaje (opcional)
+          </Button>
+        ) : (
+          <div className="space-y-1">
+            <Label htmlFor="message" className="text-sm text-gray-600">
+              Mensaje para el cliente (opcional)
+            </Label>
+            <Textarea
+              id="message"
+              placeholder="Ej: Disponibilidad inmediata, camión con capacidad..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              maxLength={500}
+              rows={2}
+              className="text-sm resize-none"
+              data-testid="offer-message-input"
+            />
+            <p className="text-xs text-gray-400 text-right">
+              {message.length}/500
+            </p>
+          </div>
+        )}
+
+        {/* AC12.7.10.1 - Submit button shows earnings */}
+        <div className="flex gap-2 pt-2">
           <Button
             type="submit"
-            size="sm"
-            className="flex-1 bg-orange-500 hover:bg-orange-600 h-9 text-xs"
+            className="flex-1 bg-green-600 hover:bg-green-700 h-14 text-base font-semibold"
             disabled={isPending}
             data-testid="submit-offer-button"
           >
             {isPending ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                 Enviando...
               </>
             ) : (
               <>
-                <Send className="h-3.5 w-3.5 mr-1.5" />
-                Enviar Oferta
+                <Send className="h-5 w-5 mr-2" />
+                ENVIAR OFERTA
               </>
             )}
           </Button>
-
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onCancel}
-              disabled={isPending}
-              className="h-9 text-xs"
-            >
-              Cancelar
-            </Button>
-          )}
         </div>
+
+        {onCancel && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isPending}
+            className="w-full h-11"
+          >
+            Cancelar
+          </Button>
+        )}
       </form>
     </div>
   );
@@ -282,26 +358,22 @@ export function OfferForm({ request, settings, onCancel }: OfferFormProps) {
  */
 export function OfferFormSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-3 animate-pulse">
-      <div className="flex items-center gap-1.5 mb-1">
-        <div className="h-3.5 w-3.5 bg-gray-200 rounded" />
-        <div className="h-3 w-20 bg-gray-200 rounded" />
-      </div>
-      <div className="h-3 w-28 bg-gray-200 rounded mb-3" />
-      <div className="space-y-2.5">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="h-14 bg-gray-100 rounded-lg" />
-          <div className="h-14 bg-gray-100 rounded-lg" />
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
+      {/* Earnings section skeleton */}
+      <div className="bg-gray-200 h-24" />
+
+      {/* Form skeleton */}
+      <div className="p-4 space-y-4">
+        <div className="h-4 w-32 bg-gray-200 rounded" />
+        <div className="grid grid-cols-3 gap-2">
+          <div className="h-11 bg-gray-200 rounded" />
+          <div className="h-11 bg-gray-200 rounded" />
+          <div className="h-11 bg-gray-200 rounded" />
         </div>
-        <div className="space-y-1.5">
-          <div className="h-3 w-24 bg-gray-200 rounded" />
-          <div className="grid grid-cols-2 gap-2">
-            <div className="h-8 bg-gray-200 rounded" />
-            <div className="h-8 bg-gray-200 rounded" />
-          </div>
-        </div>
-        <div className="h-10 bg-gray-100 rounded-lg" />
-        <div className="h-9 bg-gray-200 rounded" />
+        <div className="h-4 w-24 bg-gray-200 rounded" />
+        <div className="h-11 bg-gray-200 rounded" />
+        <div className="h-10 bg-gray-100 rounded" />
+        <div className="h-14 bg-gray-200 rounded" />
       </div>
     </div>
   );

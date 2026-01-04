@@ -43,7 +43,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: str
   pending: { label: "Pendiente", color: "text-amber-700", bgColor: "bg-amber-100", icon: Clock },
   offers_pending: { label: "Esperando Ofertas", color: "text-blue-700", bgColor: "bg-blue-100", icon: Package },
   accepted: { label: "Aceptado", color: "text-indigo-700", bgColor: "bg-indigo-100", icon: Truck },
-  en_route: { label: "En Camino", color: "text-purple-700", bgColor: "bg-purple-100", icon: Truck },
+  in_transit: { label: "En Camino", color: "text-purple-700", bgColor: "bg-purple-100", icon: Truck },
   delivered: { label: "Entregado", color: "text-green-700", bgColor: "bg-green-100", icon: CheckCircle },
   cancelled: { label: "Cancelado", color: "text-red-700", bgColor: "bg-red-100", icon: XCircle },
   no_offers: { label: "Sin Ofertas", color: "text-gray-700", bgColor: "bg-gray-100", icon: Clock },
@@ -54,7 +54,7 @@ const STATUS_OPTIONS = [
   { value: "pending", label: "Pendientes" },
   { value: "offers_pending", label: "Esperando Ofertas" },
   { value: "accepted", label: "Aceptados" },
-  { value: "en_route", label: "En Camino" },
+  { value: "in_transit", label: "En Camino" },
   { value: "delivered", label: "Entregados" },
   { value: "cancelled", label: "Cancelados" },
   { value: "no_offers", label: "Sin Ofertas" },
@@ -78,7 +78,7 @@ const STATUS_ORDER: Record<string, number> = {
   pending: 1,
   offers_pending: 2,
   accepted: 3,
-  en_route: 4,
+  in_transit: 4,
   delivered: 5,
   cancelled: 6,
   no_offers: 7,
@@ -283,7 +283,7 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
   // Memoized click handlers for StatsCards to prevent recreating functions on each render
   const handlePendingClick = useCallback(() => toggleStatusFilter("pending"), [toggleStatusFilter]);
   const handleAcceptedClick = useCallback(() => toggleStatusFilter("accepted"), [toggleStatusFilter]);
-  const handleEnRouteClick = useCallback(() => toggleStatusFilter("en_route"), [toggleStatusFilter]);
+  const handleInTransitClick = useCallback(() => toggleStatusFilter("in_transit"), [toggleStatusFilter]);
   const handleDeliveredClick = useCallback(() => toggleStatusFilter("delivered"), [toggleStatusFilter]);
   const handleCancelledClick = useCallback(() => toggleStatusFilter("cancelled"), [toggleStatusFilter]);
   const handleAllClick = useCallback(() => toggleStatusFilter("all"), [toggleStatusFilter]);
@@ -348,10 +348,10 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
         />
         <StatsCard
           label="En Camino"
-          value={stats.en_route}
+          value={stats.in_transit}
           color="purple"
-          isActive={currentFilters.status === "en_route"}
-          onClick={handleEnRouteClick}
+          isActive={currentFilters.status === "in_transit"}
+          onClick={handleInTransitClick}
         />
         <StatsCard
           label="Entregados"

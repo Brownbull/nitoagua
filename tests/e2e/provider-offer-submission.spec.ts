@@ -46,17 +46,8 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
     test("provider can navigate to request detail page", async ({ page }) => {
       await loginAsSupplier(page);
 
-      // Ensure availability is ON
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
-      // Navigate to request browser
-      await page.goto("/provider/requests");
-      await page.waitForTimeout(2000);
+      // Provider is already on /provider/requests after login
+      await page.waitForLoadState("networkidle");
 
       // Check if there are requests
       const hasRequests = await page.getByTestId("request-list").isVisible().catch(() => false);
@@ -69,8 +60,8 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
         // Should navigate to request detail page
         await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
 
-        // Should see request details
-        await expect(page.getByText("Detalles de la Solicitud")).toBeVisible();
+        // Should see request details - Story 12.7-10 redesigned to hero cards
+        await expect(page.getByTestId("hero-cards")).toBeVisible();
       }
     });
   });
@@ -81,16 +72,8 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
     test("offer form displays price from platform settings", async ({ page }) => {
       await loginAsSupplier(page);
 
-      // Ensure availability
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
-      await page.goto("/provider/requests");
-      await page.waitForTimeout(2000);
+      // Provider is already on /provider/requests after login
+      await page.waitForLoadState("networkidle");
 
       const hasRequests = await page.getByTestId("request-list").isVisible().catch(() => false);
 
@@ -98,14 +81,24 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
         // Navigate to request detail
         await page.getByTestId("view-details-button").first().click();
         await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForLoadState("networkidle");
 
-        // Should see price display (format: $X,XXX or $XX.XXX)
-        await expect(page.getByText(/Precio de la solicitud/)).toBeVisible();
-        await expect(page.getByText(/\$[\d.,]+/)).toBeVisible();
+        // Check if provider already has offer
+        const alreadyHasOffer = await page.getByText("Ya tienes una oferta").isVisible().catch(() => false);
 
-        // Should see earnings preview with commission info
-        await expect(page.getByText(/Ganarás:/)).toBeVisible();
-        await expect(page.getByText(/comisión/)).toBeVisible();
+        if (!alreadyHasOffer) {
+          // Story 12.7-10 redesign: Earnings section is now prominent at top
+          // The earnings section shows "Tu ganancia" followed by the amount
+          await expect(page.getByText("Tu ganancia")).toBeVisible({ timeout: 10000 });
+          await expect(page.getByTestId("earnings-amount")).toBeVisible();
+
+          // Should see price and commission info
+          await expect(page.getByText(/Precio:/i)).toBeVisible();
+          await expect(page.getByText(/Comisión:/i)).toBeVisible();
+        } else {
+          // Provider already has offer - skip earnings test
+          test.skip(true, "Provider already has offer for this request");
+        }
       }
     });
   });
@@ -116,13 +109,6 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
     test("offer form has delivery window inputs", async ({ page }) => {
       await loginAsSupplier(page);
 
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
       await page.goto("/provider/requests");
       await page.waitForTimeout(2000);
 
@@ -132,14 +118,15 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
         await page.getByTestId("view-details-button").first().click();
         await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
 
-        // Should have delivery window inputs
-        await expect(page.getByTestId("delivery-start-input")).toBeVisible();
-        await expect(page.getByTestId("delivery-end-input")).toBeVisible();
+        // Story 12.7-10 redesign: Quick date buttons replace datetime inputs
+        await expect(page.getByTestId("date-quick-buttons")).toBeVisible();
+        await expect(page.getByTestId("date-today")).toBeVisible();
+        await expect(page.getByTestId("date-tomorrow")).toBeVisible();
+        await expect(page.getByTestId("hour-select")).toBeVisible();
 
-        // Should have labels
-        await expect(page.getByText("Ventana de Entrega")).toBeVisible();
-        await expect(page.getByText("Desde")).toBeVisible();
-        await expect(page.getByText("Hasta")).toBeVisible();
+        // Should have labels for time selection
+        await expect(page.getByText(/Cuándo puedes entregar/)).toBeVisible();
+        await expect(page.getByText(/Hora de entrega/)).toBeVisible();
       }
     });
   });
@@ -150,13 +137,6 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
     test("offer form has optional message textarea", async ({ page }) => {
       await loginAsSupplier(page);
 
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
       await page.goto("/provider/requests");
       await page.waitForTimeout(2000);
 
@@ -166,9 +146,14 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
         await page.getByTestId("view-details-button").first().click();
         await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
 
-        // Should have message input
+        // Story 12.7-10 redesign: Message field is collapsed by default
+        // Click to reveal message field
+        const addMessageButton = page.getByTestId("add-message-button");
+        if (await addMessageButton.isVisible().catch(() => false)) {
+          await addMessageButton.click();
+        }
         await expect(page.getByTestId("offer-message-input")).toBeVisible();
-        await expect(page.getByText(/Mensaje al cliente \(opcional\)/)).toBeVisible();
+        await expect(page.getByText(/Mensaje.*cliente.*opcional/i)).toBeVisible();
       }
     });
   });
@@ -179,13 +164,6 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
     test("offer form displays validity information", async ({ page }) => {
       await loginAsSupplier(page);
 
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
       await page.goto("/provider/requests");
       await page.waitForTimeout(2000);
 
@@ -195,8 +173,8 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
         await page.getByTestId("view-details-button").first().click();
         await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
 
-        // Should show offer validity info
-        await expect(page.getByText(/Tu oferta expira en \d+ min/)).toBeVisible();
+        // Story 12.7-10 redesign: Validity info shows minutes
+        await expect(page.getByText(/válida por \d+ minutos/i)).toBeVisible();
       }
     });
   });
@@ -207,13 +185,6 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
     test("submit button is visible and labeled correctly", async ({ page }) => {
       await loginAsSupplier(page);
 
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
       await page.goto("/provider/requests");
       await page.waitForTimeout(2000);
 
@@ -223,9 +194,9 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
         await page.getByTestId("view-details-button").first().click();
         await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
 
-        // Should have submit button
+        // Should have submit button - Story 12.7-10 redesign shows earnings
         await expect(page.getByTestId("submit-offer-button")).toBeVisible();
-        await expect(page.getByTestId("submit-offer-button")).toHaveText(/Enviar Oferta/);
+        await expect(page.getByTestId("submit-offer-button")).toHaveText(/ENVIAR OFERTA.*Ganarás/);
       }
     });
   });
@@ -237,9 +208,10 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
+      await page.waitForLoadState("networkidle");
 
-      // Should see offers page
-      await expect(page.getByText("Mis Ofertas")).toBeVisible({ timeout: 10000 });
+      // Should see offers page - check for heading
+      await expect(page.getByRole("heading", { name: "Mis Ofertas" })).toBeVisible({ timeout: 10000 });
     });
 
     test("offers page shows empty state when no offers", async ({ page }) => {
@@ -275,13 +247,6 @@ test.describe("Provider Offer Submission - Navigation Tests", () => {
   test("back button returns to request browser", async ({ page }) => {
     await loginAsSupplier(page);
 
-    const switchElement = page.getByTestId("availability-switch");
-    const currentState = await switchElement.getAttribute("data-state");
-    if (currentState === "unchecked") {
-      await switchElement.click();
-      await page.waitForTimeout(1000);
-    }
-
     await page.goto("/provider/requests");
     await page.waitForTimeout(2000);
 
@@ -291,8 +256,8 @@ test.describe("Provider Offer Submission - Navigation Tests", () => {
       await page.getByTestId("view-details-button").first().click();
       await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
 
-      // Click back button
-      await page.getByRole("link", { name: /Volver a solicitudes/ }).click();
+      // Click back button - Story 12.7-10 redesign simplified to "Volver"
+      await page.getByRole("link", { name: /Volver/ }).click();
 
       // Should be back on request browser
       await expect(page.getByText("Solicitudes Disponibles")).toBeVisible();

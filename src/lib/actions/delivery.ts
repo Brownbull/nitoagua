@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { getDeliveryPrice } from "@/lib/utils/commission";
 import { isGuestRequest, sendGuestNotification } from "@/lib/email";
-import { triggerDeliveryCompletedPush } from "@/lib/push/trigger-push";
+import { triggerDeliveryCompletedPush, triggerInTransitPush } from "@/lib/push/trigger-push";
 import { createAuthError } from "@/lib/types/action-result";
 
 /**
@@ -114,8 +114,8 @@ export async function completeDelivery(
     return { success: false, error: "Solicitud no encontrada" };
   }
 
-  // Verify request status is 'accepted' (not already delivered)
-  if (request.status !== "accepted") {
+  // AC12.7.11.5: Verify request status is 'accepted' or 'in_transit' (backwards compatible)
+  if (request.status !== "accepted" && request.status !== "in_transit") {
     return {
       success: false,
       error:
@@ -128,6 +128,7 @@ export async function completeDelivery(
   const now = new Date().toISOString();
 
   // AC 11A-1.3: Update request status to delivered
+  // AC12.7.11.5: Accept both 'accepted' and 'in_transit' for backwards compatibility
   const { error: updateRequestError } = await adminClient
     .from("water_requests")
     .update({
@@ -135,7 +136,7 @@ export async function completeDelivery(
       delivered_at: now,
     })
     .eq("id", request.id)
-    .eq("status", "accepted"); // Safety check
+    .in("status", ["accepted", "in_transit"]); // Safety check - accept both statuses
 
   if (updateRequestError) {
     console.error("[Delivery] Error updating request:", updateRequestError);
@@ -258,6 +259,141 @@ export async function completeDelivery(
   revalidatePath("/provider/deliveries");
   revalidatePath(`/provider/deliveries/${offerId}`);
   revalidatePath("/provider/earnings");
+  revalidatePath(`/request/${request.id}`);
+
+  return { success: true };
+}
+
+/**
+ * Start delivery - mark provider as "on the way"
+ *
+ * Story: 12.7-11 "En Camino" Delivery Status
+ * AC12.7.11.2: Status updates to in_transit with timestamp
+ * AC12.7.11.3: Consumer receives push notification
+ *
+ * @param requestId - The request ID
+ */
+export async function startDelivery(
+  requestId: string
+): Promise<CompleteDeliveryResult> {
+  const supabase = await createClient();
+  const adminClient = createAdminClient();
+
+  // Get current user
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
+  if (userError || !user) {
+    return createAuthError();
+  }
+
+  // Get accepted offer for this request and provider
+  const { data: offer, error: offerError } = await adminClient
+    .from("offers")
+    .select(
+      `
+      id,
+      status,
+      provider_id,
+      request_id,
+      water_requests!offers_request_id_fkey (
+        id,
+        status,
+        consumer_id,
+        amount
+      )
+    `
+    )
+    .eq("request_id", requestId)
+    .eq("provider_id", user.id)
+    .eq("status", "accepted")
+    .single();
+
+  if (offerError || !offer) {
+    console.error("[Delivery] Error fetching offer for startDelivery:", offerError);
+    return { success: false, error: "Entrega no encontrada" };
+  }
+
+  const request = offer.water_requests as unknown as {
+    id: string;
+    status: string;
+    consumer_id: string | null;
+    amount: number;
+  };
+
+  if (!request) {
+    return { success: false, error: "Solicitud no encontrada" };
+  }
+
+  // Verify request status is 'accepted' (not already in_transit or delivered)
+  if (request.status !== "accepted") {
+    if (request.status === "in_transit") {
+      return { success: false, error: "Ya estás en camino" };
+    }
+    if (request.status === "delivered") {
+      return { success: false, error: "Esta entrega ya fue completada" };
+    }
+    return { success: false, error: "La solicitud no está en estado aceptado" };
+  }
+
+  const now = new Date().toISOString();
+
+  // AC12.7.11.2: Update request status to in_transit
+  const { error: updateError } = await adminClient
+    .from("water_requests")
+    .update({
+      status: "in_transit",
+      in_transit_at: now,
+    })
+    .eq("id", request.id)
+    .eq("status", "accepted"); // Safety check to prevent race conditions
+
+  if (updateError) {
+    console.error("[Delivery] Error updating request to in_transit:", updateError);
+    return { success: false, error: "Error al actualizar estado" };
+  }
+
+  // Get provider name for notification
+  const { data: providerProfile } = await adminClient
+    .from("profiles")
+    .select("name")
+    .eq("id", user.id)
+    .single();
+
+  const providerName = providerProfile?.name || "El proveedor";
+
+  // AC12.7.11.3: Send push notification to consumer
+  if (request.consumer_id) {
+    // Create in-app notification
+    await adminClient.from("notifications").insert({
+      user_id: request.consumer_id,
+      type: "in_transit",
+      title: "¡Tu agua está en camino!",
+      message: `${providerName} está en camino con tu pedido de ${request.amount.toLocaleString("es-CL")} litros`,
+      data: {
+        request_id: request.id,
+        offer_id: offer.id,
+      },
+      read: false,
+    });
+
+    // Send push notification
+    triggerInTransitPush(request.consumer_id, request.id, providerName).catch(
+      (err) => console.error("[Delivery] In-transit push error:", err)
+    );
+  }
+
+  console.log(
+    `[Delivery] Started: request=${request.id}, provider=${user.id}, in_transit_at=${now}`
+  );
+
+  // Revalidate relevant paths
+  revalidatePath("/provider/offers");
+  revalidatePath("/provider/deliveries");
+  revalidatePath(`/provider/deliveries/${requestId}`);
   revalidatePath(`/request/${request.id}`);
 
   return { success: true };
