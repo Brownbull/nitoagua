@@ -21,6 +21,8 @@
 | BUG-R2-007 | Admin orders page mobile UX - cluttered layout, filter text cut off | High | 3.1 | Open |
 | BUG-R2-008 | Admin order detail - status badge clutters header, needs separate row | Medium | 3.1 | Open |
 | BUG-R2-009 | Provider "Mis Ofertas" - wrong default filter and incorrect status display | Medium | - | Open |
+| BUG-R2-010 | Admin Providers page - filter layout inefficient, missing email on cards | Medium | 5.1 | Open |
+| BUG-R2-011 | Admin Providers - missing ratings on cards and no rating history in detail | Medium | 5.1 | Open |
 
 ---
 
@@ -514,6 +516,142 @@ Two issues with the Provider's "Mis Ofertas" (My Offers) page:
 
 ---
 
+### BUG-R2-010: Admin Providers page - filter layout inefficient, missing email on cards
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Medium |
+| **Priority** | P2 |
+| **Device** | All (Admin panel) |
+| **Test Step** | 5.1 |
+| **URL/Route** | /admin/providers |
+
+**Description:**
+
+Two issues with the admin Providers listing page:
+
+**Issue 1: Filter layout inefficient**
+- Status filter and Area/Comuna filter should be in the same row
+- Search bar should be on a separate row below
+- Current layout wastes vertical space
+
+**Issue 2: Provider cards missing email**
+- Cards show name and phone number
+- Email is NOT displayed but should be
+- Email is important for admin to contact providers
+
+**Current Layout:**
+```
+[Status Filter ▼]
+[Area Filter ▼]
+[🔍 Search...]
+```
+
+**Proposed Layout:**
+```
+Row 1: [Status ▼] [Area ▼]
+Row 2: [🔍 Buscar proveedores...]
+```
+
+**Provider Card - Current:**
+```
+[Avatar] Provider Name
+         📞 +56912345678
+         [Status Badge]
+```
+
+**Provider Card - Proposed:**
+```
+[Avatar] Provider Name
+         📞 +56912345678
+         ✉️ provider@email.com
+         [Status Badge]
+```
+
+**Steps to Reproduce:**
+
+1. Log in as Admin
+2. Navigate to Providers section
+3. Observe filter layout (vertical, takes space)
+4. Observe provider cards (missing email)
+
+**Proposed Fix:**
+
+1. Put status and area filters in a flex row with `gap-2`
+2. Keep search bar full-width on its own row below
+3. Add email field to provider card component
+4. Use email icon (✉️ or Mail icon from lucide)
+
+---
+
+### BUG-R2-011: Admin Providers - missing ratings on cards and no rating history in detail
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Medium |
+| **Priority** | P2 |
+| **Device** | All (Admin panel) |
+| **Test Step** | 5.1 |
+| **URL/Route** | /admin/providers, /admin/providers/[id] |
+
+**Description:**
+
+Provider ratings are not visible in the admin panel - neither on the provider list cards nor in the provider detail view.
+
+**Issue 1: Provider cards missing rating**
+- No rating displayed on provider cards in the list
+- Should show average rating + count in top-right corner
+
+**Issue 2: Provider detail missing rating history**
+- When viewing a provider's details, there's no rating section
+- Should show list of all ratings with: date, consumer name, star rating, comment
+
+**Provider Card - Proposed:**
+```
+[Avatar] Provider Name                    ⭐ 4.5 (12)
+         📞 +56912345678
+         ✉️ provider@email.com
+         [Status Badge]
+```
+
+**Provider Detail - Proposed Rating Section:**
+```
+## Calificaciones (12 total) - Promedio: ⭐ 4.5
+
+| Fecha      | Cliente        | Rating | Comentario          |
+|------------|----------------|--------|---------------------|
+| 2026-01-04 | Consumer Test  | ⭐⭐⭐⭐⭐ | Excelente servicio  |
+| 2026-01-03 | Juan Pérez     | ⭐⭐⭐⭐   | Llegó a tiempo      |
+| ...        | ...            | ...    | ...                 |
+```
+
+**Steps to Reproduce:**
+
+1. Log in as Admin
+2. Navigate to Providers section
+3. Observe provider cards - no rating visible
+4. Click on a provider to see details
+5. Observe - no rating history section
+
+**Data Available:**
+
+- `profiles.average_rating` - provider's average rating
+- `profiles.rating_count` - number of ratings
+- `ratings` table - individual ratings with consumer_id, score, comment, created_at
+
+**Proposed Fix:**
+
+1. **Provider cards**: Add rating badge in top-right showing `⭐ {average_rating} ({rating_count})`
+2. **Provider detail**: Add "Calificaciones" section with:
+   - Summary: average rating, total count
+   - Table/list of individual ratings
+   - Each rating shows: date, consumer name, stars, comment (if any)
+3. Sort ratings by date descending (newest first)
+
+**Related:** This addresses FR-R2-001 (Provider ratings dashboard) - implementing this bug fix would satisfy that feature request.
+
+---
+
 ## Feature Requests / Enhancements
 
 These are not bugs but improvements identified during testing.
@@ -596,6 +734,77 @@ Hora de entrega
 - Common use case: "I can be there in about an hour"
 
 **Screenshot:** Current offer creation screen showing time selector
+
+---
+
+### FR-R2-003: Provider offer - Allow price adjustment within admin-defined limits
+
+| Field | Value |
+|-------|-------|
+| **Priority** | P1 |
+| **Category** | Provider UX / Business Logic |
+| **URL/Route** | /provider/requests/[id] |
+
+**Description:**
+
+When creating an offer, providers currently see a fixed price (calculated automatically). Providers should be able to adjust the price within limits set by admin - making offers cheaper (competitive) or slightly higher (premium service).
+
+**Current Flow:**
+```
+Tu ganancia
+$5.225
+Precio: $5.500 • Comisión: $275
+```
+- Price is fixed/calculated
+- Provider cannot adjust
+
+**Proposed Flow:**
+```
+Tu ganancia
+[$5.225] [- $100] [+ $100]
+Precio: $5.500 • Comisión: $275
+
+Rango permitido: $4.500 - $6.500
+```
+
+**Key Requirements:**
+
+1. **Admin sets price limits** (in admin panel):
+   - Base price per liter/amount
+   - Minimum price (floor)
+   - Maximum price (ceiling)
+   - Or percentage range (e.g., ±20% from base)
+
+2. **Provider adjusts price** (in offer screen):
+   - Quick +/- buttons for fast adjustment
+   - Or slider within allowed range
+   - Show min/max limits clearly
+   - Auto-recalculate commission and earnings
+
+3. **Business rules:**
+   - Commission calculated on final price
+   - Can't go below minimum (protects platform revenue)
+   - Can't go above maximum (protects consumers)
+
+**UI Considerations:**
+
+- Keep it simple for drivers (quick tap buttons)
+- Show clear feedback: "Precio más bajo = más competitivo"
+- Recalculate earnings in real-time as price changes
+
+**Admin Panel Needs:**
+
+- New section: "Configuración de Precios"
+- Set base price per liter
+- Set min/max limits or percentage range
+- Possibly per-comuna pricing
+
+**Value:**
+
+- Providers can compete on price
+- Urgent deliveries can command premium
+- Off-peak times can have discounts
+- More dynamic marketplace
 
 ---
 

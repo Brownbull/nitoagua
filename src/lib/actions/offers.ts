@@ -404,14 +404,55 @@ export interface OfferPlatformSettings {
   offer_validity_minutes: number;
   commission_percent: number;
   price: number;
+  price_min: number;
+  price_max: number;
   urgency_surcharge_percent: number;
 }
 
 /**
+ * Helper to parse price tier from database value
+ * Handles both new format {min, suggested, max} and legacy format {value: number}
+ */
+function parsePriceTierValue(
+  dbValue: unknown,
+  defaultMin: number,
+  defaultSuggested: number,
+  defaultMax: number
+): { min: number; suggested: number; max: number } {
+  if (!dbValue || typeof dbValue !== "object") {
+    return { min: defaultMin, suggested: defaultSuggested, max: defaultMax };
+  }
+
+  const obj = dbValue as Record<string, unknown>;
+
+  // New format: { min, suggested, max }
+  if ("min" in obj && "suggested" in obj && "max" in obj) {
+    return {
+      min: typeof obj.min === "number" ? obj.min : defaultMin,
+      suggested: typeof obj.suggested === "number" ? obj.suggested : defaultSuggested,
+      max: typeof obj.max === "number" ? obj.max : defaultMax,
+    };
+  }
+
+  // Legacy format: { value: number } - use as suggested, calculate min/max
+  if ("value" in obj && typeof obj.value === "number") {
+    const suggested = obj.value;
+    return {
+      min: Math.round(suggested * 0.8),
+      suggested,
+      max: Math.round(suggested * 1.3),
+    };
+  }
+
+  return { min: defaultMin, suggested: defaultSuggested, max: defaultMax };
+}
+
+/**
  * Get platform settings needed for offer submission
- * AC: 8.2.2 - Price from platform settings
+ * AC: 8.2.2 - Price from platform settings (uses suggested price by default)
  * AC: 8.2.3 - Commission for earnings preview
  * AC: 8.2.5 - Offer validity duration
+ * Returns min/max price range for provider to adjust within
  */
 export async function getOfferSettings(amount: number, isUrgent: boolean): Promise<{
   success: boolean;
@@ -433,39 +474,49 @@ export async function getOfferSettings(amount: number, isUrgent: boolean): Promi
     };
   }
 
-  // Build settings map
-  const settingsMap: Record<string, number> = {};
+  // Build settings map (keeping full objects for price tiers)
+  const settingsMap: Record<string, unknown> = {};
   for (const setting of settings || []) {
-    const value = typeof setting.value === "object" && setting.value !== null
-      ? (setting.value as { value: number }).value
-      : setting.value as number;
-    settingsMap[setting.key] = value;
+    settingsMap[setting.key] = setting.value;
   }
 
-  // Determine price based on amount
-  let basePrice = 0;
+  // Helper to get number from legacy format
+  const getNumberSetting = (key: string, defaultValue: number): number => {
+    const val = settingsMap[key];
+    if (typeof val === "object" && val !== null && "value" in val) {
+      return (val as { value: number }).value;
+    }
+    return typeof val === "number" ? val : defaultValue;
+  };
+
+  // Determine price tier based on amount
+  let priceTier: { min: number; suggested: number; max: number };
   if (amount <= 100) {
-    basePrice = settingsMap.price_100l ?? 5000;
+    priceTier = parsePriceTierValue(settingsMap.price_100l, 4000, 5000, 6500);
   } else if (amount <= 1000) {
-    basePrice = settingsMap.price_1000l ?? 20000;
+    priceTier = parsePriceTierValue(settingsMap.price_1000l, 16000, 20000, 26000);
   } else if (amount <= 5000) {
-    basePrice = settingsMap.price_5000l ?? 75000;
+    priceTier = parsePriceTierValue(settingsMap.price_5000l, 60000, 75000, 100000);
   } else {
-    basePrice = settingsMap.price_10000l ?? 140000;
+    priceTier = parsePriceTierValue(settingsMap.price_10000l, 110000, 140000, 180000);
   }
 
-  // Apply urgency surcharge if applicable
-  const urgencySurchargePercent = settingsMap.urgency_surcharge_percent ?? 10;
-  const price = isUrgent
-    ? Math.round(basePrice * (1 + urgencySurchargePercent / 100))
-    : basePrice;
+  // Apply urgency surcharge if applicable (to all price tiers)
+  const urgencySurchargePercent = getNumberSetting("urgency_surcharge_percent", 10);
+  const surchargeMultiplier = isUrgent ? (1 + urgencySurchargePercent / 100) : 1;
+
+  const price = Math.round(priceTier.suggested * surchargeMultiplier);
+  const priceMin = Math.round(priceTier.min * surchargeMultiplier);
+  const priceMax = Math.round(priceTier.max * surchargeMultiplier);
 
   return {
     success: true,
     settings: {
-      offer_validity_minutes: settingsMap.offer_validity_default ?? 30,
-      commission_percent: settingsMap.default_commission_percent ?? 15,
+      offer_validity_minutes: getNumberSetting("offer_validity_default", 30),
+      commission_percent: getNumberSetting("default_commission_percent", 15),
       price,
+      price_min: priceMin,
+      price_max: priceMax,
       urgency_surcharge_percent: urgencySurchargePercent,
     },
   };
