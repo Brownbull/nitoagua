@@ -3,15 +3,15 @@
 > Section 9 of Atlas Memory
 > Tracks knowledge synchronizations
 
-## Current Status (2025-12-30)
+## Current Status (2026-01-04)
 
 | Metric | Value |
 |--------|-------|
-| App Version | 2.4.0 |
-| Epics Done | 16/17 (94%) |
-| Epic Remaining | Epic 13 (Chrome Extension Validation) |
+| App Version | 2.7.0 |
+| Epics Done | 17/17 (100%) |
+| Epic Remaining | None - Core epics complete |
 | Production URL | https://nitoagua.vercel.app |
-| Test Coverage | 86% E2E pass rate (84/98 tests) |
+| Test Coverage | 86% E2E pass rate |
 
 ---
 
@@ -63,6 +63,11 @@ All 9 sections initialized from PRD, architecture.md, UX spec, epics.md, retrosp
   - BUG-018: PWA manifest icons now include maskable and any purposes
   - BUG-019: Full-screen loading overlay prevents submit flash
   - Patterns added: Sonner toastOptions styling, PWA icon purposes, form submit overlay
+- Story 12.7-14 deployed (2026-01-04): Final Epic 12.7 deployment
+  - Version bump: 2.6.2 → 2.7.0 (Epic 12.7 complete)
+  - Fixed TypeScript error in withdraw/page.tsx using requiresLoginRedirect() type guard
+  - Deployment: dpl_q8r3698rMrkrWYpWTWtK1qYkBdSS (READY)
+  - Epic 12.7 (Manual Testing Bug Fixes) - ALL 14 STORIES DEPLOYED
 
 > Detailed sync entries archived in `backups/v4/09-sync-history.md`
 

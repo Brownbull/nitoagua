@@ -15,11 +15,15 @@ export default function ProviderLayout({
   // Map page is full-screen - hide header (per UX mockup Section 7)
   const isMapPage = pathname === "/provider/map";
 
+  // Delivery detail page has its own fixed footer design - hide nav and header
+  // to allow full-screen driver-focused layout (BUG-R2-001 fix)
+  const isDeliveryDetailPage = pathname?.startsWith("/provider/deliveries/");
+
   return (
     <div className="min-h-dvh bg-gradient-to-b from-orange-50 to-white">
       {/* Header with Logo and Notification Bell - AC: 8.5.1 */}
-      {/* Hidden on map page for full-screen experience */}
-      {!isMapPage && (
+      {/* Hidden on map page and delivery detail page for full-screen experience */}
+      {!isMapPage && !isDeliveryDetailPage && (
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-orange-100">
           <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
             {/* Left spacer for centering */}
@@ -41,10 +45,12 @@ export default function ProviderLayout({
       )}
 
       {/* Main content with bottom padding for nav */}
-      <main className={isMapPage ? "" : "pb-20"}>{children}</main>
+      <main className={isMapPage || isDeliveryDetailPage ? "" : "pb-20"}>
+        {children}
+      </main>
 
-      {/* Bottom navigation */}
-      <ProviderNav />
+      {/* Bottom navigation - hidden on delivery detail page (has its own back button) */}
+      {!isDeliveryDetailPage && <ProviderNav />}
     </div>
   );
 }
