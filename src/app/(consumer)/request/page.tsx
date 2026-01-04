@@ -313,6 +313,25 @@ export default function RequestPage() {
     );
   }
 
+  // BUG-019 FIX: Full-screen overlay during submission prevents flash to Step 1
+  // This covers the entire UI while the navigation occurs, ensuring smooth transition
+  if (state === "submitting" || state === "submitted") {
+    return (
+      <div
+        className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center"
+        data-testid="submit-overlay"
+      >
+        <Loader2 className="h-10 w-10 animate-spin text-[#0077B6] mb-4" />
+        <p className="text-lg font-medium text-gray-900">
+          {state === "submitted" ? "¡Listo!" : "Enviando solicitud..."}
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          {state === "submitted" ? "Redirigiendo..." : "Por favor espera"}
+        </p>
+      </div>
+    );
+  }
+
   // Get step info based on state - now includes map step (Story 12-1)
   // Visual step numbers: 1=details, 2=map, 3=amount, 4=review (but user sees 3-step progress)
   const getStepInfo = () => {
@@ -356,8 +375,8 @@ export default function RequestPage() {
           nextLabel: "Siguiente",
           showHeader: true,
         };
+      // BUG-019: "submitting" and "submitted" are now handled early with full-screen overlay
       case "step3":
-      case "submitting":
         return {
           step: 3,
           totalSteps: 3,
@@ -366,7 +385,7 @@ export default function RequestPage() {
           onBack: handleStep3Back,
           onNext: handleStep3HeaderSubmit,
           showNavButtons: true,
-          nextDisabled: state === "submitting",
+          nextDisabled: false,
           nextLabel: "Confirmar",
           nextVariant: "success" as const,
           showHeader: true,
@@ -457,14 +476,14 @@ export default function RequestPage() {
           />
         )}
 
-        {/* Step 3: Review */}
-        {(state === "step3" || state === "submitting") && (
+        {/* Step 3: Review - BUG-019: submitting state now handled by full-screen overlay */}
+        {state === "step3" && (
           <RequestReview
             data={buildFormData()!}
             onEditContact={handleEditContact}
             onEditAmount={handleEditAmount}
             onSubmit={handleSubmit}
-            loading={state === "submitting"}
+            loading={false}
             urgencySurchargePercent={urgencySurcharge}
           />
         )}

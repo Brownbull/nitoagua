@@ -55,6 +55,14 @@ All 9 sections initialized from PRD, architecture.md, UX spec, epics.md, retrosp
   - Fixed: Spanish accents (calificación, opinión, Cómo) in all UI strings
   - Fixed: Tailwind class canonicalization (`flex-shrink-0` → `shrink-0`)
   - Pattern validated: RLS uses `(select auth.uid())`, trigger has `SET search_path`
+- Stories 12.7-8 to 12.7-13 deployed (2026-01-04): Batch deployment to production
+  - 38 files changed, 4563 insertions(+), 1208 deletions(-)
+  - Commit: da9e59d, pushed to main, Vercel auto-deploy triggered
+- Story 12.7-14 code review (2026-01-04): UI Polish & PWA Fixes - Atlas code review passed
+  - BUG-004: Toast contrast fixed with WCAG AA compliant colors (7:1 ratio)
+  - BUG-018: PWA manifest icons now include maskable and any purposes
+  - BUG-019: Full-screen loading overlay prevents submit flash
+  - Patterns added: Sonner toastOptions styling, PWA icon purposes, form submit overlay
 
 > Detailed sync entries archived in `backups/v4/09-sync-history.md`
 
@@ -102,10 +110,10 @@ All sections synced as of 2025-12-30. Next sync after Epic 13 or source document
 | 1-Purpose | 2025-12-18 |
 | 2-Features | 2025-12-27 |
 | 3-Personas | 2025-12-18 |
-| 4-Architecture | 2025-12-30 |
+| 4-Architecture | 2026-01-04 |
 | 5-Testing | 2026-01-03 |
 | 6-Lessons | 2026-01-03 |
-| 7-Process | 2025-12-18 |
+| 7-Process | 2026-01-04 |
 | 8-Workflow-Chains | 2025-12-22 |
 | 9-Sync-History | 2026-01-04 |
 

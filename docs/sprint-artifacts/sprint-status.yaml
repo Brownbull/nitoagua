@@ -318,7 +318,7 @@ development_status:
   12.7-13-rating-review-system: done  # BUG-014: Rating system - Atlas code review passed, Spanish accents fixed 2026-01-04
 
   # Phase 3: Polish (P3)
-  12.7-14-ui-polish-pwa-fixes: ready-for-dev  # BUG-004, 018, 019: Toast contrast, icon blank, flash
+  12.7-14-ui-polish-pwa-fixes: done  # BUG-004, 018, 019: Toast contrast, icon blank, flash - Atlas code review passed 2026-01-04
 
   epic-12.7-retrospective: optional
 

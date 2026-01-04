@@ -93,6 +93,9 @@
 | 12.7 | localStorage with URL priority | URL params take priority, then localStorage fallback, then defaults |
 | 12.7 | Dynamic year arrays | Generate year options dynamically: `Array.from({ length: currentYear - 2022 }, ...)` |
 | 12.7 | Silent refresh failures | Realtime refresh errors fail silently - user can retry manually |
+| 12.7 | Toast variant styling | Sonner `toastOptions.classNames` with `!important` modifiers to override default styles |
+| 12.7 | PWA icon purposes | Manifest needs separate icon entries for `maskable` and `any` (Next.js type limitation) |
+| 12.7 | Form submit overlay | Full-screen `fixed inset-0 z-50` overlay during submission prevents flash during navigation |
 
 ---
 
@@ -158,4 +161,4 @@ Current (v2.4.0): 1.70 MB total, 196.8 KB largest
 
 ---
 
-*Last verified: 2026-01-03 | Sources: architecture.md, Epic 8-12.7 code reviews*
+*Last verified: 2026-01-04 | Sources: architecture.md, Epic 8-12.7 code reviews*

@@ -124,6 +124,7 @@ npm run test:e2e
 | 10-1 | 2025-12-19 | Consumer offer list view with realtime updates, 26 E2E tests |
 | Testing-3 | 2025-12-19 | Merged Playwright fixtures, persona validation tests |
 | Testing-2 | 2025-12-18 | `verify:local-db`, `seed:dev-login`, local dev guide |
+| 12.7-8 to 12.7-13 | 2026-01-04 | Epic 12.7 bug fixes batch: Rating system, En Camino status, Provider UX, Admin UX, Commission screenshot, Offer cancellation |
 
 > Full deployment details in `docs/sprint-artifacts/` - Atlas tracks patterns, not full logs.
 
@@ -139,4 +140,4 @@ npm run test:e2e
 
 ---
 
-*Last verified: 2025-12-19 | Sources: run_app.local.md, sprint-artifacts, Epic 8 Retrospective*
+*Last verified: 2026-01-04 | Sources: run_app.local.md, sprint-artifacts, Epic 8 Retrospective, Epic 12.7 deployment*
