@@ -7,6 +7,7 @@ import {
   getPendingWithdrawal,
 } from "@/lib/actions/settlement";
 import { WithdrawClient } from "./withdraw-client";
+import { requiresLoginRedirect } from "@/lib/types/action-result";
 
 /**
  * Provider Commission Settlement Page
@@ -24,10 +25,11 @@ export default async function WithdrawPage() {
   ]);
 
   // Check if any result requires login (session expired)
+  // Use type guard to properly check requiresLogin on failure cases
   const requiresLogin =
-    summaryResult.requiresLogin ||
-    bankDetailsResult.requiresLogin ||
-    pendingWithdrawalResult.requiresLogin;
+    requiresLoginRedirect(summaryResult) ||
+    requiresLoginRedirect(bankDetailsResult) ||
+    requiresLoginRedirect(pendingWithdrawalResult);
 
   // If session expired, show full-screen login prompt that covers the entire viewport
   // This hides the bottom navigation from the layout
