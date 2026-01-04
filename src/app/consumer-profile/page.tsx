@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ConsumerNav } from "@/components/layout/consumer-nav";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { ConsumerProfileForm } from "@/components/consumer/profile-form";
+import { cleanupPushBeforeLogout } from "@/lib/push/logout-cleanup";
 
 interface Profile {
   name: string;
@@ -67,8 +68,17 @@ export default function ProfilePage() {
     loadProfile();
   }, [router]);
 
+  /**
+   * Story 12.8-1: AC12.8.1.2 - Consumer Logout Cleanup
+   * Cleans up push subscriptions BEFORE signOut to prevent
+   * notifications being sent to wrong users on shared devices.
+   */
   async function handleLogout() {
     setLoggingOut(true);
+
+    // AC12.8.1.2: Clean up push subscriptions FIRST
+    await cleanupPushBeforeLogout();
+
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
@@ -129,6 +139,7 @@ export default function ProfilePage() {
           className="w-full h-10 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl border-gray-200 text-sm"
           onClick={handleLogout}
           disabled={loggingOut}
+          data-testid="consumer-logout-button"
         >
           {loggingOut ? (
             <>

@@ -1,7 +1,7 @@
 # Architectural Decisions & Patterns
 
 > Section 4 of Atlas Memory
-> Last Sync: 2025-12-30
+> Last Sync: 2026-01-04
 > Sources: docs/architecture.md, docs/standards/progressive-web-app-standards.md
 
 ## Tech Stack
@@ -96,6 +96,9 @@
 | 12.7 | Toast variant styling | Sonner `toastOptions.classNames` with `!important` modifiers to override default styles |
 | 12.7 | PWA icon purposes | Manifest needs separate icon entries for `maskable` and `any` (Next.js type limitation) |
 | 12.7 | Form submit overlay | Full-screen `fixed inset-0 z-50` overlay during submission prevents flash during navigation |
+| 12.8 | Service Worker timeout | `navigator.serviceWorker.ready` can hang indefinitely - wrap with timeout (3s) |
+| 12.8 | Push cleanup on logout | Call `cleanupPushBeforeLogout()` BEFORE `signOut()` to prevent cross-user notifications |
+| 12.8 | Endpoint deduplication | On push subscribe, delete OTHER users' subscriptions for same endpoint (admin client) |
 
 ---
 

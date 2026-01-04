@@ -322,6 +322,28 @@ development_status:
 
   epic-12.7-retrospective: optional
 
+  # Epic 12.8: Round 2 Manual Testing Bug Fixes
+  # =============================================================
+  # Purpose: Fix 12 open bugs from Round 2 live multi-device testing
+  # Source: Round 2 Testing (2026-01-04) - docs/testing/manual/bugs/live-test-bugs-round2-2026-01-04.md
+  # Priority: P0 (Critical - includes security fixes)
+  # Created: 2026-01-04
+  epic-12.8: contexted  # Bug fixes from Round 2 live testing - Tech context created 2026-01-04
+
+  # Phase 1: Security Fixes (P0) - MUST DO FIRST
+  12.8-1-push-notification-security: done  # BUG-R2-003, R2-017: Push notifications sent to wrong user - Atlas code review passed 2026-01-04
+  12.8-2-role-based-route-guards: drafted  # BUG-R2-004: Admin can access consumer view - CRITICAL SECURITY
+
+  # Phase 2: Core Fixes (P1/P2)
+  12.8-3-provider-mis-ofertas-fix: drafted  # BUG-R2-009, R2-018: Wrong filter, completed deliveries visible
+  12.8-4-admin-orders-mobile-ux: drafted  # BUG-R2-007, R2-008: Cluttered layout, status badge
+  12.8-5-admin-providers-ux-ratings: drafted  # BUG-R2-010, R2-011: Missing email, ratings on cards
+
+  # Phase 3: Polish (P3)
+  12.8-6-ui-polish: drafted  # BUG-R2-005, R2-006, R2-016: Icons, fonts, toasts
+
+  epic-12.8-retrospective: optional
+
   # Epic 13: Chrome Extension Final Validation (LAST EPIC)
   # =============================================================
   # Purpose: Final production validation via Chrome Extension E2E

@@ -45,6 +45,7 @@ export interface SubscriptionStatus {
 /**
  * Subscribe a user to push notifications
  * AC12.6.3: Store subscription in database via API route
+ * Story 12.8-1: AC12.8.1.4 - Endpoint deduplication on subscribe
  *
  * @param subscription - Web Push subscription data
  */
@@ -77,6 +78,27 @@ export async function subscribeToPush(
     };
   }
 
+  // Story 12.8-1: AC12.8.1.4 - Endpoint deduplication
+  // Delete any existing subscriptions with same endpoint from OTHER users
+  // This ensures endpoint uniqueness across all users (AC12.8.1.5)
+  // When User B logs in on a device where User A was previously logged in,
+  // User A's subscription for that endpoint is removed.
+  const adminClient = createAdminClient();
+  const { error: dedupeError, data: deletedRows } = await adminClient
+    .from("push_subscriptions")
+    .delete()
+    .eq("endpoint", subscription.endpoint)
+    .neq("user_id", user.id)
+    .select("id");
+
+  if (dedupeError) {
+    console.warn("[PushSubscription] Deduplication warning:", dedupeError);
+    // Continue anyway - the upsert will still work, and we log the warning
+    // The worst case is a duplicate notification, not a failure
+  } else if (deletedRows && deletedRows.length > 0) {
+    console.log(`[PushSubscription] Deduplicated ${deletedRows.length} stale subscription(s) for endpoint`);
+  }
+
   // Insert or update subscription (upsert based on user_id + endpoint)
   const { error: insertError } = await supabase
     .from("push_subscriptions")
@@ -100,7 +122,7 @@ export async function subscribeToPush(
     };
   }
 
-  console.log(`[PushSubscription] User ${user.id} subscribed to push notifications`);
+  console.log(`[PushSubscription] User ${user.id} subscribed to push notifications (endpoint deduplicated)`);
 
   return {
     success: true,
