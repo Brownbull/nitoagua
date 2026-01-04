@@ -1,4 +1,5 @@
 import { test, expect } from "../support/fixtures/merged-fixtures";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Story 12.7-4: Admin Status Sync
@@ -31,6 +32,7 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
     page,
   }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
     // Verify stats cards show correct labels (not "Asignados")
     const statsLabels = await page.locator("[data-testid^='stats-card-']").allTextContents();
@@ -50,6 +52,7 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
     page,
   }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
     // Open filters
     const filterToggle = page.getByTestId("toggle-filters");
@@ -75,6 +78,7 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
 
   test("AC12.7.4.3 - Filter by accepted status works", async ({ page }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
     // Open filters
     const filterToggle = page.getByTestId("toggle-filters");
@@ -97,6 +101,7 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
     page,
   }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
     // Look for order cards
     const orderCards = page.locator("[data-testid^='order-card-']");
@@ -129,6 +134,7 @@ test.describe("12.7-4 Admin Status Sync - Real-time Indicator", () => {
     page,
   }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
     // Wait for page to fully load
     await page.waitForLoadState("networkidle");
@@ -155,6 +161,7 @@ test.describe("12.7-4 Admin Status Sync - Stats Card Filtering", () => {
     page,
   }) => {
     await page.goto("/admin/orders");
+    await assertNoErrorState(page);
 
     // Click on Aceptados stats card
     const aceptadosCard = page.getByTestId("stats-card-aceptados");
@@ -171,6 +178,7 @@ test.describe("12.7-4 Admin Status Sync - Stats Card Filtering", () => {
   }) => {
     // Start with a filter applied
     await page.goto("/admin/orders?status=accepted");
+    await assertNoErrorState(page);
 
     // Verify we're on the filtered page
     await expect(page.url()).toContain("status=accepted");

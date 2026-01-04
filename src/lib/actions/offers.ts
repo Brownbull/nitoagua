@@ -404,14 +404,55 @@ export interface OfferPlatformSettings {
   offer_validity_minutes: number;
   commission_percent: number;
   price: number;
+  price_min: number;
+  price_max: number;
   urgency_surcharge_percent: number;
 }
 
 /**
+ * Helper to parse price tier from database value
+ * Handles both new format {min, suggested, max} and legacy format {value: number}
+ */
+function parsePriceTierValue(
+  dbValue: unknown,
+  defaultMin: number,
+  defaultSuggested: number,
+  defaultMax: number
+): { min: number; suggested: number; max: number } {
+  if (!dbValue || typeof dbValue !== "object") {
+    return { min: defaultMin, suggested: defaultSuggested, max: defaultMax };
+  }
+
+  const obj = dbValue as Record<string, unknown>;
+
+  // New format: { min, suggested, max }
+  if ("min" in obj && "suggested" in obj && "max" in obj) {
+    return {
+      min: typeof obj.min === "number" ? obj.min : defaultMin,
+      suggested: typeof obj.suggested === "number" ? obj.suggested : defaultSuggested,
+      max: typeof obj.max === "number" ? obj.max : defaultMax,
+    };
+  }
+
+  // Legacy format: { value: number } - use as suggested, calculate min/max
+  if ("value" in obj && typeof obj.value === "number") {
+    const suggested = obj.value;
+    return {
+      min: Math.round(suggested * 0.8),
+      suggested,
+      max: Math.round(suggested * 1.3),
+    };
+  }
+
+  return { min: defaultMin, suggested: defaultSuggested, max: defaultMax };
+}
+
+/**
  * Get platform settings needed for offer submission
- * AC: 8.2.2 - Price from platform settings
+ * AC: 8.2.2 - Price from platform settings (uses suggested price by default)
  * AC: 8.2.3 - Commission for earnings preview
  * AC: 8.2.5 - Offer validity duration
+ * Returns min/max price range for provider to adjust within
  */
 export async function getOfferSettings(amount: number, isUrgent: boolean): Promise<{
   success: boolean;
@@ -433,39 +474,49 @@ export async function getOfferSettings(amount: number, isUrgent: boolean): Promi
     };
   }
 
-  // Build settings map
-  const settingsMap: Record<string, number> = {};
+  // Build settings map (keeping full objects for price tiers)
+  const settingsMap: Record<string, unknown> = {};
   for (const setting of settings || []) {
-    const value = typeof setting.value === "object" && setting.value !== null
-      ? (setting.value as { value: number }).value
-      : setting.value as number;
-    settingsMap[setting.key] = value;
+    settingsMap[setting.key] = setting.value;
   }
 
-  // Determine price based on amount
-  let basePrice = 0;
+  // Helper to get number from legacy format
+  const getNumberSetting = (key: string, defaultValue: number): number => {
+    const val = settingsMap[key];
+    if (typeof val === "object" && val !== null && "value" in val) {
+      return (val as { value: number }).value;
+    }
+    return typeof val === "number" ? val : defaultValue;
+  };
+
+  // Determine price tier based on amount
+  let priceTier: { min: number; suggested: number; max: number };
   if (amount <= 100) {
-    basePrice = settingsMap.price_100l ?? 5000;
+    priceTier = parsePriceTierValue(settingsMap.price_100l, 4000, 5000, 6500);
   } else if (amount <= 1000) {
-    basePrice = settingsMap.price_1000l ?? 20000;
+    priceTier = parsePriceTierValue(settingsMap.price_1000l, 16000, 20000, 26000);
   } else if (amount <= 5000) {
-    basePrice = settingsMap.price_5000l ?? 75000;
+    priceTier = parsePriceTierValue(settingsMap.price_5000l, 60000, 75000, 100000);
   } else {
-    basePrice = settingsMap.price_10000l ?? 140000;
+    priceTier = parsePriceTierValue(settingsMap.price_10000l, 110000, 140000, 180000);
   }
 
-  // Apply urgency surcharge if applicable
-  const urgencySurchargePercent = settingsMap.urgency_surcharge_percent ?? 10;
-  const price = isUrgent
-    ? Math.round(basePrice * (1 + urgencySurchargePercent / 100))
-    : basePrice;
+  // Apply urgency surcharge if applicable (to all price tiers)
+  const urgencySurchargePercent = getNumberSetting("urgency_surcharge_percent", 10);
+  const surchargeMultiplier = isUrgent ? (1 + urgencySurchargePercent / 100) : 1;
+
+  const price = Math.round(priceTier.suggested * surchargeMultiplier);
+  const priceMin = Math.round(priceTier.min * surchargeMultiplier);
+  const priceMax = Math.round(priceTier.max * surchargeMultiplier);
 
   return {
     success: true,
     settings: {
-      offer_validity_minutes: settingsMap.offer_validity_default ?? 30,
-      commission_percent: settingsMap.default_commission_percent ?? 15,
+      offer_validity_minutes: getNumberSetting("offer_validity_default", 30),
+      commission_percent: getNumberSetting("default_commission_percent", 15),
       price,
+      price_min: priceMin,
+      price_max: priceMax,
       urgency_surcharge_percent: urgencySurchargePercent,
     },
   };
@@ -702,18 +753,39 @@ export interface OfferWithRequest {
     address: string;
     is_urgent: boolean;
     comuna_name: string | null;
+    status: string;
+  } | null;
+  dispute: {
+    id: string;
+    status: string;
+    disputeType: string;
   } | null;
 }
 
 export interface GroupedOffers {
   pending: OfferWithRequest[];
   accepted: OfferWithRequest[];
+  disputed: OfferWithRequest[];
   history: OfferWithRequest[];
 }
 
 export interface GetMyOffersResult {
   success: boolean;
   offers?: GroupedOffers;
+  error?: string;
+}
+
+// Types for the flat list view (v2.6.0 unified list)
+export type OfferFilterStatus = "pending" | "active_delivery" | "disputed" | "delivered";
+
+export interface FlatOfferWithRequest extends OfferWithRequest {
+  // Computed filter category for easy filtering
+  filterCategory: OfferFilterStatus;
+}
+
+export interface GetAllOffersResult {
+  success: boolean;
+  offers?: FlatOfferWithRequest[];
   error?: string;
 }
 
@@ -775,7 +847,9 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
         amount,
         address,
         is_urgent,
-        comunas!water_requests_comuna_id_fkey(name)
+        status,
+        comunas!water_requests_comuna_id_fkey(name),
+        disputes!disputes_request_id_fkey(id, status, dispute_type)
       )
     `)
     .eq("provider_id", user.id)
@@ -797,8 +871,13 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
       amount: number;
       address: string;
       is_urgent: boolean;
+      status: string;
       comunas: { name: string } | null;
+      disputes: Array<{ id: string; status: string; dispute_type: string }> | null;
     } | null;
+
+    // Get the first dispute if any exist
+    const dispute = request?.disputes?.[0] ?? null;
 
     return {
       id: offer.id,
@@ -814,23 +893,190 @@ export async function getMyOffers(): Promise<GetMyOffersResult> {
         amount: request.amount,
         address: request.address,
         is_urgent: request.is_urgent,
+        status: request.status,
         comuna_name: request.comunas?.name ?? null,
+      } : null,
+      dispute: dispute ? {
+        id: dispute.id,
+        status: dispute.status,
+        disputeType: dispute.dispute_type,
       } : null,
     };
   });
 
   // Group by status
+  // Disputed: accepted offers with an open/under_review dispute
+  // History: completed deliveries (delivered status) without active disputes, plus expired/cancelled
   const grouped: GroupedOffers = {
     pending: transformedOffers.filter(o => o.status === "active"),
-    accepted: transformedOffers.filter(o => o.status === "accepted"),
+    accepted: transformedOffers.filter(o =>
+      o.status === "accepted" &&
+      (!o.dispute || !["open", "under_review"].includes(o.dispute.status))
+    ),
+    disputed: transformedOffers.filter(o =>
+      o.dispute && ["open", "under_review", "resolved_consumer", "resolved_provider"].includes(o.dispute.status)
+    ),
     history: transformedOffers.filter(o =>
-      ["expired", "cancelled", "request_filled"].includes(o.status)
+      ["expired", "cancelled", "request_filled"].includes(o.status) ||
+      (o.request?.status === "delivered" && !o.dispute)
     ),
   };
 
   return {
     success: true,
     offers: grouped,
+  };
+}
+
+/**
+ * Get provider's offers as a flat list with filter categories
+ * Used for the unified offers list view (v2.6.0)
+ * Returns all offers with computed filter category for client-side filtering
+ */
+export async function getAllOffers(): Promise<GetAllOffersResult> {
+  const supabase = await createClient();
+  const adminClient = createAdminClient();
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  // AC12.6.2.3: Return requiresLogin flag for auth failures
+  if (userError || !user) {
+    return createAuthError();
+  }
+
+  // Verify user is a provider
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return {
+      success: false,
+      error: "No se pudo obtener el perfil",
+    };
+  }
+
+  if (profile.role !== "supplier") {
+    return {
+      success: false,
+      error: "Esta funcionalidad es solo para proveedores",
+    };
+  }
+
+  // Query provider's offers with request details (without disputes - fetch separately)
+  const { data: offers, error: offersError } = await adminClient
+    .from("offers")
+    .select(`
+      id,
+      request_id,
+      status,
+      delivery_window_start,
+      delivery_window_end,
+      expires_at,
+      created_at,
+      message,
+      water_requests!offers_request_id_fkey(
+        id,
+        amount,
+        address,
+        is_urgent,
+        status,
+        comunas!water_requests_comuna_id_fkey(name)
+      )
+    `)
+    .eq("provider_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (offersError) {
+    console.error("[Offers] Error fetching offers:", offersError);
+    return {
+      success: false,
+      error: "Error al cargar ofertas",
+    };
+  }
+
+  // Fetch disputes separately - nested join through RLS doesn't work reliably
+  // Get all request IDs from the offers
+  const requestIds = (offers || [])
+    .map(o => {
+      const request = o.water_requests as { id: string } | null;
+      return request?.id;
+    })
+    .filter((id): id is string => !!id);
+
+  // Fetch disputes for these requests
+  const { data: disputes } = await adminClient
+    .from("disputes")
+    .select("id, request_id, status, dispute_type")
+    .in("request_id", requestIds.length > 0 ? requestIds : ["no-results"]);
+
+  // Create a map of request_id -> dispute for quick lookup
+  const disputeMap = new Map<string, { id: string; status: string; dispute_type: string }>();
+  (disputes || []).forEach(d => {
+    disputeMap.set(d.request_id, d);
+  });
+
+  // Transform offers with computed filter category
+  const flatOffers: FlatOfferWithRequest[] = (offers || []).map((offer) => {
+    const request = offer.water_requests as unknown as {
+      id: string;
+      amount: number;
+      address: string;
+      is_urgent: boolean;
+      status: string;
+      comunas: { name: string } | null;
+    } | null;
+
+    // Get the dispute from our map
+    const dispute = request ? disputeMap.get(request.id) ?? null : null;
+
+    // Compute filter category based on status and dispute
+    let filterCategory: OfferFilterStatus;
+
+    if (offer.status === "active") {
+      filterCategory = "pending";
+    } else if (dispute && ["open", "under_review", "resolved_consumer", "resolved_provider", "closed"].includes(dispute.status)) {
+      // Any offer with a dispute (active or resolved) goes to disputed category
+      filterCategory = "disputed";
+    } else if (offer.status === "accepted" && request?.status !== "delivered") {
+      filterCategory = "active_delivery";
+    } else {
+      // expired, cancelled, request_filled, or delivered
+      filterCategory = "delivered";
+    }
+
+    return {
+      id: offer.id,
+      request_id: offer.request_id,
+      status: offer.status as OfferWithRequest["status"],
+      delivery_window_start: offer.delivery_window_start,
+      delivery_window_end: offer.delivery_window_end,
+      expires_at: offer.expires_at,
+      created_at: offer.created_at,
+      message: offer.message,
+      request: request ? {
+        id: request.id,
+        amount: request.amount,
+        address: request.address,
+        is_urgent: request.is_urgent,
+        status: request.status,
+        comuna_name: request.comunas?.name ?? null,
+      } : null,
+      dispute: dispute ? {
+        id: dispute.id,
+        status: dispute.status,
+        disputeType: dispute.dispute_type,
+      } : null,
+      filterCategory,
+    };
+  });
+
+  return {
+    success: true,
+    offers: flatOffers,
   };
 }
 
@@ -1235,10 +1481,8 @@ export async function notifyProviderOfferAccepted(
     }
   }
 
-  // AC12.6.7: Send push notification for offer accepted
-  triggerOfferAcceptedPush(providerId, request.id, request.amount, comunaName).catch(
-    (err) => console.error("[Offers] Push notification error:", err)
-  );
+  // Note: Push notification is now triggered directly in selectOffer() for reliability
+  // This function only handles in-app notification and email
 
   console.log(`[Offers] Notified provider ${providerId} of offer acceptance: ${offerId}`);
 
@@ -1308,7 +1552,11 @@ export async function selectOffer(
         consumer_id,
         tracking_token,
         status,
-        amount
+        amount,
+        comuna_id,
+        comunas!water_requests_comuna_id_fkey (
+          name
+        )
       )
     `
     )
@@ -1329,6 +1577,8 @@ export async function selectOffer(
     tracking_token: string | null;
     status: string;
     amount: number;
+    comuna_id: string | null;
+    comunas: { name: string } | null;
   };
 
   const provider = offer.profiles as unknown as {
@@ -1384,8 +1634,17 @@ export async function selectOffer(
     };
   }
 
+  // AC12.6.7: Send push notification IMMEDIATELY (same pattern as submitOffer)
+  // This must be called directly here, not nested in notifyProviderOfferAccepted,
+  // to ensure it executes before the serverless function returns
+  const comunaName = request.comunas?.name || "";
+  triggerOfferAcceptedPush(offer.provider_id, request.id, request.amount, comunaName).catch(
+    (err) => console.error("[SelectOffer] Push notification error:", err)
+  );
+
   // AC10.2.9: Notify selected provider (in-app + email)
   // Fire and forget - don't block the response
+  // Note: Push is now handled above, this only does in-app notification and email
   notifyProviderOfferAccepted(offerId, offer.provider_id).catch((err) => {
     console.error("[SelectOffer] Failed to notify selected provider:", err);
   });

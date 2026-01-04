@@ -9,80 +9,86 @@ manual/
 ├── README.md                 # This file
 ├── plans/                    # Test plans
 │   ├── live-multi-device-test-plan.md         # Round 1 (completed)
-│   └── live-multi-device-test-plan-round2.md  # Round 2 (pending)
-└── bugs/                     # Bug reports & evidence
-    ├── live-test-bugs-2024-12-30.md           # Round 1 bugs (22 bugs)
-    └── screenshots/                            # Evidence from sessions
+│   └── live-multi-device-test-plan-round2.md  # Round 2 (current)
+├── bugs/                     # Bug reports & evidence
+│   ├── live-test-bugs-2024-12-30.md           # Round 1 bugs (22 bugs - all fixed)
+│   ├── live-test-bugs-round2-2026-01-04.md    # Round 2 bugs
+│   └── screenshots/                            # Evidence from sessions
+└── seeds/                    # Database seeding for manual tests
+    ├── README.md                              # Seeding instructions
+    ├── full-cleanup.sql                       # Clear all transactional data
+    └── seed-test-scenario.sql                 # Optional pre-populated scenarios
 ```
 
 ## Test Sessions
 
 | Session | Date | Version | Status | Bugs Found | Plan | Bugs |
 |---------|------|---------|--------|------------|------|------|
-| Round 1 | 2024-12-30 | v2.4.0 | Complete | 22 bugs | [Plan](./plans/live-multi-device-test-plan.md) | [Bugs](./bugs/live-test-bugs-2024-12-30.md) |
-| Round 2 | TBD | v2.x.x | Pending | - | [Plan](./plans/live-multi-device-test-plan-round2.md) | - |
+| Round 1 | 2024-12-30 | v2.4.0 | Complete | 22 bugs (all fixed) | [Plan](./plans/live-multi-device-test-plan.md) | [Bugs](./bugs/live-test-bugs-2024-12-30.md) |
+| Round 2 | 2026-01-04 | v2.7.0 | In Progress | - | [Plan](./plans/live-multi-device-test-plan-round2.md) | [Bugs](./bugs/live-test-bugs-round2-2026-01-04.md) |
+
+## Quick Start
+
+### Before Testing: Database Cleanup
+
+1. Go to [Supabase Dashboard](https://supabase.com/dashboard) → SQL Editor
+2. Run [seeds/full-cleanup.sql](./seeds/full-cleanup.sql)
+3. Verify all counts are 0
+
+### Test Accounts
+
+| Role | Email | Password | Login URL |
+|------|-------|----------|-----------|
+| Admin | admin@nitoagua.cl | admin.123 | /admin/login |
+| Consumer | consumer@nitoagua.cl | consumer.123 | /login |
+| Supplier | supplier@nitoagua.cl | supplier.123 | /login |
+
+### Device Setup
+
+| Device | Role | Purpose |
+|--------|------|---------|
+| Computer 1 | Admin | Admin panel operations |
+| Computer 2 | Provider | Offer management, deliveries |
+| Android Phone | Consumer | Mobile UX, push notifications |
 
 ## Test Plans
 
-### Round 1: Initial Multi-Device Testing
+### Round 1: Initial Multi-Device Testing (Complete)
 - **File:** [plans/live-multi-device-test-plan.md](./plans/live-multi-device-test-plan.md)
-- **Status:** Complete
+- **Status:** Complete - 22 bugs found
 - **Focus:** End-to-end flows across Consumer, Provider, Admin roles
 
-### Round 2: Post-Fix Validation + Deep Dive
+### Round 2: Post-Fix Validation (Current)
 - **File:** [plans/live-multi-device-test-plan-round2.md](./plans/live-multi-device-test-plan-round2.md)
-- **Status:** Pending (waiting for P1 bug fixes)
+- **Status:** In Progress
 - **Focus:**
-  - Regression testing (verify bug fixes)
-  - Admin panel UX exploration
+  - Regression testing (verify all 22 bug fixes)
+  - New features: Rating system, En Camino status, Dispute flow
   - Concurrent multi-user scenarios
-  - Production profile testing
+  - Edge cases: Offer expiration, request timeout
 
-## Bug Reports
+## Database Seeding
 
-### Round 1 Bugs (2024-12-30)
-- **File:** [bugs/live-test-bugs-2024-12-30.md](./bugs/live-test-bugs-2024-12-30.md)
-- **Total Bugs:** 22
-- **By Priority:**
-  - P1 (Critical/High): 12 bugs
-  - P2 (Medium): 7 bugs
-  - P3 (Low): 3 bugs
+The [seeds/](./seeds/) folder contains SQL scripts for preparing the database:
 
-### Key Findings from Round 1
+| Script | Purpose | When to Use |
+|--------|---------|-------------|
+| [full-cleanup.sql](./seeds/full-cleanup.sql) | Clear all transactional data | Before each test round |
+| [seed-test-scenario.sql](./seeds/seed-test-scenario.sql) | Pre-populate specific scenarios | When testing specific features |
 
-1. **Push Notifications:** Infrastructure works (Test 5 passed), but triggers are missing for transaction events (BUG-005, 008, 013)
-
-2. **Admin Panel Issues:** 6 bugs related to admin (BUG-002, 006, 007, 011, 017, 020) - needs significant attention
-
-3. **Realtime/Sync Issues:** Data not updating across views (BUG-002, 011, 022)
-
-4. **Missing Features:** "En Camino" status, ratings, dispute system (BUG-009, 014, 015, 016)
-
-## How to Run Manual Tests
-
-### Prerequisites
-- 3 devices: Computer (Admin), Computer/Tablet (Provider), Phone (Consumer)
-- Test accounts: admin@nitoagua.cl, supplier@nitoagua.cl, consumer@nitoagua.cl
-- Production URL: https://nitoagua.vercel.app
-
-### Process
-1. Review test plan for the round you're executing
-2. Set up devices with appropriate accounts
-3. Follow test steps, marking pass/fail
-4. Document bugs in the bug report file
-5. Take screenshots for evidence (save to screenshots/)
+See [seeds/README.md](./seeds/README.md) for detailed instructions.
 
 ## Bug Report Template
 
 When documenting new bugs, use this format:
 
 ```markdown
-### BUG-XXX: [Title]
+### BUG-R2-XXX: [Title]
 
 | Field | Value |
 |-------|-------|
 | **Severity** | Critical / High / Medium / Low |
-| **Priority** | P1 / P2 / P3 |
+| **Priority** | P0 / P1 / P2 / P3 |
 | **Device** | Android Phone / Computer / etc. |
 | **Test Step** | X.X |
 | **URL/Route** | /path |
@@ -98,6 +104,8 @@ When documenting new bugs, use this format:
 
 **Actual Behavior:**
 [What actually happens]
+
+**Screenshot:** (if applicable)
 ```
 
 ## Related Documentation

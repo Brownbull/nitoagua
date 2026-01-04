@@ -359,4 +359,141 @@ test.describe("Push Subscription UI @push @seeded", () => {
       expect(hasDescription).toBeGreaterThan(0);
     });
   });
+
+  /**
+   * Story 12.8-1: Push Notification Security & Logout Cleanup
+   * Tests for AC12.8.1.1-3: Logout cleanup behavior
+   *
+   * Note: These tests verify the logout flow calls cleanup correctly.
+   * Full push subscription cleanup cannot be tested in headless Playwright
+   * as browser permission APIs are not available.
+   */
+  test.describe("Logout Cleanup Security @push @security", () => {
+    test("provider logout button exists and is clickable", async ({ page }) => {
+      try {
+        await loginAsSupplier(page);
+      } catch {
+        test.skip(true, "Login failed - test users may not be seeded");
+        return;
+      }
+
+      await page.goto("/provider/settings");
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
+
+      // AC12.8.1.1: Provider logout button should exist
+      const logoutButton = page.getByTestId("sign-out-button");
+      await expect(logoutButton).toBeVisible();
+      await expect(logoutButton).toContainText("Cerrar Sesión");
+    });
+
+    test("consumer logout button exists and is clickable", async ({ page }) => {
+      try {
+        await loginAsConsumer(page);
+      } catch {
+        test.skip(true, "Login failed - test users may not be seeded");
+        return;
+      }
+
+      await page.goto("/consumer-profile");
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
+
+      // AC12.8.1.2: Consumer logout button should exist
+      const logoutButton = page.getByTestId("consumer-logout-button");
+      await expect(logoutButton).toBeVisible();
+      await expect(logoutButton).toContainText("Cerrar Sesión");
+    });
+
+    test("admin logout button exists and is clickable", async ({ page }) => {
+      await page.goto("/admin/login");
+
+      try {
+        await page.waitForSelector('[data-testid="admin-dev-login-button"]', { timeout: 10000 });
+      } catch {
+        test.skip(true, "Admin dev login not available");
+        return;
+      }
+
+      try {
+        await page.getByTestId("admin-dev-login-button").click();
+        await page.waitForURL(/\/admin\/(dashboard|not-authorized|settings)/, { timeout: 15000 });
+      } catch {
+        test.skip(true, "Login failed - test users may not be seeded");
+        return;
+      }
+
+      const currentUrl = page.url();
+      if (currentUrl.includes("not-authorized")) {
+        test.skip(true, "Admin user not authorized - test users may not be seeded");
+        return;
+      }
+
+      // Navigate to admin settings where logout button is located
+      await page.goto("/admin/settings");
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
+
+      // AC12.8.1.3: Admin logout button should exist
+      const logoutButton = page.getByTestId("admin-logout-button");
+      await expect(logoutButton).toBeVisible();
+      await expect(logoutButton).toContainText("Cerrar");
+    });
+
+    test("provider logout redirects to home page", async ({ page }) => {
+      try {
+        await loginAsSupplier(page);
+      } catch {
+        test.skip(true, "Login failed - test users may not be seeded");
+        return;
+      }
+
+      await page.goto("/provider/settings");
+      await page.waitForLoadState("networkidle");
+
+      // Check we actually landed on settings (not redirected due to auth)
+      if (!page.url().includes("/provider/settings")) {
+        test.skip(true, "Could not access provider settings - auth may have failed");
+        return;
+      }
+
+      await assertNoErrorState(page);
+
+      // Click logout - this triggers cleanupPushBeforeLogout() internally
+      const logoutButton = page.getByTestId("sign-out-button");
+      await logoutButton.click();
+
+      // Should redirect to home page after logout (allow more time for push cleanup)
+      await page.waitForURL("/", { timeout: 30000 });
+      await assertNoErrorState(page);
+    });
+
+    test("consumer logout redirects to home page", async ({ page }) => {
+      try {
+        await loginAsConsumer(page);
+      } catch {
+        test.skip(true, "Login failed - test users may not be seeded");
+        return;
+      }
+
+      await page.goto("/consumer-profile");
+      await page.waitForLoadState("networkidle");
+
+      // Check we actually landed on consumer profile (not redirected due to auth)
+      if (!page.url().includes("/consumer-profile")) {
+        test.skip(true, "Could not access consumer profile - auth may have failed");
+        return;
+      }
+
+      await assertNoErrorState(page);
+
+      // Click logout - this triggers cleanupPushBeforeLogout() internally
+      const logoutButton = page.getByTestId("consumer-logout-button");
+      await logoutButton.click();
+
+      // Should redirect to home page after logout (allow more time for push cleanup)
+      await page.waitForURL("/", { timeout: 30000 });
+      await assertNoErrorState(page);
+    });
+  });
 });

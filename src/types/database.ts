@@ -163,6 +163,83 @@ export type Database = {
         }
         Relationships: []
       }
+      disputes: {
+        Row: {
+          consumer_id: string
+          created_at: string
+          description: string | null
+          dispute_type: string
+          evidence_url: string | null
+          id: string
+          provider_id: string
+          request_id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          consumer_id: string
+          created_at?: string
+          description?: string | null
+          dispute_type: string
+          evidence_url?: string | null
+          id?: string
+          provider_id: string
+          request_id: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          consumer_id?: string
+          created_at?: string
+          description?: string | null
+          dispute_type?: string
+          evidence_url?: string | null
+          id?: string
+          provider_id?: string
+          request_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "water_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -265,6 +342,7 @@ export type Database = {
         Row: {
           address: string | null
           avatar_url: string | null
+          average_rating: number | null
           bank_account: string | null
           bank_name: string | null
           commission_override: number | null
@@ -280,6 +358,7 @@ export type Database = {
           price_1000l: number | null
           price_100l: number | null
           price_5000l: number | null
+          rating_count: number | null
           rejection_reason: string | null
           role: string
           rut: string | null
@@ -296,6 +375,7 @@ export type Database = {
         Insert: {
           address?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           bank_account?: string | null
           bank_name?: string | null
           commission_override?: number | null
@@ -311,6 +391,7 @@ export type Database = {
           price_1000l?: number | null
           price_100l?: number | null
           price_5000l?: number | null
+          rating_count?: number | null
           rejection_reason?: string | null
           role: string
           rut?: string | null
@@ -327,6 +408,7 @@ export type Database = {
         Update: {
           address?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           bank_account?: string | null
           bank_name?: string | null
           commission_override?: number | null
@@ -342,6 +424,7 @@ export type Database = {
           price_1000l?: number | null
           price_100l?: number | null
           price_5000l?: number | null
+          rating_count?: number | null
           rejection_reason?: string | null
           role?: string
           rut?: string | null
@@ -480,6 +563,61 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ratings: {
+        Row: {
+          comment: string | null
+          consumer_id: string | null
+          created_at: string | null
+          id: string
+          provider_id: string | null
+          rating: number
+          request_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          comment?: string | null
+          consumer_id?: string | null
+          created_at?: string | null
+          id?: string
+          provider_id?: string | null
+          rating: number
+          request_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          comment?: string | null
+          consumer_id?: string | null
+          created_at?: string | null
+          id?: string
+          provider_id?: string | null
+          rating?: number
+          request_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ratings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ratings_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "water_requests"
             referencedColumns: ["id"]
           },
         ]

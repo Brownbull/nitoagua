@@ -209,4 +209,86 @@ Each test must seed its own data, clean up, and not depend on other tests' state
 
 ---
 
-*Last verified: 2025-12-29 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Epic 10-12 implementations*
+## Code Review Learnings (Testing)
+
+| Date | Story | Issue | Fix Applied |
+|------|-------|-------|-------------|
+| 2026-01-03 | 12.7-8 | Wrong import: `@playwright/test` instead of merged-fixtures | Use `../support/fixtures/merged-fixtures` |
+| 2026-01-03 | 12.7-8 | 13x `waitForTimeout(2000)` anti-pattern | Replaced with `waitForLoadState("networkidle")` |
+| 2026-01-03 | 12.7-8 | Missing `assertNoErrorState` in login helpers | Added to both loginAsSupplier/loginAsConsumer |
+| 2026-01-03 | 12.7-11 | **Mock tests (22 placeholder assertions)** - Tests that verify string === string instead of page interaction | Rewrote with real page navigation, `assertNoErrorState`, and actual UI assertions |
+| 2026-01-03 | 12.7-11 | Wrong status value in admin timeline (`en_route` vs `in_transit`) | Use consistent `in_transit` DB value in all code |
+| 2026-01-03 | 12.7-12 | `Page` type import with merged-fixtures | Import `Page` from `@playwright/test` separately when using merged-fixtures |
+| 2026-01-03 | 12.7-12 | Tests fail when provider has pending withdrawal | Add `checkForPendingWithdrawal()` helper + skip logic for state-dependent tests |
+| 2026-01-03 | 12.7-12 | Weak "always-pass" assertions (`expect(x \|\| true).toBe(true)`) | Replace with proper state checks that can actually fail |
+| 2026-01-03 | 12.7-13 | Rating E2E tests with database verification | Use admin client for test setup, serial mode for data mutations |
+
+---
+
+## Rating/Review Test Pattern (Story 12.7-13)
+
+**Test Structure:** Serial tests with shared test data IDs
+
+```typescript
+test.describe.configure({ mode: "serial" });
+
+// Track IDs for cross-test dependencies and cleanup
+let testRequestId: string | null = null;
+let testProviderId: string | null = null;
+let testConsumerId: string | null = null;
+
+test.beforeAll(async () => {
+  const adminClient = getAdminClient();
+  // Find test users by role
+  const { data: consumer } = await adminClient
+    .from("profiles")
+    .select("id")
+    .eq("role", "consumer")
+    .limit(1)
+    .single();
+  if (consumer) testConsumerId = consumer.id;
+});
+
+test.afterAll(async () => {
+  // Clean up test data
+  if (testRequestId) {
+    const adminClient = getAdminClient();
+    await adminClient.from("ratings").delete().eq("request_id", testRequestId);
+    await adminClient.from("water_requests").delete().eq("id", testRequestId);
+  }
+});
+```
+
+**Database Verification Pattern:**
+```typescript
+test("Rating persists in database", async ({ log }) => {
+  test.skip(!testRequestId, "Test data not available");
+
+  const adminClient = getAdminClient();
+  const { data: rating, error } = await adminClient
+    .from("ratings")
+    .select("*")
+    .eq("request_id", testRequestId)
+    .eq("consumer_id", testConsumerId)
+    .single();
+
+  expect(rating).toBeTruthy();
+  expect(rating.rating).toBe(4);
+  expect(rating.comment).toBe("Expected comment text");
+});
+```
+
+**Key Test IDs Added:**
+- `rating-section` - Rating section container
+- `rate-button` - Initial rate CTA
+- `edit-rating-button` - Edit existing rating
+- `rating-dialog` - Rating dialog modal
+- `rating-stars-input` - Star selection container
+- `star-{1-5}` - Individual star buttons
+- `rating-label` - Feedback label (Malo/Regular/Bueno/etc.)
+- `rating-comment` - Comment textarea
+- `rating-submit-button` - Submit rating button
+
+---
+
+*Last verified: 2026-01-03 | Sources: run_app.local.md, testing docs, Stories Testing-1/1B/2/3, Epic 10-12.7 implementations*

@@ -6,7 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 import { LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { cleanupPushBeforeLogout } from "@/lib/push/logout-cleanup";
 
+/**
+ * Provider Sign Out Button
+ * Story 12.8-1: AC12.8.1.1 - Provider Logout Cleanup
+ * Cleans up push subscriptions BEFORE signOut to prevent
+ * notifications being sent to wrong users on shared devices.
+ */
 export function SignOutButton() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -15,6 +22,9 @@ export function SignOutButton() {
     setIsLoading(true);
 
     try {
+      // AC12.8.1.1: Clean up push subscriptions FIRST
+      await cleanupPushBeforeLogout();
+
       const supabase = createClient();
       const { error } = await supabase.auth.signOut();
 

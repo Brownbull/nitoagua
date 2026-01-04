@@ -23,6 +23,9 @@ export interface ConsumerOffer {
   profiles: {
     name: string;
     avatar_url?: string | null;
+    // AC12.7.13.4: Provider rating display
+    average_rating?: number | null;
+    rating_count?: number | null;
   } | null;
 }
 
@@ -91,15 +94,16 @@ export function useConsumerOffers(
         created_at,
         accepted_at,
         profiles:provider_id (
-          name
+          name,
+          avatar_url,
+          average_rating,
+          rating_count
         )
       `
       )
       .eq("request_id", requestId)
       .in("status", ["active", "expired"])
       .order("delivery_window_start", { ascending: true });
-    // NOTE: avatar_url column does not exist in profiles table yet
-    // When added, include in select: profiles:provider_id (name, avatar_url)
 
     if (fetchError) {
       console.error("[ConsumerOffers] Fetch error:", fetchError);
@@ -108,17 +112,27 @@ export function useConsumerOffers(
     }
 
     // Transform the data to match our interface
-    // Note: avatar_url exists in profiles table but not yet populated by providers
-    // The offer-card.tsx falls back to initials when avatar_url is null
-    const transformedOffers: ConsumerOffer[] = (data || []).map((offer) => ({
-      ...offer,
-      profiles: offer.profiles
-        ? {
-            name: (offer.profiles as { name: string }).name || "Repartidor",
-            avatar_url: null, // TODO: Add avatar_url to query when types are regenerated
-          }
-        : null,
-    }));
+    // AC12.7.13.4: Include provider rating in offer display
+    const transformedOffers: ConsumerOffer[] = (data || []).map((offer) => {
+      const profiles = offer.profiles as {
+        name: string;
+        avatar_url?: string | null;
+        average_rating?: number | null;
+        rating_count?: number | null;
+      } | null;
+
+      return {
+        ...offer,
+        profiles: profiles
+          ? {
+              name: profiles.name || "Repartidor",
+              avatar_url: profiles.avatar_url || null,
+              average_rating: profiles.average_rating || null,
+              rating_count: profiles.rating_count || null,
+            }
+          : null,
+      };
+    });
 
     setOffers(transformedOffers);
     setError(null);

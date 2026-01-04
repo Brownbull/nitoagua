@@ -10,12 +10,18 @@ import {
   History,
   ChevronRight,
   Check,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ConsumerNav } from "@/components/layout/consumer-nav";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { StatusBadge, type RequestStatus } from "@/components/shared/status-badge";
 import { formatShortDate } from "@/lib/utils/format";
+
+// Dispute status for display
+type DisputeStatus = "open" | "under_review" | "resolved_consumer" | "resolved_provider" | null;
 
 interface WaterRequest {
   id: string;
@@ -25,6 +31,7 @@ interface WaterRequest {
   is_urgent: boolean;
   created_at: string;
   delivered_at: string | null;
+  dispute_status: DisputeStatus;
 }
 
 interface Statistics {
@@ -75,9 +82,7 @@ export default function HistoryPage() {
       // Fetch all requests for this consumer
       const { data: requestsData, error } = await supabase
         .from("water_requests")
-        .select(
-          "id, status, amount, address, is_urgent, created_at, delivered_at"
-        )
+        .select("id, status, amount, address, is_urgent, created_at, delivered_at")
         .eq("consumer_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -87,7 +92,28 @@ export default function HistoryPage() {
         return;
       }
 
-      const typedRequests = (requestsData || []) as WaterRequest[];
+      // Fetch consumer's disputes separately (RLS allows consumers to see their own disputes)
+      const { data: disputesData } = await supabase
+        .from("disputes")
+        .select("request_id, status")
+        .eq("consumer_id", user.id);
+
+      // Create a map of request IDs to dispute status
+      const disputesByRequest = new Map<string, DisputeStatus>(
+        (disputesData || []).map((d) => [d.request_id, d.status as DisputeStatus])
+      );
+
+      // Transform data to include dispute_status
+      const typedRequests = (requestsData || []).map((r) => ({
+        id: r.id,
+        status: r.status,
+        amount: r.amount,
+        address: r.address,
+        is_urgent: r.is_urgent,
+        created_at: r.created_at,
+        delivered_at: r.delivered_at,
+        dispute_status: disputesByRequest.get(r.id) || null,
+      })) as WaterRequest[];
       setRequests(typedRequests);
 
       // Calculate statistics
@@ -291,15 +317,27 @@ export default function HistoryPage() {
                       : ""
                   }`}
                 >
-                  {/* Status icon */}
+                  {/* Status icon - shows dispute status or delivery status */}
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      request.status === "delivered"
-                        ? "bg-green-100"
-                        : "bg-amber-100"
+                      request.dispute_status === "open" || request.dispute_status === "under_review"
+                        ? "bg-red-100"
+                        : request.dispute_status === "resolved_consumer"
+                          ? "bg-green-100"
+                          : request.dispute_status === "resolved_provider"
+                            ? "bg-gray-100"
+                            : request.status === "delivered"
+                              ? "bg-green-100"
+                              : "bg-amber-100"
                     }`}
                   >
-                    {request.status === "delivered" ? (
+                    {request.dispute_status === "open" || request.dispute_status === "under_review" ? (
+                      <AlertTriangle className="h-5 w-5 text-red-600" />
+                    ) : request.dispute_status === "resolved_consumer" ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : request.dispute_status === "resolved_provider" ? (
+                      <XCircle className="h-5 w-5 text-gray-500" />
+                    ) : request.status === "delivered" ? (
                       <Check className="h-5 w-5 text-green-600" />
                     ) : (
                       <Clock className="h-5 w-5 text-amber-600" />
@@ -321,6 +359,39 @@ export default function HistoryPage() {
 
                   {/* Status and arrow */}
                   <div className="flex items-center gap-2">
+                    {request.dispute_status && (
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
+                          request.dispute_status === "open" || request.dispute_status === "under_review"
+                            ? "bg-red-100 text-red-700"
+                            : request.dispute_status === "resolved_consumer"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {request.dispute_status === "open" ? (
+                          <>
+                            <AlertTriangle className="h-3 w-3" />
+                            Disputa
+                          </>
+                        ) : request.dispute_status === "under_review" ? (
+                          <>
+                            <Clock className="h-3 w-3" />
+                            En revisión
+                          </>
+                        ) : request.dispute_status === "resolved_consumer" ? (
+                          <>
+                            <CheckCircle className="h-3 w-3" />
+                            A tu favor
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-3 w-3" />
+                            No procedió
+                          </>
+                        )}
+                      </span>
+                    )}
                     <StatusBadge status={request.status as RequestStatus} size="sm" />
                     <ChevronRight className="h-4 w-4 text-gray-400" />
                   </div>

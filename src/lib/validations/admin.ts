@@ -69,26 +69,47 @@ export const SETTING_KEYS = {
 } as const;
 
 /**
+ * Amount tiers available for pricing
+ */
+export const AMOUNT_TIERS = [100, 1000, 5000, 10000] as const;
+export type AmountTier = (typeof AMOUNT_TIERS)[number];
+
+/**
+ * Price tier schema - min, suggested, max prices for each amount tier
+ */
+const priceTierSchema = z
+  .object({
+    min: z
+      .number()
+      .int("El precio debe ser un numero entero")
+      .positive("El precio minimo debe ser mayor a 0"),
+    suggested: z
+      .number()
+      .int("El precio debe ser un numero entero")
+      .positive("El precio sugerido debe ser mayor a 0"),
+    max: z
+      .number()
+      .int("El precio debe ser un numero entero")
+      .positive("El precio maximo debe ser mayor a 0"),
+  })
+  .refine((data) => data.min <= data.suggested, {
+    message: "El minimo debe ser menor o igual al sugerido",
+    path: ["min"],
+  })
+  .refine((data) => data.suggested <= data.max, {
+    message: "El sugerido debe ser menor o igual al maximo",
+    path: ["suggested"],
+  });
+
+/**
  * Pricing settings validation schema
- * Validates water prices, urgency surcharge, and commission rates
+ * Validates water prices (with min/suggested/max), urgency surcharge, and commission rates
  */
 export const pricingSettingsSchema = z.object({
-  price_100l: z
-    .number()
-    .int("El precio debe ser un numero entero")
-    .positive("El precio debe ser mayor a 0"),
-  price_1000l: z
-    .number()
-    .int("El precio debe ser un numero entero")
-    .positive("El precio debe ser mayor a 0"),
-  price_5000l: z
-    .number()
-    .int("El precio debe ser un numero entero")
-    .positive("El precio debe ser mayor a 0"),
-  price_10000l: z
-    .number()
-    .int("El precio debe ser un numero entero")
-    .positive("El precio debe ser mayor a 0"),
+  price_100l: priceTierSchema,
+  price_1000l: priceTierSchema,
+  price_5000l: priceTierSchema,
+  price_10000l: priceTierSchema,
   urgency_surcharge_percent: z
     .number()
     .int("El porcentaje debe ser un numero entero")
@@ -107,13 +128,19 @@ export const pricingSettingsSchema = z.object({
 export type PricingSettingsInput = z.infer<typeof pricingSettingsSchema>;
 
 /**
+ * Type for a single price tier
+ */
+export type PriceTier = z.infer<typeof priceTierSchema>;
+
+/**
  * Default pricing settings values (used when no settings exist in database)
+ * Each tier has min, suggested, and max prices
  */
 export const DEFAULT_PRICING_SETTINGS: PricingSettingsInput = {
-  price_100l: 5000, // CLP
-  price_1000l: 20000, // CLP
-  price_5000l: 75000, // CLP
-  price_10000l: 140000, // CLP
+  price_100l: { min: 4000, suggested: 5000, max: 6500 }, // CLP
+  price_1000l: { min: 16000, suggested: 20000, max: 26000 }, // CLP
+  price_5000l: { min: 60000, suggested: 75000, max: 100000 }, // CLP
+  price_10000l: { min: 110000, suggested: 140000, max: 180000 }, // CLP
   urgency_surcharge_percent: 10, // %
   default_commission_percent: 15, // %
 };

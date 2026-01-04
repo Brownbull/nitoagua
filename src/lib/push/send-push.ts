@@ -22,20 +22,35 @@ let vapidInitialized = false;
  * This prevents build-time errors when env vars are not available
  */
 function initVapid(): boolean {
-  if (vapidInitialized) return true;
+  if (vapidInitialized) {
+    console.log("[Push] VAPID already initialized");
+    return true;
+  }
 
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "";
-  const privateKey = process.env.VAPID_PRIVATE_KEY || "";
+  // Trim whitespace from keys - env vars can have trailing newlines
+  const publicKey = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "").trim();
+  const privateKey = (process.env.VAPID_PRIVATE_KEY || "").trim();
   const subject = process.env.VAPID_SUBJECT || "mailto:soporte@nitoagua.cl";
 
+  // Debug: Log key presence and lengths (not actual values for security)
+  console.log("[Push] initVapid() checking keys:", {
+    hasPublicKey: !!publicKey,
+    publicKeyLength: publicKey.length,
+    hasPrivateKey: !!privateKey,
+    privateKeyLength: privateKey.length,
+    subject,
+  });
+
   if (!publicKey || !privateKey) {
-    console.warn("[Push] VAPID keys not configured");
+    console.warn("[Push] VAPID keys not configured - publicKey:", !!publicKey, "privateKey:", !!privateKey);
     return false;
   }
 
   try {
+    console.log("[Push] Calling webpush.setVapidDetails...");
     webpush.setVapidDetails(subject, publicKey, privateKey);
     vapidInitialized = true;
+    console.log("[Push] VAPID initialized successfully");
     return true;
   } catch (error) {
     console.error("[Push] Error initializing VAPID:", error);
@@ -79,13 +94,40 @@ export async function sendPushToUser(
     return { success: true, sent: 0, total: 0, cleaned: 0 };
   }
 
-  const adminClient = createAdminClient();
+  let adminClient;
+  try {
+    adminClient = createAdminClient();
+    console.log("[Push] Admin client created successfully");
+  } catch (err) {
+    console.error("[Push] Failed to create admin client:", err);
+    return {
+      success: false,
+      sent: 0,
+      total: 0,
+      cleaned: 0,
+      errors: ["Failed to create admin client: " + String(err)],
+    };
+  }
 
   // Query user's push subscriptions
-  const { data: subscriptions, error: queryError } = await adminClient
+  console.log(`[Push] Querying subscriptions for user: ${userId}`);
+  console.log(`[Push] Admin client URL check:`, process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30));
+
+  const { data: subscriptions, error: queryError, status, statusText } = await adminClient
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
     .eq("user_id", userId);
+
+  // Extra debug: log raw response
+  console.log(`[Push] Raw query response:`, JSON.stringify({
+    dataType: typeof subscriptions,
+    dataIsArray: Array.isArray(subscriptions),
+    dataLength: subscriptions?.length,
+    errorCode: queryError?.code,
+    errorMsg: queryError?.message
+  }));
+
+  console.log(`[Push] Query result - status: ${status}, statusText: ${statusText}, data length: ${subscriptions?.length ?? 'null'}, error: ${queryError?.message ?? 'none'}`);
 
   if (queryError) {
     console.error("[Push] Error querying subscriptions:", queryError);

@@ -229,8 +229,45 @@ export async function updateSettings(
 }
 
 /**
+ * Helper to parse price tier from database value
+ * Handles both new format {min, suggested, max} and legacy format (single number)
+ */
+function parsePriceTier(
+  dbValue: unknown,
+  defaultTier: { min: number; suggested: number; max: number }
+): { min: number; suggested: number; max: number } {
+  if (!dbValue || typeof dbValue !== "object") {
+    return defaultTier;
+  }
+
+  const obj = dbValue as Record<string, unknown>;
+
+  // New format: { min, suggested, max }
+  if ("min" in obj && "suggested" in obj && "max" in obj) {
+    return {
+      min: typeof obj.min === "number" ? obj.min : defaultTier.min,
+      suggested: typeof obj.suggested === "number" ? obj.suggested : defaultTier.suggested,
+      max: typeof obj.max === "number" ? obj.max : defaultTier.max,
+    };
+  }
+
+  // Legacy format: { value: number } - use as suggested, calculate min/max
+  if ("value" in obj && typeof obj.value === "number") {
+    const suggested = obj.value;
+    return {
+      min: Math.round(suggested * 0.8), // 20% below suggested
+      suggested,
+      max: Math.round(suggested * 1.3), // 30% above suggested
+    };
+  }
+
+  return defaultTier;
+}
+
+/**
  * Get current pricing settings from database
  * Falls back to defaults if settings don't exist
+ * Supports both new format (min/suggested/max) and legacy format (single value)
  */
 export async function getPricingSettings(): Promise<ActionResult<PricingSettingsInput>> {
   try {
@@ -265,32 +302,32 @@ export async function getPricingSettings(): Promise<ActionResult<PricingSettings
       };
     }
 
-    // Build settings object from database rows
-    const settingsMap: Record<string, number> = {};
+    // Build settings map from database rows
+    const settingsMap: Record<string, unknown> = {};
     for (const setting of settings || []) {
-      // JSONB value is stored as { value: number }
-      const value = typeof setting.value === "object" && setting.value !== null
-        ? (setting.value as { value: number }).value
-        : setting.value as number;
-      settingsMap[setting.key] = value;
+      settingsMap[setting.key] = setting.value;
     }
 
-    // Merge with defaults for any missing settings
+    // Parse price tiers (handles both new and legacy formats)
     const result: PricingSettingsInput = {
-      price_100l:
-        settingsMap.price_100l ?? DEFAULT_PRICING_SETTINGS.price_100l,
-      price_1000l:
-        settingsMap.price_1000l ?? DEFAULT_PRICING_SETTINGS.price_1000l,
-      price_5000l:
-        settingsMap.price_5000l ?? DEFAULT_PRICING_SETTINGS.price_5000l,
-      price_10000l:
-        settingsMap.price_10000l ?? DEFAULT_PRICING_SETTINGS.price_10000l,
-      urgency_surcharge_percent:
-        settingsMap.urgency_surcharge_percent ??
-        DEFAULT_PRICING_SETTINGS.urgency_surcharge_percent,
-      default_commission_percent:
-        settingsMap.default_commission_percent ??
-        DEFAULT_PRICING_SETTINGS.default_commission_percent,
+      price_100l: parsePriceTier(settingsMap.price_100l, DEFAULT_PRICING_SETTINGS.price_100l),
+      price_1000l: parsePriceTier(settingsMap.price_1000l, DEFAULT_PRICING_SETTINGS.price_1000l),
+      price_5000l: parsePriceTier(settingsMap.price_5000l, DEFAULT_PRICING_SETTINGS.price_5000l),
+      price_10000l: parsePriceTier(settingsMap.price_10000l, DEFAULT_PRICING_SETTINGS.price_10000l),
+      urgency_surcharge_percent: (() => {
+        const val = settingsMap.urgency_surcharge_percent;
+        if (typeof val === "object" && val !== null && "value" in val) {
+          return (val as { value: number }).value;
+        }
+        return typeof val === "number" ? val : DEFAULT_PRICING_SETTINGS.urgency_surcharge_percent;
+      })(),
+      default_commission_percent: (() => {
+        const val = settingsMap.default_commission_percent;
+        if (typeof val === "object" && val !== null && "value" in val) {
+          return (val as { value: number }).value;
+        }
+        return typeof val === "number" ? val : DEFAULT_PRICING_SETTINGS.default_commission_percent;
+      })(),
     };
 
     console.log("[ADMIN] Pricing settings loaded for user:", user.email);
@@ -311,6 +348,7 @@ export async function getPricingSettings(): Promise<ActionResult<PricingSettings
 /**
  * Update pricing settings
  * Validates input and upserts each setting to database
+ * Stores price tiers with min/suggested/max structure
  */
 export async function updatePricingSettings(
   input: PricingSettingsInput
@@ -374,29 +412,29 @@ export async function updatePricingSettings(
     const updatedBy = profile?.id || null;
     const timestamp = new Date().toISOString();
 
-    // Prepare settings to upsert
+    // Prepare settings to upsert - price tiers now have min/suggested/max structure
     const settingsToUpsert = [
       {
         key: "price_100l",
-        value: { value: data.price_100l },
+        value: data.price_100l, // { min, suggested, max }
         updated_by: updatedBy,
         updated_at: timestamp,
       },
       {
         key: "price_1000l",
-        value: { value: data.price_1000l },
+        value: data.price_1000l, // { min, suggested, max }
         updated_by: updatedBy,
         updated_at: timestamp,
       },
       {
         key: "price_5000l",
-        value: { value: data.price_5000l },
+        value: data.price_5000l, // { min, suggested, max }
         updated_by: updatedBy,
         updated_at: timestamp,
       },
       {
         key: "price_10000l",
-        value: { value: data.price_10000l },
+        value: data.price_10000l, // { min, suggested, max }
         updated_by: updatedBy,
         updated_at: timestamp,
       },

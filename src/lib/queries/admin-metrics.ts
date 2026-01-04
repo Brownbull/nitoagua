@@ -48,6 +48,12 @@ export interface ProviderMetrics {
   newApplications: number;
 }
 
+export interface DisputeMetrics {
+  openCount: number;
+  underReviewCount: number;
+  totalActiveCount: number;
+}
+
 export interface TrendData {
   requests: number;
   offers: number;
@@ -61,6 +67,7 @@ export interface DashboardMetrics {
   offers: OfferMetrics;
   financial: FinancialMetrics;
   providers: ProviderMetrics;
+  disputes: DisputeMetrics;
   trends: TrendData;
   lastUpdated: string;
 }
@@ -401,6 +408,37 @@ async function getProviderMetrics(
 }
 
 /**
+ * Get dispute metrics (not period-dependent - shows current active disputes)
+ */
+async function getDisputeMetrics(
+  adminClient: ReturnType<typeof createAdminClient>
+): Promise<DisputeMetrics> {
+  // Get all active disputes (open or under_review)
+  const { data: disputes, error } = await adminClient
+    .from("disputes")
+    .select("id, status")
+    .in("status", ["open", "under_review"]);
+
+  if (error || !disputes) {
+    console.error("[ADMIN] Error fetching dispute metrics:", error?.message);
+    return {
+      openCount: 0,
+      underReviewCount: 0,
+      totalActiveCount: 0,
+    };
+  }
+
+  const openCount = disputes.filter((d) => d.status === "open").length;
+  const underReviewCount = disputes.filter((d) => d.status === "under_review").length;
+
+  return {
+    openCount,
+    underReviewCount,
+    totalActiveCount: openCount + underReviewCount,
+  };
+}
+
+/**
  * Get all dashboard metrics for a period
  */
 export async function getDashboardMetrics(period: Period): Promise<DashboardMetrics> {
@@ -410,7 +448,7 @@ export async function getDashboardMetrics(period: Period): Promise<DashboardMetr
   const { start: prevStart, end: prevEnd } = getPreviousDateRange(period);
 
   // Fetch current and previous period metrics in parallel
-  const [currentRequests, prevRequests, currentOffers, prevOffers, currentFinancial, prevFinancial, currentProviders, prevProviders] =
+  const [currentRequests, prevRequests, currentOffers, prevOffers, currentFinancial, prevFinancial, currentProviders, prevProviders, currentDisputes] =
     await Promise.all([
       getRequestMetrics(adminClient, start, end),
       getRequestMetrics(adminClient, prevStart, prevEnd),
@@ -420,6 +458,7 @@ export async function getDashboardMetrics(period: Period): Promise<DashboardMetr
       getFinancialMetrics(adminClient, prevStart, prevEnd),
       getProviderMetrics(adminClient, start, end),
       getProviderMetrics(adminClient, prevStart, prevEnd),
+      getDisputeMetrics(adminClient),
     ]);
 
   // Calculate trends
@@ -436,6 +475,7 @@ export async function getDashboardMetrics(period: Period): Promise<DashboardMetr
     offers: currentOffers,
     financial: currentFinancial,
     providers: currentProviders,
+    disputes: currentDisputes,
     trends,
     lastUpdated: new Date().toISOString(),
   };

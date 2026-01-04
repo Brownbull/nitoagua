@@ -304,23 +304,45 @@ development_status:
   12.7-1-fix-map-tile-rendering: done  # BUG-001: Map tiles not rendering - CSS height chain + invalidateSize() fix - DONE 2025-12-31
   12.7-2-push-notification-triggers: done  # BUG-005, 008, 013: Triggers verified existing, logging enhanced, E2E tests fixed - DONE 2026-01-01
   12.7-3-admin-orders-click-fix: done  # BUG-007: Admin orders click fix - Debounced realtime refresh, E2E fixed, Atlas code review passed - 2025-12-31
-  12.7-4-admin-status-sync: review  # BUG-011: Admin status enum fix (assigned→accepted) - 7/7 E2E tests passing
-  12.7-5-consumer-dispute-option: ready-for-dev  # BUG-015: Consumer cannot dispute delivery
-  12.7-6-admin-dispute-resolution: ready-for-dev  # BUG-016: Admin needs dispute resolution tools (depends on 12.7-5)
-  12.7-7-admin-responsive-ui-fixes: ready-for-dev  # BUG-020: Admin provider details buttons cut off
-  12.7-8-offer-cancellation-flow: review  # BUG-021, 022: VERIFIED WORKING - E2E tests added, code analysis shows correct implementation
+  12.7-4-admin-status-sync: done  # BUG-011: Admin status enum fix (assigned→accepted) - Code review fix: detail page also updated - 7/7 E2E tests passing
+  12.7-5-consumer-dispute-option: done  # BUG-015: Consumer dispute option - Atlas code review passed, .single() fix applied, API route documented
+  12.7-6-admin-dispute-resolution: done  # BUG-016: Admin dispute resolution - Code review passed, deployed 2026-01-02
+  12.7-7-admin-responsive-ui-fixes: done  # BUG-020: Admin provider details buttons cut off - Atlas code review passed 2026-01-03
+  12.7-8-offer-cancellation-flow: done  # BUG-021, 022: VERIFIED WORKING - E2E tests added, Atlas code review passed 2026-01-03
 
   # Phase 2: Medium Priority (P2)
-  12.7-9-admin-panel-ux-improvements: ready-for-dev  # BUG-002, 006, 017: Stale data, no sorting, nav issues
-  12.7-10-provider-ux-redesign: ready-for-dev  # BUG-003, 010: Request detail overload, not driver-friendly
-  12.7-11-en-camino-delivery-status: ready-for-dev  # BUG-009: Missing "En Camino" status
-  12.7-12-commission-payment-screenshot: ready-for-dev  # BUG-012: No screenshot upload for commission
-  12.7-13-rating-review-system: ready-for-dev  # BUG-014: No rating/review system
+  12.7-9-admin-panel-ux-improvements: done  # BUG-002, 006, 017: Stale data, no sorting, nav issues - Atlas code review passed 2026-01-03
+  12.7-10-provider-ux-redesign: done  # BUG-003, 010: Request detail overload, not driver-friendly - Implemented 2026-01-03
+  12.7-11-en-camino-delivery-status: done  # BUG-009: "En Camino" status - Atlas code review passed, 2 fixes applied 2026-01-03
+  12.7-12-commission-payment-screenshot: done  # BUG-012: Storage bucket fix - Atlas code review passed, test fixes applied 2026-01-03
+  12.7-13-rating-review-system: done  # BUG-014: Rating system - Atlas code review passed, Spanish accents fixed 2026-01-04
 
   # Phase 3: Polish (P3)
-  12.7-14-ui-polish-pwa-fixes: ready-for-dev  # BUG-004, 018, 019: Toast contrast, icon blank, flash
+  12.7-14-ui-polish-pwa-fixes: done  # BUG-004, 018, 019: Toast contrast, icon blank, flash - Atlas code review passed 2026-01-04
 
   epic-12.7-retrospective: optional
+
+  # Epic 12.8: Round 2 Manual Testing Bug Fixes
+  # =============================================================
+  # Purpose: Fix 12 open bugs from Round 2 live multi-device testing
+  # Source: Round 2 Testing (2026-01-04) - docs/testing/manual/bugs/live-test-bugs-round2-2026-01-04.md
+  # Priority: P0 (Critical - includes security fixes)
+  # Created: 2026-01-04
+  epic-12.8: contexted  # Bug fixes from Round 2 live testing - Tech context created 2026-01-04
+
+  # Phase 1: Security Fixes (P0) - MUST DO FIRST
+  12.8-1-push-notification-security: done  # BUG-R2-003, R2-017: Push notifications sent to wrong user - Atlas code review passed 2026-01-04
+  12.8-2-role-based-route-guards: drafted  # BUG-R2-004: Admin can access consumer view - CRITICAL SECURITY
+
+  # Phase 2: Core Fixes (P1/P2)
+  12.8-3-provider-mis-ofertas-fix: drafted  # BUG-R2-009, R2-018: Wrong filter, completed deliveries visible
+  12.8-4-admin-orders-mobile-ux: drafted  # BUG-R2-007, R2-008: Cluttered layout, status badge
+  12.8-5-admin-providers-ux-ratings: drafted  # BUG-R2-010, R2-011: Missing email, ratings on cards
+
+  # Phase 3: Polish (P3)
+  12.8-6-ui-polish: drafted  # BUG-R2-005, R2-006, R2-016: Icons, fonts, toasts
+
+  epic-12.8-retrospective: optional
 
   # Epic 13: Chrome Extension Final Validation (LAST EPIC)
   # =============================================================

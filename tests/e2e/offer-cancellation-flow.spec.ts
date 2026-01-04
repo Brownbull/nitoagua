@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/fixtures/merged-fixtures";
 import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
@@ -29,23 +29,27 @@ test.use({
 // Helper to login as supplier
 async function loginAsSupplier(page: import("@playwright/test").Page) {
   await page.goto("/login");
+  await assertNoErrorState(page);
   await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
   const supplierButton = page.getByRole("button", { name: "Supplier", exact: true });
   await supplierButton.click();
-  await page.waitForTimeout(100);
+  await expect(supplierButton).toHaveAttribute("data-state", "on");
   await page.getByTestId("dev-login-button").click();
   await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await assertNoErrorState(page);
 }
 
 // Helper to login as consumer
 async function loginAsConsumer(page: import("@playwright/test").Page) {
   await page.goto("/login");
+  await assertNoErrorState(page);
   await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
   const consumerButton = page.getByRole("button", { name: "Consumer", exact: true });
   await consumerButton.click();
-  await page.waitForTimeout(100);
+  await expect(consumerButton).toHaveAttribute("data-state", "on");
   await page.getByTestId("dev-login-button").click();
   await page.waitForURL("**/", { timeout: 15000 });
+  await assertNoErrorState(page);
 }
 
 test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
@@ -56,7 +60,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
       const pendingSection = page.getByTestId("section-pending");
@@ -98,7 +102,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
       const pendingSection = page.getByTestId("section-pending");
@@ -122,7 +126,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
 
       // Wait for toast and UI update
       await expect(page.getByText("Oferta cancelada")).toBeVisible({ timeout: 5000 });
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState("networkidle");
 
       // Verify offer moved to history with "Cancelada" badge
       const historySection = page.getByTestId("section-history");
@@ -145,7 +149,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       // Navigate to consumer's request that has offers
       // This test verifies the hook correctly filters by status
       await page.goto("/");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
       // Check if consumer has any active requests with offers
@@ -158,7 +162,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       }
 
       await trackLink.click();
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
 
       // If there are offer cards visible, verify they are all active (not cancelled)
       const offerCards = page.locator('[data-testid="consumer-offer-card"]');
@@ -189,7 +193,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
       // Look in history section for cancelled offers
@@ -221,7 +225,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
       const historySection = page.getByTestId("section-history");
@@ -251,7 +255,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
       const acceptedSection = page.getByTestId("section-accepted");
@@ -286,7 +290,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
       // Connection indicator shows Wifi/WifiOff icon with "En vivo"/"Offline" text
@@ -305,7 +309,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
       // Look for refresh button
@@ -321,7 +325,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
 
       // Click refresh - should not error
       await refreshButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState("networkidle");
 
       // Page should still be functional
       await expect(page.getByRole("heading", { name: "Mis Ofertas" })).toBeVisible();

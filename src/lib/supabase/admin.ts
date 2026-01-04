@@ -14,9 +14,15 @@ import type { Database } from "@/types/database";
  */
 export function createAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Support both naming conventions for service role key
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
+    console.error("[AdminClient] Missing env vars:", {
+      hasUrl: !!supabaseUrl,
+      hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_KEY,
+    });
     throw new Error(
       "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables"
     );
