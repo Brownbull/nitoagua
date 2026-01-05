@@ -5,6 +5,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { AUTH_ERROR_MESSAGE, type ActionResult } from "@/lib/types/action-result";
 
+export interface ProviderRating {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  consumer_name: string | null;
+}
+
 /**
  * Check if current user is admin
  * AC12.6.2.4: Return requiresLogin flag for auth failures
@@ -213,5 +221,56 @@ export async function updateCommissionOverride(
   } catch (err) {
     console.error("[ADMIN] Unexpected error in updateCommissionOverride:", err);
     return { success: false, error: "Error inesperado al actualizar comision" };
+  }
+}
+
+/**
+ * Get ratings for a provider (admin only)
+ * Returns up to 20 most recent ratings
+ */
+export async function getProviderRatings(
+  providerId: string
+): Promise<{ success: boolean; ratings: ProviderRating[]; error?: string; requiresLogin?: boolean }> {
+  try {
+    const auth = await verifyAdminAccess();
+    if (!auth.isAdmin) {
+      return { success: false, ratings: [], error: auth.error || "Error de autenticación", requiresLogin: auth.requiresLogin };
+    }
+
+    const adminClient = createAdminClient();
+
+    const { data: ratings, error } = await adminClient
+      .from("ratings")
+      .select(`
+        id,
+        rating,
+        comment,
+        created_at,
+        consumer:profiles!consumer_id(name)
+      `)
+      .eq("provider_id", providerId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error) {
+      console.error("[ADMIN] Error fetching provider ratings:", error.message);
+      return { success: false, ratings: [], error: "Error al cargar calificaciones" };
+    }
+
+    // Map to flattened structure (filter out any with null created_at)
+    const mappedRatings: ProviderRating[] = (ratings || [])
+      .filter((r) => r.created_at !== null)
+      .map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        created_at: r.created_at as string,
+        consumer_name: (r.consumer as { name: string } | null)?.name ?? null,
+      }));
+
+    return { success: true, ratings: mappedRatings };
+  } catch (err) {
+    console.error("[ADMIN] Unexpected error in getProviderRatings:", err);
+    return { success: false, ratings: [], error: "Error inesperado al cargar calificaciones" };
   }
 }
