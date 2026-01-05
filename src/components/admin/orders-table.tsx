@@ -286,7 +286,7 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
   const handleInTransitClick = useCallback(() => toggleStatusFilter("in_transit"), [toggleStatusFilter]);
   const handleDeliveredClick = useCallback(() => toggleStatusFilter("delivered"), [toggleStatusFilter]);
   const handleCancelledClick = useCallback(() => toggleStatusFilter("cancelled"), [toggleStatusFilter]);
-  const handleAllClick = useCallback(() => toggleStatusFilter("all"), [toggleStatusFilter]);
+  const handleDisputeClick = useCallback(() => toggleStatusFilter("has_dispute"), [toggleStatusFilter]);
 
   return (
     <div className="space-y-4">
@@ -368,11 +368,11 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
           onClick={handleCancelledClick}
         />
         <StatsCard
-          label="Total"
-          value={stats.total}
-          color="gray"
-          isActive={!hasActiveFilters}
-          onClick={handleAllClick}
+          label="Disputas"
+          value={stats.disputes}
+          color="orange"
+          isActive={currentFilters.status === "has_dispute"}
+          onClick={handleDisputeClick}
         />
       </div>
 
@@ -629,6 +629,10 @@ const STATS_COLOR_CLASSES: Record<string, { normal: string; active: string }> = 
   red: {
     normal: "bg-red-50 text-red-700",
     active: "bg-red-500 text-white ring-2 ring-red-600 ring-offset-2"
+  },
+  orange: {
+    normal: "bg-orange-50 text-orange-700",
+    active: "bg-orange-500 text-white ring-2 ring-orange-600 ring-offset-2"
   },
   gray: {
     normal: "bg-gray-100 text-gray-700",

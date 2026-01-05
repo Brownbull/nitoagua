@@ -1,13 +1,14 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/fixtures/merged-fixtures";
 import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Provider's Active Offers List - Story 8-3
+ * Updated for unified list view (v2.6.2) - Story 12.8-3
  *
  * Tests the offers list page functionality:
- * - AC8.3.1: Provider sees offers grouped: Pendientes, Aceptadas, Expiradas/Rechazadas
- * - AC8.3.2: Pending offers show: request summary, delivery window, time remaining countdown
- * - AC8.3.3: Countdown displays "Expira en 25:30" format
+ * - AC8.3.1: Provider sees unified offers list with filter dropdowns
+ * - AC8.3.2: Offer cards show: request summary, delivery window, status badge
+ * - AC8.3.3: Countdown displays "Expira en 25:30" format for pending offers
  * - AC8.3.4: "Cancelar Oferta" button available on pending offers
  * - AC8.3.5: Offers update in real-time (acceptance, expiration)
  *
@@ -20,6 +21,7 @@ const skipIfNoDevLogin = process.env.NEXT_PUBLIC_DEV_LOGIN !== "true";
 // Helper to login as supplier
 async function loginAsSupplier(page: import("@playwright/test").Page) {
   await page.goto("/login");
+  await assertNoErrorState(page);
 
   // Wait for dev login section to be visible
   await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
@@ -28,12 +30,13 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
   const supplierButton = page.getByRole("button", { name: "Supplier", exact: true });
   await supplierButton.click();
 
-  // Wait a moment for the email/password to auto-fill
-  await page.waitForTimeout(100);
+  // Wait for email/password to auto-fill
+  await page.waitForLoadState("networkidle");
 
   // Click login
   await page.getByTestId("dev-login-button").click();
   await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await assertNoErrorState(page);
 }
 
 test.describe("Provider Active Offers List - Story 8-3", () => {
@@ -44,48 +47,55 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
       // Should see offers page header
       await expect(page.getByRole("heading", { name: "Mis Ofertas" })).toBeVisible({ timeout: 10000 });
-      await expect(page.getByText("Gestiona tus ofertas enviadas")).toBeVisible();
+      // Should see offer count summary (unified list view since v2.6.0)
+      await expect(page.getByText(/\d+ de \d+ ofertas/)).toBeVisible();
     });
 
-    test("offers page shows grouped sections", async ({ page }) => {
+    test("offers page shows filter dropdowns (unified list view)", async ({ page }) => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
-      // Check for section headers (they should exist even if empty)
-      const hasPendingSection = await page.getByTestId("section-pending").isVisible().catch(() => false);
-      const hasAcceptedSection = await page.getByTestId("section-accepted").isVisible().catch(() => false);
-      const hasHistorySection = await page.getByTestId("section-history").isVisible().catch(() => false);
       const hasEmptyState = await page.getByTestId("empty-state-global").isVisible().catch(() => false);
 
-      // Should have either sections or global empty state
       if (hasEmptyState) {
         // Empty state should have link to requests
         await expect(page.getByRole("link", { name: /Ver Solicitudes/ })).toBeVisible();
       } else {
-        // All three sections should be visible
-        expect(hasPendingSection).toBe(true);
-        expect(hasAcceptedSection).toBe(true);
-        expect(hasHistorySection).toBe(true);
+        // Unified list view has Estado and Comuna filter dropdowns
+        await expect(page.getByRole("button", { name: /Estado/i })).toBeVisible();
+        await expect(page.getByRole("button", { name: /Comuna/i })).toBeVisible();
       }
     });
 
-    test("pending section shows badge count", async ({ page }) => {
+    test("Estado filter dropdown shows status options", async ({ page }) => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
-      const pendingSection = page.getByTestId("section-pending");
-      const hasPending = await pendingSection.isVisible().catch(() => false);
+      const estadoButton = page.getByRole("button", { name: /Estado/i });
+      const hasEstadoButton = await estadoButton.isVisible().catch(() => false);
 
-      if (hasPending) {
-        // Section should show "Pendientes" label
-        await expect(pendingSection.getByText("Pendientes")).toBeVisible();
+      if (hasEstadoButton) {
+        // Open Estado dropdown
+        await estadoButton.click();
+
+        // Should show filter options with counts
+        await expect(page.getByRole("button", { name: /Pendientes/i })).toBeVisible();
+        await expect(page.getByRole("button", { name: /En proceso/i })).toBeVisible();
+        await expect(page.getByRole("button", { name: /Historial/i })).toBeVisible();
+
+        // Close dropdown
+        await page.keyboard.press("Escape");
       }
     });
   });
@@ -97,7 +107,8 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
       // Check if there are any offer cards
       const hasOfferCards = await page.getByTestId("offer-card").first().isVisible().catch(() => false);
@@ -105,8 +116,8 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       if (hasOfferCards) {
         const firstCard = page.getByTestId("offer-card").first();
 
-        // Should show location (comuna name)
-        await expect(firstCard.locator("text=/Ubicación|Santiago|Providencia|Las Condes|Vitacura|Maipu/i")).toBeVisible();
+        // Should show location (comuna name) - any Chilean comuna
+        await expect(firstCard.locator("text=/Villarrica|Pucón|Santiago|Providencia|Las Condes|Vitacura|Maipu/i")).toBeVisible();
 
         // Should show amount in liters
         await expect(firstCard.locator("text=/litros/i")).toBeVisible();
@@ -120,24 +131,23 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
-      // Look for pending offers specifically
-      const pendingSection = page.getByTestId("section-pending");
-      const hasPendingSection = await pendingSection.isVisible().catch(() => false);
+      // Look for pending offers (with "Pendiente" badge)
+      const pendingOffers = page.locator('[data-testid="offer-card"]').filter({
+        has: page.getByText("Pendiente"),
+      });
+      const pendingCount = await pendingOffers.count();
 
-      if (hasPendingSection) {
-        const hasOffers = await pendingSection.getByTestId("offer-card").first().isVisible().catch(() => false);
+      if (pendingCount > 0) {
+        // Pending offer cards should have countdown
+        const countdown = pendingOffers.first().getByTestId("countdown-timer");
+        const hasCountdown = await countdown.isVisible().catch(() => false);
 
-        if (hasOffers) {
-          // Pending offer cards should have countdown
-          const countdown = pendingSection.getByTestId("countdown-timer").first();
-          const hasCountdown = await countdown.isVisible().catch(() => false);
-
-          if (hasCountdown) {
-            // AC8.3.3: Countdown displays "Expira en XX:XX" format
-            await expect(countdown).toHaveText(/Expira en \d{1,2}:\d{2}/);
-          }
+        if (hasCountdown) {
+          // AC8.3.3: Countdown displays "Expira en XX:XX" format
+          await expect(countdown).toHaveText(/Expira en \d{1,2}:\d{2}/);
         }
       }
     });
@@ -150,19 +160,19 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
-      const pendingSection = page.getByTestId("section-pending");
-      const hasPendingSection = await pendingSection.isVisible().catch(() => false);
+      // Look for pending offers (with "Pendiente" badge)
+      const pendingOffers = page.locator('[data-testid="offer-card"]').filter({
+        has: page.getByText("Pendiente"),
+      });
+      const pendingCount = await pendingOffers.count();
 
-      if (hasPendingSection) {
-        const hasOffers = await pendingSection.getByTestId("offer-card").first().isVisible().catch(() => false);
-
-        if (hasOffers) {
-          // Should have "Cancelar Oferta" button
-          const cancelButton = pendingSection.getByRole("button", { name: /Cancelar Oferta/ }).first();
-          await expect(cancelButton).toBeVisible();
-        }
+      if (pendingCount > 0) {
+        // Should have "Cancelar Oferta" button
+        const cancelButton = pendingOffers.first().getByRole("button", { name: /Cancelar Oferta/ });
+        await expect(cancelButton).toBeVisible();
       }
     });
 
@@ -170,23 +180,23 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
-      const pendingSection = page.getByTestId("section-pending");
-      const hasPendingSection = await pendingSection.isVisible().catch(() => false);
+      // Look for pending offers (with "Pendiente" badge)
+      const pendingOffers = page.locator('[data-testid="offer-card"]').filter({
+        has: page.getByText("Pendiente"),
+      });
+      const pendingCount = await pendingOffers.count();
 
-      if (hasPendingSection) {
-        const hasOffers = await pendingSection.getByTestId("offer-card").first().isVisible().catch(() => false);
+      if (pendingCount > 0) {
+        // Click cancel button
+        await pendingOffers.first().getByRole("button", { name: /Cancelar Oferta/ }).click();
 
-        if (hasOffers) {
-          // Click cancel button
-          await pendingSection.getByRole("button", { name: /Cancelar Oferta/ }).first().click();
-
-          // AC8.4.1: Confirmation dialog should appear
-          await expect(page.getByText("¿Cancelar esta oferta?")).toBeVisible();
-          await expect(page.getByRole("button", { name: /Volver/ })).toBeVisible();
-          await expect(page.getByRole("button", { name: /Sí, cancelar/ })).toBeVisible();
-        }
+        // AC8.4.1: Confirmation dialog should appear
+        await expect(page.getByText("¿Cancelar esta oferta?")).toBeVisible();
+        await expect(page.getByRole("button", { name: /Volver/ })).toBeVisible();
+        await expect(page.getByRole("button", { name: /Sí, cancelar/ })).toBeVisible();
       }
     });
   });
@@ -198,9 +208,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(3000);
-
-      // FIRST: Check for error states - fail if any database errors present
+      await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
       // Should show either "En vivo" (connected) or "Offline" (polling fallback)
@@ -208,7 +216,6 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       const hasOfflineIndicator = await page.getByText("Offline").isVisible().catch(() => false);
 
       // One of the indicators should be visible
-      // This is now safe because we checked for errors first
       expect(
         hasLiveIndicator || hasOfflineIndicator,
         "Expected either 'En vivo' or 'Offline' connection indicator to be visible"
@@ -219,50 +226,45 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
-      // Should have a refresh button
-      await expect(page.getByRole("button", { name: /Actualizar/ })).toBeVisible();
+      // Should have a refresh button (title="Actualizar")
+      const refreshButton = page.locator('[title="Actualizar"]');
+      await expect(refreshButton).toBeVisible();
     });
   });
 
   test.describe("Empty States", () => {
     test.skip(skipIfNoDevLogin, "Dev login required for provider tests");
 
-    test("empty pending section shows appropriate message", async ({ page }) => {
+    test("empty filtered results show appropriate message", async ({ page }) => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
-      const pendingSection = page.getByTestId("section-pending");
-      const hasPendingSection = await pendingSection.isVisible().catch(() => false);
+      // Check if global empty state (no offers at all)
+      const hasGlobalEmpty = await page.getByTestId("empty-state-global").isVisible().catch(() => false);
 
-      if (hasPendingSection) {
-        const hasEmptyPending = await page.getByTestId("empty-state-pending").isVisible().catch(() => false);
+      if (hasGlobalEmpty) {
+        // Should show empty state message and link
+        await expect(page.getByText("No tienes ofertas")).toBeVisible();
+        await expect(page.getByRole("link", { name: /Ver Solicitudes/ })).toBeVisible();
+      } else {
+        // Apply a filter that might return no results (e.g., "Con disputa")
+        await page.getByRole("button", { name: /Estado/i }).click();
+        await page.getByRole("button", { name: /Con disputa/i }).click();
+        await page.keyboard.press("Escape");
+        await page.waitForLoadState("networkidle");
 
-        if (hasEmptyPending) {
-          // Should show empty state message and link
-          await expect(page.getByText("No tienes ofertas pendientes")).toBeVisible();
-          await expect(page.getByRole("link", { name: /Ver solicitudes disponibles/ })).toBeVisible();
-        }
-      }
-    });
+        // Check for filtered empty state
+        const hasFilteredEmpty = await page.getByTestId("empty-state-filtered").isVisible().catch(() => false);
 
-    test("empty accepted section shows appropriate message", async ({ page }) => {
-      await loginAsSupplier(page);
-
-      await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
-
-      const acceptedSection = page.getByTestId("section-accepted");
-      const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
-
-      if (hasAcceptedSection) {
-        const hasEmptyAccepted = await page.getByTestId("empty-state-accepted").isVisible().catch(() => false);
-
-        if (hasEmptyAccepted) {
-          await expect(page.getByText("Aún no tienes entregas activas")).toBeVisible();
+        if (hasFilteredEmpty) {
+          await expect(page.getByText("Sin resultados")).toBeVisible();
+          await expect(page.getByRole("button", { name: /Limpiar filtros/i })).toBeVisible();
         }
       }
     });
@@ -271,7 +273,8 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await assertNoErrorState(page);
 
       const hasEmptyState = await page.getByTestId("empty-state-global").isVisible().catch(() => false);
 

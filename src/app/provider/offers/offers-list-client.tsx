@@ -34,23 +34,24 @@ interface OffersListClientProps {
 
 const PAGE_SIZE = 10;
 
-// Filter status configuration
+// AC12.8.3.5: Filter status configuration - based on water_requests.status
+// Shows only active offers by default (pending offers + in-progress deliveries)
 const STATUS_OPTIONS: {
   value: OfferFilterStatus;
   label: string;
 }[] = [
-  { value: "pending", label: "Pendientes" },
-  { value: "active_delivery", label: "Entregas activas" },
+  { value: "pending", label: "Pendientes" },       // offer.status = 'active'
+  { value: "active_delivery", label: "En proceso" }, // Aceptada/En Camino (not delivered)
   { value: "disputed", label: "Con disputa" },
-  { value: "delivered", label: "Historial" },
+  { value: "delivered", label: "Historial" },      // Delivered, cancelled, expired, etc.
 ];
 
 type SortOrder = "newest" | "oldest";
 
 /**
- * Unified Offers List Client (v2.6.1)
+ * Unified Offers List Client (v2.6.2)
  * Single list with dropdown multi-select filters for Estado and Comuna
- * Default: Shows active_delivery filter selected
+ * AC12.8.3.1: No default filter - provider sees all relevant offers immediately
  */
 export function OffersListClient({
   initialOffers,
@@ -60,9 +61,9 @@ export function OffersListClient({
   const [offers, setOffers] = useState<FlatOfferWithRequest[]>(initialOffers);
   const [highlightedOfferId, setHighlightedOfferId] = useState<string | undefined>(newOfferId);
 
-  // Filter state - default to active_delivery
+  // Filter state - AC12.8.3.1: No default filter on page load
   const [selectedStatuses, setSelectedStatuses] = useState<Set<OfferFilterStatus>>(
-    new Set(["active_delivery"])
+    new Set()
   );
   const [selectedComunas, setSelectedComunas] = useState<Set<string>>(new Set());
 
@@ -172,12 +173,20 @@ export function OffersListClient({
   }, [offers]);
 
   // Filter and sort offers
+  // AC12.8.3.1: No default filter - show all ACTIVE offers (not delivered/cancelled)
+  // AC12.8.3.2: Hide completed deliveries unless explicitly filtered
+  // AC12.8.3.3: Hide cancelled requests unless explicitly filtered
   const filteredAndSortedOffers = useMemo(() => {
     let result = [...offers];
 
-    // Apply status filters if any are selected
+    // Apply status filters
     if (selectedStatuses.size > 0) {
+      // When filters are explicitly selected, show exactly those categories
       result = result.filter((o) => selectedStatuses.has(o.filterCategory));
+    } else {
+      // AC12.8.3.2, AC12.8.3.3: When NO filter selected, hide "delivered" (history) by default
+      // This shows: pending, active_delivery, disputed - all "active" work items
+      result = result.filter((o) => o.filterCategory !== "delivered");
     }
 
     // Apply comuna filters if any are selected

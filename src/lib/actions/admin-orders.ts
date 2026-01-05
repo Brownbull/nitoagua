@@ -31,6 +31,7 @@ export interface OrderStats {
   in_transit: number;
   delivered: number;
   cancelled: number;
+  disputes: number;
 }
 
 export interface OrderFilters {
@@ -48,12 +49,17 @@ function getEmptyStats(): OrderStats {
     in_transit: 0,
     delivered: 0,
     cancelled: 0,
+    disputes: 0,
   };
 }
 
-function calculateStats(requests: Array<{ status: string }>): OrderStats {
+function calculateStats(
+  requests: Array<{ status: string }>,
+  disputeCount: number
+): OrderStats {
   const stats = getEmptyStats();
   stats.total = requests.length;
+  stats.disputes = disputeCount;
 
   requests.forEach(r => {
     switch (r.status) {
@@ -98,16 +104,20 @@ export async function getAdminOrders(filters?: OrderFilters): Promise<{
     const adminClient = createAdminClient();
 
     // First, get ALL requests for stats calculation (unfiltered by status)
-    const { data: allRequests, error: allReqError } = await adminClient
-      .from("water_requests")
-      .select("status");
+    const [allRequestsResult, disputeCountResult] = await Promise.all([
+      adminClient.from("water_requests").select("status"),
+      adminClient.from("disputes").select("id", { count: "exact", head: true }),
+    ]);
 
-    if (allReqError) {
-      console.error("[ADMIN] Error fetching all orders for stats:", allReqError.message);
+    if (allRequestsResult.error) {
+      console.error("[ADMIN] Error fetching all orders for stats:", allRequestsResult.error.message);
     }
 
     // Calculate stats from ALL requests (not filtered by status)
-    const stats = calculateStats(allRequests || []);
+    const stats = calculateStats(
+      allRequestsResult.data || [],
+      disputeCountResult.count || 0
+    );
 
     // Build the query for water_requests (filtered for display)
     let query = adminClient
@@ -131,8 +141,24 @@ export async function getAdminOrders(filters?: OrderFilters): Promise<{
       `)
       .order("created_at", { ascending: false });
 
-    // Apply status filter
-    if (filters?.status && filters.status !== "all") {
+    // Handle "has_dispute" filter separately - need to fetch dispute request IDs first
+    let disputeRequestIds: string[] | null = null;
+    if (filters?.status === "has_dispute") {
+      const { data: disputes } = await adminClient
+        .from("disputes")
+        .select("request_id");
+      disputeRequestIds = disputes?.map(d => d.request_id) || [];
+
+      // If filtering by disputes but none exist, return empty
+      if (disputeRequestIds.length === 0) {
+        console.log("[ADMIN] getAdminOrders: No disputes found");
+        return { success: true, orders: [], stats, comunas: [] };
+      }
+
+      // Filter query to only include requests with disputes
+      query = query.in("id", disputeRequestIds);
+    } else if (filters?.status && filters.status !== "all") {
+      // Apply regular status filter
       if (filters.status === "pending") {
         query = query.in("status", ["pending", "offers_pending"]);
       } else {

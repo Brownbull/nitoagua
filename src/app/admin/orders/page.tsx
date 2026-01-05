@@ -28,17 +28,18 @@ async function getOrdersData(filters?: {
 }> {
   const adminClient = createAdminClient();
 
-  // First, get ALL requests for stats calculation (unfiltered by status)
-  const { data: allRequests, error: allReqError } = await adminClient
-    .from("water_requests")
-    .select("status");
+  // First, get ALL requests for stats calculation AND dispute count (unfiltered by status)
+  const [allRequestsResult, disputeCountResult] = await Promise.all([
+    adminClient.from("water_requests").select("status"),
+    adminClient.from("disputes").select("id", { count: "exact", head: true }),
+  ]);
 
-  if (allReqError) {
-    console.error("[ADMIN] Error fetching all orders for stats:", allReqError.message);
+  if (allRequestsResult.error) {
+    console.error("[ADMIN] Error fetching all orders for stats:", allRequestsResult.error.message);
   }
 
   // Calculate stats from ALL requests (not filtered by status)
-  const stats = calculateStats(allRequests || []);
+  const stats = calculateStats(allRequestsResult.data || [], disputeCountResult.count || 0);
 
   // Build the query for water_requests (filtered for display)
   let query = adminClient
@@ -186,12 +187,14 @@ function getEmptyStats(): OrderStats {
     in_transit: 0,
     delivered: 0,
     cancelled: 0,
+    disputes: 0,
   };
 }
 
-function calculateStats(requests: Array<{ status: string }>): OrderStats {
+function calculateStats(requests: Array<{ status: string }>, disputeCount: number): OrderStats {
   const stats = getEmptyStats();
   stats.total = requests.length;
+  stats.disputes = disputeCount;
 
   requests.forEach(r => {
     switch (r.status) {

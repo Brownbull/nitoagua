@@ -335,7 +335,7 @@ development_status:
   12.8-2-role-based-route-guards: done  # BUG-R2-004: Admin can access consumer view - CRITICAL SECURITY - Code review passed 2026-01-04
 
   # Phase 2: Core Fixes (P1/P2)
-  12.8-3-provider-mis-ofertas-fix: drafted  # BUG-R2-009, R2-018: Wrong filter, completed deliveries visible
+  12.8-3-provider-mis-ofertas-fix: done  # BUG-R2-009, R2-018: Wrong filter, completed deliveries visible - Atlas code review passed 2026-01-04
   12.8-4-admin-orders-mobile-ux: drafted  # BUG-R2-007, R2-008: Cluttered layout, status badge
   12.8-5-admin-providers-ux-ratings: drafted  # BUG-R2-010, R2-011: Missing email, ratings on cards
 

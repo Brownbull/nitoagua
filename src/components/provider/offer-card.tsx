@@ -31,7 +31,8 @@ interface OfferCardProps {
   onExpire?: (offerId: string) => void;
 }
 
-const statusConfig = {
+// Offer status config (for offer lifecycle states)
+const offerStatusConfig = {
   active: {
     label: "Pendiente",
     className: "bg-orange-100 text-orange-800",
@@ -50,6 +51,34 @@ const statusConfig = {
   },
   request_filled: {
     label: "No seleccionada",
+    className: "bg-gray-100 text-gray-600",
+  },
+};
+
+// AC12.8.3.4: Delivery status config (for water_requests.status - actual delivery state)
+const deliveryStatusConfig: Record<string, { label: string; className: string }> = {
+  pending: {
+    label: "Pendiente",
+    className: "bg-orange-100 text-orange-800",
+  },
+  accepted: {
+    label: "Aceptada",
+    className: "bg-blue-100 text-blue-800",
+  },
+  in_transit: {
+    label: "En Camino",
+    className: "bg-amber-100 text-amber-800",
+  },
+  delivered: {
+    label: "Entregada",
+    className: "bg-green-100 text-green-800",
+  },
+  cancelled: {
+    label: "Cancelada",
+    className: "bg-gray-100 text-gray-600",
+  },
+  timeout: {
+    label: "Expirada",
     className: "bg-gray-100 text-gray-600",
   },
 };
@@ -79,13 +108,23 @@ function OfferCardComponent({ offer, isNew = false, onWithdraw, onExpire }: Offe
     isHistoryStatus: HISTORY_STATUSES.includes(offer.status),
   }), [offer.status]);
 
-  // Memoize status badge lookup
-  const statusBadge = useMemo(() =>
-    statusConfig[offer.status] || {
+  // AC12.8.3.4: Memoize status badge lookup
+  // For accepted offers, show water_requests.status (actual delivery state)
+  // For non-accepted offers, show offer.status (offer lifecycle state)
+  const statusBadge = useMemo(() => {
+    // If offer is accepted and we have a request with status, show delivery status
+    if (isAccepted && offer.request?.status) {
+      return deliveryStatusConfig[offer.request.status] || {
+        label: offer.request.status,
+        className: "bg-gray-100 text-gray-800",
+      };
+    }
+    // Otherwise show offer status
+    return offerStatusConfig[offer.status] || {
       label: offer.status,
       className: "bg-gray-100 text-gray-800",
-    },
-  [offer.status]);
+    };
+  }, [offer.status, offer.request?.status, isAccepted]);
 
   // Memoize formatted delivery window
   const formattedDeliveryWindow = useMemo(() => ({

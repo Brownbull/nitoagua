@@ -336,6 +336,19 @@ export async function createDispute(
     console.warn("[Disputes] revalidatePath error (non-fatal):", revalidateErr);
   }
 
+  // Send notification to admin users about the new dispute
+  try {
+    await notifyAdminsOfNewDispute(
+      adminClientForInsert,
+      dispute.id,
+      input.request_id,
+      input.dispute_type
+    );
+  } catch (notifyErr) {
+    // Log but don't fail - dispute was created successfully
+    console.warn("[Disputes] Admin notification error (non-fatal):", notifyErr);
+  }
+
   return {
     success: true,
     data: { disputeId: dispute.id },
@@ -400,5 +413,68 @@ export async function getDisputeForRequest(
       success: false,
       error: "Error al obtener la disputa",
     };
+  }
+}
+
+/**
+ * Helper function to notify admin users when a new dispute is created
+ * Creates in-app notifications for all admin users
+ */
+async function notifyAdminsOfNewDispute(
+  adminClient: ReturnType<typeof createAdminClientSafe>,
+  disputeId: string,
+  requestId: string,
+  disputeType: DisputeType
+): Promise<void> {
+  if (!adminClient) {
+    console.warn("[Disputes] Cannot notify admins - admin client not available");
+    return;
+  }
+
+  // Get admin users
+  const { data: adminEmails } = await adminClient
+    .from("admin_allowed_emails")
+    .select("email");
+
+  if (!adminEmails || adminEmails.length === 0) {
+    console.log("[Disputes] No admin emails found to notify");
+    return;
+  }
+
+  const { data: adminProfiles } = await adminClient
+    .from("profiles")
+    .select("id")
+    .in("email", adminEmails.map((a) => a.email));
+
+  if (!adminProfiles || adminProfiles.length === 0) {
+    console.log("[Disputes] No admin profiles found to notify");
+    return;
+  }
+
+  // Prepare notification messages
+  const disputeTypeLabel = DISPUTE_TYPE_LABELS[disputeType] || disputeType;
+  const shortRequestId = requestId.slice(0, 8);
+
+  // Create notifications for all admins
+  const notifications = adminProfiles.map((admin) => ({
+    user_id: admin.id,
+    type: "dispute_created",
+    title: "Nueva Disputa Reportada",
+    message: `Disputa "${disputeTypeLabel}" para pedido #${shortRequestId}. Requiere revisión.`,
+    data: {
+      dispute_id: disputeId,
+      request_id: requestId,
+      dispute_type: disputeType,
+    },
+  }));
+
+  const { error: insertError } = await adminClient
+    .from("notifications")
+    .insert(notifications);
+
+  if (insertError) {
+    console.error("[Disputes] Error creating admin notifications:", insertError.message);
+  } else {
+    console.log(`[Disputes] Notified ${adminProfiles.length} admin(s) about dispute ${disputeId}`);
   }
 }

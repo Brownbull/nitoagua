@@ -3,6 +3,7 @@ import { assertNoErrorState } from "../fixtures/error-detection";
 
 /**
  * E2E Tests for Offer Cancellation Flow - Story 12.7-8
+ * Updated for unified list view (v2.6.2)
  *
  * Tests the complete offer cancellation workflow:
  * - AC12.7.8.1: Provider sees success message when cancelling offer
@@ -33,7 +34,8 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
   await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
   const supplierButton = page.getByRole("button", { name: "Supplier", exact: true });
   await supplierButton.click();
-  await expect(supplierButton).toHaveAttribute("data-state", "on");
+  // Wait for email/password to auto-fill
+  await page.waitForLoadState("networkidle");
   await page.getByTestId("dev-login-button").click();
   await page.waitForURL("**/provider/requests", { timeout: 15000 });
   await assertNoErrorState(page);
@@ -46,7 +48,8 @@ async function loginAsConsumer(page: import("@playwright/test").Page) {
   await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
   const consumerButton = page.getByRole("button", { name: "Consumer", exact: true });
   await consumerButton.click();
-  await expect(consumerButton).toHaveAttribute("data-state", "on");
+  // Wait for email/password to auto-fill
+  await page.waitForLoadState("networkidle");
   await page.getByTestId("dev-login-button").click();
   await page.waitForURL("**/", { timeout: 15000 });
   await assertNoErrorState(page);
@@ -63,22 +66,19 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
-      const pendingSection = page.getByTestId("section-pending");
-      const hasPendingSection = await pendingSection.isVisible().catch(() => false);
+      // Unified list view - look for offer cards with "Pendiente" badge (active offers)
+      const pendingOffers = page.locator('[data-testid="offer-card"]').filter({
+        has: page.getByText("Pendiente"),
+      });
+      const pendingCount = await pendingOffers.count();
 
-      if (!hasPendingSection) {
-        test.skip(true, "No pending section - need pending offers to test");
-        return;
-      }
-
-      const hasOffers = await pendingSection.getByTestId("offer-card").first().isVisible().catch(() => false);
-      if (!hasOffers) {
+      if (pendingCount === 0) {
         test.skip(true, "No pending offers available to test withdrawal");
         return;
       }
 
-      // Step 1: Click cancel button
-      await pendingSection.getByRole("button", { name: /Cancelar Oferta/ }).first().click();
+      // Step 1: Click cancel button on first pending offer
+      await pendingOffers.first().getByRole("button", { name: /Cancelar Oferta/ }).click();
 
       // Step 2: Verify dialog appears
       await expect(page.getByText("¿Cancelar esta oferta?")).toBeVisible({ timeout: 5000 });
@@ -98,29 +98,26 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       });
     });
 
-    test("Cancelled offer moves to history section with 'Cancelada' badge", async ({ page }) => {
+    test("Cancelled offer shows 'Cancelada' badge in history filter", async ({ page }) => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
       await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
-      const pendingSection = page.getByTestId("section-pending");
-      const hasPendingSection = await pendingSection.isVisible().catch(() => false);
+      // Look for pending offers to cancel
+      const pendingOffers = page.locator('[data-testid="offer-card"]').filter({
+        has: page.getByText("Pendiente"),
+      });
+      const pendingCount = await pendingOffers.count();
 
-      if (!hasPendingSection) {
-        test.skip(true, "No pending section available");
-        return;
-      }
-
-      const initialPendingCount = await pendingSection.getByTestId("offer-card").count();
-      if (initialPendingCount === 0) {
+      if (pendingCount === 0) {
         test.skip(true, "No pending offers to test");
         return;
       }
 
       // Cancel the offer
-      await pendingSection.getByRole("button", { name: /Cancelar Oferta/ }).first().click();
+      await pendingOffers.first().getByRole("button", { name: /Cancelar Oferta/ }).click();
       await expect(page.getByText("¿Cancelar esta oferta?")).toBeVisible({ timeout: 5000 });
       await page.getByRole("button", { name: /Sí, cancelar/i }).click();
 
@@ -128,13 +125,15 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await expect(page.getByText("Oferta cancelada")).toBeVisible({ timeout: 5000 });
       await page.waitForLoadState("networkidle");
 
-      // Verify offer moved to history with "Cancelada" badge
-      const historySection = page.getByTestId("section-history");
-      const cancelledCards = historySection.locator('[data-testid="offer-card"]').filter({
+      // Open Estado dropdown and select "Historial"
+      await page.getByRole("button", { name: /Estado/i }).click();
+      await page.getByRole("button", { name: /Historial/i }).click();
+      await page.keyboard.press("Escape"); // Close dropdown
+
+      // Verify cancelled offers are visible with "Cancelada" badge in history view
+      const cancelledCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Cancelada"),
       });
-
-      // At least one cancelled offer should exist in history
       const cancelledCount = await cancelledCards.count();
       expect(cancelledCount).toBeGreaterThan(0);
     });
@@ -196,16 +195,13 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
-      // Look in history section for cancelled offers
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
+      // Select "Historial" filter to see cancelled offers
+      await page.getByRole("button", { name: /Estado/i }).click();
+      await page.getByRole("button", { name: /Historial/i }).click();
+      await page.keyboard.press("Escape"); // Close dropdown
+      await page.waitForLoadState("networkidle");
 
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
-
-      const cancelledCards = historySection.locator('[data-testid="offer-card"]').filter({
+      const cancelledCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Cancelada"),
       });
       const cancelledCount = await cancelledCards.count();
@@ -228,15 +224,13 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
+      // Select "Historial" filter to see expired offers
+      await page.getByRole("button", { name: /Estado/i }).click();
+      await page.getByRole("button", { name: /Historial/i }).click();
+      await page.keyboard.press("Escape"); // Close dropdown
+      await page.waitForLoadState("networkidle");
 
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
-
-      const expiredCards = historySection.locator('[data-testid="offer-card"]').filter({
+      const expiredCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Expirada"),
       });
       const expiredCount = await expiredCards.count();
@@ -258,15 +252,16 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await page.waitForLoadState("networkidle");
       await assertNoErrorState(page);
 
-      const acceptedSection = page.getByTestId("section-accepted");
-      const acceptedCount = await acceptedSection.count();
+      // Select "En proceso" filter to see accepted/in-progress offers
+      await page.getByRole("button", { name: /Estado/i }).click();
+      await page.getByRole("button", { name: /En proceso/i }).click();
+      await page.keyboard.press("Escape"); // Close dropdown
+      await page.waitForLoadState("networkidle");
 
-      if (acceptedCount === 0) {
-        test.skip(true, "No accepted section visible");
-        return;
-      }
-
-      const acceptedCards = acceptedSection.locator('[data-testid="offer-card"]');
+      // Look for accepted offers (not expired/cancelled)
+      const acceptedCards = page.locator('[data-testid="offer-card"]').filter({
+        has: page.getByText(/Aceptada|En Camino/),
+      });
       const cardCount = await acceptedCards.count();
 
       if (cardCount === 0) {

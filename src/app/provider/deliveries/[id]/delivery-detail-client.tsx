@@ -297,16 +297,44 @@ export function DeliveryDetailClient({ delivery }: DeliveryDetailClientProps) {
           {/* Dispute Info - Show if there's a dispute */}
           {delivery.dispute && (
             <div
-              className="bg-red-50 border border-red-200 rounded-xl p-4"
+              className={`rounded-xl p-4 ${
+                delivery.dispute.status === "resolved_provider"
+                  ? "bg-green-50 border border-green-200"
+                  : delivery.dispute.status === "resolved_consumer"
+                    ? "bg-red-50 border border-red-300"
+                    : "bg-red-50 border border-red-200"
+              }`}
               data-testid="dispute-info"
             >
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-red-800">
-                    Disputa Reportada
+                <AlertTriangle
+                  className={`h-5 w-5 mt-0.5 shrink-0 ${
+                    delivery.dispute.status === "resolved_provider"
+                      ? "text-green-600"
+                      : "text-red-500"
+                  }`}
+                />
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-medium ${
+                      delivery.dispute.status === "resolved_provider"
+                        ? "text-green-800"
+                        : "text-red-800"
+                    }`}
+                  >
+                    {delivery.dispute.status === "resolved_provider"
+                      ? "Disputa Resuelta a Tu Favor"
+                      : delivery.dispute.status === "resolved_consumer"
+                        ? "Disputa Resuelta en Contra"
+                        : "Disputa Reportada"}
                   </p>
-                  <p className="text-sm text-red-600 mt-1">
+                  <p
+                    className={`text-sm mt-1 ${
+                      delivery.dispute.status === "resolved_provider"
+                        ? "text-green-700"
+                        : "text-red-600"
+                    }`}
+                  >
                     {delivery.dispute.disputeType === "not_delivered"
                       ? "No recibí mi pedido"
                       : delivery.dispute.disputeType === "wrong_quantity"
@@ -317,21 +345,54 @@ export function DeliveryDetailClient({ delivery }: DeliveryDetailClientProps) {
                             ? "Mala calidad"
                             : "Otro problema"}
                   </p>
+
+                  {/* Resolution badge */}
                   <Badge
                     className={`mt-2 ${
                       delivery.dispute.status === "open"
                         ? "bg-red-100 text-red-700"
                         : delivery.dispute.status === "under_review"
                           ? "bg-amber-100 text-amber-700"
-                          : "bg-gray-100 text-gray-700"
+                          : delivery.dispute.status === "resolved_provider"
+                            ? "bg-green-100 text-green-700"
+                            : delivery.dispute.status === "resolved_consumer"
+                              ? "bg-red-200 text-red-800"
+                              : "bg-gray-100 text-gray-700"
                     }`}
                   >
                     {delivery.dispute.status === "open"
                       ? "Abierta"
                       : delivery.dispute.status === "under_review"
                         ? "En Revisión"
-                        : "Resuelta"}
+                        : delivery.dispute.status === "resolved_provider"
+                          ? "✓ A Tu Favor"
+                          : delivery.dispute.status === "resolved_consumer"
+                            ? "✗ En Tu Contra"
+                            : "Cerrada"}
                   </Badge>
+
+                  {/* Warning message if resolved against provider */}
+                  {delivery.dispute.status === "resolved_consumer" && (
+                    <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg">
+                      <p className="text-xs font-semibold text-red-800">
+                        ⚠️ Advertencia
+                      </p>
+                      <p className="text-xs text-red-700 mt-1">
+                        Esta disputa fue resuelta en tu contra. Las disputas
+                        repetidas pueden resultar en suspensión o desactivación
+                        de tu cuenta. Por favor asegúrate de completar las
+                        entregas correctamente.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Resolution notes if available */}
+                  {delivery.dispute.resolutionNotes && (
+                    <div className="mt-2 text-xs text-gray-600 bg-white/50 rounded p-2">
+                      <span className="font-medium">Notas: </span>
+                      {delivery.dispute.resolutionNotes}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

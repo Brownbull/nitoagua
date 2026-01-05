@@ -592,28 +592,81 @@ export function RequestStatusClient({ initialRequest }: RequestStatusClientProps
                   <span className="ml-2 text-sm text-gray-500">Cargando...</span>
                 </div>
               ) : existingDispute ? (
-                // Show existing dispute status
-                <div className="flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                    existingDispute.status.startsWith("resolved") ? "bg-green-100" : "bg-amber-100"
-                  }`}>
-                    {existingDispute.status.startsWith("resolved") ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
-                    ) : (
-                      <AlertTriangle className="h-4 w-4 text-amber-600" aria-hidden="true" />
-                    )}
+                // Show existing dispute status with resolution-specific content
+                <div>
+                  <div className="flex items-start gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                      existingDispute.status === "resolved_consumer"
+                        ? "bg-green-100"
+                        : existingDispute.status === "resolved_provider"
+                          ? "bg-gray-100"
+                          : "bg-amber-100"
+                    }`}>
+                      {existingDispute.status === "resolved_consumer" ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" aria-hidden="true" />
+                      ) : existingDispute.status === "resolved_provider" ? (
+                        <MessageCircle className="h-4 w-4 text-gray-600" aria-hidden="true" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-amber-600" aria-hidden="true" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900" data-testid="dispute-status-label">
+                        {existingDispute.status === "resolved_consumer"
+                          ? "Disputa resuelta a tu favor"
+                          : existingDispute.status === "resolved_provider"
+                            ? "Disputa cerrada"
+                            : "Disputa en revisión"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5" data-testid="dispute-status-value">
+                        {DISPUTE_STATUS_LABELS[existingDispute.status]}
+                      </p>
+                    </div>
+                    <CheckCircle className={`h-5 w-5 shrink-0 ${
+                      existingDispute.status === "resolved_consumer"
+                        ? "text-green-500"
+                        : existingDispute.status === "resolved_provider"
+                          ? "text-gray-400"
+                          : "text-amber-500"
+                    }`} />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900" data-testid="dispute-status-label">
-                      {existingDispute.status.startsWith("resolved") ? "Disputa resuelta" : "Disputa en revisión"}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5" data-testid="dispute-status-value">
-                      {DISPUTE_STATUS_LABELS[existingDispute.status]}
-                    </p>
-                  </div>
-                  <CheckCircle className={`h-5 w-5 shrink-0 ${
-                    existingDispute.status.startsWith("resolved") ? "text-green-500" : "text-amber-500"
-                  }`} />
+
+                  {/* Resolution-specific messages */}
+                  {existingDispute.status === "resolved_consumer" && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800 mb-2">
+                        Lamentamos mucho los inconvenientes que esto te ha causado. Tu experiencia es muy importante para nosotros y trabajamos constantemente para mejorar nuestro servicio.
+                      </p>
+                      {existingDispute.resolution_notes && (
+                        <p className="text-xs text-green-700 mb-3 italic">
+                          &quot;{existingDispute.resolution_notes}&quot;
+                        </p>
+                      )}
+                      <Button
+                        asChild
+                        size="sm"
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        <Link href="/request">
+                          <RotateCcw className="mr-2 h-4 w-4" />
+                          Intentar de Nuevo
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+
+                  {existingDispute.status === "resolved_provider" && (
+                    <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                      <p className="text-sm text-gray-700 mb-2">
+                        Después de revisar tu caso, no encontramos evidencia suficiente para proceder con tu reclamo. Si crees que hubo un error, puedes contactar a soporte.
+                      </p>
+                      {existingDispute.resolution_notes && (
+                        <p className="text-xs text-gray-600 italic">
+                          &quot;{existingDispute.resolution_notes}&quot;
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : canDispute ? (
                 // Show dispute button - AC12.7.5.1
