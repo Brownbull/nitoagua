@@ -1,7 +1,7 @@
 # Historical Lessons (Retrospectives)
 
 > Section 6 of Atlas Memory
-> Last Sync: 2026-01-02
+> Last Sync: 2026-01-05
 > Sources: Epic retrospectives, code reviews
 
 ## What Worked / What Failed
@@ -28,6 +28,9 @@
 | `.limit(1)` for existence checks | `.single()` returns 406 when no rows → Use `.limit(1)` |
 | RLS policies for inserts | Admin client requires env var → Use RLS if policy allows |
 | Bucket name verification | Code references wrong bucket name → Verify bucket exists in DB |
+| Ternary rating display | `&&` only renders when true → Use ternary with fallback text |
+| Story spec font mismatch | Story said "Inter" but app uses Poppins → Verify actual fonts before implementing |
+| Sonner toast font isolation | Sonner may render outside font context → Use explicit `!font-sans` class |
 
 ---
 
@@ -841,4 +844,48 @@ profiles:provider_id (
 
 ---
 
-*Last verified: 2026-01-03 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4, 12.7-5, 12.7-12, 12.7-13), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix, Code Review 12.7-4, Code Review 12.7-5, Realtime Connection Loop Fix Session, Consumer Dispute Implementation, Storage Bucket Mismatch Fix, Rating/Review System*
+## Admin Provider Rating Display (Story 12.8-5)
+
+**Problem:** Admin provider detail panel showed rating badge next to name in list view, but not in the detail panel when clicking into a provider.
+
+**Root Cause:** The rating badge conditional only rendered when `rating_count > 0`:
+```typescript
+// ❌ INCOMPLETE - Nothing shown when provider has no ratings
+{provider.rating_count && provider.rating_count > 0 && (
+  <div className="rating-badge">...</div>
+)}
+```
+
+**Solution:** Always show the rating badge with a fallback for no ratings:
+```typescript
+// ✅ CORRECT - Always shows rating info in detail panel
+{provider.rating_count && provider.rating_count > 0 ? (
+  <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 rounded-lg">
+    <Star className="w-4 h-4 text-amber-500 fill-current" />
+    <span className="text-sm font-semibold text-amber-700">
+      {(provider.average_rating ?? 0).toFixed(1)}
+    </span>
+    <span className="text-xs text-amber-600">
+      ({provider.rating_count})
+    </span>
+  </div>
+) : (
+  <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-100 rounded-lg">
+    Sin calificaciones
+  </span>
+)}
+```
+
+**Pattern:** Consistent Rating Display
+- **List view (cards):** Ternary with "Sin calificaciones" fallback ✓
+- **Detail view (panel):** Ternary with "Sin calificaciones" fallback ✓ (fixed in 12.8-5)
+
+**Files Affected:**
+- `src/components/admin/provider-directory.tsx` - List view (was correct)
+- `src/components/admin/provider-detail-panel.tsx` - Detail panel (fixed)
+
+**Key Insight:** When displaying rating info in multiple views (list and detail), ensure both use the same pattern with fallback text. The detail panel should match the list view's handling of zero-rating providers.
+
+---
+
+*Last verified: 2026-01-05 | Sources: Epic 3, 8, 10, 11, 12, 12.6, 12.7 (Stories 12.7-2, 12.7-3, 12.7-4, 12.7-5, 12.7-12, 12.7-13), 12.8 (Stories 12.8-5, 12.8-6), Push Notification Reliability Session, Local Dev Setup, VAPID Whitespace Fix, Code Review 12.7-4, Code Review 12.7-5, Realtime Connection Loop Fix Session, Consumer Dispute Implementation, Storage Bucket Mismatch Fix, Rating/Review System, Admin Provider Rating Display Fix, Toast Font Consistency Fix*

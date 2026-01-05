@@ -9,6 +9,7 @@ import {
   Search,
   Filter,
   ChevronRight,
+  ChevronDown,
   Package,
   Clock,
   Truck,
@@ -92,6 +93,9 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
   const [showFilters, setShowFilters] = useState(false);
   const [localFilters, setLocalFilters] = useState(currentFilters);
   const [isMounted, setIsMounted] = useState(false);
+
+  // Mobile: collapsible status cards state
+  const [showMobileStatusCards, setShowMobileStatusCards] = useState(false);
 
   // Sorting state - default to newest first
   const [sortField, setSortField] = useState<SortField>("created_at");
@@ -288,6 +292,37 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
   const handleCancelledClick = useCallback(() => toggleStatusFilter("cancelled"), [toggleStatusFilter]);
   const handleDisputeClick = useCallback(() => toggleStatusFilter("has_dispute"), [toggleStatusFilter]);
 
+  // Get label for current status filter (for mobile compact display)
+  const getActiveFilterLabel = useCallback(() => {
+    if (!currentFilters.status || currentFilters.status === "all") return "Todos";
+    const option = STATUS_OPTIONS.find(o => o.value === currentFilters.status);
+    return option?.label || "Todos";
+  }, [currentFilters.status]);
+
+  // Get count for current filter (for mobile compact display)
+  const getActiveFilterCount = useCallback(() => {
+    if (!currentFilters.status || currentFilters.status === "all") {
+      return stats.pending + stats.accepted + stats.in_transit + stats.delivered + stats.cancelled;
+    }
+    switch (currentFilters.status) {
+      case "pending":
+      case "offers_pending":
+        return stats.pending;
+      case "accepted":
+        return stats.accepted;
+      case "in_transit":
+        return stats.in_transit;
+      case "delivered":
+        return stats.delivered;
+      case "cancelled":
+        return stats.cancelled;
+      case "has_dispute":
+        return stats.disputes;
+      default:
+        return 0;
+    }
+  }, [currentFilters.status, stats]);
+
   return (
     <div className="space-y-4">
       {/* Real-time Indicator with Refresh Button */}
@@ -330,8 +365,83 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
         </button>
       </div>
 
-      {/* Stats Cards - Scrollable (not sticky), Clickable Filters */}
-      <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
+      {/* Mobile: Collapsible Status Cards (AC12.8.4.1) */}
+      <div className="md:hidden">
+        <button
+          onClick={() => setShowMobileStatusCards(!showMobileStatusCards)}
+          className="flex items-center justify-between w-full px-3 py-2.5 bg-white rounded-lg border border-gray-200 shadow-sm"
+          data-testid="mobile-status-toggle"
+          aria-expanded={showMobileStatusCards}
+          aria-controls="mobile-status-cards"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-900">
+              {getActiveFilterLabel()}
+            </span>
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+              {getActiveFilterCount()} pedidos
+            </span>
+          </div>
+          <ChevronDown className={cn("h-4 w-4 text-gray-500 transition-transform", showMobileStatusCards && "rotate-180")} />
+        </button>
+
+        {/* Collapsible status cards grid */}
+        {showMobileStatusCards && (
+          <div id="mobile-status-cards" className="mt-2 grid grid-cols-3 gap-2">
+            <StatsCard
+              label="Pend."
+              value={stats.pending}
+              color="amber"
+              isActive={currentFilters.status === "pending" || currentFilters.status === "offers_pending"}
+              onClick={() => { handlePendingClick(); setShowMobileStatusCards(false); }}
+              compact
+            />
+            <StatsCard
+              label="Acept."
+              value={stats.accepted}
+              color="indigo"
+              isActive={currentFilters.status === "accepted"}
+              onClick={() => { handleAcceptedClick(); setShowMobileStatusCards(false); }}
+              compact
+            />
+            <StatsCard
+              label="Camino"
+              value={stats.in_transit}
+              color="purple"
+              isActive={currentFilters.status === "in_transit"}
+              onClick={() => { handleInTransitClick(); setShowMobileStatusCards(false); }}
+              compact
+            />
+            <StatsCard
+              label="Entreg."
+              value={stats.delivered}
+              color="green"
+              isActive={currentFilters.status === "delivered"}
+              onClick={() => { handleDeliveredClick(); setShowMobileStatusCards(false); }}
+              compact
+            />
+            <StatsCard
+              label="Canc."
+              value={stats.cancelled}
+              color="red"
+              isActive={currentFilters.status === "cancelled"}
+              onClick={() => { handleCancelledClick(); setShowMobileStatusCards(false); }}
+              compact
+            />
+            <StatsCard
+              label="Disp."
+              value={stats.disputes}
+              color="orange"
+              isActive={currentFilters.status === "has_dispute"}
+              onClick={() => { handleDisputeClick(); setShowMobileStatusCards(false); }}
+              compact
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: Full Stats Cards (AC12.8.4.6 - preserved) */}
+      <div className="hidden md:grid md:grid-cols-6 gap-3">
         <StatsCard
           label="Pendientes"
           value={stats.pending}
@@ -376,9 +486,91 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
         />
       </div>
 
-      {/* Search and Filter Bar - Sticky */}
-      <div className="sticky top-[108px] z-20 bg-white rounded-xl p-3 shadow-sm space-y-3">
-        <div className="flex gap-2">
+      {/* Search and Filter Bar - Sticky (AC12.8.4.3, AC12.8.4.4) */}
+      <div className="sticky top-[108px] z-20 bg-white rounded-xl p-3 shadow-sm space-y-2">
+        {/* Mobile: Row 1 - Status dropdown + Date sort (AC12.8.4.4) */}
+        <div className="flex gap-2 md:hidden">
+          {/* Status Filter Dropdown - fixed width (AC12.8.4.3) */}
+          <select
+            value={localFilters.status}
+            onChange={(e) => {
+              setLocalFilters({ ...localFilters, status: e.target.value });
+              // Apply immediately on mobile for better UX
+              const params = new URLSearchParams(searchParams.toString());
+              if (e.target.value && e.target.value !== "all") {
+                params.set("status", e.target.value);
+              } else {
+                params.delete("status");
+              }
+              router.push(`/admin/orders?${params.toString()}`);
+              setCurrentPage(1);
+            }}
+            className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+            data-testid="mobile-filter-status"
+          >
+            {STATUS_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+
+          {/* Date Sort Button */}
+          <button
+            onClick={() => {
+              if (sortField === "created_at") {
+                setSortDirection(d => d === "asc" ? "desc" : "asc");
+              } else {
+                setSortField("created_at");
+                setSortDirection("desc");
+              }
+              setCurrentPage(1);
+            }}
+            className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 shrink-0"
+            data-testid="mobile-date-sort"
+          >
+            <Calendar className="w-4 h-4 text-gray-500" />
+            {sortField === "created_at" && sortDirection === "asc" ? (
+              <ArrowUp className="w-3.5 h-3.5 text-gray-600" />
+            ) : (
+              <ArrowDown className="w-3.5 h-3.5 text-gray-600" />
+            )}
+          </button>
+
+          {/* Filter Toggle Button (compact on mobile) */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              "flex items-center gap-1 px-3 py-2 border rounded-lg text-sm font-medium transition-colors shrink-0",
+              hasActiveFilters
+                ? "bg-gray-800 text-white border-gray-800"
+                : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+            )}
+            data-testid="toggle-filters"
+          >
+            <Filter className="w-4 h-4" />
+            {hasActiveFilters && (
+              <span className="w-2 h-2 bg-white rounded-full" />
+            )}
+          </button>
+        </div>
+
+        {/* Mobile: Row 2 - Full-width search (AC12.8.4.4) */}
+        <div className="md:hidden relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar pedidos..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
+            data-testid="mobile-orders-search"
+          />
+        </div>
+
+        {/* Desktop: Original layout (AC12.8.4.6 - preserved) */}
+        <div className="hidden md:flex gap-2">
           {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -433,7 +625,7 @@ export function OrdersTable({ orders: initialOrders, stats: initialStats, comuna
                 ? "bg-gray-800 text-white border-gray-800"
                 : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
             )}
-            data-testid="toggle-filters"
+            data-testid="desktop-toggle-filters"
           >
             <Filter className="w-4 h-4" />
             Filtros
@@ -606,6 +798,7 @@ interface StatsCardProps {
   color: string;
   isActive?: boolean;
   onClick?: () => void;
+  compact?: boolean;
 }
 
 // Color classes defined outside component to avoid recreation
@@ -641,21 +834,22 @@ const STATS_COLOR_CLASSES: Record<string, { normal: string; active: string }> = 
 };
 
 // Memoized StatsCard to prevent re-renders when parent state changes
-const StatsCard = memo(function StatsCard({ label, value, color, isActive, onClick }: StatsCardProps) {
+const StatsCard = memo(function StatsCard({ label, value, color, isActive, onClick, compact }: StatsCardProps) {
   const colors = STATS_COLOR_CLASSES[color] || STATS_COLOR_CLASSES.gray;
 
   return (
     <button
       onClick={onClick}
       className={cn(
-        "rounded-xl p-3 text-center w-full transition-all duration-200",
+        "rounded-xl text-center w-full transition-all duration-200",
+        compact ? "p-2" : "p-3",
         isActive ? colors.active : colors.normal,
         onClick && "cursor-pointer hover:scale-105 active:scale-95"
       )}
-      data-testid={`stats-card-${label.toLowerCase().replace(/\s/g, "-")}`}
+      data-testid={`stats-card-${label.toLowerCase().replace(/\s/g, "-").replace(/\./g, "")}`}
     >
-      <p className="text-2xl font-bold">{value}</p>
-      <p className={cn("text-xs font-medium", isActive ? "opacity-90" : "opacity-80")}>{label}</p>
+      <p className={cn("font-bold", compact ? "text-lg" : "text-2xl")}>{value}</p>
+      <p className={cn("font-medium", compact ? "text-[10px]" : "text-xs", isActive ? "opacity-90" : "opacity-80")}>{label}</p>
     </button>
   );
 });

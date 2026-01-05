@@ -250,27 +250,47 @@ export default async function OrdersPage({
     <div className="min-h-screen bg-gray-100 pb-20">
       {/* Sticky Header + Search/Filter */}
       <div className="sticky top-0 z-30 bg-gray-100">
-        {/* Header */}
-        <header className="bg-gradient-to-r from-gray-200 to-white px-5 py-3">
-          <div className="flex items-center gap-2 mb-3">
-            <Link
-              href="/admin/dashboard"
-              className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
-              data-testid="back-to-dashboard"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </Link>
-            <span className="font-logo text-xl text-gray-700">nitoagua</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <Package className="w-5 h-5 text-blue-600" />
+        {/* Header - Compact on mobile (AC12.8.4.2) */}
+        <header className="bg-gradient-to-r from-gray-200 to-white px-4 py-2 md:px-5 md:py-3">
+          {/* Mobile: Compact single-row header (AC12.8.4.2) */}
+          <div className="flex items-center justify-between md:hidden">
+            <div className="flex items-center gap-2">
+              <Link
+                href="/admin/dashboard"
+                className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
+                data-testid="back-to-dashboard"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </Link>
+              <h1 className="text-lg font-bold text-gray-900" data-testid="orders-title">Pedidos</h1>
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                {stats.total}
+              </span>
             </div>
-            <div>
-              <h1 className="text-xl font-extrabold text-gray-900" data-testid="orders-title">Pedidos</h1>
-              <p className="text-gray-500 text-sm">
-                {stats.total} pedidos totales
-              </p>
+          </div>
+
+          {/* Desktop: Original header layout (AC12.8.4.6) */}
+          <div className="hidden md:block">
+            <div className="flex items-center gap-2 mb-3">
+              <Link
+                href="/admin/dashboard"
+                className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
+                data-testid="desktop-back-to-dashboard"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </Link>
+              <span className="font-logo text-xl text-gray-700">nitoagua</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Package className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-xl font-extrabold text-gray-900" data-testid="desktop-orders-title">Pedidos</h1>
+                <p className="text-gray-500 text-sm">
+                  {stats.total} pedidos totales
+                </p>
+              </div>
             </div>
           </div>
         </header>

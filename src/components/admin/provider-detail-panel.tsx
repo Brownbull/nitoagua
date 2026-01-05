@@ -248,10 +248,10 @@ export function ProviderDetailPanel({
               <User className="w-8 h-8 text-gray-400" />
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xl font-bold text-gray-900">{provider.name}</h3>
-                {/* Rating Badge */}
-                {provider.rating_count && provider.rating_count > 0 && (
+                {/* Rating Badge - Always shown */}
+                {provider.rating_count && provider.rating_count > 0 ? (
                   <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 rounded-lg">
                     <Star className="w-4 h-4 text-amber-500 fill-current" />
                     <span className="text-sm font-semibold text-amber-700">
@@ -261,6 +261,10 @@ export function ProviderDetailPanel({
                       ({provider.rating_count})
                     </span>
                   </div>
+                ) : (
+                  <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-100 rounded-lg">
+                    Sin calificaciones
+                  </span>
                 )}
               </div>
               <span

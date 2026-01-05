@@ -354,42 +354,77 @@ export default async function OrderDetailPage({
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-gray-200 to-white px-5 py-3">
-        <div className="flex items-center gap-2 mb-3">
-          <Link
-            href="/admin/orders"
-            className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
-            data-testid="back-to-orders"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </Link>
-          <span className="font-logo text-xl text-gray-700">nitoagua</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <Package className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-extrabold text-gray-900" data-testid="order-id">
-                  #{order.id.slice(0, 8)}
-                </h1>
-                {order.is_urgent && (
-                  <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
-                    URGENTE
-                  </span>
-                )}
-              </div>
-              <p className="text-gray-500 text-sm">
-                {format(new Date(order.created_at), "d 'de' MMMM, yyyy 'a las' HH:mm", { locale: es })}
-              </p>
-            </div>
+      {/* Header - Mobile: Status on own row (AC12.8.4.5) */}
+      <header className="bg-gradient-to-r from-gray-200 to-white px-4 py-2 md:px-5 md:py-3">
+        {/* Mobile: Compact header (AC12.8.4.5) */}
+        <div className="md:hidden">
+          {/* Row 1: Back + Title */}
+          <div className="flex items-center gap-2 mb-2">
+            <Link
+              href="/admin/orders"
+              className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
+              data-testid="back-to-orders"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </Link>
+            <h1 className="text-lg font-bold text-gray-900" data-testid="order-id">
+              Pedido #{order.id.slice(0, 8)}
+            </h1>
+            {order.is_urgent && (
+              <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-semibold rounded">
+                URGENTE
+              </span>
+            )}
           </div>
-          <span className={cn("px-3 py-1.5 rounded-full text-sm font-semibold", currentStatus.bgColor, currentStatus.color)}>
-            {currentStatus.label}
-          </span>
+
+          {/* Row 2: Status badge + Date (AC12.8.4.5 - status prominent) */}
+          <div className="flex items-center gap-2">
+            <span className={cn("px-3 py-1.5 rounded-full text-sm font-semibold", currentStatus.bgColor, currentStatus.color)} data-testid="order-status">
+              {currentStatus.label}
+            </span>
+            <span className="text-xs text-gray-500">
+              {format(new Date(order.created_at), "d MMM, HH:mm", { locale: es })}
+            </span>
+          </div>
+        </div>
+
+        {/* Desktop: Original header layout (AC12.8.4.6) */}
+        <div className="hidden md:block">
+          <div className="flex items-center gap-2 mb-3">
+            <Link
+              href="/admin/orders"
+              className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
+              data-testid="desktop-back-to-orders"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </Link>
+            <span className="font-logo text-xl text-gray-700">nitoagua</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Package className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-extrabold text-gray-900" data-testid="desktop-order-id">
+                    #{order.id.slice(0, 8)}
+                  </h1>
+                  {order.is_urgent && (
+                    <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                      URGENTE
+                    </span>
+                  )}
+                </div>
+                <p className="text-gray-500 text-sm">
+                  {format(new Date(order.created_at), "d 'de' MMMM, yyyy 'a las' HH:mm", { locale: es })}
+                </p>
+              </div>
+            </div>
+            <span className={cn("px-3 py-1.5 rounded-full text-sm font-semibold", currentStatus.bgColor, currentStatus.color)} data-testid="desktop-order-status">
+              {currentStatus.label}
+            </span>
+          </div>
         </div>
       </header>
 

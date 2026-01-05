@@ -9,12 +9,13 @@
         "delete_branch",
         "merge_branch",
         "reset_branch",
-        "rebase_branch"
+        "rebase_branch",
+        "list_extensions",
+        "get_advisors",
+        "list_edge_functions",
+        "get_edge_function",
+        "deploy_edge_function"
       ]
-    },
-    "vercel": {
-      "type": "http",
-      "url": "https://vercel.com/api/mcp"
     }
   }
 }

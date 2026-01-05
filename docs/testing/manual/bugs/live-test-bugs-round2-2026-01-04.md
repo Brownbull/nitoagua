@@ -23,6 +23,13 @@
 | BUG-R2-009 | Provider "Mis Ofertas" - wrong default filter and incorrect status display | Medium | - | Open |
 | BUG-R2-010 | Admin Providers page - filter layout inefficient, missing email on cards | Medium | 5.1 | Open |
 | BUG-R2-011 | Admin Providers - missing ratings on cards and no rating history in detail | Medium | 5.1 | Open |
+| BUG-R2-012 | Admin orders - "Total" filter card should be replaced with "Disputas" | Medium | 3.1 | **Fixed** |
+| BUG-R2-013 | Admin not notified when consumer creates a dispute | Medium | 6.14 | **Fixed** |
+| BUG-R2-014 | Provider dispute resolution display - no warning when resolved against them | Medium | 6.14 | **Fixed** |
+| BUG-R2-015 | Consumer dispute resolution display - no apologetic message or retry link | Medium | 6.14 | **Fixed** |
+| BUG-R2-016 | Toast notifications - inconsistent font and missing icons | Low | 9 | Open |
+| BUG-R2-017 | Push notifications sent to wrong user on shared devices | Critical | 10 | Open |
+| BUG-R2-018 | Provider "Mis Ofertas" shows completed deliveries instead of hiding them | Medium | 10 | Open |
 
 ---
 
@@ -652,6 +659,514 @@ Provider ratings are not visible in the admin panel - neither on the provider li
 
 ---
 
+### BUG-R2-012: Admin orders - "Total" filter card should be replaced with "Disputas"
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Medium |
+| **Priority** | P2 |
+| **Device** | All (Admin panel) |
+| **Test Step** | 3.1 |
+| **URL/Route** | /admin/orders |
+
+**Description:**
+
+The admin orders page has 6 stats cards: Pending, Accepted, In Transit, Delivered, Cancelled, Total. The "Total" card is redundant because:
+1. Total is already shown in the header ("X pedidos totales")
+2. Clicking "Total" has the same effect as having no filter selected
+
+A more useful card would be "Disputas" showing orders that have associated disputes, allowing admins to quickly filter to orders with problems.
+
+**Steps to Reproduce:**
+
+1. Log in as Admin
+2. Navigate to Orders section
+3. Observe the 6 status filter cards
+4. Note: "Total" card doesn't provide unique value
+
+**Expected Behavior:**
+
+- Replace "Total" card with "Disputas" (orange color)
+- Clicking "Disputas" filters to orders with associated disputes
+- Total count visible in header is sufficient
+
+**Resolution:**
+
+Fixed in `src/components/admin/orders-table.tsx`:
+1. Replaced "Total" StatsCard with "Disputas" using orange color
+2. Added `disputes` count to `OrderStats` type
+3. Added `has_dispute` filter that queries dispute request IDs
+4. Toggle behavior: clicking an active filter deselects it (shows all)
+
+---
+
+### BUG-R2-013: Admin not notified when consumer creates a dispute
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Medium |
+| **Priority** | P2 |
+| **Device** | All |
+| **Test Step** | 6.14 |
+| **URL/Route** | Dispute creation flow |
+
+**Description:**
+
+When a consumer creates a dispute for a delivered order, admin users should receive an in-app notification to alert them that a dispute needs review. Currently, no notification is sent.
+
+**Steps to Reproduce:**
+
+1. Complete a delivery as Provider
+2. As Consumer, file a dispute on the delivered order
+3. As Admin, check notifications
+4. Observe: No notification about the new dispute
+
+**Expected Behavior:**
+
+- Admin receives notification: "Nueva Disputa Reportada"
+- Notification includes dispute type and order ID
+- Admin can click to navigate to dispute review
+
+**Actual Behavior:**
+
+- No notification sent to admin
+- Admin only discovers disputes by manually checking the orders/disputes section
+
+**Resolution:**
+
+Fixed in `src/lib/actions/disputes.ts`:
+1. Added `notifyAdminsOfNewDispute()` helper function
+2. Queries `admin_allowed_emails` table to find admin users
+3. Creates notification for each admin with type `dispute_created`
+4. Notification message: "Disputa '{type}' para pedido #{id}. Requiere revisión."
+5. Called after successful dispute creation in `createDispute()`
+
+---
+
+### BUG-R2-014: Provider dispute resolution display - no warning when resolved against them
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Medium |
+| **Priority** | P2 |
+| **Device** | All (Provider view) |
+| **Test Step** | 6.14 |
+| **URL/Route** | /provider/deliveries/[id] |
+
+**Description:**
+
+When a dispute is resolved against the provider (`resolved_consumer`), the provider sees a generic "Disputa resuelta" message without any indication that it was resolved against them or any warning about consequences.
+
+**Steps to Reproduce:**
+
+1. Have a delivered order with a dispute
+2. As Admin, resolve the dispute in favor of the consumer
+3. As Provider, view the delivery detail
+4. Observe: Generic "resolved" message, no warning
+
+**Expected Behavior:**
+
+- Show clear indication if resolved against provider (red styling)
+- Display warning message about account consequences
+- Show resolution notes if provided by admin
+
+**Actual Behavior:**
+
+- Generic green "resolved" styling regardless of outcome
+- No differentiation between resolved_consumer vs resolved_provider
+- No warning about potential account suspension
+
+**Resolution:**
+
+Fixed in `src/app/provider/deliveries/[id]/delivery-detail-client.tsx`:
+1. Different styling for `resolved_provider` (green) vs `resolved_consumer` (red)
+2. Added warning box when resolved against provider:
+   - "⚠️ Advertencia: Esta disputa fue resuelta en tu contra."
+   - "Las disputas repetidas pueden resultar en suspensión o desactivación de tu cuenta."
+3. Shows resolution notes if available
+
+---
+
+### BUG-R2-015: Consumer dispute resolution display - no apologetic message or retry link
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Medium |
+| **Priority** | P2 |
+| **Device** | All (Consumer view) |
+| **Test Step** | 6.14 |
+| **URL/Route** | /request/[id] |
+
+**Description:**
+
+When a dispute is resolved in favor of the consumer (`resolved_consumer`), the consumer sees a basic "Resuelta (a tu favor)" message. There's no apologetic tone or encouragement to try the service again with a link to create a new request.
+
+**Steps to Reproduce:**
+
+1. Have a delivered order with a dispute
+2. As Admin, resolve the dispute in favor of the consumer
+3. As Consumer, view the request detail
+4. Observe: Generic "resolved" message, no apology or retry option
+
+**Expected Behavior:**
+
+- Apologetic message acknowledging the inconvenience
+- Encouragement to try the service again
+- Prominent "Intentar de Nuevo" button linking to /request
+
+**Actual Behavior:**
+
+- Generic "Resuelta (a tu favor)" status only
+- No empathetic messaging
+- No call-to-action to retry
+
+**Resolution:**
+
+Fixed in `src/components/consumer/request-status-client.tsx`:
+
+For `resolved_consumer`:
+1. Green styling with apologetic message:
+   - "Lamentamos mucho los inconvenientes que esto te ha causado."
+   - "Tu experiencia es muy importante para nosotros..."
+2. Shows resolution notes if provided (in italics)
+3. "Intentar de Nuevo" button linking to `/request`
+
+For `resolved_provider`:
+1. Gray styling with explanatory message
+2. Informs consumer they can contact support if they believe there was an error
+3. Shows resolution notes if provided
+
+---
+
+### BUG-R2-016: Toast notifications - inconsistent font and missing icons
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Low |
+| **Priority** | P3 |
+| **Device** | All |
+| **Test Step** | 9 (Toast Styling) |
+| **URL/Route** | App-wide |
+
+**Description:**
+
+Toast notifications (via Sonner) have visual polish issues:
+1. Font used in toasts doesn't match the app's primary font (Inter)
+2. Toast messages lack icons to visually indicate success/error/warning states
+
+**Steps to Reproduce:**
+
+1. Trigger any toast notification (e.g., submit a request, accept an offer)
+2. Observe the toast styling
+3. Compare font to rest of app UI
+4. Note: no icons present in toast messages
+
+**Expected Behavior:**
+
+- Toast font should match app font (Inter or system font stack)
+- Success toasts should have a checkmark icon ✓
+- Error toasts should have an X or warning icon
+- Info toasts should have an info icon ℹ
+
+**Actual Behavior:**
+
+- Toast font appears different from app font
+- No icons in toast messages - just text
+
+**Proposed Fix:**
+
+1. Configure Sonner Toaster with app font family in `globals.css` or theme config
+2. Add `icon` prop to toast calls or configure default icons in Toaster component:
+   ```tsx
+   <Toaster
+     toastOptions={{
+       style: { fontFamily: 'Inter, system-ui, sans-serif' },
+     }}
+   />
+   ```
+3. Update toast calls to include icons:
+   ```tsx
+   toast.success("¡Listo!", { icon: <CheckCircle className="h-4 w-4" /> })
+   toast.error("Error", { icon: <XCircle className="h-4 w-4" /> })
+   ```
+
+**Note:** This is a visual polish issue - core toast functionality works correctly.
+
+---
+
+### BUG-R2-017: Push notifications sent to wrong user on shared devices
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Critical |
+| **Priority** | P0 |
+| **Device** | All (cross-device/multi-user issue) |
+| **Test Step** | 10 (Multi-Consumer Competition) |
+| **URL/Route** | Push notification system |
+
+**Description:**
+
+Push notifications are being sent to the wrong user when multiple users log in on different devices. The notification system sends notifications based on device endpoint rather than following the currently authenticated user.
+
+**Steps to Reproduce:**
+
+1. **Consumer A** (test@nitoagua.cl) logs in on **Laptop**
+2. **Consumer B** (trombone.forest@gmail.com) logs in on **Cell Phone**
+3. Both consumers create water requests at approximately the same time
+4. **Provider** views available requests in their panel (sees both requests)
+5. **Provider** creates an offer for **Consumer A's request** (the test consumer)
+6. **BUG:** Notification appears on **Cell Phone** (Consumer B) instead of **Laptop** (Consumer A)
+7. Consumer B clicks the notification → "No tienes permiso" error (unauthorized)
+8. Consumer A must manually refresh the app to see the offer
+
+**Expected Behavior:**
+
+- Notification for Consumer A's request should appear on Laptop (where Consumer A is logged in)
+- Consumer A should receive the notification, not Consumer B
+- Notification should follow the USER, not the DEVICE
+
+**Actual Behavior:**
+
+- Notification appears on Cell Phone (Consumer B's device)
+- Consumer B sees notification for Consumer A's request
+- Consumer B cannot access the linked page (authorization error)
+- Consumer A never receives the notification
+
+**Root Cause Analysis:**
+
+Investigation revealed multiple issues in the push notification system:
+
+**Issue 1: Missing Logout Cleanup**
+
+When a user logs out, the push subscription is NOT cleaned up:
+- `signOut()` is called but `unsubscribeFromPush()` is NOT called
+- Database record linking user to endpoint remains
+- Browser service worker subscription remains active
+- Next user who logs in inherits the old user's endpoint
+
+**Affected Files:**
+- `src/app/provider/settings/sign-out-button.tsx` - Missing unsubscribe
+- `src/app/consumer-profile/page.tsx` - Missing unsubscribe
+- `src/components/admin/admin-logout-button.tsx` - Missing unsubscribe
+
+**Issue 2: Database Constraint Too Loose**
+
+The `push_subscriptions` table has:
+```sql
+UNIQUE(user_id, endpoint)
+```
+
+This allows the SAME endpoint to be registered for MULTIPLE users:
+- User A → Endpoint E1
+- User B → Endpoint E1 (also allowed!)
+
+Should be:
+```sql
+UNIQUE(endpoint)  -- Global uniqueness per device
+```
+
+**Issue 3: No Endpoint Deduplication on Subscribe**
+
+When a user subscribes with an endpoint that already exists for another user, the system should:
+1. Check if endpoint exists for DIFFERENT user
+2. Delete old user's subscription
+3. Create new subscription
+
+Currently it just upserts without deduplication.
+
+**Data Flow (Bug Scenario):**
+
+```
+1. Consumer A logs in on Laptop
+   → Service worker gets endpoint E1
+   → DB: (Consumer_A, E1)
+
+2. Consumer A logs out
+   → signOut() called
+   → DB still has: (Consumer_A, E1) ← BUG!
+   → Browser still subscribed to E1
+
+3. Consumer B logs in on Laptop (or different device with cached SW)
+   → Service worker returns endpoint E1 (device-specific)
+   → upsert creates: (Consumer_B, E1)
+   → DB now has BOTH: (Consumer_A, E1) AND (Consumer_B, E1)
+
+4. Provider creates offer for Consumer A's request
+   → Query: SELECT * FROM push_subscriptions WHERE user_id = Consumer_A
+   → Returns: endpoint E1
+   → Push sent to E1
+
+5. E1 was registered with Consumer B's browser session!
+   → Notification appears on Consumer B's device
+   → Consumer B sees notification meant for Consumer A
+```
+
+**Security Impact:**
+
+- **Privacy breach:** Users can see notifications about OTHER users' orders
+- **Authorization bypass:** Notification links go to pages the wrong user cannot access
+- **Multi-tenant isolation failure:** Cross-user data leakage
+
+**Proposed Fix (Three-Part):**
+
+**Part 1: Add Logout Cleanup (Immediate)**
+```typescript
+// In all logout handlers:
+async function handleLogout() {
+  // 1. Unsubscribe from browser push manager
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.getSubscription();
+  if (subscription) await subscription.unsubscribe();
+
+  // 2. Delete from database
+  await unsubscribeFromPush();
+
+  // 3. Then sign out
+  await supabase.auth.signOut();
+}
+```
+
+**Part 2: Endpoint Deduplication on Subscribe**
+```typescript
+// In subscribeToPush():
+// Before upserting, delete any existing subscriptions with same endpoint
+await supabase
+  .from("push_subscriptions")
+  .delete()
+  .eq("endpoint", subscription.endpoint)
+  .neq("user_id", user.id);  // Only delete OTHER users' records
+
+// Then upsert for current user
+```
+
+**Part 3: Database Migration (Optional)**
+```sql
+-- Make endpoint globally unique
+ALTER TABLE push_subscriptions
+  DROP CONSTRAINT IF EXISTS push_subscriptions_user_id_endpoint_key;
+
+ALTER TABLE push_subscriptions
+  ADD CONSTRAINT push_subscriptions_endpoint_key UNIQUE (endpoint);
+```
+
+**Files to Modify:**
+
+| File | Change Required |
+|------|-----------------|
+| `src/app/provider/settings/sign-out-button.tsx` | Add `unsubscribeFromPush()` call |
+| `src/app/consumer-profile/page.tsx` | Add `unsubscribeFromPush()` call |
+| `src/components/admin/admin-logout-button.tsx` | Add `unsubscribeFromPush()` call |
+| `src/lib/actions/push-subscription.ts` | Add endpoint deduplication in `subscribeToPush()` |
+| (Optional) `supabase/migrations/` | Add global endpoint uniqueness |
+
+**Testing After Fix:**
+
+1. User A logs in on Device X, enables push
+2. User A logs out (verify subscription deleted)
+3. User B logs in on Device X, enables push
+4. User A creates request on different device
+5. Provider creates offer
+6. Verify: Notification goes to User A's device, NOT Device X
+
+**Additional Confirmed Scenarios:**
+
+The same bug affects ALL notification types, not just "New Offer" notifications:
+
+1. **"Oferta recibida"** - Consumer receives offer notification → Wrong user gets it
+2. **"En Camino"** - Provider starts delivery → Consumer notification goes to wrong device
+3. **"Entregado"** - Delivery completed → Consumer notification goes to wrong device
+
+All three notification types were observed going to Consumer B's phone instead of Consumer A's laptop during testing.
+
+**Related Bugs:**
+
+This is an expansion of BUG-R2-003 (Push notifications bound to device instead of user account) with:
+- Clearer reproduction steps
+- Root cause analysis
+- Specific code locations identified
+- Proposed fix with code examples
+
+---
+
+### BUG-R2-018: Provider "Mis Ofertas" shows completed deliveries instead of hiding them
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Medium |
+| **Priority** | P2 |
+| **Device** | All (Provider view) |
+| **Test Step** | 10 (Multi-Consumer Competition) |
+| **URL/Route** | /provider/offers |
+
+**Description:**
+
+After completing a delivery, the offer continues to appear in the Provider's "Mis Ofertas" (My Offers) list as an active delivery with "Aceptada" status. Completed deliveries should be hidden from this view or moved to a "Historial" (History) section.
+
+**Steps to Reproduce:**
+
+1. Log in as Provider
+2. Accept a consumer's request (offer becomes "Aceptada")
+3. Complete the delivery flow: Start delivery → Mark as delivered
+4. Navigate to "Mis Ofertas" page
+5. Observe: The completed delivery still appears with status "Aceptada"
+
+**Expected Behavior:**
+
+- Completed deliveries (status = "delivered") should NOT appear in active offers list
+- Either hide them completely, or move to a separate "Completadas" or "Historial" tab
+- Active offers list should only show: pending offers, accepted (awaiting start), and in_transit
+
+**Actual Behavior:**
+
+- Completed delivery still visible in "Mis Ofertas"
+- Shows "Aceptada" status badge even though delivery is complete
+- Provider sees both active AND completed deliveries mixed together
+- Screenshot shows Estado "1" filter with 2 offers, both showing "Aceptada" despite one being delivered
+
+**Screenshot:** Provider "Mis Ofertas" page showing Estado filter "1" with both completed and active offers displaying as "Aceptada"
+
+**Root Cause (suspected):**
+
+The offers query likely joins with `offers` table status instead of `water_requests.status`:
+- `offers.status = 'accepted'` (never changes after acceptance)
+- `water_requests.status = 'delivered'` (updated when delivery completes)
+
+The UI is showing `offers.status` when it should show `water_requests.status` for the delivery state.
+
+**Proposed Fix:**
+
+1. Update the offers query to JOIN with water_requests and get the actual delivery status:
+   ```sql
+   SELECT o.*, wr.status as delivery_status
+   FROM offers o
+   JOIN water_requests wr ON wr.id = o.request_id
+   WHERE o.supplier_id = $1
+     AND o.status = 'accepted'
+     AND wr.status NOT IN ('delivered', 'cancelled')
+   ORDER BY wr.created_at DESC
+   ```
+
+2. Or filter on the client side to exclude delivered requests:
+   ```typescript
+   const activeOffers = offers.filter(
+     o => o.request?.status !== 'delivered' && o.request?.status !== 'cancelled'
+   );
+   ```
+
+3. Optionally add tabs: "Activas" | "Completadas" to let provider see history
+
+**Files to Investigate:**
+
+- `src/app/provider/offers/page.tsx` - Offers listing page
+- `src/lib/actions/offers.ts` - Offers query logic
+- `src/components/provider/offer-card.tsx` - Offer card status display
+
+**Related Issues:**
+
+This is partially related to BUG-R2-009 which noted "wrong status displayed on offer cards" - both issues stem from using `offers.status` instead of `water_requests.status`.
+
+---
+
 ## Feature Requests / Enhancements
 
 These are not bugs but improvements identified during testing.
@@ -809,4 +1324,4 @@ Rango permitido: $4.500 - $6.500
 ---
 
 *Document created: 2026-01-04*
-*Last updated: 2026-01-04*
+*Last updated: 2026-01-04 - Added BUG-R2-018 (Mis Ofertas shows completed deliveries); Updated BUG-R2-017 with confirmed scenarios for En Camino and Delivered notifications*

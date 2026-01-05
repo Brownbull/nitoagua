@@ -2,7 +2,15 @@
   "mcpServers": {
     "supabase": {
       "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=spvbmmydrfquvndxpcug"
+      "url": "https://mcp.supabase.com/mcp?project_ref=spvbmmydrfquvndxpcug",
+      "disabledTools": [
+        "create_branch",
+        "list_branches",
+        "delete_branch",
+        "merge_branch",
+        "reset_branch",
+        "rebase_branch"
+      ]
     }
   }
 }

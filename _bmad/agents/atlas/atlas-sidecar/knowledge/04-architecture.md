@@ -99,6 +99,7 @@
 | 12.8 | Service Worker timeout | `navigator.serviceWorker.ready` can hang indefinitely - wrap with timeout (3s) |
 | 12.8 | Push cleanup on logout | Call `cleanupPushBeforeLogout()` BEFORE `signOut()` to prevent cross-user notifications |
 | 12.8 | Endpoint deduplication | On push subscribe, delete OTHER users' subscriptions for same endpoint (admin client) |
+| 12.8 | Toast font consistency | Add `!font-sans` to Sonner classNames - toast portal may render outside body font context |
 
 ---
 
@@ -164,4 +165,4 @@ Current (v2.4.0): 1.70 MB total, 196.8 KB largest
 
 ---
 
-*Last verified: 2026-01-04 | Sources: architecture.md, Epic 8-12.7 code reviews*
+*Last verified: 2026-01-05 | Sources: architecture.md, Epic 8-12.8 code reviews*
