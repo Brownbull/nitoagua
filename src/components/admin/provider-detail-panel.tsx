@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   X,
@@ -17,6 +17,7 @@ import {
   Percent,
   FileText,
   Loader2,
+  Star,
 } from "lucide-react";
 import type { ProviderDirectoryEntry } from "@/app/admin/providers/page";
 import {
@@ -24,6 +25,8 @@ import {
   unsuspendProvider,
   banProvider,
   updateCommissionOverride,
+  getProviderRatings,
+  type ProviderRating,
 } from "@/lib/actions/provider-management";
 import { toast } from "sonner";
 
@@ -40,6 +43,20 @@ function formatDate(dateString: string | null): string {
     month: "long",
     year: "numeric",
   });
+}
+
+function formatRelativeDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "hoy";
+  if (diffDays === 1) return "ayer";
+  if (diffDays < 7) return `hace ${diffDays} días`;
+  if (diffDays < 30) return `hace ${Math.floor(diffDays / 7)} sem`;
+  if (diffDays < 365) return `hace ${Math.floor(diffDays / 30)} mes${Math.floor(diffDays / 30) > 1 ? "es" : ""}`;
+  return date.toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function formatCurrency(amount: number): string {
@@ -80,8 +97,23 @@ export function ProviderDetailPanel({
     provider.commission_override?.toString() || ""
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [ratings, setRatings] = useState<ProviderRating[]>([]);
+  const [ratingsLoading, setRatingsLoading] = useState(true);
 
   const statusInfo = getStatusInfo(provider.verification_status);
+
+  // Fetch ratings when panel opens
+  useEffect(() => {
+    async function loadRatings() {
+      setRatingsLoading(true);
+      const result = await getProviderRatings(provider.id);
+      if (result.success) {
+        setRatings(result.ratings);
+      }
+      setRatingsLoading(false);
+    }
+    loadRatings();
+  }, [provider.id]);
 
   const handleSuspend = async () => {
     if (!suspendReason.trim()) {
@@ -216,9 +248,23 @@ export function ProviderDetailPanel({
               <User className="w-8 h-8 text-gray-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900">{provider.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold text-gray-900">{provider.name}</h3>
+                {/* Rating Badge */}
+                {provider.rating_count && provider.rating_count > 0 && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 rounded-lg">
+                    <Star className="w-4 h-4 text-amber-500 fill-current" />
+                    <span className="text-sm font-semibold text-amber-700">
+                      {(provider.average_rating ?? 0).toFixed(1)}
+                    </span>
+                    <span className="text-xs text-amber-600">
+                      ({provider.rating_count})
+                    </span>
+                  </div>
+                )}
+              </div>
               <span
-                className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${statusInfo.bg} ${statusInfo.color}`}
+                className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${statusInfo.bg} ${statusInfo.color} mt-1`}
               >
                 {statusInfo.label}
               </span>
@@ -283,6 +329,76 @@ export function ProviderDetailPanel({
                 </p>
               </div>
             </div>
+          </section>
+
+          {/* Ratings Section */}
+          <section className="bg-gray-50 rounded-xl p-4 space-y-3" data-testid="ratings-section">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Calificaciones
+              </h4>
+              {provider.rating_count && provider.rating_count > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-amber-500">
+                    <Star className="w-4 h-4 fill-current" />
+                    <span className="text-sm font-semibold">
+                      {(provider.average_rating ?? 0).toFixed(1)}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    ({provider.rating_count} calificacion{provider.rating_count !== 1 ? "es" : ""})
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {ratingsLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+              </div>
+            ) : ratings.length > 0 ? (
+              <div className="space-y-3">
+                {ratings.map((rating) => (
+                  <div
+                    key={rating.id}
+                    className="bg-white rounded-lg p-3 space-y-2"
+                    data-testid={`rating-${rating.id}`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {rating.consumer_name || "Cliente"}
+                        </p>
+                        <div className="flex items-center gap-0.5 mt-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-3 h-3 ${
+                                star <= rating.rating
+                                  ? "text-amber-400 fill-current"
+                                  : "text-gray-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {formatRelativeDate(rating.created_at)}
+                      </span>
+                    </div>
+                    {rating.comment && (
+                      <p className="text-sm text-gray-600 italic">
+                        &ldquo;{rating.comment}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">
+                Este proveedor aun no tiene calificaciones.
+              </p>
+            )}
           </section>
 
           {/* Commission Override */}
