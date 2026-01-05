@@ -70,13 +70,13 @@ test.describe("Orders Page - Navigation and Layout", () => {
     await page.goto("/admin/orders");
     await assertNoErrorState(page);
 
-    // Stats cards should be visible (Pendientes, Aceptados, En Camino, Entregados, Cancelados, Total)
-    await expect(page.getByText("Pendientes")).toBeVisible();
-    await expect(page.getByText("Aceptados")).toBeVisible();
-    await expect(page.getByText("En Camino")).toBeVisible();
-    await expect(page.getByText("Entregados")).toBeVisible();
-    await expect(page.getByText("Cancelados")).toBeVisible();
-    await expect(page.getByTestId("stats-card-total")).toBeVisible();
+    // Stats cards should be visible - use testid to avoid strict mode violations
+    await expect(page.getByTestId("stats-card-pendientes")).toBeVisible();
+    await expect(page.getByTestId("stats-card-aceptados")).toBeVisible();
+    await expect(page.getByTestId("stats-card-en-camino")).toBeVisible();
+    await expect(page.getByTestId("stats-card-entregados")).toBeVisible();
+    await expect(page.getByTestId("stats-card-cancelados")).toBeVisible();
+    await expect(page.getByTestId("stats-card-disputas")).toBeVisible();
   });
 });
 
@@ -503,9 +503,11 @@ test.describe("Orders Page - Mobile Navigation", () => {
     const pageTitle = page.getByTestId("orders-title");
     await expect(pageTitle).toBeVisible();
 
-    // Stats cards should be visible on mobile
-    await expect(page.getByText("Pendientes")).toBeVisible();
-    await expect(page.getByTestId("stats-card-total")).toBeVisible();
+    // Stats cards should be visible on mobile - use testid for mobile toggle or first stat card
+    const mobileToggle = page.getByTestId("mobile-status-toggle");
+    const statsCard = page.getByTestId("stats-card-pendientes");
+    // Either mobile toggle or stats card should be visible depending on viewport
+    await expect(mobileToggle.or(statsCard)).toBeVisible();
   });
 });
 

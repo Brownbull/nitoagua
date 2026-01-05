@@ -294,13 +294,13 @@ test.describe("Admin Orders Mobile UX - AC12.8.4.6: Desktop Layout Preserved", (
     await page.goto("/admin/orders");
     await assertNoErrorState(page);
 
-    // Desktop stats cards should be visible
-    await expect(page.getByText("Pendientes")).toBeVisible();
-    await expect(page.getByText("Aceptados")).toBeVisible();
-    await expect(page.getByText("En Camino")).toBeVisible();
-    await expect(page.getByText("Entregados")).toBeVisible();
-    await expect(page.getByText("Cancelados")).toBeVisible();
-    await expect(page.getByText("Disputas")).toBeVisible();
+    // Desktop stats cards should be visible - use testid to avoid strict mode violations
+    await expect(page.getByTestId("stats-card-pendientes")).toBeVisible();
+    await expect(page.getByTestId("stats-card-aceptados")).toBeVisible();
+    await expect(page.getByTestId("stats-card-en-camino")).toBeVisible();
+    await expect(page.getByTestId("stats-card-entregados")).toBeVisible();
+    await expect(page.getByTestId("stats-card-cancelados")).toBeVisible();
+    await expect(page.getByTestId("stats-card-disputas")).toBeVisible();
   });
 
   test("Desktop: Mobile toggle is hidden", async ({ page }) => {
