@@ -44,8 +44,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${poppins.variable} ${pacifico.variable}`}>
-      <body className="antialiased font-sans">
+    // suppressHydrationWarning on html/body to prevent errors from browser extensions
+    // (Grammarly, VS Code, etc.) that inject attributes after SSR
+    <html lang="es" className={`${poppins.variable} ${pacifico.variable}`} suppressHydrationWarning>
+      <body className="antialiased font-sans" suppressHydrationWarning>
         <ServiceWorkerRegistration />
         {children}
         <Toaster position="top-right" />

@@ -24,6 +24,8 @@ export type ProviderDirectoryEntry = {
   commission_override: number | null;
   deliveries_count: number;
   commission_owed: number;
+  average_rating: number | null;
+  rating_count: number | null;
 };
 
 interface ProvidersPageProps {
@@ -62,7 +64,9 @@ async function getProviders(params: {
       is_available,
       service_area,
       created_at,
-      commission_override
+      commission_override,
+      average_rating,
+      rating_count
     `, { count: "exact" })
     .in("role", ["supplier", "provider"]);
 
@@ -122,6 +126,8 @@ async function getProviders(params: {
     ...p,
     deliveries_count: deliveriesByProvider[p.id] || 0,
     commission_owed: 0, // Will be implemented in Story 6.5
+    average_rating: p.average_rating ?? null,
+    rating_count: p.rating_count ?? null,
   }));
 
   return { providers: result, total: count || 0 };
@@ -130,17 +136,16 @@ async function getProviders(params: {
 async function getServiceAreas(): Promise<string[]> {
   const adminClient = createAdminClient();
 
+  // Get all active comunas from the comunas table
   const { data } = await adminClient
-    .from("profiles")
-    .select("service_area")
-    .in("role", ["supplier", "provider"])
-    .not("service_area", "is", null);
+    .from("comunas")
+    .select("name")
+    .eq("active", true)
+    .order("name");
 
   if (!data) return [];
 
-  // Get unique service areas
-  const areas = [...new Set(data.map(p => p.service_area).filter(Boolean))] as string[];
-  return areas.sort();
+  return data.map(c => c.name);
 }
 
 export default async function ProvidersPage({ searchParams }: ProvidersPageProps) {

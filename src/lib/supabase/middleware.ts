@@ -5,21 +5,23 @@ import {
   getRoleRedirectUrl,
   isRouteAllowedForRole,
   getRequiredRoleForRoute,
-  PUBLIC_ROUTES,
+  AUTH_ROUTES,
+  TECHNICAL_ROUTES,
+  GUEST_ALLOWED_ROUTES,
 } from '@/lib/auth/role-redirect'
 
 /**
- * Middleware session update with role-based route guards
+ * Middleware session update with STRICT role-based route guards
  *
  * Story 12.8-2: Role-Based Route Guards (BUG-R2-004)
  *
- * Ensures:
- * 1. Session tokens are refreshed on each request
- * 2. Users are redirected to role-appropriate routes
- * 3. Unauthenticated users are sent to /login for role-restricted routes
+ * STRICT ISOLATION PRINCIPLE:
+ * - Admins can ONLY access /admin/* routes
+ * - Suppliers can ONLY access /provider/* and /profile/* routes
+ * - Consumers can ONLY access consumer routes (/, /request/*, /settings/*, etc.)
+ * - Once authenticated, users are locked to their role's routes
  *
- * Note: Routes like /request are intentionally accessible without authentication
- * to support guest water requests.
+ * Note: /request is accessible to unauthenticated guests for water requests
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -57,60 +59,96 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  // Skip role checks for public routes (static files, API, auth routes)
-  const isPublicRoute = PUBLIC_ROUTES.some(
+  // Skip role checks for technical routes (API, service worker, etc.)
+  const isTechnicalRoute = TECHNICAL_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   )
 
-  // Also skip for static assets not in PUBLIC_ROUTES (already handled by matcher, but be safe)
+  // Also skip for static assets (already handled by matcher, but be safe)
   const isStaticAsset = pathname.includes('.') && !pathname.endsWith('.html')
 
-  if (isPublicRoute || isStaticAsset) {
+  if (isTechnicalRoute || isStaticAsset) {
     return supabaseResponse
   }
 
-  // Check if this route requires a specific role (e.g., /admin, /provider, /settings)
+  // Auth routes are always accessible (login, signup, callbacks)
+  const isAuthRoute = AUTH_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  )
+
+  if (isAuthRoute) {
+    return supabaseResponse
+  }
+
+  // Check if this route requires a specific role
   const requiredRole = getRequiredRoleForRoute(pathname)
 
-  // If route doesn't require a specific role, allow access (e.g., /request for guests)
+  // If route doesn't require a specific role, allow access
   if (!requiredRole) {
     return supabaseResponse
   }
 
-  // Route requires a specific role - authentication is required
+  // Route requires a specific role - check authentication
   if (!user) {
-    // Don't redirect if already on a login page
-    if (pathname !== '/login' && pathname !== '/signup' && pathname !== '/admin/login') {
-      // Admin routes use separate admin login
-      if (pathname.startsWith('/admin')) {
-        return NextResponse.redirect(new URL('/admin/login', request.url))
+    // Unauthenticated user trying to access role-restricted route
+    // Allow guest access to specific public routes (landing page, guest request, tracking)
+    const isGuestAllowed = GUEST_ALLOWED_ROUTES.some((route) => {
+      if (route === '/') {
+        return pathname === '/'
       }
+      return pathname === route || pathname.startsWith(`${route}/`)
+    })
 
-      // All other protected routes use main login with returnTo
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('returnTo', pathname)
-      return NextResponse.redirect(loginUrl)
+    if (isGuestAllowed) {
+      return supabaseResponse
     }
-    return supabaseResponse
+
+    // Admin routes use separate admin login
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+
+    // All other protected routes use main login with returnTo
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('returnTo', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
-  // User is authenticated - fetch their role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
+  // User is authenticated - determine their EFFECTIVE role
+  // IMPORTANT: Admin status is determined by admin_allowed_emails table, NOT profile.role
+  // (profile.role can only be 'consumer' or 'supplier' per DB constraint)
+
+  let effectiveRole: string | undefined
+
+  // First check if user is an admin (admin_allowed_emails takes precedence)
+  const { data: adminEmail } = await supabase
+    .from('admin_allowed_emails')
+    .select('email')
+    .eq('email', user.email ?? '')
     .single()
 
-  const role = profile?.role
+  if (adminEmail) {
+    // User is an admin - they can ONLY access admin routes
+    effectiveRole = 'admin'
+  } else {
+    // Not an admin - use profile.role (consumer or supplier)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
 
-  // Check if user is allowed to access this route
-  if (!isRouteAllowedForRole(pathname, role)) {
+    effectiveRole = profile?.role
+  }
+
+  // STRICT ISOLATION: Check if user is allowed to access this route
+  if (!isRouteAllowedForRole(pathname, effectiveRole)) {
     // Get the correct redirect URL for their role
-    const redirectUrl = getRoleRedirectUrl(role)
+    const redirectUrl = getRoleRedirectUrl(effectiveRole)
 
-    // Log for debugging (useful in development)
+    // Log for debugging
     console.log(
-      `[ROLE GUARD] Blocking ${role || 'unknown'} from ${pathname}, redirecting to ${redirectUrl}`
+      `[ROLE GUARD] Blocking ${effectiveRole || 'unknown'} from ${pathname}, redirecting to ${redirectUrl}`
     )
 
     return NextResponse.redirect(new URL(redirectUrl, request.url))

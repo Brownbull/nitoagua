@@ -7,9 +7,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
-  Filter,
   X,
   User,
+  Star,
+  Phone,
+  Mail,
 } from "lucide-react";
 import type { ProviderDirectoryEntry } from "@/app/admin/providers/page";
 import { ProviderDetailPanel } from "./provider-detail-panel";
@@ -30,7 +32,7 @@ interface ProviderDirectoryProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "Todos los estados" },
+  { value: "all", label: "Estado" },
   { value: "pending", label: "Pendiente" },
   { value: "approved", label: "Aprobado" },
   { value: "suspended", label: "Suspendido" },
@@ -113,7 +115,6 @@ export function ProviderDirectory({
   const searchParams = useSearchParams();
   const [searchValue, setSearchValue] = useState(currentFilters.search);
   const [selectedProvider, setSelectedProvider] = useState<ProviderDirectoryEntry | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
 
   // Debounced search
   const updateFilters = useCallback(
@@ -175,9 +176,53 @@ export function ProviderDirectory({
 
   return (
     <div className="space-y-4" data-testid="provider-directory">
-      {/* Search and Filters */}
-      <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
-        {/* Search Bar */}
+      {/* Filters and Search */}
+      <div className="bg-white rounded-xl p-4 shadow-sm space-y-3 overflow-hidden">
+        {/* Row 1: Status + Area Filters (side by side) */}
+        <div className="flex gap-2 w-full">
+          {/* Status Filter */}
+          <select
+            value={currentFilters.status}
+            onChange={(e) => updateFilters({ status: e.target.value })}
+            className="flex-1 min-w-0 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+            data-testid="status-filter"
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Service Area Filter */}
+          <select
+            value={currentFilters.area}
+            onChange={(e) => updateFilters({ area: e.target.value })}
+            className="flex-1 min-w-0 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+            data-testid="area-filter"
+          >
+            <option value="all">Area</option>
+            {serviceAreas.map((area) => (
+              <option key={area} value={area}>
+                {area}
+              </option>
+            ))}
+          </select>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg shrink-0"
+              data-testid="clear-filters"
+              title="Limpiar filtros"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Row 2: Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -194,61 +239,6 @@ export function ProviderDirectory({
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Filter Toggle Button (Mobile) */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="lg:hidden flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg text-sm font-medium text-gray-700"
-        >
-          <Filter className="w-4 h-4" />
-          Filtros
-          {hasActiveFilters && (
-            <span className="w-2 h-2 bg-blue-500 rounded-full" />
-          )}
-        </button>
-
-        {/* Filters Row */}
-        <div className={`flex flex-wrap gap-2 ${showFilters ? "block" : "hidden lg:flex"}`}>
-          {/* Status Filter */}
-          <select
-            value={currentFilters.status}
-            onChange={(e) => updateFilters({ status: e.target.value })}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-            data-testid="status-filter"
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Service Area Filter */}
-          <select
-            value={currentFilters.area}
-            onChange={(e) => updateFilters({ area: e.target.value })}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-            data-testid="area-filter"
-          >
-            <option value="all">Todas las areas</option>
-            {serviceAreas.map((area) => (
-              <option key={area} value={area}>
-                {area}
-              </option>
-            ))}
-          </select>
-
-          {/* Clear Filters */}
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
-            >
-              <X className="w-3.5 h-3.5" />
-              Limpiar filtros
             </button>
           )}
         </div>
@@ -366,7 +356,8 @@ export function ProviderDirectory({
                 className="bg-white rounded-xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                 data-testid={`provider-card-${provider.id}`}
               >
-                <div className="flex items-center gap-3 mb-3">
+                {/* Header: Avatar, Name, Status, Rating */}
+                <div className="flex items-start gap-3 mb-2">
                   <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
                     <User className="w-5 h-5 text-gray-400" />
                   </div>
@@ -374,11 +365,44 @@ export function ProviderDirectory({
                     <p className="text-sm font-bold text-gray-900 truncate">
                       {provider.name}
                     </p>
-                    <p className="text-xs text-gray-500">{provider.phone}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {getStatusBadge(provider.verification_status, provider.is_available)}
+                    </div>
                   </div>
-                  {getStatusBadge(provider.verification_status, provider.is_available)}
+                  {/* Rating in top-right corner */}
+                  <div className="text-right shrink-0" data-testid="provider-rating">
+                    {provider.rating_count && provider.rating_count > 0 ? (
+                      <div>
+                        <div className="flex items-center gap-1 text-amber-500">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          <span className="text-sm font-semibold">
+                            {(provider.average_rating ?? 0).toFixed(1)}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500">({provider.rating_count})</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">Sin calificaciones</span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex justify-between text-xs text-gray-500">
+
+                {/* Contact Info: Phone and Email */}
+                <div className="space-y-1 mb-2 pl-13">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                    <Phone className="w-3 h-3 text-gray-400" />
+                    <span>{provider.phone}</span>
+                  </div>
+                  {provider.email && (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                      <Mail className="w-3 h-3 text-gray-400" />
+                      <span className="truncate">{provider.email}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Stats */}
+                <div className="flex justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
                   <span>{provider.deliveries_count} entregas</span>
                   <span>Desde {formatDate(provider.created_at)}</span>
                 </div>

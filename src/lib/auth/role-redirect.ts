@@ -4,7 +4,13 @@
  * Story 12.8-2: Role-Based Route Guards (BUG-R2-004)
  *
  * Provides centralized role-to-route mappings and redirect helpers
- * to enforce role isolation across the application.
+ * to enforce STRICT role isolation across the application.
+ *
+ * STRICT ISOLATION PRINCIPLE:
+ * - Admins can ONLY access /admin/* routes
+ * - Suppliers can ONLY access /provider/* and /profile/* routes
+ * - Consumers can ONLY access consumer routes (/, /request/*, /settings/*, etc.)
+ * - Once authenticated, users are locked to their role's routes
  *
  * Usage:
  * - Middleware: Use getRoleRedirectUrl and isRouteAllowedForRole
@@ -18,37 +24,70 @@ export type UserRole = "admin" | "supplier" | "consumer";
  * Maps each role to their default dashboard/home route
  */
 export const ROLE_HOME_ROUTES: Record<UserRole, string> = {
-  admin: "/admin",
+  admin: "/admin/dashboard",
   supplier: "/provider",
   consumer: "/",
 };
 
 /**
- * Route prefixes that require specific roles
- * Note: /request is intentionally NOT listed here as it's accessible to guests
+ * Routes that each role is ALLOWED to access (whitelist approach)
+ * Any route not in a role's whitelist will redirect to their home
  */
-export const ROLE_ROUTE_PATTERNS: Record<UserRole, string[]> = {
-  admin: ["/admin"],
-  supplier: ["/provider", "/profile"], // /profile is supplier-only profile page
-  consumer: ["/consumer-profile", "/settings", "/history"], // /request is public for guest access
+export const ROLE_ALLOWED_ROUTES: Record<UserRole, string[]> = {
+  admin: [
+    "/admin",
+  ],
+  supplier: [
+    "/provider",
+    "/profile",
+  ],
+  consumer: [
+    "/",
+    "/request",
+    "/consumer-profile",
+    "/settings",
+    "/history",
+    "/track",
+  ],
 };
 
 /**
- * Public routes that don't require authentication or role checks
+ * Routes that are ALWAYS public (no auth required, no role checks for unauthenticated users)
+ * These are auth-related routes and static assets
  */
-export const PUBLIC_ROUTES = [
-  "/",
+export const AUTH_ROUTES = [
   "/login",
   "/signup",
   "/auth/callback",
   "/admin/login",
   "/admin/not-authorized",
   "/admin/auth/callback",
+];
+
+/**
+ * Technical routes that should never be role-checked
+ */
+export const TECHNICAL_ROUTES = [
   "/api",
   "/sw.js",
   "/manifest.webmanifest",
   "/icons",
 ];
+
+/**
+ * Routes that unauthenticated users (guests) can access
+ * These are public-facing pages that don't require login
+ */
+export const GUEST_ALLOWED_ROUTES = [
+  "/",        // Landing page
+  "/request", // Guest water request flow
+  "/track",   // Track delivery by token
+];
+
+/**
+ * Combined public routes (for backwards compatibility)
+ */
+export const PUBLIC_ROUTES = [...AUTH_ROUTES, ...TECHNICAL_ROUTES];
 
 /**
  * Get the default redirect URL for a given role
@@ -61,58 +100,83 @@ export function getRoleRedirectUrl(role: UserRole | string | undefined | null): 
 
 /**
  * Check if a route path is allowed for a specific role
- * Returns true if:
- * - Route is public
- * - Route doesn't match any role-specific pattern
- * - Route matches the user's role pattern
+ *
+ * STRICT ISOLATION: Uses whitelist approach
+ * - Technical routes (API, SW, etc.) are always allowed
+ * - Auth routes are always allowed (for login/logout flows)
+ * - For authenticated users, ONLY routes in their role's whitelist are allowed
  */
 export function isRouteAllowedForRole(
   pathname: string,
   role: UserRole | string | undefined | null
 ): boolean {
-  // Public routes are always allowed
-  if (PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+  // Technical routes are always allowed (API, service worker, etc.)
+  if (TECHNICAL_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
     return true;
   }
 
-  // Check if this path is restricted to a specific role
-  for (const [requiredRole, patterns] of Object.entries(ROLE_ROUTE_PATTERNS)) {
-    const matchesPattern = patterns.some(
-      (pattern) => pathname === pattern || pathname.startsWith(`${pattern}/`)
-    );
-
-    if (matchesPattern) {
-      // This route requires a specific role
-      return role === requiredRole;
-    }
+  // Auth routes are always allowed (login, signup, callbacks)
+  if (AUTH_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+    return true;
   }
 
-  // Route doesn't match any role-specific pattern - allow it
-  return true;
+  // If no role, only allow public routes (handled above) - block everything else
+  if (!role) {
+    return false;
+  }
+
+  // Get the allowed routes for this role
+  const allowedRoutes = ROLE_ALLOWED_ROUTES[role as UserRole];
+  if (!allowedRoutes) {
+    // Unknown role - block access
+    return false;
+  }
+
+  // Check if pathname matches any of the role's allowed routes
+  // Special case: "/" should only match exactly "/" for consumer, not as a prefix for everything
+  return allowedRoutes.some((route) => {
+    if (route === "/") {
+      // Root route matches exactly "/" only
+      return pathname === "/";
+    }
+    // Other routes match as prefixes
+    return pathname === route || pathname.startsWith(`${route}/`);
+  });
 }
 
 /**
  * Get the required role for a route path, if any
- * Returns null if the route is public or doesn't require a specific role
+ * Returns null if the route is a technical/auth route that doesn't require role checks
+ * Returns the role that owns this route otherwise
  */
 export function getRequiredRoleForRoute(pathname: string): UserRole | null {
-  // Public routes don't require any role
-  if (PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+  // Technical routes don't require any role
+  if (TECHNICAL_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
     return null;
   }
 
-  // Check each role's patterns
-  for (const [role, patterns] of Object.entries(ROLE_ROUTE_PATTERNS)) {
-    const matchesPattern = patterns.some(
-      (pattern) => pathname === pattern || pathname.startsWith(`${pattern}/`)
-    );
+  // Auth routes don't require any role (anyone can access login/signup)
+  if (AUTH_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+    return null;
+  }
 
-    if (matchesPattern) {
+  // Find which role owns this route
+  for (const [role, routes] of Object.entries(ROLE_ALLOWED_ROUTES)) {
+    const matchesRoute = routes.some((route) => {
+      if (route === "/") {
+        return pathname === "/";
+      }
+      return pathname === route || pathname.startsWith(`${route}/`);
+    });
+
+    if (matchesRoute) {
       return role as UserRole;
     }
   }
 
-  return null;
+  // Unknown route - will require authentication and role check
+  // Return consumer as default (will be blocked if user is admin/supplier)
+  return "consumer";
 }
 
 /**
