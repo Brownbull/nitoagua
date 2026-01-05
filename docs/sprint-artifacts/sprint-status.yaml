@@ -332,7 +332,7 @@ development_status:
 
   # Phase 1: Security Fixes (P0) - MUST DO FIRST
   12.8-1-push-notification-security: done  # BUG-R2-003, R2-017: Push notifications sent to wrong user - Atlas code review passed 2026-01-04
-  12.8-2-role-based-route-guards: drafted  # BUG-R2-004: Admin can access consumer view - CRITICAL SECURITY
+  12.8-2-role-based-route-guards: done  # BUG-R2-004: Admin can access consumer view - CRITICAL SECURITY - Code review passed 2026-01-04
 
   # Phase 2: Core Fixes (P1/P2)
   12.8-3-provider-mis-ofertas-fix: drafted  # BUG-R2-009, R2-018: Wrong filter, completed deliveries visible

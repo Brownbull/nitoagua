@@ -43,6 +43,7 @@ export default function ProfilePage() {
       setEmail(user.email ?? null);
 
       // Fetch profile including comuna_id
+      // Story 12.8-2: Role-Based Route Guards (BUG-R2-004)
       const { data: profileData } = await supabase
         .from("profiles")
         .select("name, phone, address, special_instructions, comuna_id, role")
@@ -50,9 +51,14 @@ export default function ProfilePage() {
         .single();
 
       if (profileData) {
-        // If supplier, redirect to supplier profile
+        // Redirect non-consumers to their appropriate profile/dashboard
         if (profileData.role === "supplier") {
           router.push("/profile");
+          return;
+        }
+        if (profileData.role === "admin") {
+          // Admin should go to admin panel, not consumer profile
+          router.push("/admin");
           return;
         }
         setProfile(profileData);

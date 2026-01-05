@@ -34,7 +34,8 @@ export default function ConsumerSettingsPage() {
         return;
       }
 
-      // Fetch profile for name display
+      // Fetch profile for role check
+      // Story 12.8-2: Role-Based Route Guards (BUG-R2-004)
       const { data: profile } = await supabase
         .from("profiles")
         .select("name, role")
@@ -42,9 +43,14 @@ export default function ConsumerSettingsPage() {
         .single();
 
       if (profile) {
-        // If supplier, redirect to supplier settings
+        // Redirect non-consumers to their appropriate settings/dashboard
         if (profile.role === "supplier") {
           router.push("/provider/settings");
+          return;
+        }
+        if (profile.role === "admin") {
+          // Admin should go to admin panel, not consumer settings
+          router.push("/admin");
           return;
         }
       }

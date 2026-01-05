@@ -8,6 +8,15 @@ export const metadata = {
   description: "Panel de Administracion",
 };
 
+/**
+ * Admin Layout
+ *
+ * Story 12.8-2: Role-Based Route Guards (BUG-R2-004)
+ *
+ * NOTE: Role-based redirects are handled by middleware.
+ * This layout only conditionally shows navigation UI for authenticated admins.
+ * The login and not-authorized pages render without the sidebar/nav.
+ */
 export default async function AdminLayout({
   children,
 }: {
@@ -20,6 +29,7 @@ export default async function AdminLayout({
   const userEmail = user?.email;
 
   // Only show navigation if user is an admin (not just authenticated)
+  // Middleware handles the actual access control; this just controls UI visibility
   const adminCheck = user && userEmail ? await isAdmin(userEmail) : false;
   const showNav = user && userEmail && adminCheck;
 

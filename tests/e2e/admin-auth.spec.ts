@@ -1,8 +1,10 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/fixtures/merged-fixtures";
+import { assertNoErrorState } from "../fixtures/error-detection";
 
 test.describe("Admin Authentication - Login Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/admin/login");
+    await assertNoErrorState(page);
   });
 
   test("AC6.1.1 - Admin can navigate to /admin and see login page with Google OAuth button", async ({
@@ -13,6 +15,7 @@ test.describe("Admin Authentication - Login Page", () => {
 
     // Should redirect to /admin/login
     await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await assertNoErrorState(page);
     expect(page.url()).toContain("/admin/login");
 
     // Verify Google sign-in button is visible
@@ -79,6 +82,7 @@ test.describe("Admin Dashboard Access Guard", () => {
 
     // Should redirect to login
     await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await assertNoErrorState(page);
     expect(page.url()).toContain("/admin/login");
   });
 
@@ -91,6 +95,7 @@ test.describe("Admin Dashboard Access Guard", () => {
 
     // Should redirect to login
     await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await assertNoErrorState(page);
     expect(page.url()).toContain("/admin/login");
   });
 });
@@ -101,6 +106,7 @@ test.describe("Admin Auth Callback Route", () => {
 
     // Should redirect to admin login when no code provided
     await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await assertNoErrorState(page);
     expect(page.url()).toContain("/admin/login");
   });
 
@@ -113,6 +119,7 @@ test.describe("Admin Auth Callback Route", () => {
 
     // Should redirect to admin login with error
     await page.waitForURL("**/admin/login**", { timeout: 10000 });
+    // Note: Don't assert no error state here as the error param is expected
     expect(page.url()).toContain("/admin/login");
     expect(page.url()).toContain("error=");
   });
@@ -123,6 +130,7 @@ test.describe("AC6.1.6 - Admin Interface Accessibility", () => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/admin/login");
+    await assertNoErrorState(page);
 
     // Should show login interface on mobile (no mobile restriction)
     await expect(page.getByTestId("admin-google-sign-in-button")).toBeVisible();
@@ -132,6 +140,7 @@ test.describe("AC6.1.6 - Admin Interface Accessibility", () => {
     // Set desktop viewport (1024px or more)
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.goto("/admin/login");
+    await assertNoErrorState(page);
 
     // Should show login interface
     await expect(page.getByTestId("admin-google-sign-in-button")).toBeVisible();
@@ -141,6 +150,7 @@ test.describe("AC6.1.6 - Admin Interface Accessibility", () => {
     // Set large desktop viewport
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/admin/login");
+    await assertNoErrorState(page);
 
     // Should show login interface
     await expect(page.getByTestId("admin-google-sign-in-button")).toBeVisible();
@@ -157,6 +167,7 @@ test.describe("Admin Not Authorized Page", () => {
 
     // Without auth, should redirect to login
     await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await assertNoErrorState(page);
     expect(page.url()).toContain("/admin/login");
   });
 });
@@ -165,6 +176,7 @@ test.describe("Admin Login Loading State", () => {
   test("Google button shows loading state when clicked", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.goto("/admin/login");
+    await assertNoErrorState(page);
 
     const googleButton = page.getByTestId("admin-google-sign-in-button");
     await expect(googleButton).toBeVisible();
@@ -175,8 +187,8 @@ test.describe("Admin Login Loading State", () => {
     // Click the button (this will trigger OAuth redirect attempt)
     await googleButton.click();
 
-    // Give it a moment to update state
-    await page.waitForTimeout(100);
+    // Wait for network idle instead of fixed timeout
+    await page.waitForLoadState("networkidle");
 
     // Button interaction should have worked
     expect(true).toBe(true);
@@ -187,6 +199,7 @@ test.describe("Admin UI - Gray Theme", () => {
   test("login page uses gray/neutral theme colors", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.goto("/admin/login");
+    await assertNoErrorState(page);
 
     // Verify gray background (bg-gray-100)
     const body = page.locator("body");
@@ -205,6 +218,7 @@ test.describe("Admin Sidebar Navigation", () => {
   test("sidebar is not visible on login page", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.goto("/admin/login");
+    await assertNoErrorState(page);
 
     // Sidebar should not be visible on login page (no user)
     const dashboardNav = page.getByTestId("nav-dashboard");
@@ -220,6 +234,7 @@ test.describe("Admin Dev Login (Local Testing)", () => {
 
   test("admin can login with test credentials and access dashboard", async ({ page }) => {
     await page.goto("/admin/login");
+    await assertNoErrorState(page);
 
     // Dev login form should be visible
     const devLoginButton = page.getByTestId("admin-dev-login-button");
@@ -234,6 +249,7 @@ test.describe("Admin Dev Login (Local Testing)", () => {
 
     // Should redirect to admin dashboard
     await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await assertNoErrorState(page);
     expect(page.url()).toContain("/admin/dashboard");
 
     // Dashboard should show admin content
@@ -242,6 +258,7 @@ test.describe("Admin Dev Login (Local Testing)", () => {
 
   test("non-admin user sees not-authorized page", async ({ page }) => {
     await page.goto("/admin/login");
+    await assertNoErrorState(page);
 
     // Dev login form should be visible
     const devLoginButton = page.getByTestId("admin-dev-login-button");
