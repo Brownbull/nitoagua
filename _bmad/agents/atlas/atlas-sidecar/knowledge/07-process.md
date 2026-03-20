@@ -125,6 +125,7 @@ npm run test:e2e
 | Testing-3 | 2025-12-19 | Merged Playwright fixtures, persona validation tests |
 | Testing-2 | 2025-12-18 | `verify:local-db`, `seed:dev-login`, local dev guide |
 | 12.7-8 to 12.7-13 | 2026-01-04 | Epic 12.7 bug fixes batch: Rating system, En Camino status, Provider UX, Admin UX, Commission screenshot, Offer cancellation |
+| 12.8-4 to 12.8-6 | 2026-01-05 | Epic 12.8 final batch: Admin orders mobile UX, Provider ratings in admin, Toast font consistency (!font-sans) |
 
 > Full deployment details in `docs/sprint-artifacts/` - Atlas tracks patterns, not full logs.
 
@@ -140,4 +141,4 @@ npm run test:e2e
 
 ---
 
-*Last verified: 2026-01-04 | Sources: run_app.local.md, sprint-artifacts, Epic 8 Retrospective, Epic 12.7 deployment*
+*Last verified: 2026-01-05 | Sources: run_app.local.md, sprint-artifacts, Epic 8 Retrospective, Epic 12.7-12.8 deployments*

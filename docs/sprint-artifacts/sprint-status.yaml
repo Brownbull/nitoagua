@@ -340,7 +340,7 @@ development_status:
   12.8-5-admin-providers-ux-ratings: done  # BUG-R2-010, R2-011: Missing email, ratings on cards - Completed 2026-01-05
 
   # Phase 3: Polish (P3)
-  12.8-6-ui-polish: done  # BUG-R2-005, R2-006, R2-016: Icons, fonts, toasts - Atlas code review passed 2026-01-05
+  12.8-6-ui-polish: deployed  # BUG-R2-005, R2-006, R2-016: Icons, fonts, toasts - Deployed to production 2026-01-05
 
   epic-12.8-retrospective: optional
 
