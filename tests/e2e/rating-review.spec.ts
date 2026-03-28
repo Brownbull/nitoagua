@@ -25,8 +25,9 @@ test.use({
   hasTouch: true,
 });
 
-// Skip if dev login not enabled
+// Skip if dev login not enabled or service role key missing
 const skipIfNoDevLogin = process.env.NEXT_PUBLIC_DEV_LOGIN !== "true";
+const skipIfNoServiceRole = !(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY);
 
 // Supabase admin client for test setup
 function getAdminClient() {
@@ -35,7 +36,7 @@ function getAdminClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
   if (!serviceRoleKey) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY required for E2E tests");
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_KEY required");
   }
 
   return createClient(supabaseUrl, serviceRoleKey, {
@@ -70,6 +71,7 @@ async function loginAsConsumer(page: import("@playwright/test").Page) {
 }
 
 test.describe("Rating/Review System @rating @12.7-13", () => {
+  test.skip(skipIfNoServiceRole, "SUPABASE_SERVICE_ROLE_KEY required for rating tests");
   // Tests must run in order (serial) since they mutate data
   test.describe.configure({ mode: "serial" });
 

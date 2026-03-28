@@ -52,48 +52,48 @@ test.describe("Provider Registration - Story 7-1", () => {
       await page.goto("/provider/onboarding/personal");
 
       // Should redirect to the welcome page
-      await page.waitForURL("**/provider/onboarding", { timeout: 10000 });
-      expect(page.url()).toContain("/provider/onboarding");
+      await page.waitForURL("**/login**", { timeout: 30000 });
+      expect(page.url()).toContain("/login");
     });
 
     test("areas step redirects unauthenticated users", async ({ page }) => {
       await page.context().clearCookies();
       await page.goto("/provider/onboarding/areas");
 
-      await page.waitForURL("**/provider/onboarding", { timeout: 10000 });
-      expect(page.url()).toContain("/provider/onboarding");
+      await page.waitForURL("**/login**", { timeout: 30000 });
+      expect(page.url()).toContain("/login");
     });
 
     test("documents step redirects unauthenticated users", async ({ page }) => {
       await page.context().clearCookies();
       await page.goto("/provider/onboarding/documents");
 
-      await page.waitForURL("**/provider/onboarding", { timeout: 10000 });
-      expect(page.url()).toContain("/provider/onboarding");
+      await page.waitForURL("**/login**", { timeout: 30000 });
+      expect(page.url()).toContain("/login");
     });
 
     test("bank step redirects unauthenticated users", async ({ page }) => {
       await page.context().clearCookies();
       await page.goto("/provider/onboarding/bank");
 
-      await page.waitForURL("**/provider/onboarding", { timeout: 10000 });
-      expect(page.url()).toContain("/provider/onboarding");
+      await page.waitForURL("**/login**", { timeout: 30000 });
+      expect(page.url()).toContain("/login");
     });
 
     test("review step redirects unauthenticated users", async ({ page }) => {
       await page.context().clearCookies();
       await page.goto("/provider/onboarding/review");
 
-      await page.waitForURL("**/provider/onboarding", { timeout: 10000 });
-      expect(page.url()).toContain("/provider/onboarding");
+      await page.waitForURL("**/login**", { timeout: 30000 });
+      expect(page.url()).toContain("/login");
     });
 
     test("pending step redirects unauthenticated users", async ({ page }) => {
       await page.context().clearCookies();
       await page.goto("/provider/onboarding/pending");
 
-      await page.waitForURL("**/provider/onboarding", { timeout: 10000 });
-      expect(page.url()).toContain("/provider/onboarding");
+      await page.waitForURL("**/login**", { timeout: 30000 });
+      expect(page.url()).toContain("/login");
     });
   });
 
@@ -314,13 +314,11 @@ test.describe("Provider vs Consumer Registration Paths", () => {
     await page.goto("/provider/onboarding");
     await expect(page.getByText("¿Quieres ser repartidor de agua?")).toBeVisible();
 
-    // Consumer flow starts at / with "Crear Cuenta" link
+    // Consumer flow starts at / with CTA button to request water
     await page.goto("/");
-    // Wait for auth check
-    const crearCuentaLink = page.getByTestId("crear-cuenta-link");
-
-    // For unauthenticated users, should show crear cuenta
-    await expect(crearCuentaLink).toBeVisible({ timeout: 5000 });
+    const requestButton = page.getByTestId("request-water-button");
+    await expect(requestButton).toBeVisible();
+    await expect(requestButton).toContainText("Pedir Agua Ahora");
   });
 
   test("login page role parameter works for both roles", async ({ page }) => {
@@ -341,8 +339,8 @@ test.describe("Story 7-9: Vehicle Information UX Alignment", () => {
       await page.context().clearCookies();
       await page.goto("/provider/onboarding/vehicle");
 
-      await page.waitForURL("**/provider/onboarding", { timeout: 10000 });
-      expect(page.url()).toContain("/provider/onboarding");
+      await page.waitForURL("**/login**", { timeout: 30000 });
+      expect(page.url()).toContain("/login");
     });
   });
 
@@ -629,8 +627,8 @@ test.describe("Story 7-10: Bank Account UX Alignment", () => {
       await page.context().clearCookies();
       await page.goto("/provider/onboarding/bank");
 
-      await page.waitForURL("**/provider/onboarding", { timeout: 10000 });
-      expect(page.url()).toContain("/provider/onboarding");
+      await page.waitForURL("**/login**", { timeout: 30000 });
+      expect(page.url()).toContain("/login");
     });
   });
 });

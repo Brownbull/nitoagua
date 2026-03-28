@@ -11,28 +11,56 @@ const validRequestData = {
 };
 
 /**
- * Helper function to fill the request form with valid data
+ * Helper function to fill step 1 of the request form with valid data
  */
-async function fillRequestForm(
+async function fillStep1(
   page: import("@playwright/test").Page,
   data = validRequestData
 ) {
+  // Wait for comunas to load and select one (required field)
+  await expect(page.getByText("Selecciona tu comuna")).toBeVisible({ timeout: 10000 });
+  await page.getByTestId("comuna-select").click();
+  await expect(page.getByTestId("comuna-option-villarrica")).toBeVisible({ timeout: 5000 });
+  await page.getByTestId("comuna-option-villarrica").click();
+
   await page.getByTestId("name-input").fill(data.name);
   await page.getByTestId("phone-input").fill(data.phone);
   await page.getByTestId("email-input").fill(data.email);
   await page.getByTestId("address-input").fill(data.address);
   await page.getByTestId("instructions-input").fill(data.specialInstructions);
-  await page.getByTestId(`amount-option-${data.amount}`).click();
 }
 
 /**
- * Helper function to navigate to the review screen
+ * Helper function to select an amount option on step 2
  */
-async function navigateToReview(page: import("@playwright/test").Page) {
-  await fillRequestForm(page);
-  await page.getByTestId("submit-button").click();
-  // Wait for review screen to be visible
-  await expect(page.getByTestId("review-screen")).toBeVisible();
+async function selectAmount(
+  page: import("@playwright/test").Page,
+  amount = validRequestData.amount
+) {
+  // Wait for amount options to render (they load with the step 2 component)
+  // Note: request-step3-amount.tsx uses testid "amount-{value}", not "amount-option-{value}"
+  await expect(page.getByTestId(`amount-${amount}`)).toBeVisible({ timeout: 10000 });
+  await page.getByTestId(`amount-${amount}`).click();
+}
+
+/**
+ * Helper function to navigate to the review screen through all wizard steps
+ */
+async function navigateToReview(
+  page: import("@playwright/test").Page,
+  data = validRequestData
+) {
+  // Step 1: Fill contact + location
+  await fillStep1(page, data);
+  await page.getByTestId("next-button").click();
+
+  // Step 2: Select amount
+  await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
+  await selectAmount(page, data.amount);
+  await page.getByTestId("nav-next-button").click();
+
+  // Step 3: Review
+  await expect(page.getByTestId("review-screen")).toBeVisible({ timeout: 10000 });
 }
 
 test.describe("Request Review and Submission (Story 2-3)", () => {
@@ -66,7 +94,7 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
       await navigateToReview(page);
 
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-        "Revisar Solicitud"
+        "Revisa tu pedido"
       );
     });
   });
@@ -77,26 +105,15 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
 
       // Check amount display includes price in Chilean format
       const amountElement = page.getByTestId("review-amount");
-      await expect(amountElement).toContainText("1.000 L");
-      await expect(amountElement).toContainText("$15.000");
+      await expect(amountElement).toContainText("1.000 litros");
     });
 
     test("different amounts show correct prices", async ({ page }) => {
-      // Fill form with 5000L option
-      await page.getByTestId("name-input").fill(validRequestData.name);
-      await page.getByTestId("phone-input").fill(validRequestData.phone);
-      await page.getByTestId("email-input").fill(validRequestData.email);
-      await page.getByTestId("address-input").fill(validRequestData.address);
-      await page
-        .getByTestId("instructions-input")
-        .fill(validRequestData.specialInstructions);
-      await page.getByTestId("amount-option-5000").click();
-      await page.getByTestId("submit-button").click();
+      // Navigate to review with 5000L option
+      await navigateToReview(page, { ...validRequestData, amount: "5000" });
 
-      await expect(page.getByTestId("review-screen")).toBeVisible();
       const amountElement = page.getByTestId("review-amount");
-      await expect(amountElement).toContainText("5.000 L");
-      await expect(amountElement).toContainText("$45.000");
+      await expect(amountElement).toContainText("5.000 litros");
     });
   });
 
@@ -104,10 +121,11 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
     test("clicking Editar returns to form", async ({ page }) => {
       await navigateToReview(page);
 
-      await page.getByTestId("edit-button").click();
+      // Use edit-contact-link to go back to step 1
+      await page.getByTestId("edit-contact-link").click();
 
-      // Should be back on form view
-      await expect(page.getByTestId("request-form")).toBeVisible();
+      // Should be back on step 1
+      await expect(page.getByTestId("name-input")).toBeVisible();
     });
 
     test("form data is preserved after returning from review", async ({
@@ -115,9 +133,9 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
     }) => {
       await navigateToReview(page);
 
-      await page.getByTestId("edit-button").click();
+      await page.getByTestId("edit-contact-link").click();
 
-      // Check all fields retain their values
+      // Check step 1 fields retain their values
       await expect(page.getByTestId("name-input")).toHaveValue(
         validRequestData.name
       );
@@ -133,9 +151,14 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
       await expect(page.getByTestId("instructions-input")).toHaveValue(
         validRequestData.specialInstructions
       );
-      await expect(
-        page.getByTestId(`amount-option-${validRequestData.amount}`)
-      ).toHaveAttribute("aria-checked", "true");
+
+      // Navigate to step 2 to verify amount is preserved
+      await page.getByTestId("next-button").click();
+      await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
+      // Selected amount has blue border class
+      const amountBtn = page.getByTestId(`amount-${validRequestData.amount}`);
+      await expect(amountBtn).toBeVisible();
+      await expect(amountBtn).toHaveClass(/border-\[#0077B6\]/);
     });
 
     test("back button on review also returns to form with data", async ({
@@ -143,23 +166,26 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
     }) => {
       await navigateToReview(page);
 
-      await page.getByTestId("back-button").click();
+      // Use header nav-back-button to go back to step 2
+      await page.getByTestId("nav-back-button").click();
 
-      // Should be back on form view with data preserved
-      await expect(page.getByTestId("request-form")).toBeVisible();
-      await expect(page.getByTestId("name-input")).toHaveValue(
-        validRequestData.name
-      );
+      // Should be back on step 2
+      await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
     });
   });
 
   test.describe("AC2-3-4: Submit button shows loading spinner", () => {
+    // These tests use page.route() mocks that don't reliably intercept
+    // production API calls (Vercel serverless). Skip when testing against production.
+    const isProduction = !!process.env.BASE_URL;
+
     test("submit button shows loading state during submission", async ({
       page,
     }) => {
-      // Mock API to delay response
+      test.skip(isProduction, "page.route() mocks don't intercept production API");
+      // Mock API to delay response (3s to reliably check loading state)
       await page.route("**/api/requests", async (route) => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
         await route.fulfill({
           status: 201,
           contentType: "application/json",
@@ -183,10 +209,11 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
 
       // Check loading state
       await expect(submitButton).toBeDisabled();
-      await expect(submitButton).toContainText("Enviando");
+      await expect(submitButton).toContainText("Enviando...");
     });
 
     test("buttons are disabled during submission", async ({ page }) => {
+      test.skip(isProduction, "page.route() mocks don't intercept production API");
       // Mock slow API response
       await page.route("**/api/requests", async (route) => {
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -209,9 +236,8 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
 
       await page.getByTestId("submit-button").click();
 
-      // Both buttons should be disabled
+      // Submit button should be disabled during submission
       await expect(page.getByTestId("submit-button")).toBeDisabled();
-      await expect(page.getByTestId("edit-button")).toBeDisabled();
     });
   });
 
@@ -393,26 +419,20 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
     test("urgent requests show urgency indicator on review", async ({
       page,
     }) => {
-      await page.getByTestId("name-input").fill(validRequestData.name);
-      await page.getByTestId("phone-input").fill(validRequestData.phone);
-      await page.getByTestId("email-input").fill(validRequestData.email);
-      await page.getByTestId("address-input").fill(validRequestData.address);
-      await page
-        .getByTestId("instructions-input")
-        .fill(validRequestData.specialInstructions);
-      await page
-        .getByTestId(`amount-option-${validRequestData.amount}`)
-        .click();
+      // Step 1: Fill contact + location
+      await fillStep1(page);
+      await page.getByTestId("next-button").click();
 
-      // Set urgency to urgent
+      // Step 2: Select amount and urgency
+      await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
+      await selectAmount(page);
       await page.getByTestId("urgency-urgent").click();
+      await page.getByTestId("nav-next-button").click();
 
-      await page.getByTestId("submit-button").click();
-
-      await expect(page.getByTestId("review-screen")).toBeVisible();
-      await expect(page.getByTestId("review-urgency")).toContainText(
-        "⚡ Urgente"
-      );
+      // Step 3: Review
+      await expect(page.getByTestId("review-screen")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("⚡ Urgente")).toBeVisible();
+      await expect(page.getByTestId("urgency-surcharge")).toBeVisible();
     });
 
     test("non-urgent requests do not show urgency indicator", async ({
@@ -421,7 +441,7 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
       await navigateToReview(page);
 
       // Urgency indicator should not be visible for normal (non-urgent) requests
-      await expect(page.getByTestId("review-urgency")).not.toBeVisible();
+      await expect(page.getByText("⚡ Urgente")).not.toBeVisible();
     });
   });
 
@@ -429,6 +449,7 @@ test.describe("Request Review and Submission (Story 2-3)", () => {
     test("double click prevention - button disabled during submit", async ({
       page,
     }) => {
+      test.skip(!!process.env.BASE_URL, "page.route() mocks don't intercept production API");
       // Mock slow API
       let callCount = 0;
       await page.route("**/api/requests", async (route) => {

@@ -57,11 +57,11 @@ test.describe("Admin Settings Dev Login", () => {
 
     // Verify page title (use heading role to avoid multiple matches)
     await expect(
-      page.getByRole("heading", { name: "Configuracion" })
+      page.getByRole("heading", { name: "Configuración" })
     ).toBeVisible();
   });
 
-  test("AC6.2.1 - Admin can navigate to Configuracion from bottom nav (mobile)", async ({
+  test("AC6.2.1 - Admin can navigate to Configuración from bottom nav (mobile)", async ({
     page,
   }) => {
     // Set mobile viewport to see bottom nav
@@ -86,7 +86,7 @@ test.describe("Admin Settings Dev Login", () => {
 
     // Verify page title
     await expect(
-      page.getByRole("heading", { name: "Configuracion" })
+      page.getByRole("heading", { name: "Configuración" })
     ).toBeVisible();
   });
 
@@ -351,7 +351,7 @@ test.describe("Admin Settings Dev Login", () => {
     await expect(
       page.getByRole("main").getByText("admin@nitoagua.cl")
     ).toBeVisible();
-    await expect(page.getByText("Sesion activa como:")).toBeVisible();
+    await expect(page.getByText("Sesión activa como:")).toBeVisible();
   });
 
   test("Preview text shows current configuration", async ({ page }) => {

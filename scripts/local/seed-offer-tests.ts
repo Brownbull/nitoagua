@@ -185,7 +185,7 @@ const OFFER_TEST_OFFERS = [
     status: "active",
     delivery_window_start: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
     delivery_window_end: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours from now
-    expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 min from now
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
     message: "Tengo disponibilidad",
     created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 min ago
   },
@@ -197,7 +197,7 @@ const OFFER_TEST_OFFERS = [
     status: "active",
     delivery_window_start: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(), // 1 hour from now
     delivery_window_end: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
-    expires_at: new Date(Date.now() + 25 * 60 * 1000).toISOString(), // 25 min from now
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
     message: "Puedo llegar pronto",
     created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 min ago
   },
@@ -246,7 +246,7 @@ const OFFER_TEST_OFFERS = [
     status: "active",
     delivery_window_start: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
     delivery_window_end: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
-    expires_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(), // Only 2 minutes from now!
+    expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes from now (about to expire)
     message: "Oferta por expirar pronto",
     created_at: new Date(Date.now() - 28 * 60 * 1000).toISOString(), // 28 min ago (almost at 30 min limit)
   },
@@ -307,7 +307,7 @@ const CONSUMER_FACING_OFFERS = [
     status: "active",
     delivery_window_start: new Date(Date.now() + 1 * 60 * 60 * 1000).toISOString(), // 1 hour from now
     delivery_window_end: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
-    expires_at: new Date(Date.now() + 45 * 60 * 1000).toISOString(), // 45 min from now
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
     message: "Puedo llegar muy pronto",
     created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 min ago
   },
@@ -319,7 +319,7 @@ const CONSUMER_FACING_OFFERS = [
     status: "active",
     delivery_window_start: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(), // 3 hours from now
     delivery_window_end: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(), // 5 hours from now
-    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 60 min from now
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
     message: "Tengo disponibilidad esta tarde",
     created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 min ago
   },
@@ -331,7 +331,7 @@ const CONSUMER_FACING_OFFERS = [
     status: "active",
     delivery_window_start: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(), // 5 hours from now
     delivery_window_end: new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString(), // 7 hours from now
-    expires_at: new Date(Date.now() + 90 * 60 * 1000).toISOString(), // 90 min from now
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
     message: "Disponible en la tarde-noche",
     created_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 min ago
   },
@@ -401,6 +401,40 @@ const TEST_COMUNAS = [
 
 const isClean = process.argv.includes("--clean");
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resetRequestStatuses(supabase: any, providerId: string, secondaryProviderId: string) {
+  console.log("\n🔄 Resetting request statuses to intended states...");
+
+  // Reset seed-token-pending back to pending (tests may have accepted it)
+  const { error: pendingError } = await supabase
+    .from("water_requests")
+    .update({ status: "pending", supplier_id: null, accepted_at: null, delivered_at: null, in_transit_at: null })
+    .eq("id", "33333333-3333-3333-3333-333333333333");
+
+  if (pendingError) {
+    console.warn("  ⚠ Failed to reset pending request:", pendingError.message);
+  } else {
+    console.log("  ✓ Reset seed-token-pending to 'pending'");
+  }
+
+  // Reset other seeded requests to correct states
+  for (const req of OFFER_TEST_REQUESTS) {
+    const updateData: Record<string, unknown> = { status: req.status };
+    if (req.status === "accepted") {
+      updateData.supplier_id = req.supplier_id === null ?
+        (req.id === "77777777-7777-7777-7777-777777777776" ? secondaryProviderId : providerId) :
+        req.supplier_id;
+    }
+    if (req.status === "pending") {
+      updateData.supplier_id = null;
+      updateData.accepted_at = null;
+    }
+
+    await supabase.from("water_requests").update(updateData).eq("id", req.id);
+  }
+  console.log("  ✓ Reset all offer test requests to intended statuses");
+}
+
 async function main() {
   console.log("🧪 Offer E2E Test Data Seed Script");
   console.log(`   Target: ${useProduction ? "PRODUCTION" : "LOCAL"} (${CONFIG.url})`);
@@ -430,6 +464,7 @@ async function main() {
       // Provider notifications (Story 11-3: P8)
       await seedProviderNotifications(supabase, providerId);
       await verifyOfferTestData(supabase);
+      await resetRequestStatuses(supabase, providerId, secondaryProviderId);
     }
 
     console.log("\n✅ Done!\n");

@@ -1,16 +1,6 @@
 import { test, expect, assertNoErrorState } from "../fixtures/error-detection";
 
 /**
- * Helper to skip past the map step after filling step 1
- * Story 12-1 added a map pinpoint step between step 1 and step 2
- */
-async function skipMapStep(page: import("@playwright/test").Page) {
-  await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
-  await expect(page.getByTestId("map-confirm-button")).toBeVisible({ timeout: 15000 });
-  await page.getByTestId("map-confirm-button").click();
-}
-
-/**
  * Story 12-2: Payment Method Selection Tests
  * Tests the cash/transfer payment selection feature in the request form
  * Uses error-detection fixtures per Atlas Testing Section 5.2
@@ -33,9 +23,6 @@ test.describe("Payment Method Selection - Story 12-2", () => {
     await page.getByTestId("address-input").fill("Camino Los Robles 123, Villarrica");
     await page.getByTestId("instructions-input").fill("Después del puente, casa azul");
     await page.getByTestId("next-button").click();
-
-    // Story 12-1: Skip map step to get to step 2
-    await skipMapStep(page);
 
     // Wait for step 2 (amount selection)
     await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });

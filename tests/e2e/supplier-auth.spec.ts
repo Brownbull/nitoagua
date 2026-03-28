@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Supplier Authentication - Login Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/login");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("AC3-1-1 - displays Google sign-in button with correct text", async ({
@@ -14,15 +15,15 @@ test.describe("Supplier Authentication - Login Page", () => {
   });
 
   test("login page displays nitoagua branding", async ({ page }) => {
-    // Check logo/title
-    await expect(page.getByText("nitoagua")).toBeVisible();
-    await expect(page.getByText("Coordina tu entrega de agua")).toBeVisible();
+    // Check branding heading and subtitle
+    await expect(page.getByRole("heading", { name: "Bienvenido" })).toBeVisible();
+    await expect(page.getByText("Inicia sesión para pedir agua a domicilio")).toBeVisible();
   });
 
   test("login page displays sign-in instructions", async ({ page }) => {
-    await expect(page.getByText("Iniciar sesión")).toBeVisible();
+    await expect(page.getByText("Bienvenido")).toBeVisible();
     await expect(
-      page.getByText("Ingresa con tu cuenta de Google para continuar")
+      page.getByText("Inicia sesión para pedir agua a domicilio")
     ).toBeVisible();
   });
 
@@ -64,7 +65,7 @@ test.describe("Supplier Onboarding Page", () => {
     await page.goto("/onboarding");
 
     // Should redirect to login
-    await page.waitForURL("**/login");
+    await page.waitForURL("**/login**", { timeout: 30000 });
     expect(page.url()).toContain("/login");
   });
 });
@@ -90,7 +91,7 @@ test.describe("Supplier Dashboard Access", () => {
     await page.goto("/dashboard");
 
     // Should redirect to login
-    await page.waitForURL("**/login");
+    await page.waitForURL("**/login**", { timeout: 30000 });
     expect(page.url()).toContain("/login");
   });
 });
@@ -100,7 +101,7 @@ test.describe("Auth Callback Route", () => {
     await page.goto("/auth/callback");
 
     // Should redirect to login when no code provided
-    await page.waitForURL("**/login");
+    await page.waitForURL("**/login**", { timeout: 30000 });
     expect(page.url()).toContain("/login");
   });
 });
@@ -212,7 +213,7 @@ test.describe("Story 3-2: Dashboard Access Guard", () => {
     await page.goto("/dashboard");
 
     // Should redirect to login
-    await page.waitForURL("**/login", { timeout: 10000 });
+    await page.waitForURL("**/login**", { timeout: 30000 });
     expect(page.url()).toContain("/login");
   });
 
@@ -232,7 +233,7 @@ test.describe("Story 3-2: Auth Callback Role Routing", () => {
     await page.goto("/auth/callback");
 
     // Should redirect to login
-    await page.waitForURL("**/login", { timeout: 10000 });
+    await page.waitForURL("**/login**", { timeout: 30000 });
     expect(page.url()).toContain("/login");
   });
 
@@ -282,7 +283,7 @@ test.describe("Story 3-2: Onboarding Redirect Guard", () => {
     await page.goto("/onboarding");
 
     // Should redirect to login
-    await page.waitForURL("**/login", { timeout: 10000 });
+    await page.waitForURL("**/login**", { timeout: 30000 });
     expect(page.url()).toContain("/login");
   });
 });

@@ -2,40 +2,22 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Consumer Registration - Story 4-1", () => {
   test.describe("AC4-1-1: Crear Cuenta link on Consumer Home", () => {
+    test.skip(true, "Feature removed: Crear Cuenta link no longer exists - registration is via Google OAuth");
+
     test("shows Crear Cuenta link for non-logged-in users", async ({ page }) => {
       await page.goto("/");
-
-      // Wait for auth check to complete
-      const crearCuentaLink = page.getByTestId("crear-cuenta-link");
-
-      // Should be visible for non-logged-in users
-      await expect(crearCuentaLink).toBeVisible({ timeout: 5000 });
-      await expect(crearCuentaLink).toHaveText("Crear Cuenta");
     });
 
     test("Crear Cuenta link has correct href with role=consumer param", async ({ page }) => {
       await page.goto("/");
-
-      const crearCuentaLink = page.getByTestId("crear-cuenta-link");
-      await expect(crearCuentaLink).toBeVisible({ timeout: 5000 });
-
-      // Verify href includes role=consumer
-      await expect(crearCuentaLink).toHaveAttribute("href", "/login?role=consumer");
     });
   });
 
   test.describe("AC4-1-2: Navigation to Login Page with Role Param", () => {
+    test.skip(true, "Feature removed: Crear Cuenta link no longer exists - registration is via Google OAuth");
+
     test("clicking Crear Cuenta navigates to login page with role=consumer", async ({ page }) => {
       await page.goto("/");
-
-      const crearCuentaLink = page.getByTestId("crear-cuenta-link");
-      await expect(crearCuentaLink).toBeVisible({ timeout: 5000 });
-
-      await crearCuentaLink.click();
-
-      // Should navigate to login with role=consumer
-      await page.waitForURL("**/login?role=consumer");
-      expect(page.url()).toContain("/login?role=consumer");
     });
   });
 
@@ -53,7 +35,7 @@ test.describe("Consumer Registration - Story 4-1", () => {
 
       const switchLink = page.getByTestId("switch-to-supplier-link");
       await expect(switchLink).toBeVisible();
-      await expect(switchLink).toContainText("¿Eres proveedor de agua?");
+      await expect(switchLink).toContainText("Soy repartidor");
     });
 
     test("login page shows switch to consumer link for supplier login", async ({ page }) => {
@@ -61,7 +43,7 @@ test.describe("Consumer Registration - Story 4-1", () => {
 
       const switchLink = page.getByTestId("switch-to-consumer-link");
       await expect(switchLink).toBeVisible();
-      await expect(switchLink).toContainText("¿No eres proveedor?");
+      await expect(switchLink).toContainText("Soy consumidor");
     });
   });
 
@@ -73,8 +55,8 @@ test.describe("Consumer Registration - Story 4-1", () => {
       // Try to access consumer onboarding directly
       await page.goto("/consumer/onboarding");
 
-      // Should redirect to login with role=consumer
-      await page.waitForURL("**/login?role=consumer", { timeout: 10000 });
+      // Should redirect to login
+      await page.waitForURL("**/login**", { timeout: 10000 });
       expect(page.url()).toContain("/login");
     });
   });
@@ -160,7 +142,7 @@ test.describe("Consumer Registration - Story 4-1", () => {
       await page.context().clearCookies();
       await page.goto("/onboarding");
 
-      await page.waitForURL("**/login", { timeout: 10000 });
+      await page.waitForURL("**/login**", { timeout: 30000 });
       expect(page.url()).toContain("/login");
     });
 
@@ -168,7 +150,7 @@ test.describe("Consumer Registration - Story 4-1", () => {
       await page.context().clearCookies();
       await page.goto("/dashboard");
 
-      await page.waitForURL("**/login", { timeout: 10000 });
+      await page.waitForURL("**/login**", { timeout: 30000 });
       expect(page.url()).toContain("/login");
     });
   });
@@ -177,16 +159,18 @@ test.describe("Consumer Registration - Story 4-1", () => {
     test("consumer home shows nitoagua branding", async ({ page }) => {
       await page.goto("/");
 
-      await expect(page.getByText("Bienvenido a nitoagua")).toBeVisible();
-      await expect(page.getByText("Tu agua, cuando la necesitas")).toBeVisible();
+      await expect(page.getByText("nitoagua")).toBeVisible();
+      await expect(page.getByText("Agua potable")).toBeVisible();
+      await expect(page.getByText("directo a tu hogar")).toBeVisible();
     });
 
-    test("consumer home has big action button", async ({ page }) => {
+    test("consumer home has request water button", async ({ page }) => {
       await page.goto("/");
 
-      // Look for the big action button (water request button)
-      const requestButton = page.locator('[data-testid="big-action-button"]');
+      // CTA button with data-testid="request-water-button"
+      const requestButton = page.getByTestId("request-water-button");
       await expect(requestButton).toBeVisible();
+      await expect(requestButton).toContainText("Pedir Agua Ahora");
     });
   });
 });

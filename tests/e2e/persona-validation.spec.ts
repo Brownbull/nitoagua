@@ -102,8 +102,8 @@ test.describe("Persona: Dona Maria (Consumer)", () => {
         message: "Verify benefits in Spanish",
       });
       await expect(page.getByText("Entrega rápida")).toBeVisible();
-      await expect(page.getByText("Proveedores verificados")).toBeVisible();
-      await expect(page.getByText("Sin cuenta requerida")).toBeVisible();
+      await expect(page.getByText("Verificados")).toBeVisible();
+      await expect(page.getByText("Sin cuenta")).toBeVisible();
 
       await log({
         level: "success",

@@ -87,10 +87,10 @@ test.describe("12.7-6 Admin Disputes - List and Filters", () => {
 
   test("AC12.7.6.1 - Stats cards show dispute counts", async ({ page }) => {
     // Should show stats cards for Total, Abiertas, En Revisión, Resueltas
-    await expect(page.getByText("Total")).toBeVisible();
-    await expect(page.getByText("Abiertas")).toBeVisible();
-    await expect(page.getByText("En Revisión")).toBeVisible();
-    await expect(page.getByText("Resueltas")).toBeVisible();
+    await expect(page.getByText("Total", { exact: true })).toBeVisible();
+    await expect(page.getByText("Abiertas", { exact: true })).toBeVisible();
+    await expect(page.getByText("En Revisión", { exact: true })).toBeVisible();
+    await expect(page.getByText("Resueltas", { exact: true })).toBeVisible();
   });
 
   test("AC12.7.6.1 - Filter by open status works", async ({ page }) => {
@@ -463,8 +463,8 @@ test.describe("12.7-6 Admin Disputes - Mobile Navigation", () => {
     await assertNoErrorState(page);
 
     // Stats should be visible on mobile
-    await expect(page.getByText("Total")).toBeVisible();
-    await expect(page.getByText("Abiertas")).toBeVisible();
+    await expect(page.getByText("Total", { exact: true })).toBeVisible();
+    await expect(page.getByText("Abiertas", { exact: true })).toBeVisible();
   });
 
   test("AC12.7.6.2 - Dispute detail loads on mobile", async ({ page }) => {

@@ -49,10 +49,10 @@ test.describe("PWA Configuration", () => {
     );
 
     const swContent = await response.text();
-    // Verify cache-first strategy implemented
-    expect(swContent).toContain("nitoagua-v1");
-    expect(swContent).toContain("cacheFirst");
-    expect(swContent).toContain("networkFirst");
+    // Verify service worker has cache strategy
+    expect(swContent).toContain("nitoagua-v");
+    expect(swContent).toContain("Cache-first");
+    expect(swContent).toContain("network-first");
   });
 
   test("AC1.4.5 & AC1.4.6 - manifest has standalone display mode", async ({
@@ -69,7 +69,7 @@ test.describe("PWA Configuration", () => {
     const response = await request.get("/manifest.webmanifest");
     const manifest = await response.json();
 
-    expect(manifest.icons).toHaveLength(2);
+    expect(manifest.icons).toHaveLength(4);
 
     const icon192 = manifest.icons.find(
       (icon: { sizes: string }) => icon.sizes === "192x192"

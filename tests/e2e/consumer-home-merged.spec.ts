@@ -55,13 +55,13 @@ test.describe("Consumer Home Screen (Merged Fixtures)", () => {
 
     await log({ level: "step", message: "Check 'Entrega rápida' benefit" });
     await expect(page.getByText("Entrega rápida")).toBeVisible();
-    await expect(page.getByText("En menos de 24 horas")).toBeVisible();
+    await expect(page.getByText("En menos de 24h")).toBeVisible();
 
-    await log({ level: "step", message: "Check 'Proveedores verificados' benefit" });
-    await expect(page.getByText("Proveedores verificados")).toBeVisible();
+    await log({ level: "step", message: "Check 'Verificados' benefit" });
+    await expect(page.getByText("Verificados")).toBeVisible();
 
-    await log({ level: "step", message: "Check 'Sin cuenta requerida' benefit" });
-    await expect(page.getByText("Sin cuenta requerida")).toBeVisible();
+    await log({ level: "step", message: "Check 'Sin cuenta' benefit" });
+    await expect(page.getByText("Sin cuenta")).toBeVisible();
 
     await log({ level: "success", message: "All benefits verified" });
   });
@@ -93,7 +93,7 @@ test.describe("Consumer Home Screen (Merged Fixtures)", () => {
     const adminLink = page.getByTestId("admin-access-link");
     await expect(adminLink).toBeVisible();
     await expect(adminLink).toHaveAttribute("href", "/admin");
-    await expect(adminLink).toContainText("Administración");
+    await expect(adminLink).toContainText("Admin");
 
     await log({ level: "success", message: "Admin link verified" });
   });

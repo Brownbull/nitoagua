@@ -79,6 +79,10 @@ test.describe("Consumer Home Screen", () => {
     await expect(page.getByText("Entrega rápida")).toBeVisible();
     await expect(page.getByText("En menos de 24h")).toBeVisible();
 
+    await log({ level: "step", message: "Verify benefits in Spanish (continued)" });
+    await expect(page.getByText("Verificados")).toBeVisible();
+    await expect(page.getByText("Sin cuenta")).toBeVisible();
+
     await log({ level: "step", message: "Verify login links in Spanish" });
     // Use role selectors to target footer login links specifically
     await expect(page.getByRole("link", { name: /Consumidor/i })).toBeVisible();

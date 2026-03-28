@@ -15,9 +15,11 @@ import { test, expect } from "@playwright/test";
  */
 
 const CRON_SECRET = process.env.CRON_SECRET || "local-dev-cron-secret-12345";
+const skipIfNoCronSecret = !process.env.CRON_SECRET;
 
 test.describe("Cron Expire Offers - Authentication", () => {
   test("AC6.7.5: returns 401 without CRON_SECRET", async ({ request }) => {
+    test.skip(skipIfNoCronSecret, "CRON_SECRET env var required");
     const response = await request.get("/api/cron/expire-offers");
     expect(response.status()).toBe(401);
 
@@ -26,6 +28,7 @@ test.describe("Cron Expire Offers - Authentication", () => {
   });
 
   test("AC6.7.5: returns 401 with wrong CRON_SECRET", async ({ request }) => {
+    test.skip(skipIfNoCronSecret, "CRON_SECRET env var required");
     const response = await request.get("/api/cron/expire-offers", {
       headers: {
         Authorization: "Bearer wrong-secret",
@@ -38,6 +41,7 @@ test.describe("Cron Expire Offers - Authentication", () => {
   });
 
   test("AC6.7.5: returns 200 with correct CRON_SECRET", async ({ request }) => {
+    test.skip(skipIfNoCronSecret, "CRON_SECRET env var required");
     const response = await request.get("/api/cron/expire-offers", {
       headers: {
         Authorization: `Bearer ${CRON_SECRET}`,

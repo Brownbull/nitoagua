@@ -29,16 +29,6 @@ async function fillStep1Form(page: import("@playwright/test").Page) {
   await page.getByTestId("instructions-input").fill("Casa azul con portón verde");
 }
 
-/**
- * Helper to skip past the map step after filling step 1
- * Used in INT-1 test to progress through full request flow
- */
-async function _skipMapStep(page: import("@playwright/test").Page) {
-  await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
-  await expect(page.getByTestId("map-confirm-button")).toBeVisible({ timeout: 15000 });
-  await page.getByTestId("map-confirm-button").click();
-}
-
 test.describe("Epic 12 Integration Tests - Story 12-13", () => {
   test.describe("12-INT-1: Full Request Flow with Map + Payment + Urgency", () => {
     test("complete request creation with all Epic 12 features", async ({ page }) => {
@@ -49,12 +39,6 @@ test.describe("Epic 12 Integration Tests - Story 12-13", () => {
       // Step 1: Fill contact and location
       await fillStep1Form(page);
       await page.getByTestId("next-button").click();
-
-      // Map Step: Confirm location (Epic 12-1)
-      await expect(page.getByTestId("map-step")).toBeVisible({ timeout: 10000 });
-      await expect(page.getByTestId("location-pinpoint")).toBeVisible({ timeout: 15000 });
-      await expect(page.getByTestId("coordinates-display")).toBeVisible();
-      await page.getByTestId("map-confirm-button").click();
 
       // Step 2: Amount + Payment + Urgency
       await expect(page.getByText("Paso 2 de 3")).toBeVisible({ timeout: 10000 });
