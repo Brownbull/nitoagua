@@ -28,17 +28,17 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
       await page.goto(`/request/${REQUEST_IDS.pending}/offers?token=${TRACKING_TOKENS.pending}`);
 
       await log({ level: "step", message: "Check for active countdown or expired badge" });
-      const countdown = page.getByTestId("countdown-timer").first();
+      const countdown = page.getByTestId("offer-countdown").first();
       const hasActiveCountdown = await countdown.isVisible().catch(() => false);
 
       if (hasActiveCountdown) {
         await expect(countdown).toContainText("Expira en");
         await log({ level: "success", message: "Countdown prefix verified" });
       } else {
-        // All offers may have expired - check expired badge instead
-        const expiredBadge = page.getByTestId("offer-expired-badge").first();
-        await expect(expiredBadge).toBeVisible();
-        await log({ level: "info", message: "All offers expired - showing Expirada badge instead" });
+        // All offers may have expired - check for "Expirada" text in first card
+        const firstCard = page.getByTestId("consumer-offer-card").first();
+        await expect(firstCard.getByText("Expirada")).toBeVisible();
+        await log({ level: "info", message: "All offers expired - showing Expirada text instead" });
       }
     });
 
@@ -64,8 +64,8 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
         await log({ level: "success", message: "Countdown format verified" });
       } else {
         // All offers expired - valid scenario
-        const expiredBadge = page.getByTestId("offer-expired-badge").first();
-        await expect(expiredBadge).toBeVisible();
+        const firstCard = page.getByTestId("consumer-offer-card").first();
+        await expect(firstCard.getByText("Expirada")).toBeVisible();
         await log({ level: "info", message: "All offers expired - format test not applicable" });
       }
     });
@@ -77,36 +77,43 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
       await page.goto(`/request/${REQUEST_IDS.pending}/offers?token=${TRACKING_TOKENS.pending}`);
 
       await log({ level: "step", message: "Verify countdown timer or expired state exists" });
-      const countdown = page.getByTestId("countdown-timer").first();
+      const countdown = page.getByTestId("offer-countdown").first();
       const hasActiveCountdown = await countdown.isVisible().catch(() => false);
 
       if (hasActiveCountdown) {
         await log({ level: "info", message: "Active countdown found - color transitions depend on time remaining" });
         await log({ level: "success", message: "Countdown timer with urgency styling verified" });
       } else {
-        // Check for expired badge - also valid
-        const expiredBadge = page.getByTestId("offer-expired-badge").first();
-        await expect(expiredBadge).toBeVisible();
+        // Check for expired text - also valid
+        const firstCard = page.getByTestId("consumer-offer-card").first();
+        await expect(firstCard.getByText("Expirada")).toBeVisible();
         await log({ level: "info", message: "All offers expired - urgency colors not applicable" });
       }
     });
   });
 
   test.describe("AC10.3.4 & AC10.3.5: Expired Offer Handling", () => {
-    test("expired offer shows 'Expirada' badge", async ({ page, log }) => {
+    test("expired offer shows 'Expirada' text", async ({ page, log }) => {
       await log({ level: "step", message: "Navigate to offers page" });
       await page.goto(`/request/${REQUEST_IDS.pending}/offers?token=${TRACKING_TOKENS.pending}`);
 
       // Note: This test requires an offer that is already expired or will expire during test
-      // Check if any expired badge exists
-      const expiredBadge = page.getByTestId("offer-expired-badge");
-      const hasExpiredOffer = await expiredBadge.count() > 0;
+      // Check if any card has "Expirada" text
+      const cards = page.getByTestId("consumer-offer-card");
+      const cardCount = await cards.count();
+      let foundExpired = false;
 
-      if (hasExpiredOffer) {
-        await log({ level: "step", message: "Found expired offer - verifying badge" });
-        await expect(expiredBadge.first()).toContainText("Expirada");
-        await log({ level: "success", message: "Expired badge verified" });
-      } else {
+      for (let i = 0; i < cardCount; i++) {
+        const card = cards.nth(i);
+        const hasExpiredText = await card.getByText("Expirada").isVisible().catch(() => false);
+        if (hasExpiredText) {
+          foundExpired = true;
+          await log({ level: "success", message: `Card ${i + 1} shows Expirada text` });
+          break;
+        }
+      }
+
+      if (!foundExpired) {
         await log({ level: "info", message: "No expired offers in current data - badge test skipped" });
       }
     });
@@ -121,12 +128,12 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
 
       await log({ level: "info", message: `Found ${cardCount} offer cards` });
 
-      // Check each card for expired state
+      // Check each card for expired state (look for "Expirada" text)
       for (let i = 0; i < cardCount; i++) {
         const card = cards.nth(i);
-        const hasExpiredBadge = await card.getByTestId("offer-expired-badge").isVisible().catch(() => false);
+        const hasExpiredText = await card.getByText("Expirada").isVisible().catch(() => false);
 
-        if (hasExpiredBadge) {
+        if (hasExpiredText) {
           await log({ level: "step", message: `Card ${i + 1} is expired - checking button disabled` });
           const selectButton = card.getByTestId("select-offer-button");
           await expect(selectButton).toBeDisabled();
@@ -146,9 +153,9 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
 
       for (let i = 0; i < cardCount; i++) {
         const card = cards.nth(i);
-        const hasExpiredBadge = await card.getByTestId("offer-expired-badge").isVisible().catch(() => false);
+        const hasExpiredText = await card.getByText("Expirada").isVisible().catch(() => false);
 
-        if (hasExpiredBadge) {
+        if (hasExpiredText) {
           await log({ level: "step", message: `Card ${i + 1} is expired - checking opacity styling` });
           const classes = await card.getAttribute("class");
           expect(classes).toContain("opacity");
@@ -168,8 +175,8 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
 
       if (!hasActiveCountdown) {
         await log({ level: "info", message: "All offers expired - countdown update test not applicable" });
-        const expiredBadge = page.getByTestId("offer-expired-badge").first();
-        await expect(expiredBadge).toBeVisible();
+        const firstCard = page.getByTestId("consumer-offer-card").first();
+        await expect(firstCard.getByText("Expirada")).toBeVisible();
         return;
       }
 
@@ -202,15 +209,15 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
       const cards = page.getByTestId("consumer-offer-card");
       await expect(cards).toHaveCount(CONSUMER_OFFERS_TEST_DATA.totalOffers);
 
-      await log({ level: "step", message: "Verify each active card has countdown or expired badge" });
+      await log({ level: "step", message: "Verify each active card has countdown or expired text" });
       for (let i = 0; i < CONSUMER_OFFERS_TEST_DATA.totalOffers; i++) {
         const card = cards.nth(i);
-        const hasCountdown = await card.getByTestId("countdown-timer").isVisible().catch(() => false);
-        const hasExpiredBadge = await card.getByTestId("offer-expired-badge").isVisible().catch(() => false);
+        const hasCountdown = await card.getByTestId("offer-countdown").isVisible().catch(() => false);
+        const hasExpiredText = await card.getByText("Expirada").isVisible().catch(() => false);
 
-        // Each card should have either countdown OR expired badge
-        expect(hasCountdown || hasExpiredBadge).toBeTruthy();
-        await log({ level: "info", message: `Card ${i + 1}: ${hasCountdown ? "has countdown" : "has expired badge"}` });
+        // Each card should have either countdown OR expired text
+        expect(hasCountdown || hasExpiredText).toBeTruthy();
+        await log({ level: "info", message: `Card ${i + 1}: ${hasCountdown ? "has countdown" : "has expired text"}` });
       }
 
       await log({ level: "success", message: "All offer cards have timer/badge" });
@@ -220,7 +227,7 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
       await log({ level: "step", message: "Navigate to offers page" });
       await page.goto(`/request/${REQUEST_IDS.pending}/offers?token=${TRACKING_TOKENS.pending}`);
 
-      const countdown = page.getByTestId("countdown-timer").first();
+      const countdown = page.getByTestId("offer-countdown").first();
       if (await countdown.isVisible()) {
         // The countdown should have an SVG clock icon
         const icon = countdown.locator("svg");
@@ -233,22 +240,22 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
   });
 
   test.describe("Spanish Localization", () => {
-    test("expired badge shows 'Expirada' in Spanish", async ({ page, log }) => {
+    test("expired text or countdown shows Spanish labels", async ({ page, log }) => {
       await log({ level: "step", message: "Navigate to offers page" });
       await page.goto(`/request/${REQUEST_IDS.pending}/offers?token=${TRACKING_TOKENS.pending}`);
 
       // Wait for content to load
-      await expect(page.getByText("Ofertas Recibidas")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Elige tu repartidor" })).toBeVisible();
 
-      const expiredBadge = page.getByTestId("offer-expired-badge").first();
-      const hasExpired = await expiredBadge.isVisible().catch(() => false);
+      // Check for "Expirada" text in any card
+      const firstCard = page.getByTestId("consumer-offer-card").first();
+      const hasExpiredText = await firstCard.getByText("Expirada").isVisible().catch(() => false);
 
-      if (hasExpired) {
-        await expect(expiredBadge).toHaveText("Expirada");
+      if (hasExpiredText) {
         await log({ level: "success", message: "Spanish expired text verified" });
       } else {
         // Check that countdown uses Spanish prefix
-        const countdown = page.getByTestId("countdown-timer").first();
+        const countdown = page.getByTestId("offer-countdown").first();
         if (await countdown.isVisible()) {
           await expect(countdown).toContainText("Expira en");
           await log({ level: "success", message: "Spanish countdown prefix verified" });
@@ -262,7 +269,7 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
       await log({ level: "step", message: "Navigate to offers page" });
       await page.goto(`/request/${REQUEST_IDS.pending}/offers?token=${TRACKING_TOKENS.pending}`);
 
-      const countdown = page.getByTestId("countdown-timer").first();
+      const countdown = page.getByTestId("offer-countdown").first();
       if (await countdown.isVisible()) {
         const ariaLive = await countdown.getAttribute("aria-live");
         expect(ariaLive).toBe("polite");
@@ -274,7 +281,7 @@ test.describe("Consumer Offer Countdown Timer (Story 10-3)", () => {
       await log({ level: "step", message: "Navigate to offers page" });
       await page.goto(`/request/${REQUEST_IDS.pending}/offers?token=${TRACKING_TOKENS.pending}`);
 
-      const countdown = page.getByTestId("countdown-timer").first();
+      const countdown = page.getByTestId("offer-countdown").first();
       if (await countdown.isVisible()) {
         const ariaLabel = await countdown.getAttribute("aria-label");
         expect(ariaLabel).toContain("Expira en");
