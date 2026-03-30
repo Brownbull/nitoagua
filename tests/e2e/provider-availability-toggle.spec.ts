@@ -38,7 +38,8 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
   // Click login
   await page.getByTestId("dev-login-button").click();
   await page.waitForURL("**/provider/requests", { timeout: 60000 });
-  await page.waitForLoadState("networkidle");
+  // Wait for heading to confirm page rendered (not networkidle — realtime connections stay open)
+  await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
 }
 
 // Helper to login and navigate to settings (where toggle lives)
