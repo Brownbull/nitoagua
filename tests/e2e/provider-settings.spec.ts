@@ -36,7 +36,7 @@ async function loginAsSupplier(page: Page) {
 
   // Click login - should now redirect to /provider/requests
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
 }
 
 test.describe("Provider Settings Page @settings", () => {

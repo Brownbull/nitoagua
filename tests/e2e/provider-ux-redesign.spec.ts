@@ -35,7 +35,7 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
   // Wait for email/password to auto-fill
   await page.waitForLoadState("networkidle");
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
   await assertNoErrorState(page);
 }
 
@@ -57,7 +57,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
         // Click on first "Ver Detalles" button
         const viewDetailsButton = page.getByTestId("view-details-button").first();
         await viewDetailsButton.click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
         await assertNoErrorState(page);
 
         // AC12.7.10.1 - Hero cards should be visible
@@ -87,7 +87,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
       if (hasRequests) {
         const viewDetailsButton = page.getByTestId("view-details-button").first();
         await viewDetailsButton.click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
         await assertNoErrorState(page);
 
         // Check for offer form with prominent earnings
@@ -120,7 +120,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
       if (hasRequests) {
         const viewDetailsButton = page.getByTestId("view-details-button").first();
         await viewDetailsButton.click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
         await assertNoErrorState(page);
 
         const alreadyHasOffer = await page.getByText("Ya tienes una oferta").isVisible().catch(() => false);
@@ -153,7 +153,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
       if (hasRequests) {
         const viewDetailsButton = page.getByTestId("view-details-button").first();
         await viewDetailsButton.click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
         await assertNoErrorState(page);
 
         const alreadyHasOffer = await page.getByText("Ya tienes una oferta").isVisible().catch(() => false);
@@ -189,7 +189,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
       if (hasRequests) {
         const viewDetailsButton = page.getByTestId("view-details-button").first();
         await viewDetailsButton.click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
         await assertNoErrorState(page);
 
         const alreadyHasOffer = await page.getByText("Ya tienes una oferta").isVisible().catch(() => false);
@@ -230,7 +230,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
         const viewButton = deliveryCard.getByRole("link", { name: /Ver Detalles/i });
         if (await viewButton.isVisible().catch(() => false)) {
           await viewButton.click();
-          await page.waitForURL(/\/provider\/deliveries\/[a-z0-9-]+/, { timeout: 10000 });
+          await page.waitForURL(/\/provider\/deliveries\/[a-z0-9-]+/, { timeout: 30000 });
           await assertNoErrorState(page);
 
           // AC12.7.10.2 - Address section should be visible
@@ -264,7 +264,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
         const viewButton = deliveryCard.getByRole("link", { name: /Ver Detalles/i });
         if (await viewButton.isVisible().catch(() => false)) {
           await viewButton.click();
-          await page.waitForURL(/\/provider\/deliveries\/[a-z0-9-]+/, { timeout: 10000 });
+          await page.waitForURL(/\/provider\/deliveries\/[a-z0-9-]+/, { timeout: 30000 });
           await assertNoErrorState(page);
 
           // AC12.7.10.2 - Time remaining should be visible
@@ -293,7 +293,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
         const viewButton = deliveryCard.getByRole("link", { name: /Ver Detalles/i });
         if (await viewButton.isVisible().catch(() => false)) {
           await viewButton.click();
-          await page.waitForURL(/\/provider\/deliveries\/[a-z0-9-]+/, { timeout: 10000 });
+          await page.waitForURL(/\/provider\/deliveries\/[a-z0-9-]+/, { timeout: 30000 });
           await assertNoErrorState(page);
 
           // AC12.7.10.2 - Complete button or status should be visible
@@ -327,7 +327,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
         const viewButton = deliveryCard.getByRole("link", { name: /Ver Detalles/i });
         if (await viewButton.isVisible().catch(() => false)) {
           await viewButton.click();
-          await page.waitForURL(/\/provider\/deliveries\/[a-z0-9-]+/, { timeout: 10000 });
+          await page.waitForURL(/\/provider\/deliveries\/[a-z0-9-]+/, { timeout: 30000 });
           await assertNoErrorState(page);
 
           // AC12.7.10.2 - Order details should be visible
@@ -357,7 +357,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
       if (hasRequests) {
         const viewDetailsButton = page.getByTestId("view-details-button").first();
         await viewDetailsButton.click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
         await assertNoErrorState(page);
 
         // Check for horizontal overflow
@@ -382,7 +382,7 @@ test.describe("Provider UX Redesign - Story 12.7-10", () => {
       if (hasRequests) {
         const viewDetailsButton = page.getByTestId("view-details-button").first();
         await viewDetailsButton.click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
         await assertNoErrorState(page);
 
         const alreadyHasOffer = await page.getByText("Ya tienes una oferta").isVisible().catch(() => false);

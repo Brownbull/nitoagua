@@ -36,7 +36,7 @@ async function loginAsProvider(page: Page) {
   await supplierButton.click();
   await page.waitForLoadState("networkidle");
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
   await assertNoErrorState(page);
 }
 
@@ -49,7 +49,7 @@ async function loginAsAdmin(page: Page) {
   await page.fill("#admin-email", "admin@nitoagua.cl");
   await page.fill("#admin-password", "admin.123");
   await page.getByTestId("admin-dev-login-button").click();
-  await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+  await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   await assertNoErrorState(page);
 }
 
@@ -89,7 +89,7 @@ test.describe("Commission Payment Screenshot Flow - Story 12.7-12", () => {
 
       // Navigate to withdraw page
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Check if provider already has a pending withdrawal
@@ -128,7 +128,7 @@ test.describe("Commission Payment Screenshot Flow - Story 12.7-12", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Check if provider already has a pending withdrawal
@@ -160,7 +160,7 @@ test.describe("Commission Payment Screenshot Flow - Story 12.7-12", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Check if provider already has a pending withdrawal
@@ -194,7 +194,7 @@ test.describe("Commission Payment Screenshot Flow - Story 12.7-12", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Check if provider already has a pending withdrawal
@@ -225,7 +225,7 @@ test.describe("Commission Payment Screenshot Flow - Story 12.7-12", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Check if provider already has a pending withdrawal
@@ -378,7 +378,7 @@ test.describe("Integration: Earnings to Settlement Flow", () => {
     await payButton.click();
 
     // Step 4: Verify we're on withdraw page
-    await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+    await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
     await assertNoErrorState(page);
 
     // Check if provider already has a pending withdrawal

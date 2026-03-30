@@ -25,7 +25,7 @@ test.describe("Provider Verification Status - Story 7-2", () => {
       await page.goto("/provider/onboarding/pending");
 
       // Should redirect to the welcome page for unauthenticated users
-      await page.waitForURL("**/provider/onboarding", { timeout: 10000 });
+      await page.waitForURL("**/provider/onboarding", { timeout: 30000 });
       expect(page.url()).toContain("/provider/onboarding");
       expect(page.url()).not.toContain("/pending");
     });

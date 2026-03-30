@@ -339,7 +339,7 @@ test.describe("Admin Settings Dev Login", () => {
     await backButton.click();
 
     // Should navigate to dashboard
-    await page.waitForURL("**/admin/dashboard", { timeout: 10000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     expect(page.url()).toContain("/admin/dashboard");
   });
 

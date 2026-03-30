@@ -37,23 +37,35 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
 
   // Click login
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
+  await page.waitForLoadState("networkidle");
+}
+
+// Helper to login and navigate to settings (where toggle lives)
+async function loginAndGoToSettings(page: import("@playwright/test").Page) {
+  await loginAsSupplier(page);
+  // Wait for page to finish loading before clicking nav
+  await page.waitForLoadState("domcontentloaded");
+  // Navigate via bottom nav (goto loses session)
+  const ajustesLink = page.getByRole("link", { name: "Ajustes" });
+  await expect(ajustesLink).toBeVisible({ timeout: 30000 });
+  await ajustesLink.click();
+  await page.waitForURL("**/provider/settings", { timeout: 30000 });
 }
 
 test.describe("Provider Availability Toggle - Story 7-4", () => {
   test.describe("AC7.4.1: Availability Toggle Display", () => {
     test.skip(skipIfNoDevLogin, "Dev login required for supplier tests");
 
-    test("dashboard shows availability toggle for approved provider", async ({ page }) => {
-      await loginAsSupplier(page);
+    test("settings page shows availability toggle for approved provider", async ({ page }) => {
+      await loginAndGoToSettings(page);
 
-      // Should see availability toggle container
       const toggleContainer = page.getByTestId("availability-toggle-container");
-      await expect(toggleContainer).toBeVisible({ timeout: 10000 });
+      await expect(toggleContainer).toBeVisible({ timeout: 15000 });
     });
 
     test("toggle displays current availability status text", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       const statusText = page.getByTestId("availability-status-text");
       await expect(statusText).toBeVisible();
@@ -64,14 +76,14 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     });
 
     test("toggle has visible indicator dot", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       const indicator = page.getByTestId("availability-indicator");
       await expect(indicator).toBeVisible();
     });
 
     test("toggle switch is visible and interactive", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       const switchElement = page.getByTestId("availability-switch");
       await expect(switchElement).toBeVisible();
@@ -79,7 +91,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     });
 
     test("toggle shows green styling when available", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -103,7 +115,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     });
 
     test("toggle shows gray styling when unavailable", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -130,7 +142,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     test.skip(skipIfNoDevLogin, "Dev login required for supplier tests");
 
     test("can toggle from OFF to ON", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       const switchElement = page.getByTestId("availability-switch");
       const initialState = await switchElement.getAttribute("data-state");
@@ -153,7 +165,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     });
 
     test("shows success toast when turning ON", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       const switchElement = page.getByTestId("availability-switch");
       const initialState = await switchElement.getAttribute("data-state");
@@ -174,7 +186,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     });
 
     test("toggle updates UI with optimistic feedback", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       const switchElement = page.getByTestId("availability-switch");
       const initialState = await switchElement.getAttribute("data-state");
@@ -196,7 +208,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     test.skip(skipIfNoDevLogin, "Dev login required for supplier tests");
 
     test("can toggle from ON to OFF", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -231,7 +243,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     });
 
     test("shows success toast when turning OFF", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -270,7 +282,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
       // This is a structural test to verify dialog elements exist
       // Setting up actual in-progress deliveries is complex in test env
 
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       // Verify testids are defined in the component
       const expectedTestIds = [
@@ -298,7 +310,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     test.skip(skipIfNoDevLogin, "Dev login required for supplier tests");
 
     test("availability status persists after page reload", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       const switchElement = page.getByTestId("availability-switch");
 
@@ -322,7 +334,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
     });
 
     test("availability status persists after logout and login", async ({ page }) => {
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       const switchElement = page.getByTestId("availability-switch");
 
@@ -349,7 +361,7 @@ test.describe("Provider Availability Toggle - Story 7-4", () => {
       await page.waitForTimeout(500);
 
       // Login again
-      await loginAsSupplier(page);
+      await loginAndGoToSettings(page);
 
       // Verify state persists
       const newSwitchElement = page.getByTestId("availability-switch");

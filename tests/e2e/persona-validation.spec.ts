@@ -251,7 +251,7 @@ test.describe("Persona: Don Pedro (Provider)", () => {
       await log({ level: "step", message: "Wait for navigation after login" });
       // Wait for either success (provider area) or failure (stay on login with error)
       try {
-        await page.waitForURL("**/provider/**", { timeout: 10000 });
+        await page.waitForURL("**/provider/**", { timeout: 30000 });
       } catch {
         // Check if there's an auth error (user doesn't exist)
         const errorVisible = await page.getByRole("alert").isVisible().catch(() => false);

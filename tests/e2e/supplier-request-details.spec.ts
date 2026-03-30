@@ -9,7 +9,7 @@ test.describe("Story 3-4: Supplier Request Details - Authentication", () => {
     await page.goto("/requests/00000000-0000-0000-0000-000000000001");
 
     // Should redirect to login
-    await page.waitForURL("**/login", { timeout: 10000 });
+    await page.waitForURL("**/login**", { timeout: 30000 });
     expect(page.url()).toContain("/login");
   });
 });

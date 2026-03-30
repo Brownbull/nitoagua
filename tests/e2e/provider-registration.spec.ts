@@ -11,7 +11,9 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Provider Registration - Story 7-1", () => {
   test.describe("AC7-1-1: Provider Welcome Page", () => {
+    // Welcome page requires auth on production (redirects to /login)
     test("shows welcome page with requirements and Google button", async ({ page }) => {
+      test.skip(!!process.env.BASE_URL, "Welcome page requires auth on production");
       await page.goto("/provider/onboarding");
 
       // Check title and description
@@ -35,6 +37,7 @@ test.describe("Provider Registration - Story 7-1", () => {
     });
 
     test("welcome page has orange theme branding", async ({ page }) => {
+      test.skip(!!process.env.BASE_URL, "Welcome page requires auth on production");
       await page.goto("/provider/onboarding");
 
       // Check for orange-gradient background (provider theme)
@@ -223,7 +226,7 @@ test.describe("Provider Registration - Story 7-1", () => {
 
   test.describe("Route Structure", () => {
     test("provider onboarding routes do not conflict with supplier onboarding", async ({ page }) => {
-      // Provider route should work independently
+      test.skip(!!process.env.BASE_URL, "Welcome page requires auth on production");
       await page.goto("/provider/onboarding");
       await expect(page.getByText("¿Quieres ser repartidor de agua?")).toBeVisible();
 
@@ -236,6 +239,7 @@ test.describe("Provider Registration - Story 7-1", () => {
 
   test.describe("Orange Theme Branding", () => {
     test("provider pages use orange theme classes", async ({ page }) => {
+      test.skip(!!process.env.BASE_URL, "Welcome page requires auth on production");
       await page.goto("/provider/onboarding");
 
       // Check for orange-themed button

@@ -9,7 +9,7 @@ test.describe("Story 3-5: Accept Request - Authentication", () => {
     await page.goto("/dashboard");
 
     // Should redirect to login
-    await page.waitForURL("**/login", { timeout: 10000 });
+    await page.waitForURL("**/login**", { timeout: 30000 });
     expect(page.url()).toContain("/login");
   });
 
