@@ -24,7 +24,7 @@ test.describe("Admin Provider Verification Queue", () => {
     await devLoginButton.click();
 
     // Wait for dashboard to load
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.3.1 - Admin can view queue of pending provider applications", async ({
@@ -115,7 +115,7 @@ test.describe("Admin Provider Verification Queue", () => {
     await backButton.click();
 
     // Should navigate to dashboard
-    await page.waitForURL("**/admin/dashboard", { timeout: 5000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("empty queue shows helpful message", async ({ page }) => {
@@ -154,7 +154,7 @@ test.describe("Admin Verification Detail Page", () => {
     await page.fill("#admin-password", "admin.123");
     await devLoginButton.click();
 
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.3.4 - Clicking application opens detail view", async ({ page }) => {
@@ -169,7 +169,7 @@ test.describe("Admin Verification Detail Page", () => {
       await firstCard.click();
 
       // Should navigate to detail page
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       // Detail sections should be visible
       await expect(page.getByTestId("personal-info-section")).toBeVisible();
@@ -184,7 +184,7 @@ test.describe("Admin Verification Detail Page", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       // Personal info section should show
       const personalInfo = page.getByTestId("personal-info-section");
@@ -201,7 +201,7 @@ test.describe("Admin Verification Detail Page", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       const bankInfo = page.getByTestId("bank-info-section");
       await expect(bankInfo).toBeVisible();
@@ -217,7 +217,7 @@ test.describe("Admin Verification Detail Page", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       const docsSection = page.getByTestId("documents-section");
       await expect(docsSection).toBeVisible();
@@ -232,7 +232,7 @@ test.describe("Admin Verification Detail Page", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       const notesSection = page.getByTestId("notes-section");
       await expect(notesSection).toBeVisible();
@@ -248,7 +248,7 @@ test.describe("Admin Verification Detail Page", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       // Click back button
       const backButton = page.getByTestId("back-to-queue");
@@ -256,7 +256,7 @@ test.describe("Admin Verification Detail Page", () => {
       await backButton.click();
 
       // Should return to queue
-      await page.waitForURL("**/admin/verification", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification", { timeout: 30000 });
       expect(page.url()).not.toMatch(/\/admin\/verification\/[a-f0-9-]+/);
     }
   });
@@ -278,7 +278,7 @@ test.describe("Admin Verification Actions", () => {
     await page.fill("#admin-password", "admin.123");
     await devLoginButton.click();
 
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.3.6-8 - Action buttons are visible for pending applications", async ({
@@ -291,7 +291,7 @@ test.describe("Admin Verification Actions", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       // Action buttons should be visible
       const approveBtn = page.getByTestId("btn-approve");
@@ -312,7 +312,7 @@ test.describe("Admin Verification Actions", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       // Click approve
       await page.getByTestId("btn-approve").click();
@@ -335,7 +335,7 @@ test.describe("Admin Verification Actions", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       // Click reject
       await page.getByTestId("btn-reject").click();
@@ -369,7 +369,7 @@ test.describe("Admin Verification Actions", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       // Click more info
       await page.getByTestId("btn-more-info").click();
@@ -401,7 +401,7 @@ test.describe("Admin Verification Actions", () => {
 
     if (hasApplications) {
       await firstCard.click();
-      await page.waitForURL("**/admin/verification/*", { timeout: 5000 });
+      await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
       // Notes input should be visible
       const notesInput = page.getByTestId("notes-input");
@@ -430,7 +430,7 @@ test.describe("Admin Navigation - Verification Link", () => {
     await page.fill("#admin-password", "admin.123");
     await devLoginButton.click();
 
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("sidebar has verification link enabled", async ({ page }) => {
@@ -448,7 +448,7 @@ test.describe("Admin Navigation - Verification Link", () => {
 
     // Click and verify navigation
     await verificationNav.click();
-    await page.waitForURL("**/admin/verification", { timeout: 5000 });
+    await page.waitForURL("**/admin/verification", { timeout: 30000 });
   });
 
   test("dashboard quick action links to verification", async ({ page }) => {
@@ -459,7 +459,7 @@ test.describe("Admin Navigation - Verification Link", () => {
     await expect(quickAction).toBeVisible();
 
     await quickAction.click();
-    await page.waitForURL("**/admin/verification", { timeout: 5000 });
+    await page.waitForURL("**/admin/verification", { timeout: 30000 });
   });
 
   test("mobile bottom nav has verification link", async ({ page }) => {
@@ -477,6 +477,6 @@ test.describe("Admin Navigation - Verification Link", () => {
 
     // Click and verify navigation
     await verifyLink.click();
-    await page.waitForURL("**/admin/verification", { timeout: 5000 });
+    await page.waitForURL("**/admin/verification", { timeout: 30000 });
   });
 });

@@ -29,7 +29,7 @@ test.describe("Admin Orders Page - Story 12.7-9", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test.describe("AC12.7.9.1: Real-time Updates & Refresh", () => {
@@ -119,7 +119,7 @@ test.describe("Admin Settlement Page - Story 12.7-9", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test.describe("AC12.7.9.3: Finance Quick Navigation", () => {

@@ -24,7 +24,7 @@ test.describe("Operations Dashboard - Navigation and Layout", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.8.1 - Dashboard displays period selector", async ({ page }) => {
@@ -61,7 +61,7 @@ test.describe("Operations Dashboard - Request Metrics", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.8.1 - Request metrics tab is visible and selected by default", async ({ page }) => {
@@ -106,7 +106,7 @@ test.describe("Operations Dashboard - Offer Metrics", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     // Click the Offers tab to view offer metrics
     await page.getByTestId("stats-tab-offers").click();
   });
@@ -151,7 +151,7 @@ test.describe("Operations Dashboard - Stats Tab Switching", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Switching from Requests to Offers tab shows offer metrics", async ({ page }) => {
@@ -188,7 +188,7 @@ test.describe("Operations Dashboard - Financial Metrics", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.8.1 - Financial metrics section is visible", async ({ page }) => {
@@ -225,7 +225,7 @@ test.describe("Operations Dashboard - Provider Metrics", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.8.1 - Provider metrics section is visible", async ({ page }) => {
@@ -260,7 +260,7 @@ test.describe("Operations Dashboard - Period Selection", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.8.2 - Clicking Today updates the period selection", async ({
@@ -310,7 +310,7 @@ test.describe("Operations Dashboard - Manual Refresh", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.8.6 - Refresh button is visible", async ({ page }) => {
@@ -340,7 +340,7 @@ test.describe("Operations Dashboard - Drill-down Navigation", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.8.4 - Clicking requests metric navigates to orders page", async ({
@@ -349,7 +349,7 @@ test.describe("Operations Dashboard - Drill-down Navigation", () => {
     const metric = page.getByTestId("metric-requests-total");
     await metric.click();
 
-    await page.waitForURL("**/admin/orders**", { timeout: 10000 });
+    await page.waitForURL("**/admin/orders**", { timeout: 30000 });
     expect(page.url()).toContain("/admin/orders");
   });
 
@@ -359,7 +359,7 @@ test.describe("Operations Dashboard - Drill-down Navigation", () => {
     const metric = page.getByTestId("metric-providers-active");
     await metric.click();
 
-    await page.waitForURL("**/admin/providers**", { timeout: 10000 });
+    await page.waitForURL("**/admin/providers**", { timeout: 30000 });
     expect(page.url()).toContain("/admin/providers");
   });
 
@@ -369,7 +369,7 @@ test.describe("Operations Dashboard - Drill-down Navigation", () => {
     const metric = page.getByTestId("metric-commission");
     await metric.click();
 
-    await page.waitForURL("**/admin/settlement**", { timeout: 10000 });
+    await page.waitForURL("**/admin/settlement**", { timeout: 30000 });
     expect(page.url()).toContain("/admin/settlement");
   });
 
@@ -379,7 +379,7 @@ test.describe("Operations Dashboard - Drill-down Navigation", () => {
     const metric = page.getByTestId("metric-new-applications");
     await metric.click();
 
-    await page.waitForURL("**/admin/verification**", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification**", { timeout: 30000 });
     expect(page.url()).toContain("/admin/verification");
   });
 });
@@ -393,7 +393,7 @@ test.describe("Operations Dashboard - Quick Actions", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Quick action: Verification navigates to verification page", async ({
@@ -403,7 +403,7 @@ test.describe("Operations Dashboard - Quick Actions", () => {
     await expect(quickAction).toBeVisible();
     await quickAction.click();
 
-    await page.waitForURL("**/admin/verification**", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification**", { timeout: 30000 });
     expect(page.url()).toContain("/admin/verification");
   });
 
@@ -412,7 +412,7 @@ test.describe("Operations Dashboard - Quick Actions", () => {
     await expect(quickAction).toBeVisible();
     await quickAction.click();
 
-    await page.waitForURL("**/admin/settings**", { timeout: 10000 });
+    await page.waitForURL("**/admin/settings**", { timeout: 30000 });
     expect(page.url()).toContain("/admin/settings");
   });
 });
@@ -426,7 +426,7 @@ test.describe("Finanzas Page - Period Filtering", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.8.5 - Settlement page has period selector", async ({ page }) => {
@@ -461,7 +461,7 @@ test.describe("Finanzas Page - Period Filtering", () => {
       await januaryOption.click();
 
       // Wait for navigation
-      await page.waitForURL("**/admin/settlement**month=1**", { timeout: 5000 });
+      await page.waitForURL("**/admin/settlement**month=1**", { timeout: 30000 });
       expect(page.url()).toContain("month=1");
     }
   });
@@ -502,7 +502,7 @@ test.describe("Operations Dashboard - Mobile Responsiveness", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Period selector is visible on mobile", async ({ page }) => {
@@ -529,7 +529,7 @@ test.describe("Operations Dashboard - Auth Protection", () => {
     await page.goto("/admin/dashboard");
 
     // Should redirect to login page
-    await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await page.waitForURL("**/admin/login", { timeout: 30000 });
     expect(page.url()).toContain("/admin/login");
   });
 

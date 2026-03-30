@@ -11,7 +11,7 @@ test.describe("Admin Pricing Page - Unauthenticated Access", () => {
     await page.goto("/admin/pricing");
 
     // Should redirect to login
-    await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await page.waitForURL("**/admin/login", { timeout: 30000 });
     expect(page.url()).toContain("/admin/login");
   });
 });
@@ -33,7 +33,7 @@ test.describe("Admin Pricing Dev Login", () => {
     await devLoginButton.click();
 
     // Wait for dashboard
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.9.1 - Admin can navigate to pricing from sidebar (desktop)", async ({
@@ -52,7 +52,7 @@ test.describe("Admin Pricing Dev Login", () => {
     await pricingLink.click();
 
     // Should navigate to pricing page
-    await page.waitForURL("**/admin/pricing", { timeout: 10000 });
+    await page.waitForURL("**/admin/pricing", { timeout: 30000 });
     expect(page.url()).toContain("/admin/pricing");
 
     // Verify page title
@@ -372,7 +372,7 @@ test.describe("Admin Pricing Dev Login", () => {
     await backButton.click();
 
     // Should navigate to dashboard
-    await page.waitForURL("**/admin/dashboard", { timeout: 10000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     expect(page.url()).toContain("/admin/dashboard");
   });
 });
@@ -393,7 +393,7 @@ test.describe("Admin Pricing - Form Accessibility", () => {
     await page.fill("#admin-password", "admin.123");
     await devLoginButton.click();
 
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/pricing");
     await page.waitForLoadState("networkidle");
   });

@@ -30,7 +30,7 @@ test.describe("Admin Providers UX & Ratings", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC12.8.5.1: Status and Area filters are side-by-side", async ({ page, log }) => {

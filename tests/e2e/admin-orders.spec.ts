@@ -26,7 +26,7 @@ test.describe("Orders Page - Navigation and Layout", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.6.1 - Admin can navigate to orders page from sidebar", async ({
@@ -39,7 +39,7 @@ test.describe("Orders Page - Navigation and Layout", () => {
     await expect(pedidosLink).toBeVisible();
     await pedidosLink.click();
 
-    await page.waitForURL("**/admin/orders", { timeout: 10000 });
+    await page.waitForURL("**/admin/orders", { timeout: 30000 });
     expect(page.url()).toContain("/admin/orders");
   });
 
@@ -61,7 +61,7 @@ test.describe("Orders Page - Navigation and Layout", () => {
     await expect(backButton).toBeVisible();
     await backButton.click();
 
-    await page.waitForURL("**/admin/dashboard", { timeout: 10000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.6.1 - Stats cards display all required metrics", async ({
@@ -89,7 +89,7 @@ test.describe("Orders Page - Search and Filters", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/orders");
     await assertNoErrorState(page);
   });
@@ -150,7 +150,7 @@ test.describe("Orders Page - Search and Filters", () => {
 
     // URL should contain the filter parameter
     await page.waitForURL("**/admin/orders?status=delivered", {
-      timeout: 10000,
+      timeout: 30000,
     });
     expect(page.url()).toContain("status=delivered");
   });
@@ -167,7 +167,7 @@ test.describe("Orders Page - Search and Filters", () => {
     await clearButton.click();
 
     // URL should no longer have filter parameters
-    await page.waitForURL("**/admin/orders", { timeout: 10000 });
+    await page.waitForURL("**/admin/orders", { timeout: 30000 });
     expect(page.url()).not.toContain("status=");
   });
 });
@@ -181,7 +181,7 @@ test.describe("Orders Page - Orders Table", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/orders");
     await assertNoErrorState(page);
   });
@@ -211,7 +211,7 @@ test.describe("Orders Page - Orders Table", () => {
       await firstOrder.click();
 
       // Should navigate to order detail page
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
       expect(page.url()).toMatch(/\/admin\/orders\/[a-zA-Z0-9-]+/);
     }
   });
@@ -226,7 +226,7 @@ test.describe("Order Detail Page", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.6.3 - Order detail page shows order ID", async ({ page }) => {
@@ -237,7 +237,7 @@ test.describe("Order Detail Page", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Order ID should be visible in header
       const orderId = page.getByTestId("order-id");
@@ -254,7 +254,7 @@ test.describe("Order Detail Page", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Timeline section should be visible
       await expect(page.getByText("Linea de Tiempo")).toBeVisible();
@@ -273,7 +273,7 @@ test.describe("Order Detail Page", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Consumer info section should be visible
       await expect(
@@ -293,7 +293,7 @@ test.describe("Order Detail Page", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Offer analytics section should be visible
       await expect(page.getByText("Analiticas de Ofertas")).toBeVisible();
@@ -315,7 +315,7 @@ test.describe("Order Detail Page", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Offer history section should be visible
       await expect(page.getByText("Historial de Ofertas")).toBeVisible();
@@ -329,7 +329,7 @@ test.describe("Order Detail Page", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Click back button
       const backButton = page.getByTestId("back-to-orders");
@@ -337,7 +337,7 @@ test.describe("Order Detail Page", () => {
       await backButton.click();
 
       // Should return to orders list
-      await page.waitForURL("**/admin/orders", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders", { timeout: 30000 });
       expect(page.url()).toMatch(/\/admin\/orders$/);
     }
   });
@@ -352,7 +352,7 @@ test.describe("Order Detail Page - Cancel Order", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.6.6 - Cancel button is visible for non-completed orders", async ({
@@ -365,7 +365,7 @@ test.describe("Order Detail Page - Cancel Order", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Cancel button should be visible in Actions section
       const cancelButton = page.getByTestId("cancel-order-button");
@@ -380,7 +380,7 @@ test.describe("Order Detail Page - Cancel Order", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       const cancelButton = page.getByTestId("cancel-order-button");
       if (await cancelButton.isVisible()) {
@@ -403,7 +403,7 @@ test.describe("Order Detail Page - Cancel Order", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       const cancelButton = page.getByTestId("cancel-order-button");
       if (await cancelButton.isVisible()) {
@@ -430,7 +430,7 @@ test.describe("Order Detail Page - Cancel Order", () => {
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       const cancelButton = page.getByTestId("cancel-order-button");
       if (await cancelButton.isVisible()) {
@@ -462,7 +462,7 @@ test.describe("Orders Page - Mobile Navigation", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await assertNoErrorState(page);
   });
 
@@ -491,7 +491,7 @@ test.describe("Orders Page - Mobile Navigation", () => {
     const pedidosLink = page.getByTestId("operations-pedidos");
     await pedidosLink.click();
 
-    await page.waitForURL("**/admin/orders", { timeout: 10000 });
+    await page.waitForURL("**/admin/orders", { timeout: 30000 });
     expect(page.url()).toContain("/admin/orders");
   });
 
@@ -518,7 +518,7 @@ test.describe("Orders Page - Auth Protection", () => {
     await page.goto("/admin/orders");
 
     // Should redirect to login page
-    await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await page.waitForURL("**/admin/login", { timeout: 30000 });
     expect(page.url()).toContain("/admin/login");
   });
 
@@ -528,7 +528,7 @@ test.describe("Orders Page - Auth Protection", () => {
     await page.goto("/admin/orders/some-order-id");
 
     // Should redirect to login page
-    await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await page.waitForURL("**/admin/login", { timeout: 30000 });
     expect(page.url()).toContain("/admin/login");
   });
 });

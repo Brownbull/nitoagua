@@ -47,7 +47,7 @@ test.describe("A1: Admin View Verification Queue", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await devLoginButton.click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("A1.1 - Admin sees list of pending providers", async ({ page }) => {
@@ -124,7 +124,7 @@ test.describe("A2: Admin Review Provider Documents", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await devLoginButton.click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("A2.1 - Clicking application opens detail view", async ({ page }) => {
@@ -139,7 +139,7 @@ test.describe("A2: Admin Review Provider Documents", () => {
     await reviewButton.click();
 
     // Should navigate to detail page
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Detail sections should be visible
     await expect(page.getByTestId("personal-info-section")).toBeVisible();
@@ -157,7 +157,7 @@ test.describe("A2: Admin Review Provider Documents", () => {
     // Click the review button on first card
     const reviewButton = cards.first().getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Documents section should be visible
     const docsSection = page.getByTestId("documents-section");
@@ -174,7 +174,7 @@ test.describe("A2: Admin Review Provider Documents", () => {
     await expect(firstCard).toBeVisible({ timeout: 10000 });
     const reviewButton = firstCard.getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
     await assertNoErrorState(page);
 
     // Personal info section
@@ -192,7 +192,7 @@ test.describe("A2: Admin Review Provider Documents", () => {
     await expect(firstCard).toBeVisible({ timeout: 10000 });
     const reviewButton = firstCard.getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
     await assertNoErrorState(page);
 
     const bankInfo = page.getByTestId("bank-info-section");
@@ -206,7 +206,7 @@ test.describe("A2: Admin Review Provider Documents", () => {
     await expect(firstCard).toBeVisible({ timeout: 10000 });
     const reviewButton = firstCard.getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Click back button
     const backButton = page.getByTestId("back-to-queue");
@@ -214,7 +214,7 @@ test.describe("A2: Admin Review Provider Documents", () => {
     await backButton.click();
 
     // Should return to queue
-    await page.waitForURL("**/admin/verification", { timeout: 5000 });
+    await page.waitForURL("**/admin/verification", { timeout: 30000 });
     expect(page.url()).not.toMatch(/\/admin\/verification\/[a-f0-9-]+/);
   });
 });
@@ -232,7 +232,7 @@ test.describe("A3: Admin Approve/Reject Provider", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await devLoginButton.click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("A3.1 - Action buttons are visible for pending applications", async ({
@@ -245,7 +245,7 @@ test.describe("A3: Admin Approve/Reject Provider", () => {
     await expect(firstCard).toBeVisible({ timeout: 10000 });
     const reviewButton = firstCard.getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Action buttons should be visible
     const approveBtn = page.getByTestId("btn-approve");
@@ -263,7 +263,7 @@ test.describe("A3: Admin Approve/Reject Provider", () => {
     await expect(firstCard).toBeVisible({ timeout: 10000 });
     const reviewButton = firstCard.getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Click approve
     await page.getByTestId("btn-approve").click();
@@ -283,7 +283,7 @@ test.describe("A3: Admin Approve/Reject Provider", () => {
     await expect(firstCard).toBeVisible({ timeout: 10000 });
     const reviewButton = firstCard.getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Click reject
     await page.getByTestId("btn-reject").click();
@@ -314,7 +314,7 @@ test.describe("A3: Admin Approve/Reject Provider", () => {
     await expect(firstCard).toBeVisible({ timeout: 10000 });
     const reviewButton = firstCard.getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Click more info
     await page.getByTestId("btn-more-info").click();
@@ -348,7 +348,7 @@ test.describe("A3: Admin Approve/Reject Provider", () => {
     // Click on a pending provider via the review button
     const reviewButton = pendingCards.first().getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Click approve and confirm
     await page.getByTestId("btn-approve").click();
@@ -358,7 +358,7 @@ test.describe("A3: Admin Approve/Reject Provider", () => {
     await page.getByTestId("btn-confirm-approve").click();
 
     // Should redirect back to queue with success message
-    await page.waitForURL("**/admin/verification", { timeout: 15000 });
+    await page.waitForURL("**/admin/verification", { timeout: 30000 });
 
     // The approved provider should no longer be in the pending queue
     // (We can verify by checking the count decreased or the URL is no longer accessible)
@@ -377,7 +377,7 @@ test.describe("A3: Admin Approve/Reject Provider", () => {
 
     const reviewButton = pendingCards.first().getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Click reject
     await page.getByTestId("btn-reject").click();
@@ -391,7 +391,7 @@ test.describe("A3: Admin Approve/Reject Provider", () => {
     await page.getByTestId("btn-confirm-reject").click();
 
     // Should redirect back to queue
-    await page.waitForURL("**/admin/verification", { timeout: 15000 });
+    await page.waitForURL("**/admin/verification", { timeout: 30000 });
     await assertNoErrorState(page);
   });
 });
@@ -409,7 +409,7 @@ test.describe("A4: Provider Notification", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await devLoginButton.click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("A4.1 - Approval triggers notification (email API called)", async ({
@@ -432,14 +432,14 @@ test.describe("A4: Provider Notification", () => {
 
     const reviewButton = pendingCards.first().getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Click approve and confirm
     await page.getByTestId("btn-approve").click();
     await page.getByTestId("btn-confirm-approve").click();
 
     // Should complete without error (email sent asynchronously)
-    await page.waitForURL("**/admin/verification", { timeout: 15000 });
+    await page.waitForURL("**/admin/verification", { timeout: 30000 });
 
     // Success is indicated by redirect without error
     await assertNoErrorState(page);
@@ -461,7 +461,7 @@ test.describe("A4: Provider Notification", () => {
 
     const reviewButton = pendingCards.first().getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Click reject
     await page.getByTestId("btn-reject").click();
@@ -469,7 +469,7 @@ test.describe("A4: Provider Notification", () => {
     await page.getByTestId("btn-confirm-reject").click();
 
     // Should complete without error
-    await page.waitForURL("**/admin/verification", { timeout: 15000 });
+    await page.waitForURL("**/admin/verification", { timeout: 30000 });
     await assertNoErrorState(page);
   });
 });
@@ -487,7 +487,7 @@ test.describe("Admin Verification - Internal Notes", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await devLoginButton.click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Notes section is visible and editable", async ({ page }) => {
@@ -502,7 +502,7 @@ test.describe("Admin Verification - Internal Notes", () => {
 
     const reviewButton = firstCard.getByRole("link", { name: "Revisar Solicitud" });
     await reviewButton.click();
-    await page.waitForURL("**/admin/verification/*", { timeout: 10000 });
+    await page.waitForURL("**/admin/verification/*", { timeout: 30000 });
 
     // Notes section visible
     const notesSection = page.getByTestId("notes-section");

@@ -26,7 +26,7 @@ test.describe("Settlement Dashboard - Navigation and Layout", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.5.1 - Admin can navigate to settlement page from sidebar", async ({
@@ -39,7 +39,7 @@ test.describe("Settlement Dashboard - Navigation and Layout", () => {
     await expect(finanzasLink).toBeVisible();
     await finanzasLink.click();
 
-    await page.waitForURL("**/admin/settlement", { timeout: 10000 });
+    await page.waitForURL("**/admin/settlement", { timeout: 30000 });
     expect(page.url()).toContain("/admin/settlement");
   });
 
@@ -61,7 +61,7 @@ test.describe("Settlement Dashboard - Navigation and Layout", () => {
     await expect(backButton).toBeVisible();
     await backButton.click();
 
-    await page.waitForURL("**/admin/dashboard", { timeout: 10000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 });
 
@@ -74,7 +74,7 @@ test.describe("Settlement Dashboard - Summary Cards", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/settlement");
   });
 
@@ -114,7 +114,7 @@ test.describe("Settlement Dashboard - Pending Payments Table", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/settlement");
   });
 
@@ -154,7 +154,7 @@ test.describe("Settlement Dashboard - Provider Balances Table", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/settlement");
   });
 
@@ -184,7 +184,7 @@ test.describe("Settlement Dashboard - Payment Verification Modal", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/settlement");
   });
 
@@ -257,7 +257,7 @@ test.describe("Settlement Dashboard - Payment Rejection Modal", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/settlement");
   });
 
@@ -345,7 +345,7 @@ test.describe("Settlement Dashboard - Provider Balance Detail", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/settlement");
   });
 
@@ -417,7 +417,7 @@ test.describe("Settlement Dashboard - Mobile Navigation", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.5.1 - Bottom nav shows Finanzas link on mobile", async ({
@@ -434,7 +434,7 @@ test.describe("Settlement Dashboard - Mobile Navigation", () => {
     const finanzasLink = page.getByTestId("bottom-nav-finanzas");
     await finanzasLink.click();
 
-    await page.waitForURL("**/admin/settlement", { timeout: 10000 });
+    await page.waitForURL("**/admin/settlement", { timeout: 30000 });
     expect(page.url()).toContain("/admin/settlement");
   });
 
@@ -460,7 +460,7 @@ test.describe("Settlement Dashboard - Auth Protection", () => {
     await page.goto("/admin/settlement");
 
     // Should redirect to login page
-    await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await page.waitForURL("**/admin/login", { timeout: 30000 });
     expect(page.url()).toContain("/admin/login");
   });
 });

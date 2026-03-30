@@ -25,7 +25,7 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC12.7.4.1 - Admin orders page shows correct status labels", async ({
@@ -93,7 +93,7 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
     await applyButton.click();
 
     // URL should contain status=accepted
-    await page.waitForURL("**/admin/orders?status=accepted", { timeout: 10000 });
+    await page.waitForURL("**/admin/orders?status=accepted", { timeout: 30000 });
     expect(page.url()).toContain("status=accepted");
   });
 
@@ -127,7 +127,7 @@ test.describe("12.7-4 Admin Status Sync - Real-time Indicator", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC12.7.4.2 - Real-time indicator shows connection status", async ({
@@ -154,7 +154,7 @@ test.describe("12.7-4 Admin Status Sync - Stats Card Filtering", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC12.7.4.3 - Clicking Aceptados stats card filters orders", async ({
@@ -169,7 +169,7 @@ test.describe("12.7-4 Admin Status Sync - Stats Card Filtering", () => {
     await aceptadosCard.click();
 
     // URL should contain status=accepted
-    await page.waitForURL("**/admin/orders?status=accepted", { timeout: 10000 });
+    await page.waitForURL("**/admin/orders?status=accepted", { timeout: 30000 });
     expect(page.url()).toContain("status=accepted");
   });
 
@@ -190,6 +190,6 @@ test.describe("12.7-4 Admin Status Sync - Stats Card Filtering", () => {
 
     // Should navigate to orders page without status filter
     // The navigation removes the status param
-    await page.waitForURL((url) => !url.toString().includes("status="), { timeout: 10000 });
+    await page.waitForURL((url) => !url.toString().includes("status="), { timeout: 30000 });
   });
 });

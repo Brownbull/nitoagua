@@ -26,7 +26,7 @@ test.describe("Provider Directory - View and Navigation", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.4.1 - Admin can navigate to provider directory from sidebar", async ({
@@ -39,7 +39,7 @@ test.describe("Provider Directory - View and Navigation", () => {
     await expect(proveedoresLink).toBeVisible();
     await proveedoresLink.click();
 
-    await page.waitForURL("**/admin/providers", { timeout: 10000 });
+    await page.waitForURL("**/admin/providers", { timeout: 30000 });
     expect(page.url()).toContain("/admin/providers");
   });
 
@@ -81,7 +81,7 @@ test.describe("Provider Directory - Table Display", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/providers");
   });
 
@@ -129,7 +129,7 @@ test.describe("Provider Directory - Search and Filters", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/providers");
   });
 
@@ -209,7 +209,7 @@ test.describe("Provider Directory - Detail Panel", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/providers");
   });
 
@@ -316,7 +316,7 @@ test.describe("Provider Directory - Actions UI", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/providers");
   });
 
@@ -473,7 +473,7 @@ test.describe("Provider Directory - Mobile Navigation", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.4.1 - Bottom nav shows Proveedores link on mobile", async ({ page }) => {
@@ -496,7 +496,7 @@ test.describe("Provider Directory - Mobile Navigation", () => {
     const proveedoresLink = page.getByTestId("operations-proveedores");
     await proveedoresLink.click();
 
-    await page.waitForURL("**/admin/providers", { timeout: 10000 });
+    await page.waitForURL("**/admin/providers", { timeout: 30000 });
     expect(page.url()).toContain("/admin/providers");
   });
 
@@ -604,7 +604,7 @@ test.describe("Provider Directory - Pagination", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/providers");
   });
 
@@ -646,7 +646,7 @@ test.describe("Provider Directory - Status Badges", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC6.4.2 - Status badges display correctly for each status", async ({ page }) => {

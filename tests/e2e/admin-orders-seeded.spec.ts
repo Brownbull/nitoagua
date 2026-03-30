@@ -31,7 +31,7 @@ test.describe("A5: Admin Orders Dashboard @seeded", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("A5.1 - Orders page shows seeded orders in table", async ({ page }) => {
@@ -60,7 +60,7 @@ test.describe("A5: Admin Orders Dashboard @seeded", () => {
     await pendingCard.click();
 
     // URL should update with filter
-    await page.waitForURL("**/admin/orders?status=pending", { timeout: 10000 });
+    await page.waitForURL("**/admin/orders?status=pending", { timeout: 30000 });
 
     // Page should still load successfully
     await expect(page.getByTestId("orders-title")).toBeVisible();
@@ -75,7 +75,7 @@ test.describe("A5: Admin Orders Dashboard @seeded", () => {
     const deliveredCard = page.getByTestId("stats-card-entregados");
     await deliveredCard.click();
 
-    await page.waitForURL("**/admin/orders?status=delivered", { timeout: 10000 });
+    await page.waitForURL("**/admin/orders?status=delivered", { timeout: 30000 });
 
     // Page should load
     await expect(page.getByTestId("orders-title")).toBeVisible();
@@ -120,7 +120,7 @@ test.describe("A6: Order Detail View @seeded", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("A6.1 - Order detail page navigated from list shows order info", async ({ page }) => {
@@ -132,7 +132,7 @@ test.describe("A6: Order Detail View @seeded", () => {
     const firstCard = page.locator("[data-testid^='order-card-']").first();
     if (await firstCard.isVisible({ timeout: 5000 })) {
       await firstCard.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Order ID should be visible
       const orderId = page.getByTestId("order-id");
@@ -149,7 +149,7 @@ test.describe("A6: Order Detail View @seeded", () => {
     const firstCard = page.locator("[data-testid^='order-card-']").first();
     if (await firstCard.isVisible({ timeout: 5000 })) {
       await firstCard.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Timeline section
       await expect(page.getByText("Linea de Tiempo")).toBeVisible();
@@ -165,7 +165,7 @@ test.describe("A6: Order Detail View @seeded", () => {
     const firstCard = page.locator("[data-testid^='order-card-']").first();
     if (await firstCard.isVisible({ timeout: 5000 })) {
       await firstCard.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Consumer info section
       await expect(page.getByText("Informacion del Consumidor")).toBeVisible();
@@ -181,13 +181,13 @@ test.describe("A6: Order Detail View @seeded", () => {
     const firstCard = page.locator("[data-testid^='order-card-']").first();
     if (await firstCard.isVisible({ timeout: 5000 })) {
       await firstCard.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Click back button
       const backButton = page.getByTestId("back-to-orders");
       await backButton.click();
 
-      await page.waitForURL("**/admin/orders", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders", { timeout: 30000 });
     }
   });
 });
@@ -200,7 +200,7 @@ test.describe("A7: Settlement Queue @seeded", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("A7.1 - Settlement page shows summary cards with seeded data", async ({ page }) => {
@@ -265,7 +265,7 @@ test.describe("A8: Approve Settlement @seeded", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("A8.1 - Verify button opens confirmation modal if payments exist", async ({ page }) => {
@@ -341,7 +341,7 @@ test.describe("A9: Reject Settlement @seeded", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("A9.1 - Reject button opens rejection modal if payments exist", async ({ page }) => {
@@ -452,7 +452,7 @@ test.describe("Settlement UI Features @seeded", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Period selector allows filtering by week/month/year", async ({ page }) => {

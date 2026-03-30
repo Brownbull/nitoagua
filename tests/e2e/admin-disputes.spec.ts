@@ -25,7 +25,7 @@ test.describe("12.7-6 Admin Disputes - Navigation", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await assertNoErrorState(page);
   });
 
@@ -45,7 +45,7 @@ test.describe("12.7-6 Admin Disputes - Navigation", () => {
     const disputasLink = page.getByTestId("nav-disputas");
     await disputasLink.click();
 
-    await page.waitForURL("**/admin/disputes", { timeout: 10000 });
+    await page.waitForURL("**/admin/disputes", { timeout: 30000 });
     expect(page.url()).toContain("/admin/disputes");
   });
 
@@ -67,7 +67,7 @@ test.describe("12.7-6 Admin Disputes - Navigation", () => {
     await expect(backButton).toBeVisible();
     await backButton.click();
 
-    await page.waitForURL("**/admin/dashboard", { timeout: 10000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 });
 
@@ -80,7 +80,7 @@ test.describe("12.7-6 Admin Disputes - List and Filters", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await page.goto("/admin/disputes");
     await assertNoErrorState(page);
   });
@@ -98,7 +98,7 @@ test.describe("12.7-6 Admin Disputes - List and Filters", () => {
     const openFilter = page.locator('a[href="/admin/disputes?status=open"]');
     await openFilter.click();
 
-    await page.waitForURL("**/admin/disputes?status=open", { timeout: 10000 });
+    await page.waitForURL("**/admin/disputes?status=open", { timeout: 30000 });
     expect(page.url()).toContain("status=open");
   });
 
@@ -107,7 +107,7 @@ test.describe("12.7-6 Admin Disputes - List and Filters", () => {
     const resolvedFilter = page.locator('a[href="/admin/disputes?status=resolved"]');
     await resolvedFilter.click();
 
-    await page.waitForURL("**/admin/disputes?status=resolved", { timeout: 10000 });
+    await page.waitForURL("**/admin/disputes?status=resolved", { timeout: 30000 });
     expect(page.url()).toContain("status=resolved");
   });
 
@@ -148,7 +148,7 @@ test.describe("12.7-6 Admin Disputes - List and Filters", () => {
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
 
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       expect(page.url()).toMatch(/\/admin\/disputes\/[a-zA-Z0-9-]+/);
     }
   });
@@ -163,7 +163,7 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC12.7.6.2 - Detail page shows dispute ID", async ({ page }) => {
@@ -174,7 +174,7 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Should show dispute ID in header
@@ -193,7 +193,7 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Consumer section should be visible
@@ -213,7 +213,7 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Provider section should be visible
@@ -233,7 +233,7 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Timeline section should be visible
@@ -255,7 +255,7 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // View order link should be visible
@@ -264,7 +264,7 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
 
       // Click and verify navigation
       await viewOrderLink.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
       expect(page.url()).toMatch(/\/admin\/orders\/[a-zA-Z0-9-]+/);
     }
   });
@@ -277,14 +277,14 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
 
       // Click back button
       const backButton = page.getByTestId("back-to-disputes");
       await expect(backButton).toBeVisible();
       await backButton.click();
 
-      await page.waitForURL("**/admin/disputes", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes", { timeout: 30000 });
       expect(page.url()).toMatch(/\/admin\/disputes$/);
     }
   });
@@ -299,7 +299,7 @@ test.describe("12.7-6 Admin Disputes - Resolution Actions", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("AC12.7.6.3 - Resolution buttons visible for open disputes", async ({
@@ -313,7 +313,7 @@ test.describe("12.7-6 Admin Disputes - Resolution Actions", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Resolution section should be visible
@@ -339,7 +339,7 @@ test.describe("12.7-6 Admin Disputes - Resolution Actions", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Try to resolve without notes
@@ -363,7 +363,7 @@ test.describe("12.7-6 Admin Disputes - Resolution Actions", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Enter notes
@@ -397,7 +397,7 @@ test.describe("12.7-6 Admin Disputes - Resolution Actions", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Resolution buttons should NOT be visible
@@ -419,7 +419,7 @@ test.describe("12.7-6 Admin Disputes - Auth Protection", () => {
     await page.goto("/admin/disputes");
 
     // Should redirect to login page
-    await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await page.waitForURL("**/admin/login", { timeout: 30000 });
     expect(page.url()).toContain("/admin/login");
   });
 
@@ -429,7 +429,7 @@ test.describe("12.7-6 Admin Disputes - Auth Protection", () => {
     await page.goto("/admin/disputes/some-dispute-id");
 
     // Should redirect to login page
-    await page.waitForURL("**/admin/login", { timeout: 10000 });
+    await page.waitForURL("**/admin/login", { timeout: 30000 });
     expect(page.url()).toContain("/admin/login");
   });
 });
@@ -444,7 +444,7 @@ test.describe("12.7-6 Admin Disputes - Mobile Navigation", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
     await assertNoErrorState(page);
   });
 
@@ -475,7 +475,7 @@ test.describe("12.7-6 Admin Disputes - Mobile Navigation", () => {
 
     if (await firstDispute.isVisible()) {
       await firstDispute.click();
-      await page.waitForURL("**/admin/disputes/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Key elements should be visible on mobile

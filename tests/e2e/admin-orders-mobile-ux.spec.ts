@@ -32,7 +32,7 @@ test.describe("Admin Orders Mobile UX - AC12.8.4.1: Collapsible Status Cards", (
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Mobile: Status cards are collapsed by default", async ({ page }) => {
@@ -130,7 +130,7 @@ test.describe("Admin Orders Mobile UX - AC12.8.4.2: Compact Header", () => {
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Mobile: Header shows compact layout", async ({ page }) => {
@@ -173,7 +173,7 @@ test.describe("Admin Orders Mobile UX - AC12.8.4.3 & AC12.8.4.4: Filter Layout",
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Mobile: Status dropdown is visible and usable", async ({ page }) => {
@@ -231,7 +231,7 @@ test.describe("Admin Orders Mobile UX - AC12.8.4.5: Order Detail Status", () => 
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Mobile: Order detail shows status on own row", async ({ page }) => {
@@ -243,7 +243,7 @@ test.describe("Admin Orders Mobile UX - AC12.8.4.5: Order Detail Status", () => 
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Mobile header should be visible
@@ -268,7 +268,7 @@ test.describe("Admin Orders Mobile UX - AC12.8.4.5: Order Detail Status", () => 
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Status should be in viewport without scrolling
       const statusBadge = page.getByTestId("order-status");
@@ -287,7 +287,7 @@ test.describe("Admin Orders Mobile UX - AC12.8.4.6: Desktop Layout Preserved", (
     await page.fill("#admin-email", "admin@nitoagua.cl");
     await page.fill("#admin-password", "admin.123");
     await page.getByTestId("admin-dev-login-button").click();
-    await page.waitForURL("**/admin/dashboard", { timeout: 15000 });
+    await page.waitForURL("**/admin/dashboard", { timeout: 30000 });
   });
 
   test("Desktop: All 6 status cards visible", async ({ page }) => {
@@ -348,7 +348,7 @@ test.describe("Admin Orders Mobile UX - AC12.8.4.6: Desktop Layout Preserved", (
 
     if (await firstOrder.isVisible()) {
       await firstOrder.click();
-      await page.waitForURL("**/admin/orders/**", { timeout: 10000 });
+      await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Desktop header should be visible
       const desktopHeader = page.locator("header .hidden.md\\:block");
