@@ -80,13 +80,16 @@ const G5_CONSUMER_STATUS = [
   'cron-expire-offers.spec.ts',
 ];
 
-const G6_PROVIDER_AUTH = [
+const G6A_PROVIDER_AUTH = [
   'supplier-dashboard.spec.ts',
   'epic12-integration.spec.ts',
   'supplier-profile.spec.ts',
   'supplier-request-details.spec.ts',
   'provider-registration.spec.ts',
   'provider-settings.spec.ts',
+];
+
+const G6B_PROVIDER_TOGGLE = [
   'provider-availability-toggle.spec.ts',
   'provider-ux-redesign.spec.ts',
 ];
@@ -192,7 +195,8 @@ export default defineConfig({
         // Seed first
         { name: 'g4-consumer-offers', use: chromeDevice, testMatch: G4_CONSUMER_OFFERS },
         { name: 'g5-consumer-status', use: chromeDevice, testMatch: G5_CONSUMER_STATUS },
-        { name: 'g6-provider-auth', use: chromeDevice, testMatch: G6_PROVIDER_AUTH },
+        { name: 'g6a-provider-auth', use: chromeDevice, testMatch: G6A_PROVIDER_AUTH },
+        { name: 'g6b-provider-toggle', use: chromeDevice, testMatch: G6B_PROVIDER_TOGGLE },
         { name: 'g7-provider-offers', use: chromeDevice, testMatch: G7_PROVIDER_OFFERS },
         { name: 'g8-provider-config', use: chromeDevice, testMatch: G8_PROVIDER_CONFIG },
         { name: 'g9-admin-core', use: chromeDevice, testMatch: G9_ADMIN_CORE },
