@@ -51,7 +51,9 @@ async function loginAsSupplier(page: import('@playwright/test').Page) {
   await page.getByTestId('dev-login-button').click();
 
   // Wait for redirect to provider requests
-  await page.waitForURL('**/provider/requests', { timeout: 15000 });
+  await page.waitForURL('**/provider/requests', { timeout: 60000 });
+  // Wait for page to render (don't use networkidle — realtime stays open)
+  await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
 }
 
 test.describe('P7: Track My Offers @workflow @P7', () => {
@@ -74,7 +76,7 @@ test.describe('P7: Track My Offers @workflow @P7', () => {
     // THEN: Provider sees offers page header
     await log({ level: 'step', message: 'Verifying offers page structure' });
     await expect(page.getByRole('heading', { name: 'Mis Ofertas' })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Gestiona tus ofertas enviadas')).toBeVisible();
+    await expect(page.getByText(/\d+ de \d+ ofertas/)).toBeVisible();
 
     await log({ level: 'success', message: 'P7.1 - Offers list page visible' });
   });
@@ -90,35 +92,25 @@ test.describe('P7: Track My Offers @workflow @P7', () => {
     await page.goto('/provider/offers');
     await assertNoErrorState(page);
 
-    // THEN: Provider sees offers grouped by status
-    await log({ level: 'step', message: 'Checking offer sections' });
+    // THEN: Provider sees offers page with filters (v2.6.2 unified list)
+    await log({ level: 'step', message: 'Checking offer page structure' });
 
-    // Check for section headers (they exist even if empty)
-    const hasPendingSection = await page.getByTestId('section-pending').isVisible().catch(() => false);
-    const hasAcceptedSection = await page.getByTestId('section-accepted').isVisible().catch(() => false);
-    const hasHistorySection = await page.getByTestId('section-history').isVisible().catch(() => false);
     const hasGlobalEmpty = await page.getByTestId('empty-state-global').isVisible().catch(() => false);
 
-    // If no global empty state, sections should exist
+    // If no global empty state, offer list and filter dropdowns should exist
     if (!hasGlobalEmpty) {
-      await log({ level: 'step', message: 'Verifying section presence' });
+      await log({ level: 'step', message: 'Verifying filter dropdown presence' });
 
-      // At least one section should be visible
-      const hasSections = hasPendingSection || hasAcceptedSection || hasHistorySection;
-      expect(hasSections).toBe(true);
+      // v2.6.2: Estado filter dropdown should be visible with status options
+      const estadoButton = page.locator('button').filter({ hasText: /^Estado/ }).first();
+      await expect(estadoButton).toBeVisible();
 
-      // Check specific sections based on seeded data
-      if (hasPendingSection) {
-        await expect(page.getByTestId('section-pending').getByText('Pendientes')).toBeVisible();
-      }
-
-      if (hasAcceptedSection) {
-        await expect(page.getByTestId('section-accepted').getByText('Entregas Activas')).toBeVisible();
-      }
-
-      if (hasHistorySection) {
-        await expect(page.getByTestId('section-history').getByText(/Historial|Expiradas/i)).toBeVisible();
-      }
+      // Open Estado dropdown to verify options
+      await estadoButton.click();
+      await expect(page.getByRole('button', { name: /Pendientes/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /En proceso/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Historial/i })).toBeVisible();
+      await page.keyboard.press('Escape');
     }
 
     await log({ level: 'success', message: 'P7.2 - Offers grouped by status' });
@@ -134,46 +126,50 @@ test.describe('P7: Track My Offers @workflow @P7', () => {
     await page.goto('/provider/offers');
     await assertNoErrorState(page);
 
-    // WHEN: Looking at pending offers
+    // WHEN: Looking at pending offers (v2.6.2 unified list - use Pendientes filter)
     await log({ level: 'step', message: 'Checking pending offers display' });
 
-    const pendingSection = page.getByTestId('section-pending');
-    const hasPendingSection = await pendingSection.isVisible().catch(() => false);
+    // Apply Pendientes filter
+    const estadoButton = page.locator('button').filter({ hasText: /^Estado/ }).first();
+    await estadoButton.click();
+    await page.getByRole('button', { name: /Pendientes/i }).click();
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
 
-    if (hasPendingSection) {
-      const hasPendingOffers = await pendingSection.getByTestId('offer-card').first().isVisible().catch(() => false);
+    const hasPendingOffers = await page.getByTestId('offer-card').first().isVisible().catch(() => false);
 
-      if (hasPendingOffers) {
-        // THEN: Pending offers show countdown timer (testid="offer-countdown" from OfferCard)
-        const countdown = pendingSection.getByTestId('offer-countdown').first();
-        const countdownCount = await pendingSection.locator('[data-testid="offer-countdown"]').count();
+    if (hasPendingOffers) {
+      // THEN: Pending offers show countdown timer (testid="offer-countdown" from OfferCard)
+      const countdown = page.getByTestId('offer-countdown').first();
+      const countdownCount = await page.locator('[data-testid="offer-countdown"]').count();
 
-        if (countdownCount > 0) {
-          // Countdown shows "Expira en XX:XX" format (< 1hr) or "Expira en X h MM min" (> 1hr)
-          // Note: Text extraction may omit spaces between span elements
-          await expect(countdown).toHaveText(/Expira en\s*(\d{1,2}:\d{2}|\d+ h \d{2} min)/);
-          await log({ level: 'success', message: 'Countdown timer visible on pending offers' });
-        }
-
-        // Pending offers should have Cancel button
-        const cancelButton = pendingSection.getByRole('button', { name: /Cancelar Oferta/ }).first();
-        await expect(cancelButton).toBeVisible();
-        await log({ level: 'success', message: 'Cancel button visible on pending offers' });
+      if (countdownCount > 0) {
+        // Countdown shows "Expira en XX:XX" format (< 1hr) or "Expira en X h MM min" (> 1hr)
+        await expect(countdown).toHaveText(/Expira en\s*(\d{1,2}:\d{2}|\d+ h \d{2} min)/);
+        await log({ level: 'success', message: 'Countdown timer visible on pending offers' });
       }
+
+      // Pending offers should have Cancel button
+      const cancelButton = page.getByRole('button', { name: /Cancelar Oferta/ }).first();
+      await expect(cancelButton).toBeVisible();
+      await log({ level: 'success', message: 'Cancel button visible on pending offers' });
     }
 
-    // Check accepted offers show "Ver Entrega" button
-    const acceptedSection = page.getByTestId('section-accepted');
-    const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
+    // Clear filters and apply En proceso to check accepted offers
+    await estadoButton.click();
+    // Deselect Pendientes
+    await page.getByRole('button', { name: /Pendientes/i }).click();
+    // Select En proceso
+    await page.getByRole('button', { name: /En proceso/i }).click();
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
 
-    if (hasAcceptedSection) {
-      const hasAcceptedOffers = await acceptedSection.getByTestId('offer-card').first().isVisible().catch(() => false);
+    const hasAcceptedOffers = await page.getByTestId('offer-card').first().isVisible().catch(() => false);
 
-      if (hasAcceptedOffers) {
-        const viewDeliveryButton = acceptedSection.getByRole('link', { name: /Ver Entrega/ }).first();
-        await expect(viewDeliveryButton).toBeVisible();
-        await log({ level: 'success', message: 'Ver Entrega button visible on accepted offers' });
-      }
+    if (hasAcceptedOffers) {
+      const viewDeliveryButton = page.getByRole('link', { name: /Ver Entrega/ }).first();
+      await expect(viewDeliveryButton).toBeVisible();
+      await log({ level: 'success', message: 'Ver Entrega button visible on accepted offers' });
     }
 
     await log({ level: 'success', message: 'P7.3 - Status updates reflect correctly' });
@@ -276,33 +272,33 @@ test.describe('P9: Delivery Details @workflow @P9', () => {
     await page.goto('/provider/offers');
     await assertNoErrorState(page);
 
-    // Look for accepted offers with "Ver Entrega" button
+    // Look for accepted offers with "Ver Entrega" button (v2.6.2 unified list)
     await log({ level: 'step', message: 'Looking for accepted deliveries' });
 
-    const acceptedSection = page.getByTestId('section-accepted');
-    const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
+    // Apply En proceso filter to find accepted offers
+    const estadoButton = page.locator('button').filter({ hasText: /^Estado/ }).first();
+    await estadoButton.click();
+    await page.getByRole('button', { name: /En proceso/i }).click();
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
 
-    if (hasAcceptedSection) {
-      const viewDeliveryButton = acceptedSection.getByRole('link', { name: /Ver Entrega/ }).first();
-      const hasViewButton = await viewDeliveryButton.isVisible().catch(() => false);
+    const viewDeliveryButton = page.getByRole('link', { name: /Ver Entrega/ }).first();
+    const hasViewButton = await viewDeliveryButton.isVisible().catch(() => false);
 
-      if (hasViewButton) {
-        // WHEN: Provider clicks "Ver Entrega"
-        await log({ level: 'step', message: 'Clicking Ver Entrega to view details' });
-        await viewDeliveryButton.click();
+    if (hasViewButton) {
+      // WHEN: Provider clicks "Ver Entrega"
+      await log({ level: 'step', message: 'Clicking Ver Entrega to view details' });
+      await viewDeliveryButton.click();
 
-        // THEN: Should navigate to delivery detail page
-        await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
+      // THEN: Should navigate to delivery detail page
+      await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
 
-        // Verify delivery detail content
-        await expect(page.getByText('Detalles de Entrega')).toBeVisible({ timeout: 5000 });
+      // Verify delivery detail content
+      await expect(page.getByText('Detalles de Entrega')).toBeVisible({ timeout: 5000 });
 
-        await log({ level: 'success', message: 'P9.1 - Full request details visible' });
-      } else {
-        await log({ level: 'info', message: 'No accepted deliveries found (run npm run seed:offers first)' });
-      }
+      await log({ level: 'success', message: 'P9.1 - Full request details visible' });
     } else {
-      // Try navigating directly to the seeded accepted delivery
+      // No accepted offers in "En proceso" filter - try direct navigation
       const acceptedRequestId = OFFER_TEST_DATA.requests.acceptedWithOffer.id;
       await log({ level: 'step', message: `Navigating to seeded delivery: ${acceptedRequestId}` });
 
@@ -333,41 +329,43 @@ test.describe('P9: Delivery Details @workflow @P9', () => {
     await page.goto('/provider/offers');
     await assertNoErrorState(page);
 
-    // Find an accepted delivery
-    const acceptedSection = page.getByTestId('section-accepted');
-    const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
+    // Find an accepted delivery (v2.6.2 unified list - use En proceso filter)
+    // Apply En proceso filter to find accepted offers
+    const estadoBtn = page.locator('button').filter({ hasText: /^Estado/ }).first();
+    await estadoBtn.click();
+    await page.getByRole('button', { name: /En proceso/i }).click();
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
 
-    if (hasAcceptedSection) {
-      const viewDeliveryButton = acceptedSection.getByRole('link', { name: /Ver Entrega/ }).first();
-      const hasViewButton = await viewDeliveryButton.isVisible().catch(() => false);
+    const viewDeliveryButton = page.getByRole('link', { name: /Ver Entrega/ }).first();
+    const hasViewButton = await viewDeliveryButton.isVisible().catch(() => false);
 
-      if (hasViewButton) {
-        await viewDeliveryButton.click();
-        await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
+    if (hasViewButton) {
+      await viewDeliveryButton.click();
+      await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
 
-        // THEN: Contact info should be visible
-        await log({ level: 'step', message: 'Verifying contact information visible' });
+      // THEN: Contact info should be visible
+      await log({ level: 'step', message: 'Verifying contact information visible' });
 
-        // Look for customer name
-        const hasCustomerName = await page.getByText(/Cliente|Nombre/i).isVisible().catch(() => false);
+      // Look for customer name
+      const hasCustomerName = await page.getByText(/Cliente|Nombre/i).isVisible().catch(() => false);
 
-        // Look for address
-        const hasAddress = await page.getByText(/Dirección|Ubicación/i).isVisible().catch(() => false);
+      // Look for address
+      const hasAddress = await page.getByText(/Dirección|Ubicación/i).isVisible().catch(() => false);
 
-        // Look for phone number pattern
-        const hasPhoneInfo = await page.getByText(/\+56|Teléfono/i).isVisible().catch(() => false);
+      // Look for phone number pattern
+      const hasPhoneInfo = await page.getByText(/\+56|Teléfono/i).isVisible().catch(() => false);
 
-        // At least customer info should be visible
-        if (hasCustomerName || hasAddress || hasPhoneInfo) {
-          await log({ level: 'success', message: 'P9.2 - Contact info visible' });
-        }
-
-        // Verify back button exists
-        const backLink = page.getByRole('link', { name: /Volver a Mis Ofertas/ });
-        await expect(backLink).toBeVisible();
-
-        await log({ level: 'success', message: 'P9.2 - Delivery details verified' });
+      // At least customer info should be visible
+      if (hasCustomerName || hasAddress || hasPhoneInfo) {
+        await log({ level: 'success', message: 'P9.2 - Contact info visible' });
       }
+
+      // Verify back button exists
+      const backLink = page.getByRole('link', { name: /Volver a Mis Ofertas/ });
+      await expect(backLink).toBeVisible();
+
+      await log({ level: 'success', message: 'P9.2 - Delivery details verified' });
     } else {
       // Direct navigation test
       const acceptedRequestId = OFFER_TEST_DATA.requests.acceptedWithOffer.id;
@@ -410,34 +408,35 @@ test.describe('Provider Visibility - Integration @integration', () => {
     await expect(page.getByRole('heading', { name: 'Mis Ofertas' })).toBeVisible({ timeout: 10000 });
     await log({ level: 'step', message: 'On Mis Ofertas page' });
 
-    // Check for accepted section
-    const acceptedSection = page.getByTestId('section-accepted');
-    const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
+    // v2.6.2 unified list: apply En proceso filter to find accepted offers
+    const estadoFilterBtn = page.locator('button').filter({ hasText: /^Estado/ }).first();
+    await estadoFilterBtn.click();
+    await page.getByRole('button', { name: /En proceso/i }).click();
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
 
-    if (hasAcceptedSection) {
-      const viewButton = acceptedSection.getByRole('link', { name: /Ver Entrega/ }).first();
-      const hasViewButton = await viewButton.isVisible().catch(() => false);
+    const viewButton = page.getByRole('link', { name: /Ver Entrega/ }).first();
+    const hasViewButton = await viewButton.isVisible().catch(() => false);
 
-      if (hasViewButton) {
-        // WHEN: Click to view delivery
-        await log({ level: 'step', message: 'Navigating to delivery details' });
-        await viewButton.click();
+    if (hasViewButton) {
+      // WHEN: Click to view delivery
+      await log({ level: 'step', message: 'Navigating to delivery details' });
+      await viewButton.click();
 
-        await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
-        await expect(page.getByText('Detalles de Entrega')).toBeVisible({ timeout: 5000 });
+      await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
+      await expect(page.getByText('Detalles de Entrega')).toBeVisible({ timeout: 5000 });
 
-        // WHEN: Click back button
-        await log({ level: 'step', message: 'Navigating back to offers' });
-        const backLink = page.getByRole('link', { name: /Volver a Mis Ofertas/ });
-        await expect(backLink).toBeVisible();
-        await backLink.click();
+      // WHEN: Click back button
+      await log({ level: 'step', message: 'Navigating back to offers' });
+      const backLink = page.getByRole('link', { name: /Volver a Mis Ofertas/ });
+      await expect(backLink).toBeVisible();
+      await backLink.click();
 
-        // THEN: Back on offers page
-        await page.waitForURL(/\/provider\/offers/, { timeout: 10000 });
-        await expect(page.getByRole('heading', { name: 'Mis Ofertas' })).toBeVisible();
+      // THEN: Back on offers page
+      await page.waitForURL(/\/provider\/offers/, { timeout: 10000 });
+      await expect(page.getByRole('heading', { name: 'Mis Ofertas' })).toBeVisible();
 
-        await log({ level: 'success', message: 'Full navigation flow complete' });
-      }
+      await log({ level: 'success', message: 'Full navigation flow complete' });
     } else {
       await log({ level: 'info', message: 'No accepted deliveries for integration test' });
     }

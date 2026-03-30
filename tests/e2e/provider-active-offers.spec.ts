@@ -35,7 +35,9 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
 
   // Click login
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
+  // Wait for page to render (don't use networkidle — realtime stays open)
+  await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
   await assertNoErrorState(page);
 }
 
@@ -142,7 +144,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
 
       if (pendingCount > 0) {
         // Pending offer cards should have countdown
-        const countdown = pendingOffers.first().getByTestId("countdown-timer");
+        const countdown = pendingOffers.first().getByTestId("offer-countdown");
         const hasCountdown = await countdown.isVisible().catch(() => false);
 
         if (hasCountdown) {

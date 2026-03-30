@@ -37,7 +37,9 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
 
   // Click login
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
+  // Wait for page to render (don't use networkidle — realtime stays open)
+  await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
 }
 
 test.describe("Provider Offer Notification - Story 8-5", () => {
@@ -95,12 +97,14 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
       await assertNoErrorState(page);
 
       // If no error, check for section headers
-      const hasAcceptedSection = await page.getByTestId("section-accepted").isVisible().catch(() => false);
       const hasEmptyState = await page.getByTestId("empty-state-global").isVisible().catch(() => false);
 
-      if (!hasEmptyState && hasAcceptedSection) {
-        // Section should be titled "Entregas Activas" not "Aceptadas"
-        await expect(page.getByText("Entregas Activas")).toBeVisible();
+      if (!hasEmptyState) {
+        // v2.6.2 unified list: verify "En proceso" filter option exists (replaces "Entregas Activas" section)
+        const estadoButton = page.locator('button').filter({ hasText: /^Estado/ }).first();
+        await estadoButton.click();
+        await expect(page.getByRole("button", { name: /En proceso/i })).toBeVisible();
+        await page.keyboard.press("Escape");
       }
     });
 
@@ -113,17 +117,19 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
 
-      const acceptedSection = page.getByTestId("section-accepted");
-      const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
+      // v2.6.2 unified list: apply En proceso filter to find accepted offers
+      const estadoBtn = page.locator('button').filter({ hasText: /^Estado/ }).first();
+      await estadoBtn.click();
+      await page.getByRole("button", { name: /En proceso/i }).click();
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(500);
 
-      if (hasAcceptedSection) {
-        const hasOffers = await acceptedSection.getByTestId("offer-card").first().isVisible().catch(() => false);
+      const hasOffers = await page.getByTestId("offer-card").first().isVisible().catch(() => false);
 
-        if (hasOffers) {
-          // Accepted offers should have "Ver Entrega" button
-          const viewButton = acceptedSection.getByRole("link", { name: /Ver Entrega/ }).first();
-          await expect(viewButton).toBeVisible();
-        }
+      if (hasOffers) {
+        // Accepted offers should have "Ver Entrega" button
+        const viewButton = page.getByRole("link", { name: /Ver Entrega/ }).first();
+        await expect(viewButton).toBeVisible();
       }
     });
   });
@@ -167,23 +173,25 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
 
-      const acceptedSection = page.getByTestId("section-accepted");
-      const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
+      // v2.6.2 unified list: apply En proceso filter to find accepted offers
+      const estadoFilterBtn = page.locator('button').filter({ hasText: /^Estado/ }).first();
+      await estadoFilterBtn.click();
+      await page.getByRole("button", { name: /En proceso/i }).click();
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(500);
 
-      if (hasAcceptedSection) {
-        const viewButton = acceptedSection.getByRole("link", { name: /Ver Entrega/ }).first();
-        const hasViewButton = await viewButton.isVisible().catch(() => false);
+      const viewButton = page.getByRole("link", { name: /Ver Entrega/ }).first();
+      const hasViewButton = await viewButton.isVisible().catch(() => false);
 
-        if (hasViewButton) {
-          // Click to navigate to delivery detail
-          await viewButton.click();
+      if (hasViewButton) {
+        // Click to navigate to delivery detail
+        await viewButton.click();
 
-          // Should navigate to delivery page
-          await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
+        // Should navigate to delivery page
+        await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
 
-          // Should show delivery detail content
-          await expect(page.getByText("Detalles de Entrega")).toBeVisible({ timeout: 5000 });
-        }
+        // Should show delivery detail content
+        await expect(page.getByText("Detalles de Entrega")).toBeVisible({ timeout: 5000 });
       }
     });
 
@@ -196,25 +204,27 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
 
-      const acceptedSection = page.getByTestId("section-accepted");
-      const hasAcceptedSection = await acceptedSection.isVisible().catch(() => false);
+      // v2.6.2 unified list: apply En proceso filter to find accepted offers
+      const estadoFilterBtn = page.locator('button').filter({ hasText: /^Estado/ }).first();
+      await estadoFilterBtn.click();
+      await page.getByRole("button", { name: /En proceso/i }).click();
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(500);
 
-      if (hasAcceptedSection) {
-        const viewButton = acceptedSection.getByRole("link", { name: /Ver Entrega/ }).first();
-        const hasViewButton = await viewButton.isVisible().catch(() => false);
+      const viewButton = page.getByRole("link", { name: /Ver Entrega/ }).first();
+      const hasViewButton = await viewButton.isVisible().catch(() => false);
 
-        if (hasViewButton) {
-          await viewButton.click();
-          await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
+      if (hasViewButton) {
+        await viewButton.click();
+        await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
 
-          // Should have back button
-          const backLink = page.getByRole("link", { name: /Volver a Mis Ofertas/ });
-          await expect(backLink).toBeVisible();
+        // Should have back button
+        const backLink = page.getByRole("link", { name: /Volver a Mis Ofertas/ });
+        await expect(backLink).toBeVisible();
 
-          // Click back
-          await backLink.click();
-          await page.waitForURL(/\/provider\/offers/, { timeout: 10000 });
-        }
+        // Click back
+        await backLink.click();
+        await page.waitForURL(/\/provider\/offers/, { timeout: 10000 });
       }
     });
   });

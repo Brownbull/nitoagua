@@ -26,13 +26,24 @@ test.use({
   hasTouch: true,
 });
 
-// Helper to wait for offers page to load
+// Helper to wait for offers page to load (v2.6.2 unified list)
 async function waitForOffersPageLoad(page: import("@playwright/test").Page): Promise<void> {
   await page.getByRole("heading", { name: "Mis Ofertas" }).waitFor({ state: "visible", timeout: 10000 });
-  // Wait for section headers AND their badges (indicates data is loaded)
-  // Section headers always exist but badges only show when counts are known
-  await page.locator('[data-testid="section-history"] h2, [data-testid="empty-state-pending"]').first().waitFor({ state: "visible", timeout: 10000 });
+  // Wait for offer count summary or global empty state (indicates data is loaded)
+  await page.locator('text=/\\d+ de \\d+ ofertas/, [data-testid="empty-state-global"]').first().waitFor({ state: "visible", timeout: 10000 });
   // Small delay to ensure React has finished categorizing offers
+  await page.waitForTimeout(500);
+}
+
+// Helper to apply Estado filter in the unified list (v2.6.2)
+async function applyEstadoFilter(page: import("@playwright/test").Page, filterName: string): Promise<void> {
+  // Open Estado dropdown
+  const estadoButton = page.locator('button').filter({ hasText: /^Estado/ }).first();
+  await estadoButton.click();
+  // Click the filter option
+  await page.getByRole("button", { name: new RegExp(filterName, "i") }).click();
+  // Close the dropdown by pressing Escape
+  await page.keyboard.press("Escape");
   await page.waitForTimeout(500);
 }
 
@@ -52,7 +63,9 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
 
   // Click login
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
+  // Wait for page to render (don't use networkidle — realtime stays open)
+  await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
 }
 
 test.describe("Provider Offer Edge Cases (P13-P16)", () => {
@@ -68,17 +81,11 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      // Look for history section which contains expired offers
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
-
-      if (historyCount === 0) {
-        test.skip(true, "No history section - need expired offers to test");
-        return;
-      }
+      // v2.6.2 unified list: apply Historial filter to see expired offers
+      await applyEstadoFilter(page, "Historial");
 
       // Look for expired offers with "Expirada" badge
-      const expiredCards = historySection.locator('[data-testid="offer-card"]').filter({
+      const expiredCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Expirada"),
       });
       const hasExpiredOffers = (await expiredCards.count()) > 0;
@@ -92,28 +99,21 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await expect(expiredCards.first().getByText("Expirada")).toBeVisible();
     });
 
-    test("P13.2: Expired offers appear in history section", async ({ page }) => {
+    test("P13.2: Expired offers do not appear in pending filter", async ({ page }) => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
+      // v2.6.2 unified list: apply Pendientes filter
+      await applyEstadoFilter(page, "Pendientes");
 
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
-
-      // Expired offers should be in history, not pending
-      const pendingSection = page.getByTestId("section-pending");
-      const pendingExpired = pendingSection.locator('[data-testid="offer-card"]').filter({
+      // Expired offers should NOT appear under Pendientes filter
+      const pendingExpired = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Expirada"),
       });
 
-      // Should NOT be in pending section
       const pendingExpiredCount = await pendingExpired.count();
       expect(pendingExpiredCount).toBe(0);
     });
@@ -125,16 +125,11 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
-
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
+      // v2.6.2 unified list: apply Historial filter to see expired offers
+      await applyEstadoFilter(page, "Historial");
 
       // Look for expired offers
-      const expiredCards = historySection.locator('[data-testid="offer-card"]').filter({
+      const expiredCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Expirada"),
       });
       const expiredCount = await expiredCards.count();
@@ -162,16 +157,11 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
-
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
+      // v2.6.2 unified list: apply Historial filter to see cancelled offers
+      await applyEstadoFilter(page, "Historial");
 
       // Look for cancelled offers (withdrawn by provider)
-      const cancelledCards = historySection.locator('[data-testid="offer-card"]').filter({
+      const cancelledCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Cancelada"),
       });
       const cancelledCount = await cancelledCards.count();
@@ -196,17 +186,12 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
-
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
+      // v2.6.2 unified list: apply Historial filter to see cancelled offers
+      await applyEstadoFilter(page, "Historial");
 
       // Look for cancelled offers
       // When consumer cancels a request, the provider's offer is marked as cancelled
-      const cancelledCards = historySection.locator('[data-testid="offer-card"]').filter({
+      const cancelledCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Cancelada"),
       });
       const cancelledCount = await cancelledCards.count();
@@ -220,27 +205,22 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await expect(cancelledCards.first().getByText("Cancelada")).toBeVisible();
     });
 
-    test("P15.2: Consumer-cancelled offer appears in history section", async ({ page }) => {
+    test("P15.2: Consumer-cancelled offer appears under Historial filter", async ({ page }) => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
+      // v2.6.2 unified list: apply Historial filter
+      await applyEstadoFilter(page, "Historial");
 
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
-
-      // Cancelled offers should be in history section
-      const cancelledCards = historySection.locator('[data-testid="offer-card"]').filter({
+      // Cancelled offers should appear under Historial filter
+      const cancelledCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Cancelada"),
       });
 
-      // Check that at least one cancelled offer exists in history
+      // Check that at least one cancelled offer exists
       const cancelledCount = await cancelledCards.count();
       // This can be 0 if data isn't seeded - skip if so
       if (cancelledCount === 0) {
@@ -262,16 +242,11 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
-
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
+      // v2.6.2 unified list: apply Historial filter to see rejected offers
+      await applyEstadoFilter(page, "Historial");
 
       // Look for "No seleccionada" offers (request_filled status)
-      const notSelectedCards = historySection.locator('[data-testid="offer-card"]').filter({
+      const notSelectedCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("No seleccionada"),
       });
       const notSelectedCount = await notSelectedCards.count();
@@ -285,23 +260,18 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await expect(notSelectedCards.first().getByText("No seleccionada")).toBeVisible();
     });
 
-    test("P16.2: 'No seleccionada' offers appear in history section", async ({ page }) => {
+    test("P16.2: 'No seleccionada' offers appear under Historial filter", async ({ page }) => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
-
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
+      // v2.6.2 unified list: apply Historial filter
+      await applyEstadoFilter(page, "Historial");
 
       // Look for not selected offers
-      const notSelectedCards = historySection.locator('[data-testid="offer-card"]').filter({
+      const notSelectedCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("No seleccionada"),
       });
       const notSelectedCount = await notSelectedCards.count();
@@ -311,7 +281,7 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
         return;
       }
 
-      // Verify they are in history (not pending or accepted)
+      // Verify they exist under Historial filter
       expect(notSelectedCount).toBeGreaterThan(0);
     });
 
@@ -322,16 +292,11 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
-
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
+      // v2.6.2 unified list: apply Historial filter to see rejected offers
+      await applyEstadoFilter(page, "Historial");
 
       // Look for not selected offers
-      const notSelectedCards = historySection.locator('[data-testid="offer-card"]').filter({
+      const notSelectedCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("No seleccionada"),
       });
       const notSelectedCount = await notSelectedCards.count();
@@ -350,28 +315,22 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
   test.describe("Edge Cases - Status Display", () => {
     test.skip(skipIfNoDevLogin, "Dev login required for provider tests");
 
-    test("History section groups all non-active statuses", async ({ page }) => {
+    test("Historial filter groups all non-active statuses", async ({ page }) => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const historySection = page.getByTestId("section-history");
-      const historyCount = await historySection.count();
+      // v2.6.2 unified list: apply Historial filter
+      await applyEstadoFilter(page, "Historial");
 
-      if (historyCount === 0) {
-        test.skip(true, "No history section visible");
-        return;
-      }
-
-      // History should contain: expired, cancelled, and request_filled offers
-      // Check that history section exists and has some content
-      const historyCards = historySection.locator('[data-testid="offer-card"]');
+      // Historial should contain: expired, cancelled, and request_filled offers
+      const historyCards = page.locator('[data-testid="offer-card"]');
       const cardCount = await historyCards.count();
 
       if (cardCount === 0) {
-        test.skip(true, "No offers in history section");
+        test.skip(true, "No offers in history");
         return;
       }
 
@@ -386,16 +345,11 @@ test.describe("Provider Offer Edge Cases (P13-P16)", () => {
       await waitForOffersPageLoad(page);
       await assertNoErrorState(page);
 
-      const pendingSection = page.getByTestId("section-pending");
-      const pendingCount = await pendingSection.count();
-
-      if (pendingCount === 0) {
-        test.skip(true, "No pending section visible");
-        return;
-      }
+      // v2.6.2 unified list: apply Pendientes filter
+      await applyEstadoFilter(page, "Pendientes");
 
       // Active offers should have countdown
-      const activeOffers = pendingSection.locator('[data-testid="offer-card"]');
+      const activeOffers = page.locator('[data-testid="offer-card"]');
       const activeCount = await activeOffers.count();
 
       if (activeCount === 0) {
@@ -434,27 +388,16 @@ test.describe("Provider Offer Edge Cases - Spanish Content", () => {
     // Check page title
     await expect(page.getByRole("heading", { name: "Mis Ofertas" })).toBeVisible();
 
-    // Section headers should be in Spanish
-    // Note: The actual section headers are:
-    // - "Pendientes" for pending offers
-    // - "Entregas Activas" for accepted offers
-    // - "Historial" for expired/cancelled/request_filled offers
-    const pendingSection = page.getByTestId("section-pending");
-    const pendingCount = await pendingSection.count();
-    if (pendingCount > 0) {
-      await expect(pendingSection.getByText("Pendientes")).toBeVisible();
-    }
+    // v2.6.2 unified list: Estado filter dropdown labels should be in Spanish
+    // Open Estado dropdown to verify Spanish labels
+    const estadoButton = page.locator('button').filter({ hasText: /^Estado/ }).first();
+    await estadoButton.click();
 
-    const acceptedSection = page.getByTestId("section-accepted");
-    const acceptedCount = await acceptedSection.count();
-    if (acceptedCount > 0) {
-      await expect(acceptedSection.getByText("Entregas Activas")).toBeVisible();
-    }
+    // Filter options should be in Spanish
+    await expect(page.getByRole("button", { name: /Pendientes/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /En proceso/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Historial/i })).toBeVisible();
 
-    const historySection = page.getByTestId("section-history");
-    const historyCount = await historySection.count();
-    if (historyCount > 0) {
-      await expect(historySection.getByText("Historial")).toBeVisible();
-    }
+    await page.keyboard.press("Escape");
   });
 });

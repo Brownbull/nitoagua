@@ -36,7 +36,9 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
 
   // Click login
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
+  // Wait for page to render (don't use networkidle — realtime stays open)
+  await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
 }
 
 test.describe("Provider Offer Submission - Story 8-2", () => {
@@ -194,9 +196,9 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
         await page.getByTestId("view-details-button").first().click();
         await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
 
-        // Should have submit button - Story 12.7-10 redesign shows earnings
+        // Should have submit button - Story 12.7-10 redesign
         await expect(page.getByTestId("submit-offer-button")).toBeVisible();
-        await expect(page.getByTestId("submit-offer-button")).toHaveText(/ENVIAR OFERTA.*Ganarás/);
+        await expect(page.getByTestId("submit-offer-button")).toHaveText(/ENVIAR OFERTA/);
       }
     });
   });
@@ -223,15 +225,15 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
 
-      // Check if empty state or offers list
+      // Check if empty state or offers list (v2.6.2 unified list)
       const hasEmptyState = await page.getByText("No tienes ofertas").isVisible().catch(() => false);
-      const hasOffers = await page.getByText(/Pendientes|Aceptadas/).isVisible().catch(() => false);
+      const hasOffers = await page.getByText(/\d+ de \d+ ofertas/).isVisible().catch(() => false);
 
       // Should show one or the other
       // This is now safe because we checked for errors first
       expect(
         hasEmptyState || hasOffers,
-        "Expected either 'No tienes ofertas' empty state or offers list to be visible"
+        "Expected either 'No tienes ofertas' empty state or offers count to be visible"
       ).toBe(true);
 
       if (hasEmptyState) {

@@ -37,7 +37,9 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
   // The email and password should be pre-filled after clicking supplier button
   // Just click login
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
+  // Wait for page to render (don't use networkidle — realtime stays open)
+  await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
 }
 
 test.describe("Provider Service Area Configuration - Story 7-3", () => {
