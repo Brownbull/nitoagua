@@ -271,7 +271,7 @@ test.describe("Consumer Request Status with Offer Context (Story 10-5)", () => {
       const cardCount = await noOffersCard.count();
 
       if (cardCount > 0) {
-        await expect(page.getByTestId("no-offers-title")).toContainText("Sin Ofertas");
+        await expect(page.getByTestId("negative-status-title")).toHaveText("Sin Ofertas");
       } else {
         // If no seeded data, skip gracefully
         test.skip();
@@ -285,7 +285,7 @@ test.describe("Consumer Request Status with Offer Context (Story 10-5)", () => {
       const cardCount = await noOffersCard.count();
 
       if (cardCount > 0) {
-        await expect(page.getByTestId("no-offers-message")).toContainText("no hay aguateros disponibles");
+        await expect(page.getByTestId("negative-status-message")).toContainText(/No hay aguateros disponibles/i);
       } else {
         test.skip();
       }
@@ -298,7 +298,7 @@ test.describe("Consumer Request Status with Offer Context (Story 10-5)", () => {
       const cardCount = await noOffersCard.count();
 
       if (cardCount > 0) {
-        await expect(page.getByTestId("new-request-button")).toBeVisible();
+        await expect(page.getByTestId("primary-action-button")).toBeVisible();
       } else {
         test.skip();
       }
@@ -311,7 +311,7 @@ test.describe("Consumer Request Status with Offer Context (Story 10-5)", () => {
       const cardCount = await noOffersCard.count();
 
       if (cardCount > 0) {
-        await expect(page.getByTestId("contact-support-button")).toBeVisible();
+        await expect(page.getByTestId("support-contact")).toBeVisible();
       } else {
         test.skip();
       }

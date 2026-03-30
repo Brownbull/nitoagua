@@ -78,11 +78,11 @@ const G5_CONSUMER_STATUS = [
   'request-timeout.spec.ts',
   'request-timeout-workflow.spec.ts',
   'cron-expire-offers.spec.ts',
-  'epic12-integration.spec.ts',
 ];
 
 const G6_PROVIDER_AUTH = [
   'supplier-dashboard.spec.ts',
+  'epic12-integration.spec.ts',
   'supplier-profile.spec.ts',
   'supplier-request-details.spec.ts',
   'provider-registration.spec.ts',

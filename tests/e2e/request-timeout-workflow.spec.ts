@@ -56,10 +56,10 @@ test.describe("C5: Request Timeout Status Display @seeded", () => {
     await assertNoErrorState(page);
 
     await log({ level: "step", message: "Verify Spanish empathetic message" });
-    // Match the message from status-card.tsx for no_offers status
+    // Match the message from negative-status-card.tsx for no_offers variant
     await expect(
-      page.getByText(/Lo sentimos.*no hay aguateros disponibles|No recibimos ofertas/i)
-    ).toBeVisible();
+      page.getByTestId("negative-status-message")
+    ).toContainText(/No hay aguateros disponibles/i);
     await log({ level: "success", message: "C5.2 verified - Spanish message displayed" });
   });
 
@@ -81,10 +81,10 @@ test.describe("C5: Request Timeout Status Display @seeded", () => {
     await expect(step1).toBeVisible();
     await expect(step1).toHaveAttribute("data-status", "completed");
 
-    await log({ level: "step", message: "Verify remaining steps are pending for no_offers" });
-    // For no_offers status, steps 2-4 should be pending (see timeline-tracker.tsx)
+    await log({ level: "step", message: "Verify step 2 shows failed for no_offers" });
+    // For no_offers status, timeline has only 2 steps: step 1 completed, step 2 "failed"
     const step2 = page.getByTestId("timeline-step-2");
-    await expect(step2).toHaveAttribute("data-status", "pending");
+    await expect(step2).toHaveAttribute("data-status", "failed");
 
     await log({ level: "success", message: "C5.3 verified - Timeline shows correct state" });
   });
@@ -139,9 +139,9 @@ test.describe("C6: Timeout Notification @seeded", () => {
     const retryButton = page.getByRole("link", { name: /Nueva Solicitud|Intentar de nuevo/i });
     await expect(retryButton).toBeVisible();
 
-    // Verify support contact exists
-    const supportLink = page.getByRole("link", { name: /Contactar Soporte/i });
-    await expect(supportLink).toBeVisible();
+    // Verify support contact section exists
+    const supportSection = page.getByTestId("support-contact");
+    await expect(supportSection).toBeVisible();
 
     await log({ level: "success", message: "C6.2 verified - Helpful next steps shown" });
   });

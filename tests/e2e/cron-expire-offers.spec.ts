@@ -57,6 +57,7 @@ test.describe("Cron Expire Offers - Authentication", () => {
   test("AC6.7.4: response includes expired count and duration", async ({
     request,
   }) => {
+    test.skip(skipIfNoCronSecret, "CRON_SECRET env var required");
     const response = await request.get("/api/cron/expire-offers", {
       headers: {
         Authorization: `Bearer ${CRON_SECRET}`,
@@ -76,6 +77,7 @@ test.describe("Cron Expire Offers - Authentication", () => {
   test("AC6.7.1: cron job is idempotent - safe to run multiple times", async ({
     request,
   }) => {
+    test.skip(skipIfNoCronSecret, "CRON_SECRET env var required");
     // Run cron twice
     const response1 = await request.get("/api/cron/expire-offers", {
       headers: {

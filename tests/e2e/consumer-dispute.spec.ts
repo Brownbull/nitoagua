@@ -28,8 +28,8 @@ test.describe("12.7-5 Consumer Dispute Option", () => {
   test.describe("Dispute Button Visibility - AC12.7.5.1", () => {
     test("dispute section appears on delivered requests", async ({ page }) => {
       // Navigate to consumer login (dev login)
-      await page.goto("/auth/login");
-      await page.fill("#phone", "+56912345678");
+      await page.goto("/login");
+      await page.getByRole("button", { name: "Consumer", exact: true }).first().click();
       await page.getByTestId("dev-login-button").click();
       await page.waitForURL("**/");
       await assertNoErrorState(page);
@@ -60,8 +60,8 @@ test.describe("12.7-5 Consumer Dispute Option", () => {
 
     test("dispute button is not visible on pending requests", async ({ page }) => {
       // Login as consumer
-      await page.goto("/auth/login");
-      await page.fill("#phone", "+56912345678");
+      await page.goto("/login");
+      await page.getByRole("button", { name: "Consumer", exact: true }).first().click();
       await page.getByTestId("dev-login-button").click();
       await page.waitForURL("**/");
       await assertNoErrorState(page);
@@ -82,8 +82,8 @@ test.describe("12.7-5 Consumer Dispute Option", () => {
       // Navigate to a request page with a delivered status
 
       // Login as consumer
-      await page.goto("/auth/login");
-      await page.fill("#phone", "+56912345678");
+      await page.goto("/login");
+      await page.getByRole("button", { name: "Consumer", exact: true }).first().click();
       await page.getByTestId("dev-login-button").click();
       await page.waitForURL("**/");
       await assertNoErrorState(page);
@@ -139,8 +139,8 @@ test.describe("12.7-5 Consumer Dispute Option", () => {
   test.describe("Dispute Submission Flow - AC12.7.5.3", () => {
     test("dispute dialog has confirmation step", async ({ page }) => {
       // Login as consumer
-      await page.goto("/auth/login");
-      await page.fill("#phone", "+56912345678");
+      await page.goto("/login");
+      await page.getByRole("button", { name: "Consumer", exact: true }).first().click();
       await page.getByTestId("dev-login-button").click();
       await page.waitForURL("**/");
       await assertNoErrorState(page);
@@ -202,8 +202,8 @@ test.describe("12.7-5 Consumer Dispute Option", () => {
 
     test("can go back from confirmation to edit", async ({ page }) => {
       // Login as consumer
-      await page.goto("/auth/login");
-      await page.fill("#phone", "+56912345678");
+      await page.goto("/login");
+      await page.getByRole("button", { name: "Consumer", exact: true }).first().click();
       await page.getByTestId("dev-login-button").click();
       await page.waitForURL("**/");
       await assertNoErrorState(page);
@@ -254,8 +254,8 @@ test.describe("12.7-5 Consumer Dispute Option", () => {
   test.describe("Dispute Status Display - AC12.7.5.4", () => {
     test("dispute dialog can be cancelled", async ({ page }) => {
       // Login as consumer
-      await page.goto("/auth/login");
-      await page.fill("#phone", "+56912345678");
+      await page.goto("/login");
+      await page.getByRole("button", { name: "Consumer", exact: true }).first().click();
       await page.getByTestId("dev-login-button").click();
       await page.waitForURL("**/");
       await assertNoErrorState(page);
@@ -307,8 +307,8 @@ test.describe("12.7-5 Consumer Dispute - UI Elements", () => {
 
   test("dispute dialog shows all required elements", async ({ page }) => {
     // Login as consumer
-    await page.goto("/auth/login");
-    await page.fill("#phone", "+56912345678");
+    await page.goto("/login");
+    await page.getByRole("button", { name: "Consumer", exact: true }).first().click();
     await page.getByTestId("dev-login-button").click();
     await page.waitForURL("**/");
     await assertNoErrorState(page);

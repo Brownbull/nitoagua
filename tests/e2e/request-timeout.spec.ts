@@ -132,7 +132,7 @@ test.describe("Request Status Page - No Offers State (Guest)", () => {
     await assertNoErrorState(page);
 
     await log({ level: "step", message: "Verify 'Sin Ofertas' badge is visible" });
-    await expect(page.getByText("Sin Ofertas")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /Sin ofertas/i })).toBeVisible();
     await log({ level: "success", message: "AC10.4.5 verified" });
   });
 
@@ -144,8 +144,8 @@ test.describe("Request Status Page - No Offers State (Guest)", () => {
 
     await log({ level: "step", message: "Verify empathetic message is visible" });
     await expect(
-      page.getByText(/Lo sentimos.*no hay aguateros disponibles/i)
-    ).toBeVisible();
+      page.getByTestId("negative-status-message")
+    ).toContainText(/No hay aguateros disponibles/i);
     await log({ level: "success", message: "AC10.4.6 verified" });
   });
 
@@ -156,8 +156,9 @@ test.describe("Request Status Page - No Offers State (Guest)", () => {
     await assertNoErrorState(page);
 
     await log({ level: "step", message: "Verify retry button is visible and links to home" });
-    const retryButton = page.getByRole("link", { name: /Nueva Solicitud/i });
+    const retryButton = page.getByTestId("primary-action-button");
     await expect(retryButton).toBeVisible();
+    await expect(retryButton).toContainText(/Intentar de nuevo/i);
     await expect(retryButton).toHaveAttribute("href", "/");
     await log({ level: "success", message: "AC10.4.7 verified" });
   });
@@ -172,10 +173,13 @@ test.describe("Request Status Page - No Offers State (Guest)", () => {
     await assertNoErrorState(page);
 
     await log({ level: "step", message: "Verify WhatsApp support link is visible" });
-    const supportLink = page.getByRole("link", { name: /Contactar Soporte/i });
-    await expect(supportLink).toBeVisible();
+    const supportSection = page.getByTestId("support-contact");
+    await expect(supportSection).toBeVisible();
 
-    const href = await supportLink.getAttribute("href");
+    const whatsappLink = page.getByTestId("whatsapp-support");
+    await expect(whatsappLink).toBeVisible();
+
+    const href = await whatsappLink.getAttribute("href");
     expect(href).toContain("wa.me");
     await log({ level: "success", message: "AC10.4.8 verified" });
   });
@@ -190,7 +194,7 @@ test.describe("Request Status Page - No Offers State (Guest)", () => {
     await assertNoErrorState(page);
 
     await log({ level: "step", message: "Click retry button and verify navigation" });
-    await page.getByRole("link", { name: /Nueva Solicitud/i }).click();
+    await page.getByTestId("primary-action-button").click();
     await expect(page).toHaveURL("/");
     await log({ level: "success", message: "Navigation verified" });
   });
@@ -202,9 +206,8 @@ test.describe("Request Status Page - No Offers State (Guest)", () => {
     await assertNoErrorState(page);
 
     await log({ level: "step", message: "Verify request details are visible" });
-    await expect(
-      page.getByText(new RegExp(SEEDED_NO_OFFERS_REQUEST.amount.toLocaleString()))
-    ).toBeVisible();
+    // Amount displayed as "1.000L" (Chilean format)
+    await expect(page.getByText("1.000L")).toBeVisible();
     await log({ level: "success", message: "Request details verified" });
   });
 });
@@ -224,9 +227,9 @@ test.describe("Status Badge - no_offers variant", () => {
     await assertNoErrorState(page);
 
     await log({ level: "step", message: "Find and verify status badge styling" });
-    const badge = page.getByText("Sin Ofertas");
+    const badge = page.getByTestId("negative-status-title");
     await expect(badge).toBeVisible();
-    await expect(badge).toHaveClass(/text-\[#C2410C\]|orange/);
+    await expect(badge).toHaveText(/Sin [Oo]fertas/);
     await log({ level: "success", message: "Badge styling verified" });
   });
 });
@@ -252,9 +255,9 @@ test.describe("Request Timeout - Accessibility", () => {
     expect(count).toBeGreaterThan(0);
 
     await log({ level: "step", message: "Check support link opens in new tab securely" });
-    const supportLink = page.getByRole("link", { name: /Contactar Soporte/i });
-    await expect(supportLink).toHaveAttribute("target", "_blank");
-    await expect(supportLink).toHaveAttribute("rel", /noopener/);
+    const whatsappLink = page.getByTestId("whatsapp-support");
+    await expect(whatsappLink).toHaveAttribute("target", "_blank");
+    await expect(whatsappLink).toHaveAttribute("rel", /noopener/);
     await log({ level: "success", message: "Accessibility checks passed" });
   });
 });

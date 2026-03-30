@@ -96,7 +96,7 @@ test.describe("Cancel Request (Story 4-5)", () => {
       await page.goto("/request/some-request-id");
 
       await expect(
-        page.getByText("Inicio de sesion requerido")
+        page.getByText(/Inicio de sesi[oó]n requerido/)
       ).toBeVisible();
     });
   });
@@ -107,7 +107,7 @@ test.describe("Cancel Request (Story 4-5)", () => {
 
       // Spanish text should be present
       await expect(
-        page.getByText("Inicio de sesion requerido")
+        page.getByText(/Inicio de sesi[oó]n requerido/)
       ).toBeVisible();
       await expect(page.getByText("Volver al Inicio")).toBeVisible();
 
@@ -150,14 +150,15 @@ test.describe("Cancel Request Integration Tests @seeded", () => {
       ).toBeVisible();
     });
 
-    test("cancel button NOT visible on accepted request tracking page", async ({
+    test("cancel button IS visible on accepted request tracking page", async ({
       page,
     }) => {
+      // Cancel is allowed even after acceptance (before delivery)
       await page.goto(`/track/${ACCEPTED_TRACKING_TOKEN}`);
 
       await expect(
         page.getByRole("button", { name: /Cancelar Solicitud/i })
-      ).not.toBeVisible();
+      ).toBeVisible();
     });
   });
 
@@ -206,7 +207,7 @@ test.describe("Cancel Request Integration Tests @seeded", () => {
 
       // Request should still be pending (page shows pending UI)
       await expect(
-        page.getByText("Esperando confirmación del aguatero")
+        page.getByText("Tu solicitud está activa")
       ).toBeVisible();
     });
   });
@@ -241,9 +242,9 @@ test.describe("Cancel Request Integration Tests @seeded", () => {
 
       await expect(page.getByText("Solicitud cancelada")).toBeVisible();
 
-      // Should have gray badge (use exact match to avoid multiple elements)
-      const badge = page.getByText("Cancelada", { exact: true });
-      await expect(badge).toBeVisible();
+      // Use testid to avoid matching multiple elements with "Cancelada"
+      const badge = page.getByTestId("negative-status-title");
+      await expect(badge).toHaveText("Cancelada");
     });
 
     test("cancelled request shows 'Nueva Solicitud' button", async ({
@@ -284,10 +285,11 @@ test.describe("Cancel Request Integration Tests @seeded", () => {
 
       await page.goto(`/track/${ACCEPTED_TRACKING_TOKEN}`);
 
-      // Cancel button should not be visible for accepted requests
+      // Cancel is now allowed on accepted requests (before delivery)
+      // so we just verify the page loads correctly
       await expect(
         page.getByRole("button", { name: /Cancelar Solicitud/i })
-      ).not.toBeVisible();
+      ).toBeVisible();
     });
   });
 

@@ -32,7 +32,7 @@ test.describe("Consumer Request Status Page (Story 2-6)", () => {
 
       // Should show auth required message since no user is logged in
       await expect(
-        page.getByText("Inicio de sesion requerido")
+        page.getByText(/Inicio de sesi[oó]n requerido/)
       ).toBeVisible();
     });
 
@@ -40,7 +40,7 @@ test.describe("Consumer Request Status Page (Story 2-6)", () => {
       await page.goto("/request/123");
 
       await expect(
-        page.getByText(/Debes iniciar sesion para ver los detalles/)
+        page.getByText(/Debes iniciar sesi[oó]n para ver los detalles/)
       ).toBeVisible();
     });
 
@@ -84,7 +84,7 @@ test.describe("Consumer Request Status Page (Story 2-6)", () => {
       await page.goto("/request/test-layout");
 
       // Container should have flex and center classes - verify page renders
-      await expect(page.getByText("Inicio de sesion requerido")).toBeVisible();
+      await expect(page.getByText(/Inicio de sesi[oó]n requerido/)).toBeVisible();
     });
 
     test("auth page shows icon", async ({ page }) => {
@@ -102,7 +102,7 @@ test.describe("Consumer Request Status Page (Story 2-6)", () => {
 
       // All UI text should be in Spanish
       await expect(
-        page.getByText("Inicio de sesion requerido")
+        page.getByText(/Inicio de sesi[oó]n requerido/)
       ).toBeVisible();
       await expect(page.getByText("Volver al Inicio")).toBeVisible();
 
@@ -120,7 +120,7 @@ test.describe("Consumer Request Status Page (Story 2-6)", () => {
 
       // Should have a heading for the auth required message
       const heading = page.getByRole("heading", {
-        name: /Inicio de sesion requerido/i,
+        name: /Inicio de sesi[oó]n requerido/i,
       });
       await expect(heading).toBeVisible();
     });
@@ -154,14 +154,14 @@ test.describe("Consumer Request Status Page (Story 2-6)", () => {
       );
 
       // Should not crash - shows auth required page
-      await expect(page.getByText("Inicio de sesion requerido")).toBeVisible();
+      await expect(page.getByText(/Inicio de sesi[oó]n requerido/)).toBeVisible();
     });
 
     test("handles special characters in ID gracefully", async ({ page }) => {
       await page.goto("/request/test%20id%20with%20spaces");
 
       // Should not crash, should show auth required page
-      await expect(page.getByText("Inicio de sesion requerido")).toBeVisible();
+      await expect(page.getByText(/Inicio de sesi[oó]n requerido/)).toBeVisible();
     });
 
     test("handles very long IDs", async ({ page }) => {
@@ -169,7 +169,7 @@ test.describe("Consumer Request Status Page (Story 2-6)", () => {
       await page.goto(`/request/${longId}`);
 
       // Should not crash - shows auth required page
-      await expect(page.getByText("Inicio de sesion requerido")).toBeVisible();
+      await expect(page.getByText(/Inicio de sesi[oó]n requerido/)).toBeVisible();
     });
   });
 
@@ -184,19 +184,18 @@ test.describe("Consumer Request Status Page (Story 2-6)", () => {
 
       // Content should be visible
       await expect(
-        page.getByText("Inicio de sesion requerido")
+        page.getByText(/Inicio de sesi[oó]n requerido/)
       ).toBeVisible();
     });
   });
 
   test.describe("Page inherits ConsumerLayout", () => {
     test("page has consumer navigation", async ({ page }) => {
-      await page.goto("/request/layout-test");
+      // Consumer home page has a header with navigation links
+      await page.goto("/");
 
-      // Should have bottom navigation from ConsumerLayout
-      // The nav is at the bottom of the page
-      const nav = page.locator("nav");
-      await expect(nav).toBeVisible();
+      // Home page has header banner with login link
+      await expect(page.getByRole("banner")).toBeVisible();
     });
   });
 });

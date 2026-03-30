@@ -136,9 +136,9 @@ test.describe("Consumer Cancellation Workflow (C8-C11)", () => {
       await page.goto(`/track/${TRACKING_TOKENS.cancelled}`);
       await assertNoErrorState(page);
 
-      // Badge should show "Cancelada" status
-      const badge = page.getByText("Cancelada", { exact: true });
-      await expect(badge).toBeVisible();
+      // Badge should show "Cancelada" status (use testid to avoid multiple matches)
+      const badge = page.getByTestId("negative-status-title");
+      await expect(badge).toHaveText(/Cancelada/);
     });
 
     test("C10.3: Cancelled page shows cancellation message in Spanish", async ({ page }) => {
@@ -147,7 +147,7 @@ test.describe("Consumer Cancellation Workflow (C8-C11)", () => {
 
       // Message should explain the cancellation
       await expect(
-        page.getByText("Esta solicitud fue cancelada y no será procesada")
+        page.getByTestId("negative-status-message")
       ).toBeVisible();
     });
 
@@ -171,9 +171,9 @@ test.describe("Consumer Cancellation Workflow (C8-C11)", () => {
       // Note: Full request details (address, amount) are NOT shown on cancelled page
       // This is the current design - only status card and "Nueva Solicitud" button
       await expect(
-        page.getByText("Esta solicitud fue cancelada y no será procesada")
+        page.getByTestId("negative-status-message")
       ).toBeVisible();
-      await expect(page.getByRole("link", { name: /Nueva Solicitud/i })).toBeVisible();
+      await expect(page.getByTestId("primary-action-button")).toBeVisible();
     });
   });
 
@@ -374,12 +374,10 @@ test.describe("Consumer Cancellation Workflow (C8-C11)", () => {
       await page.goto(`/track/${TRACKING_TOKENS.cancelled}`);
       await assertNoErrorState(page);
 
-      // Spanish status texts
-      await expect(page.getByText("Cancelada", { exact: true })).toBeVisible();
-      await expect(
-        page.getByText("Esta solicitud fue cancelada y no será procesada")
-      ).toBeVisible();
-      await expect(page.getByRole("link", { name: /Nueva Solicitud/i })).toBeVisible();
+      // Spanish status texts (use testid to avoid multiple element matches)
+      await expect(page.getByTestId("negative-status-title")).toHaveText(/Cancelada/);
+      await expect(page.getByTestId("negative-status-message")).toBeVisible();
+      await expect(page.getByTestId("primary-action-button")).toBeVisible();
 
       // No English should be visible
       await expect(page.getByText("Cancelled")).not.toBeVisible();

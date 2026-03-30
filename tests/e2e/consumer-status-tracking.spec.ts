@@ -94,11 +94,11 @@ test.describe("Story 11-5: Consumer Status Tracking (C3, C4)", () => {
       await page.goto(`/track/${TRACKING_TOKENS.cancelled}`);
       await assertNoErrorState(page);
 
-      // Should show cancelled status badge
-      await expect(page.getByText("Cancelada", { exact: true })).toBeVisible();
+      // Should show cancelled status badge (use testid to avoid multiple matches)
+      await expect(page.getByTestId("negative-status-title")).toHaveText(/Cancelada/);
 
       // Should show cancellation message
-      await expect(page.getByText(/Esta solicitud fue cancelada/)).toBeVisible();
+      await expect(page.getByTestId("negative-status-message")).toBeVisible();
 
       // Should show new request option
       await expect(page.getByText(/Nueva Solicitud/)).toBeVisible();
@@ -116,13 +116,13 @@ test.describe("Story 11-5: Consumer Status Tracking (C3, C4)", () => {
       await expect(noOffersCard.getByRole("heading", { name: "Sin Ofertas" })).toBeVisible();
 
       // Should show explanation message
-      await expect(page.getByTestId("no-offers-message")).toBeVisible();
+      await expect(page.getByTestId("negative-status-message")).toBeVisible();
 
       // Should show new request button
-      await expect(page.getByTestId("new-request-button")).toBeVisible();
+      await expect(page.getByTestId("primary-action-button")).toBeVisible();
 
-      // Should show contact support button
-      await expect(page.getByTestId("contact-support-button")).toBeVisible();
+      // Should show contact support section
+      await expect(page.getByTestId("support-contact")).toBeVisible();
     });
   });
 
