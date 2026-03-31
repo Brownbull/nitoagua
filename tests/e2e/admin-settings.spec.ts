@@ -55,9 +55,9 @@ test.describe("Admin Settings Dev Login", () => {
     await page.waitForURL("**/admin/settings", { timeout: 10000 });
     expect(page.url()).toContain("/admin/settings");
 
-    // Verify page title (use heading role to avoid multiple matches)
+    // Verify page title (use exact match to avoid matching subheadings)
     await expect(
-      page.getByRole("heading", { name: "Configuración" })
+      page.getByRole("heading", { name: "Configuración", exact: true })
     ).toBeVisible();
   });
 
@@ -84,9 +84,9 @@ test.describe("Admin Settings Dev Login", () => {
     await page.waitForURL("**/admin/settings", { timeout: 10000 });
     expect(page.url()).toContain("/admin/settings");
 
-    // Verify page title
+    // Verify page title (use exact match to avoid matching subheadings)
     await expect(
-      page.getByRole("heading", { name: "Configuración" })
+      page.getByRole("heading", { name: "Configuración", exact: true })
     ).toBeVisible();
   });
 

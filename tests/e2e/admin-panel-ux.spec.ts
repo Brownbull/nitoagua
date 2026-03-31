@@ -62,49 +62,48 @@ test.describe("Admin Orders Page - Story 12.7-9", () => {
   });
 
   test.describe("AC12.7.9.2: Order Sorting", () => {
-    test("Sort dropdown exists and has options", async ({ page }) => {
+    test("Mobile: Status filter dropdown exists and has options", async ({ page }) => {
       await page.goto("/admin/orders");
       await assertNoErrorState(page);
 
-      // Check sort dropdown exists
-      const sortSelect = page.getByTestId("sort-field");
-      await expect(sortSelect).toBeVisible();
+      // On mobile, status filter dropdown is visible (not full sort dropdown)
+      const statusFilter = page.getByTestId("mobile-filter-status");
+      await expect(statusFilter).toBeVisible();
 
       // Check it has the expected options
-      const options = await sortSelect.locator("option").allTextContents();
-      expect(options).toContain("Fecha");
-      expect(options).toContain("Estado");
-      expect(options).toContain("Cantidad");
-      expect(options).toContain("Comuna");
+      const options = await statusFilter.locator("option").allTextContents();
+      expect(options).toContain("Todos");
+      expect(options).toContain("Pendientes");
+      expect(options).toContain("Entregados");
     });
 
-    test("Sort direction toggle works", async ({ page }) => {
+    test("Mobile: Date sort toggle works", async ({ page }) => {
       await page.goto("/admin/orders");
       await assertNoErrorState(page);
 
-      // Check direction button exists
-      const directionButton = page.getByTestId("sort-direction");
-      await expect(directionButton).toBeVisible();
+      // Check mobile date sort button exists
+      const dateSortButton = page.getByTestId("mobile-date-sort");
+      await expect(dateSortButton).toBeVisible();
 
-      // Click to toggle direction
-      await directionButton.click();
+      // Click to toggle sort direction
+      await dateSortButton.click();
       await page.waitForLoadState("networkidle");
 
       // Page should still be functional
       await expect(page.getByTestId("orders-title")).toBeVisible();
     });
 
-    test("Changing sort field updates order list", async ({ page }) => {
+    test("Mobile: Changing status filter updates order list", async ({ page }) => {
       await page.goto("/admin/orders");
       await assertNoErrorState(page);
 
-      const sortSelect = page.getByTestId("sort-field");
+      const statusFilter = page.getByTestId("mobile-filter-status");
 
-      // Change to sort by Estado
-      await sortSelect.selectOption("status");
+      // Change to filter by delivered
+      await statusFilter.selectOption("delivered");
       await page.waitForLoadState("networkidle");
 
-      // Page should still show orders
+      // Page should still show orders title
       await expect(page.getByTestId("orders-title")).toBeVisible();
     });
   });

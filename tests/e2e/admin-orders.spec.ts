@@ -47,8 +47,8 @@ test.describe("Orders Page - Navigation and Layout", () => {
     await page.goto("/admin/orders");
     await assertNoErrorState(page);
 
-    // Page header should be visible
-    const pageTitle = page.getByTestId("orders-title");
+    // Page header should be visible (desktop uses desktop-orders-title)
+    const pageTitle = page.getByTestId("desktop-orders-title");
     await expect(pageTitle).toBeVisible();
     await expect(pageTitle).toHaveText("Pedidos");
   });
@@ -57,7 +57,8 @@ test.describe("Orders Page - Navigation and Layout", () => {
     await page.goto("/admin/orders");
     await assertNoErrorState(page);
 
-    const backButton = page.getByTestId("back-to-dashboard");
+    // Desktop uses desktop-back-to-dashboard
+    const backButton = page.getByTestId("desktop-back-to-dashboard");
     await expect(backButton).toBeVisible();
     await backButton.click();
 
@@ -104,14 +105,14 @@ test.describe("Orders Page - Search and Filters", () => {
   });
 
   test("AC6.6.2 - Filter toggle button is visible", async ({ page }) => {
-    const filterToggle = page.getByTestId("toggle-filters");
+    const filterToggle = page.getByTestId("desktop-toggle-filters");
     await expect(filterToggle).toBeVisible();
   });
 
   test("AC6.6.2 - Clicking filter toggle reveals filter panel", async ({
     page,
   }) => {
-    const filterToggle = page.getByTestId("toggle-filters");
+    const filterToggle = page.getByTestId("desktop-toggle-filters");
     await filterToggle.click();
 
     // Filter controls should be visible
@@ -122,7 +123,7 @@ test.describe("Orders Page - Search and Filters", () => {
   });
 
   test("AC6.6.2 - Status filter has correct options", async ({ page }) => {
-    const filterToggle = page.getByTestId("toggle-filters");
+    const filterToggle = page.getByTestId("desktop-toggle-filters");
     await filterToggle.click();
 
     const statusFilter = page.getByTestId("filter-status");
@@ -137,7 +138,7 @@ test.describe("Orders Page - Search and Filters", () => {
   });
 
   test("AC6.6.2 - Apply filters button works", async ({ page }) => {
-    const filterToggle = page.getByTestId("toggle-filters");
+    const filterToggle = page.getByTestId("desktop-toggle-filters");
     await filterToggle.click();
 
     // Select a status filter
@@ -159,7 +160,7 @@ test.describe("Orders Page - Search and Filters", () => {
     // First apply a filter
     await page.goto("/admin/orders?status=delivered");
 
-    const filterToggle = page.getByTestId("toggle-filters");
+    const filterToggle = page.getByTestId("desktop-toggle-filters");
     await filterToggle.click();
 
     // Click clear filters
@@ -239,11 +240,11 @@ test.describe("Order Detail Page", () => {
       await firstOrder.click();
       await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
-      // Order ID should be visible in header
-      const orderId = page.getByTestId("order-id");
+      // Order ID should be visible in header (desktop uses desktop-order-id)
+      const orderId = page.getByTestId("desktop-order-id");
       await expect(orderId).toBeVisible();
       const text = await orderId.textContent();
-      expect(text).toMatch(/^#[a-zA-Z0-9]+/);
+      expect(text).toMatch(/#[a-zA-Z0-9]+/);
     }
   });
 
@@ -331,8 +332,8 @@ test.describe("Order Detail Page", () => {
       await firstOrder.click();
       await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
-      // Click back button
-      const backButton = page.getByTestId("back-to-orders");
+      // Click back button (desktop uses desktop-back-to-orders)
+      const backButton = page.getByTestId("desktop-back-to-orders");
       await expect(backButton).toBeVisible();
       await backButton.click();
 

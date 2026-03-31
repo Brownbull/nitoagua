@@ -61,31 +61,32 @@ test.describe("Admin Pricing Dev Login", () => {
     ).toBeVisible();
   });
 
-  test("AC6.9.2 - Pricing form displays 4 water tier price inputs", async ({
+  test("AC6.9.2 - Pricing form displays 4 water tier cards", async ({
     page,
   }) => {
     await page.goto("/admin/pricing");
     await page.waitForLoadState("networkidle");
 
-    // Verify all four price inputs are present
-    const price100l = page.getByTestId("input-price-100l");
-    const price1000l = page.getByTestId("input-price-1000l");
-    const price5000l = page.getByTestId("input-price-5000l");
-    const price10000l = page.getByTestId("input-price-10000l");
+    // Verify all four tier cards are present (collapsed by default, headers visible)
+    await expect(page.getByText("100 L")).toBeVisible();
+    await expect(page.getByText("1K L")).toBeVisible();
+    await expect(page.getByText("5K L")).toBeVisible();
+    await expect(page.getByText("10K L")).toBeVisible();
 
-    await expect(price100l).toBeVisible();
-    await expect(price1000l).toBeVisible();
-    await expect(price5000l).toBeVisible();
-    await expect(price10000l).toBeVisible();
+    // Verify $ currency symbol is present (used in tier card headers)
+    await expect(page.getByText("$").first()).toBeVisible();
 
-    // Verify tier labels
-    await expect(page.getByText("100L")).toBeVisible();
-    await expect(page.getByText("1,000L")).toBeVisible();
-    await expect(page.getByText("5,000L")).toBeVisible();
-    await expect(page.getByText("10,000L")).toBeVisible();
+    // Expand first tier to verify inputs are accessible
+    await page.getByText("100 L").click();
 
-    // Verify CLP suffix is present
-    await expect(page.getByText("CLP").first()).toBeVisible();
+    // Verify min/suggested/max inputs are present when expanded
+    const minInput = page.getByTestId("input-price_100l-min");
+    const suggestedInput = page.getByTestId("input-price_100l-suggested");
+    const maxInput = page.getByTestId("input-price_100l-max");
+
+    await expect(minInput).toBeVisible();
+    await expect(suggestedInput).toBeVisible();
+    await expect(maxInput).toBeVisible();
   });
 
   test("AC6.9.3 - Urgency surcharge input displays as percentage", async ({
@@ -162,16 +163,19 @@ test.describe("Admin Pricing Dev Login", () => {
     await page.goto("/admin/pricing");
     await page.waitForLoadState("networkidle");
 
+    // Expand 100L tier to access suggested price input
+    await page.getByText("100 L").click();
+
     // Fill valid values - change to a different value to ensure isDirty is true
-    const price100l = page.getByTestId("input-price-100l");
-    const currentValue = await price100l.inputValue();
+    const suggestedInput = page.getByTestId("input-price_100l-suggested");
+    const currentValue = await suggestedInput.inputValue();
     const newValue = currentValue === "5500" ? "6000" : "5500";
 
-    await price100l.clear();
-    await price100l.fill(newValue);
+    await suggestedInput.clear();
+    await suggestedInput.fill(newValue);
 
     // Should accept the value
-    await expect(price100l).toHaveValue(newValue);
+    await expect(suggestedInput).toHaveValue(newValue);
 
     // Save button should be enabled since form is dirty
     const saveButton = page.getByTestId("save-pricing-button");
@@ -182,10 +186,13 @@ test.describe("Admin Pricing Dev Login", () => {
     await page.goto("/admin/pricing");
     await page.waitForLoadState("networkidle");
 
+    // Expand 100L tier to access min price input
+    await page.getByText("100 L").click();
+
     // Fill negative value
-    const price100l = page.getByTestId("input-price-100l");
-    await price100l.clear();
-    await price100l.fill("-5000");
+    const minInput = page.getByTestId("input-price_100l-min");
+    await minInput.clear();
+    await minInput.fill("-5000");
 
     // Click save
     const saveButton = page.getByTestId("save-pricing-button");
@@ -221,10 +228,11 @@ test.describe("Admin Pricing Dev Login", () => {
     await page.goto("/admin/pricing");
     await page.waitForLoadState("networkidle");
 
-    // Change a price value
-    const price100l = page.getByTestId("input-price-100l");
-    await price100l.clear();
-    await price100l.fill("6000");
+    // Change commission value (always visible, no expand needed)
+    const commissionInput = page.getByTestId("input-commission");
+    const currentValue = await commissionInput.inputValue();
+    await commissionInput.clear();
+    await commissionInput.fill(String(Number(currentValue) + 1));
 
     // Click save button
     const saveButton = page.getByTestId("save-pricing-button");
@@ -255,14 +263,14 @@ test.describe("Admin Pricing Dev Login", () => {
     await page.goto("/admin/pricing");
     await page.waitForLoadState("networkidle");
 
-    // Get original value
-    const price100l = page.getByTestId("input-price-100l");
-    const originalValue = await price100l.inputValue();
-    const newValue = originalValue === "5000" ? "5500" : "5000";
+    // Change commission value (always visible, no expand needed)
+    const commissionInput = page.getByTestId("input-commission");
+    const originalValue = await commissionInput.inputValue();
+    const newValue = originalValue === "15" ? "16" : "15";
 
     // Change value
-    await price100l.clear();
-    await price100l.fill(newValue);
+    await commissionInput.clear();
+    await commissionInput.fill(newValue);
 
     // Save changes
     const saveButton = page.getByTestId("save-pricing-button");
@@ -283,7 +291,7 @@ test.describe("Admin Pricing Dev Login", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify value persisted
-    const updatedInput = page.getByTestId("input-price-100l");
+    const updatedInput = page.getByTestId("input-commission");
     await expect(updatedInput).toHaveValue(newValue);
 
     // Restore original value
@@ -302,14 +310,14 @@ test.describe("Admin Pricing Dev Login", () => {
     await page.goto("/admin/pricing");
     await page.waitForLoadState("networkidle");
 
-    // Get original value
-    const price100l = page.getByTestId("input-price-100l");
-    const originalValue = await price100l.inputValue();
-    const newValue = originalValue === "5000" ? "5500" : "5000";
+    // Change commission value (always visible)
+    const commissionInput = page.getByTestId("input-commission");
+    const originalValue = await commissionInput.inputValue();
+    const newValue = originalValue === "15" ? "16" : "15";
 
     // Change value
-    await price100l.clear();
-    await price100l.fill(newValue);
+    await commissionInput.clear();
+    await commissionInput.fill(newValue);
 
     // Save changes
     const saveButton = page.getByTestId("save-pricing-button");
@@ -328,7 +336,7 @@ test.describe("Admin Pricing Dev Login", () => {
     // Restore original value for cleanup
     await page.reload();
     await page.waitForLoadState("networkidle");
-    const updatedInput = page.getByTestId("input-price-100l");
+    const updatedInput = page.getByTestId("input-commission");
     await updatedInput.clear();
     await updatedInput.fill(originalValue);
     await saveButton.click();
@@ -399,10 +407,13 @@ test.describe("Admin Pricing - Form Accessibility", () => {
   });
 
   test("All price inputs accept numeric values only", async ({ page }) => {
-    const price100l = page.getByTestId("input-price-100l");
+    // Expand 100L tier to check input type
+    await page.getByText("100 L").click();
+
+    const minInput = page.getByTestId("input-price_100l-min");
 
     // Verify input type is number
-    await expect(price100l).toHaveAttribute("type", "number");
+    await expect(minInput).toHaveAttribute("type", "number");
   });
 
   test("Commission input accepts numeric values only", async ({ page }) => {

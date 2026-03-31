@@ -63,7 +63,7 @@ test.describe("A5: Admin Orders Dashboard @seeded", () => {
     await page.waitForURL("**/admin/orders?status=pending", { timeout: 30000 });
 
     // Page should still load successfully
-    await expect(page.getByTestId("orders-title")).toBeVisible();
+    await expect(page.getByTestId("desktop-orders-title")).toBeVisible();
   });
 
   test("A5.3 - Filter by delivered shows completed orders", async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe("A5: Admin Orders Dashboard @seeded", () => {
     await page.waitForURL("**/admin/orders?status=delivered", { timeout: 30000 });
 
     // Page should load
-    await expect(page.getByTestId("orders-title")).toBeVisible();
+    await expect(page.getByTestId("desktop-orders-title")).toBeVisible();
   });
 
   test("A5.4 - Search filters orders by name", async ({ page }) => {
@@ -91,7 +91,7 @@ test.describe("A5: Admin Orders Dashboard @seeded", () => {
     await searchInput.fill("Cliente Pendiente");
 
     // Wait for search debounce and filtering to complete
-    await expect(page.getByTestId("orders-title")).toBeVisible();
+    await expect(page.getByTestId("desktop-orders-title")).toBeVisible();
 
     // Should show matching orders (or empty state)
     const matchingCards = page.locator("[data-testid^='order-card-']");
@@ -134,8 +134,8 @@ test.describe("A6: Order Detail View @seeded", () => {
       await firstCard.click();
       await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
-      // Order ID should be visible
-      const orderId = page.getByTestId("order-id");
+      // Order ID should be visible (desktop uses desktop-order-id)
+      const orderId = page.getByTestId("desktop-order-id");
       await expect(orderId).toBeVisible();
     }
   });
@@ -184,7 +184,7 @@ test.describe("A6: Order Detail View @seeded", () => {
       await page.waitForURL("**/admin/orders/**", { timeout: 30000 });
 
       // Click back button
-      const backButton = page.getByTestId("back-to-orders");
+      const backButton = page.getByTestId("desktop-back-to-orders");
       await backButton.click();
 
       await page.waitForURL("**/admin/orders", { timeout: 30000 });
