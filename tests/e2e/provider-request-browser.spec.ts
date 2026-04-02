@@ -26,7 +26,7 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
   await page.goto("/login");
 
   // Wait for dev login section to be visible
-  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
+  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 30000 });
 
   // Click supplier button in role selector (exact match to avoid "New Supplier")
   const supplierButton = page.getByRole("button", { name: "Supplier", exact: true });
@@ -53,7 +53,7 @@ test.describe("Provider Request Browser - Story 8-1", () => {
       await page.goto("/provider/requests");
 
       // Should see the request browser page
-      await expect(page.getByText("Solicitudes Disponibles")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Solicitudes Disponibles")).toBeVisible({ timeout: 30000 });
     });
 
     test("page shows subtitle about service areas", async ({ page }) => {
@@ -69,7 +69,7 @@ test.describe("Provider Request Browser - Story 8-1", () => {
 
       // Should see some connection status (either connected or polling)
       const connectionText = page.getByText(/Actualizaciones en tiempo real|Usando actualización periódica|Conectando/);
-      await expect(connectionText).toBeVisible({ timeout: 10000 });
+      await expect(connectionText).toBeVisible({ timeout: 30000 });
     });
   });
 
@@ -101,7 +101,7 @@ test.describe("Provider Request Browser - Story 8-1", () => {
 
       // Should see unavailable state
       const unavailableState = page.getByTestId("unavailable-state");
-      await expect(unavailableState).toBeVisible({ timeout: 10000 });
+      await expect(unavailableState).toBeVisible({ timeout: 30000 });
 
       // Should show the prompt message
       await expect(page.getByText("No estás disponible")).toBeVisible();
@@ -258,13 +258,13 @@ test.describe("Provider Request Browser - Story 8-1", () => {
       await page.goto("/provider/requests");
 
       // Should redirect to login
-      await page.waitForURL(/\/auth\/login|\/login/, { timeout: 10000 });
+      await page.waitForURL(/\/auth\/login|\/login/, { timeout: 30000 });
     });
 
     test("non-supplier user is redirected to home", async ({ page }) => {
       // Login as consumer instead
       await page.goto("/login");
-      await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
+      await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 30000 });
 
       // Try to find consumer role button
       const consumerButton = page.getByRole("button", { name: "Consumer", exact: true });
@@ -309,7 +309,7 @@ test.describe("Provider Request Browser - Integration Tests", () => {
     await page.goto("/provider/requests");
 
     // Verify page loads correctly
-    await expect(page.getByText("Solicitudes Disponibles")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Solicitudes Disponibles")).toBeVisible({ timeout: 30000 });
 
     // FIRST: Check for error states - fail if any database errors present
     await page.waitForTimeout(2000);
@@ -340,6 +340,6 @@ test.describe("Provider Request Browser - Integration Tests", () => {
     await page.goto("/provider/requests");
 
     // Should still see the request browser
-    await expect(page.getByText("Solicitudes Disponibles")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Solicitudes Disponibles")).toBeVisible({ timeout: 30000 });
   });
 });

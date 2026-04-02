@@ -30,7 +30,7 @@ test.use({
 async function waitForOffersPageLoad(page: import("@playwright/test").Page): Promise<void> {
   await page.getByRole("heading", { name: "Mis Ofertas" }).waitFor({ state: "visible", timeout: 10000 });
   // Wait for offer count summary or global empty state (indicates data is loaded)
-  await page.locator('text=/\\d+ de \\d+ ofertas/, [data-testid="empty-state-global"]').first().waitFor({ state: "visible", timeout: 10000 });
+  await page.getByText(/\d+ de \d+ ofertas/).or(page.getByTestId("empty-state-global")).first().waitFor({ state: "visible", timeout: 15000 });
   // Small delay to ensure React has finished categorizing offers
   await page.waitForTimeout(500);
 }

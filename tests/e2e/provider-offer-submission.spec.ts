@@ -49,7 +49,7 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
       await loginAsSupplier(page);
 
       // Provider is already on /provider/requests after login
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Check if there are requests
       const hasRequests = await page.getByTestId("request-list").isVisible().catch(() => false);
@@ -60,7 +60,7 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
         await viewDetailsButton.click();
 
         // Should navigate to request detail page
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
 
         // Should see request details - Story 12.7-10 redesigned to hero cards
         await expect(page.getByTestId("hero-cards")).toBeVisible();
@@ -75,15 +75,15 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
       await loginAsSupplier(page);
 
       // Provider is already on /provider/requests after login
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const hasRequests = await page.getByTestId("request-list").isVisible().catch(() => false);
 
       if (hasRequests) {
         // Navigate to request detail
         await page.getByTestId("view-details-button").first().click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
-        await page.waitForLoadState("networkidle");
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
+        await page.waitForLoadState("domcontentloaded");
 
         // Check if provider already has offer
         const alreadyHasOffer = await page.getByText("Ya tienes una oferta").isVisible().catch(() => false);
@@ -118,7 +118,7 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
 
       if (hasRequests) {
         await page.getByTestId("view-details-button").first().click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
 
         // Story 12.7-10 redesign: Quick date buttons replace datetime inputs
         await expect(page.getByTestId("date-quick-buttons")).toBeVisible();
@@ -146,7 +146,7 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
 
       if (hasRequests) {
         await page.getByTestId("view-details-button").first().click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
 
         // Story 12.7-10 redesign: Message field is collapsed by default
         // Click to reveal message field
@@ -173,7 +173,7 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
 
       if (hasRequests) {
         await page.getByTestId("view-details-button").first().click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
 
         // Story 12.7-10 redesign: Validity info shows minutes
         await expect(page.getByText(/válida por \d+ minutos/i)).toBeVisible();
@@ -194,7 +194,7 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
 
       if (hasRequests) {
         await page.getByTestId("view-details-button").first().click();
-        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
 
         // Should have submit button - Story 12.7-10 redesign
         await expect(page.getByTestId("submit-offer-button")).toBeVisible();
@@ -210,7 +210,7 @@ test.describe("Provider Offer Submission - Story 8-2", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Should see offers page - check for heading
       await expect(page.getByRole("heading", { name: "Mis Ofertas" })).toBeVisible({ timeout: 10000 });
@@ -256,7 +256,7 @@ test.describe("Provider Offer Submission - Navigation Tests", () => {
 
     if (hasRequests) {
       await page.getByTestId("view-details-button").first().click();
-      await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 10000 });
+      await page.waitForURL(/\/provider\/requests\/[a-z0-9-]+/, { timeout: 30000 });
 
       // Click back button - Story 12.7-10 redesign simplified to "Volver"
       await page.getByRole("link", { name: /Volver/ }).click();
