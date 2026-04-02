@@ -196,8 +196,8 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
       await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
-      // Consumer section should be visible
-      await expect(page.getByText("Consumidor")).toBeVisible();
+      // Consumer section header should be visible
+      await expect(page.locator("h2").filter({ hasText: "Consumidor" })).toBeVisible();
 
       // WhatsApp link should be available
       const whatsappLink = page.getByTestId("consumer-whatsapp");
@@ -216,8 +216,8 @@ test.describe("12.7-6 Admin Disputes - Detail View", () => {
       await page.waitForURL("**/admin/disputes/**", { timeout: 30000 });
       await assertNoErrorState(page);
 
-      // Provider section should be visible
-      await expect(page.getByText("Proveedor")).toBeVisible();
+      // Provider section header should be visible
+      await expect(page.locator("h2").filter({ hasText: "Proveedor" })).toBeVisible();
 
       // WhatsApp link should be available
       const whatsappLink = page.getByTestId("provider-whatsapp");
@@ -479,9 +479,9 @@ test.describe("12.7-6 Admin Disputes - Mobile Navigation", () => {
       await assertNoErrorState(page);
 
       // Key elements should be visible on mobile
-      await expect(page.getByText("Detalles de la Disputa")).toBeVisible();
-      await expect(page.getByText("Consumidor")).toBeVisible();
-      await expect(page.getByText("Proveedor")).toBeVisible();
+      await expect(page.locator("h2").filter({ hasText: "Detalles de la Disputa" })).toBeVisible();
+      await expect(page.locator("h2").filter({ hasText: "Consumidor" })).toBeVisible();
+      await expect(page.locator("h2").filter({ hasText: "Proveedor" })).toBeVisible();
     }
   });
 });

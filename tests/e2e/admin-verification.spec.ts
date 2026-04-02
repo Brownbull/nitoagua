@@ -59,8 +59,8 @@ test.describe("Admin Provider Verification Queue", () => {
   }) => {
     await page.goto("/admin/verification");
 
-    // Check for count in subtitle (either "X solicitudes en cola" or "No hay solicitudes")
-    const subtitle = page.locator("header p.text-gray-600");
+    // Check for count in subtitle (either "X solicitudes pendientes" or "No hay solicitudes pendientes")
+    const subtitle = page.locator("header p.text-gray-500");
     await expect(subtitle).toBeVisible();
 
     const text = await subtitle.textContent();
@@ -103,7 +103,7 @@ test.describe("Admin Provider Verification Queue", () => {
     const moreInfoText = await moreInfoTab.textContent();
 
     expect(pendingText).toMatch(/Pendientes \(\d+\)/);
-    expect(moreInfoText).toMatch(/Mas Info \(\d+\)/);
+    expect(moreInfoText).toMatch(/Revisando \(\d+\)/);
   });
 
   test("back button navigates to dashboard", async ({ page }) => {
@@ -462,7 +462,7 @@ test.describe("Admin Navigation - Verification Link", () => {
     await page.waitForURL("**/admin/verification", { timeout: 30000 });
   });
 
-  test("mobile bottom nav has verification link", async ({ page }) => {
+  test("mobile bottom nav has verification link via operations menu", async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/admin/dashboard");
@@ -471,8 +471,13 @@ test.describe("Admin Navigation - Verification Link", () => {
     const bottomNav = page.getByTestId("admin-bottom-nav");
     await expect(bottomNav).toBeVisible();
 
-    // Verification link should be present
-    const verifyLink = page.getByTestId("bottom-nav-verificar");
+    // Open operations menu to access verification
+    const operationsBtn = page.getByTestId("bottom-nav-operations");
+    await expect(operationsBtn).toBeVisible();
+    await operationsBtn.click();
+
+    // Verification link should be present in operations menu
+    const verifyLink = page.getByTestId("operations-verificar");
     await expect(verifyLink).toBeVisible();
 
     // Click and verify navigation

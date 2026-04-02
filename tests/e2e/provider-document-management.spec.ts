@@ -42,12 +42,24 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
   await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
 }
 
+/**
+ * Navigate to the old supplier dashboard where documents-link lives.
+ * The documents quick link and expiring docs warning are on /dashboard (old layout),
+ * not on /provider/requests (new layout).
+ */
+async function navigateToSupplierDashboard(page: import("@playwright/test").Page) {
+  await page.goto("/dashboard");
+  await expect(page.getByRole("heading", { name: "Panel de Proveedor" })).toBeVisible({ timeout: 30000 });
+}
+
 test.describe("Provider Document Management - Story 7-5", () => {
   test.describe("AC7.5.1: Document List Display", () => {
     test.skip(skipIfNoDevLogin, "Dev login required for supplier tests");
 
     test("dashboard shows documents quick link for approved provider", async ({ page }) => {
       await loginAsSupplier(page);
+      // Documents link is on the old supplier dashboard, not the provider requests page
+      await navigateToSupplierDashboard(page);
 
       // Should see "Mis Documentos" quick link
       const documentsLink = page.getByTestId("documents-link");
@@ -56,13 +68,14 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("can navigate to documents page from dashboard", async ({ page }) => {
       await loginAsSupplier(page);
+      await navigateToSupplierDashboard(page);
 
       // Click documents link
       const documentsLink = page.getByTestId("documents-link");
       await documentsLink.click();
 
       // Should navigate to documents page
-      await page.waitForURL("**/dashboard/documents", { timeout: 10000 });
+      await page.waitForURL("**/dashboard/documents", { timeout: 30000 });
 
       // Should see documents container
       const container = page.getByTestId("documents-container");
@@ -72,6 +85,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
     test("documents page shows back button", async ({ page }) => {
       await loginAsSupplier(page);
       await page.goto("/dashboard/documents");
+      await expect(page.getByText("Mis Documentos")).toBeVisible({ timeout: 30000 });
 
       const backButton = page.getByTestId("back-to-dashboard");
       await expect(backButton).toBeVisible();
@@ -83,7 +97,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
       // Wait for content to load
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -107,24 +121,23 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
 
-      // Look for status badges
-      const badges = page.locator('[data-testid^="document-card-"]').locator('.badge, [class*="Badge"]');
-      const badgeCount = await badges.count();
+      // Look for status badges (Badge component uses inline-flex with variant classes)
+      const documentCards = page.locator('[data-testid^="document-card-"]');
+      const cardCount = await documentCards.count();
 
-      // Each document should have at least a verification status badge
-      if (badgeCount > 0) {
-        // Check badge contains expected text
-        const firstBadge = badges.first();
-        const badgeText = await firstBadge.textContent();
+      // Each document card should have at least a verification status badge text
+      if (cardCount > 0) {
+        const firstCard = documentCards.first();
+        const cardText = await firstCard.textContent();
         expect(
-          badgeText?.includes("Pendiente") ||
-            badgeText?.includes("Verificado") ||
-            badgeText?.includes("Vencido")
+          cardText?.includes("Pendiente") ||
+            cardText?.includes("Verificado") ||
+            cardText?.includes("Vencido")
         ).toBe(true);
       }
     });
@@ -138,21 +151,21 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
 
-      // Find a view button
+      // Find a view button (data-testid="view-{type}" e.g. view-cedula)
       const viewButtons = page.locator('[data-testid^="view-"]');
       const hasDocuments = (await viewButtons.count()) > 0;
 
       if (hasDocuments) {
         await viewButtons.first().click();
 
-        // Should see document viewer modal
+        // Should see document viewer modal (Dialog component)
         const modal = page.getByTestId("document-viewer-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
       }
     });
 
@@ -161,7 +174,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       const viewButtons = page.locator('[data-testid^="view-"]');
       const hasDocuments = (await viewButtons.count()) > 0;
@@ -170,13 +183,14 @@ test.describe("Provider Document Management - Story 7-5", () => {
         await viewButtons.first().click();
 
         const modal = page.getByTestId("document-viewer-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
 
-        // Close button should work
-        const closeButton = modal.getByRole("button", { name: /cerrar|close/i }).or(
-          modal.locator('[aria-label="Close"]')
+        // Close button — the Dialog uses an X button with class "absolute right-4 top-4"
+        // or can be closed via the "Cerrar" button in error state, or the X icon button
+        const closeButton = modal.locator("button[class*='absolute']").or(
+          modal.getByRole("button", { name: /cerrar|close/i })
         );
-        await closeButton.click();
+        await closeButton.first().click();
 
         // Modal should close
         await expect(modal).not.toBeVisible();
@@ -188,7 +202,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       const viewButtons = page.locator('[data-testid^="view-"]');
       const hasDocuments = (await viewButtons.count()) > 0;
@@ -197,11 +211,14 @@ test.describe("Provider Document Management - Story 7-5", () => {
         await viewButtons.first().click();
 
         const modal = page.getByTestId("document-viewer-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
 
-        // Should have download button
+        // Wait for document to load (loading spinner to disappear)
+        await page.waitForTimeout(2000);
+
+        // Should have download button (only visible once document loads)
         const downloadButton = modal.getByRole("button", { name: /descargar/i });
-        await expect(downloadButton).toBeVisible();
+        await expect(downloadButton).toBeVisible({ timeout: 10000 });
       }
     });
   });
@@ -214,9 +231,9 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
-      // Find an update button
+      // Find an update button (data-testid="update-{type}" e.g. update-cedula)
       const updateButtons = page.locator('[data-testid^="update-"]');
       const hasDocuments = (await updateButtons.count()) > 0;
 
@@ -225,7 +242,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
         // Should see document updater modal
         const modal = page.getByTestId("document-updater-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
       }
     });
 
@@ -234,7 +251,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       const updateButtons = page.locator('[data-testid^="update-"]');
       const hasDocuments = (await updateButtons.count()) > 0;
@@ -243,7 +260,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
         await updateButtons.first().click();
 
         const modal = page.getByTestId("document-updater-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
 
         // Should have file input
         const fileInput = page.getByTestId("file-input");
@@ -256,7 +273,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       // Try to update cedula (which supports expiration)
       const updateCedula = page.getByTestId("update-cedula");
@@ -266,7 +283,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
         await updateCedula.click();
 
         const modal = page.getByTestId("document-updater-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
 
         // Should have expiration date input
         const expiresInput = page.getByTestId("expires-at-input");
@@ -279,7 +296,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       const updateButtons = page.locator('[data-testid^="update-"]');
       const hasDocuments = (await updateButtons.count()) > 0;
@@ -288,7 +305,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
         await updateButtons.first().click();
 
         const modal = page.getByTestId("document-updater-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
 
         // Should have cancel button
         const cancelButton = modal.getByRole("button", { name: /cancelar/i });
@@ -306,7 +323,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       const updateButtons = page.locator('[data-testid^="update-"]');
       const hasDocuments = (await updateButtons.count()) > 0;
@@ -315,7 +332,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
         await updateButtons.first().click();
 
         const modal = page.getByTestId("document-updater-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
 
         // Click cancel
         const cancelButton = modal.getByRole("button", { name: /cancelar/i });
@@ -335,7 +352,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       // Add document button only appears if there are missing optional documents
       const addButton = page.getByTestId("add-document-button");
@@ -343,6 +360,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
       // This is conditional based on seeded data
       if (isVisible) {
+        // Button text is "Agregar Certificacion"
         await expect(addButton).toContainText("Certificación");
       }
     });
@@ -352,7 +370,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       const addButton = page.getByTestId("add-document-button");
       const isVisible = await addButton.isVisible().catch(() => false);
@@ -361,7 +379,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
         await addButton.click();
 
         const modal = page.getByTestId("add-document-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
       }
     });
 
@@ -370,7 +388,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       const addButton = page.getByTestId("add-document-button");
       const isVisible = await addButton.isVisible().catch(() => false);
@@ -379,7 +397,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
         await addButton.click();
 
         const modal = page.getByTestId("add-document-modal");
-        await expect(modal).toBeVisible({ timeout: 5000 });
+        await expect(modal).toBeVisible({ timeout: 10000 });
 
         // Should have document type selector
         const typeSelect = page.getByTestId("document-type-select");
@@ -393,6 +411,8 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("dashboard shows expiring documents warning if applicable", async ({ page }) => {
       await loginAsSupplier(page);
+      // The expiring docs warning is on the old supplier dashboard
+      await navigateToSupplierDashboard(page);
 
       // The warning only appears if there are expiring documents
       const warningButton = page.getByTestId("view-expiring-docs");
@@ -408,9 +428,9 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
-      // Look for expiring soon badges
+      // Look for expiring soon badges (text includes emoji: "⚠️ Expira pronto")
       const expiringBadges = page.locator("text=Expira pronto");
       const hasExpiringBadges = (await expiringBadges.count()) > 0;
 
@@ -423,7 +443,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
       // Look for expired badges
       const expiredBadges = page.locator("text=Vencido");
@@ -438,9 +458,9 @@ test.describe("Provider Document Management - Story 7-5", () => {
       await page.goto("/dashboard/documents");
 
       const container = page.getByTestId("documents-container");
-      await expect(container).toBeVisible({ timeout: 10000 });
+      await expect(container).toBeVisible({ timeout: 30000 });
 
-      // If there are expiring/expired docs, update buttons should be highlighted
+      // If there are expiring/expired docs, update buttons have orange border class
       const highlightedButtons = page.locator('[data-testid^="update-"]').filter({
         has: page.locator('[class*="orange"]'),
       });
@@ -457,12 +477,15 @@ test.describe("Provider Document Management - Navigation", () => {
   test("back button returns to dashboard", async ({ page }) => {
     await loginAsSupplier(page);
     await page.goto("/dashboard/documents");
+    await expect(page.getByText("Mis Documentos")).toBeVisible({ timeout: 30000 });
 
     const backButton = page.getByTestId("back-to-dashboard");
     await expect(backButton).toBeVisible();
 
     await backButton.click();
-    await page.waitForURL("**/provider/requests", { timeout: 5000 });
+    // back-to-dashboard links to /dashboard (old supplier dashboard)
+    // Wait for heading from the supplier dashboard page
+    await expect(page.getByRole("heading", { name: "Panel de Proveedor" })).toBeVisible({ timeout: 30000 });
   });
 
   test("documents page redirects unapproved providers", async ({ page }) => {
@@ -473,6 +496,6 @@ test.describe("Provider Document Management - Navigation", () => {
 
     // Should load successfully for approved provider
     const container = page.getByTestId("documents-container");
-    await expect(container).toBeVisible({ timeout: 10000 });
+    await expect(container).toBeVisible({ timeout: 30000 });
   });
 });

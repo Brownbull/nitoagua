@@ -79,21 +79,24 @@ test.describe("Provider Request Browser - Story 8-1", () => {
     test("unavailable provider sees prompt to activate availability", async ({ page }) => {
       await loginAsSupplier(page);
 
-      // First, ensure we're unavailable
+      // First, turn off availability via settings page (switch is not on /provider/requests)
+      await page.goto("/provider/settings");
+      await page.waitForLoadState("domcontentloaded");
+
       const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
+      const hasSwitchOnSettings = await switchElement.isVisible({ timeout: 5000 }).catch(() => false);
 
-      if (currentState === "checked") {
-        // Turn OFF
-        await switchElement.click();
-
-        // Handle warning dialog if it appears
-        const warningDialog = page.getByTestId("active-deliveries-warning-dialog");
-        const isWarningVisible = await warningDialog.isVisible().catch(() => false);
-        if (isWarningVisible) {
-          await page.getByTestId("confirm-unavailable-button").click();
+      if (hasSwitchOnSettings) {
+        const currentState = await switchElement.getAttribute("data-state");
+        if (currentState === "checked") {
+          await switchElement.click();
+          const warningDialog = page.getByTestId("active-deliveries-warning-dialog");
+          const isWarningVisible = await warningDialog.isVisible().catch(() => false);
+          if (isWarningVisible) {
+            await page.getByTestId("confirm-unavailable-button").click();
+          }
+          await page.waitForTimeout(1000);
         }
-        await page.waitForTimeout(1000);
       }
 
       // Navigate to request browser
@@ -111,23 +114,29 @@ test.describe("Provider Request Browser - Story 8-1", () => {
     test("unavailable state has link to settings", async ({ page }) => {
       await loginAsSupplier(page);
 
-      // Ensure unavailable state
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
+      // Turn off availability via settings page (switch is not on /provider/requests)
+      await page.goto("/provider/settings");
+      await page.waitForLoadState("domcontentloaded");
 
-      if (currentState === "checked") {
-        await switchElement.click();
-        const warningDialog = page.getByTestId("active-deliveries-warning-dialog");
-        const isWarningVisible = await warningDialog.isVisible().catch(() => false);
-        if (isWarningVisible) {
-          await page.getByTestId("confirm-unavailable-button").click();
+      const switchElement = page.getByTestId("availability-switch");
+      const hasSwitchOnSettings = await switchElement.isVisible({ timeout: 5000 }).catch(() => false);
+
+      if (hasSwitchOnSettings) {
+        const currentState = await switchElement.getAttribute("data-state");
+        if (currentState === "checked") {
+          await switchElement.click();
+          const warningDialog = page.getByTestId("active-deliveries-warning-dialog");
+          const isWarningVisible = await warningDialog.isVisible().catch(() => false);
+          if (isWarningVisible) {
+            await page.getByTestId("confirm-unavailable-button").click();
+          }
+          await page.waitForTimeout(1000);
         }
-        await page.waitForTimeout(1000);
       }
 
       await page.goto("/provider/requests");
 
-      // Should have a button to activate availability
+      // Should have a link to activate availability
       const activateButton = page.getByRole("link", { name: /Activar Disponibilidad/i });
       await expect(activateButton).toBeVisible();
     });
@@ -139,15 +148,8 @@ test.describe("Provider Request Browser - Story 8-1", () => {
     test("request cards display expected elements when available", async ({ page }) => {
       await loginAsSupplier(page);
 
-      // Ensure available
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
-      await page.goto("/provider/requests");
+      // Provider is already on /provider/requests after login
+      // Availability is managed via settings page, not here
       await page.waitForTimeout(2000);
 
       // FIRST: Check for error states - fail if any database errors present
@@ -181,15 +183,7 @@ test.describe("Provider Request Browser - Story 8-1", () => {
     test("empty state shows appropriate message", async ({ page }) => {
       await loginAsSupplier(page);
 
-      // Ensure available
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
-      await page.goto("/provider/requests");
+      // Provider is already on /provider/requests after login
       await page.waitForTimeout(2000);
 
       const emptyState = page.getByTestId("empty-requests-state");
@@ -207,15 +201,7 @@ test.describe("Provider Request Browser - Story 8-1", () => {
     test("refresh button is visible and clickable", async ({ page }) => {
       await loginAsSupplier(page);
 
-      // Ensure available
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
-      await page.goto("/provider/requests");
+      // Provider is already on /provider/requests after login
 
       // Should have a refresh button
       const refreshButton = page.getByRole("button", { name: /Actualizar/i });
@@ -232,15 +218,7 @@ test.describe("Provider Request Browser - Story 8-1", () => {
     test("connection indicator updates based on websocket status", async ({ page }) => {
       await loginAsSupplier(page);
 
-      // Ensure available
-      const switchElement = page.getByTestId("availability-switch");
-      const currentState = await switchElement.getAttribute("data-state");
-      if (currentState === "unchecked") {
-        await switchElement.click();
-        await page.waitForTimeout(1000);
-      }
-
-      await page.goto("/provider/requests");
+      // Provider is already on /provider/requests after login
 
       // Give time for WebSocket to connect or fall back to polling
       await page.waitForTimeout(3000);
@@ -294,19 +272,11 @@ test.describe("Provider Request Browser - Integration Tests", () => {
   test.skip(skipIfNoDevLogin, "Dev login required for provider tests");
 
   test("full flow: login, navigate, and interact with request browser", async ({ page }) => {
-    // Login
+    // Login (lands on /provider/requests)
     await loginAsSupplier(page);
 
-    // Ensure availability is ON
-    const switchElement = page.getByTestId("availability-switch");
-    const currentState = await switchElement.getAttribute("data-state");
-    if (currentState === "unchecked") {
-      await switchElement.click();
-      await page.waitForTimeout(1000);
-    }
-
-    // Navigate to request browser
-    await page.goto("/provider/requests");
+    // Provider is already on /provider/requests after login
+    // Availability is managed via settings page, not here
 
     // Verify page loads correctly
     await expect(page.getByText("Solicitudes Disponibles")).toBeVisible({ timeout: 30000 });

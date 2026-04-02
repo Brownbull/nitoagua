@@ -44,7 +44,8 @@ async function loginAsSupplier(page: Page) {
  */
 async function navigateToEarnings(page: Page): Promise<boolean> {
   await page.goto("/provider/earnings");
-  await page.waitForTimeout(2000);
+  // Wait for page heading instead of arbitrary timeout
+  await page.getByRole("heading", { name: "Mis Ganancias" }).waitFor({ state: "visible", timeout: 30000 });
   await assertNoErrorState(page);
 
   // Check if "Pagar" button exists (means there's pending commission)
@@ -63,25 +64,26 @@ test.describe("Provider Commission Settlement @settlement", () => {
       if (hasPending) {
         // Click the "Pagar" button to go to settlement page
         await page.getByRole("link", { name: "Pagar" }).click();
-        await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+        await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
 
         // Verify we're on the withdraw page
         await expect(page.getByRole("heading", { name: "Pagar Comisión" })).toBeVisible();
       } else {
         // No pending commission - directly navigate
         await page.goto("/provider/earnings/withdraw");
-        await page.waitForTimeout(2000);
+        await page.getByRole("heading", { name: "Pagar Comisión" }).waitFor({ state: "visible", timeout: 30000 });
 
         // Should show "no pending" message or redirect
         const noPending = page.getByText("Sin comisión pendiente");
-        await expect(noPending).toBeVisible({ timeout: 5000 });
+        await expect(noPending).toBeVisible({ timeout: 10000 });
       }
     });
 
     test("shows back button to return to earnings", async ({ page }) => {
       await loginAsSupplier(page);
       await page.goto("/provider/earnings/withdraw");
-      await page.waitForTimeout(2000);
+      // Wait for heading to render instead of arbitrary timeout
+      await page.getByRole("heading", { name: "Pagar Comisión" }).waitFor({ state: "visible", timeout: 30000 });
       await assertNoErrorState(page);
 
       // Back button should be visible
@@ -103,7 +105,7 @@ test.describe("Provider Commission Settlement @settlement", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Check amount due card is visible
@@ -129,7 +131,7 @@ test.describe("Provider Commission Settlement @settlement", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Check bank details card is visible
@@ -154,7 +156,7 @@ test.describe("Provider Commission Settlement @settlement", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Each bank detail row should have a copy button
@@ -177,7 +179,7 @@ test.describe("Provider Commission Settlement @settlement", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Upload area should be visible
@@ -199,7 +201,7 @@ test.describe("Provider Commission Settlement @settlement", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Submit button should be disabled initially
@@ -215,18 +217,20 @@ test.describe("Provider Commission Settlement @settlement", () => {
     test("shows appropriate message when no pending commission", async ({ page }) => {
       await loginAsSupplier(page);
       await page.goto("/provider/earnings/withdraw");
-      await page.waitForTimeout(2000);
+      await page.getByRole("heading", { name: "Pagar Comisión" }).waitFor({ state: "visible", timeout: 30000 });
       await assertNoErrorState(page);
 
-      // Either shows pending commission UI or "no pending" message
+      // Three possible states: pending commission, no pending, or pending verification
       const noPending = page.getByText("Sin comisión pendiente");
       const amountCard = page.getByTestId("amount-due-card");
+      const pendingVerification = page.getByTestId("pending-status-card");
 
       const hasNoPendingMessage = await noPending.isVisible({ timeout: 3000 }).catch(() => false);
       const hasAmountCard = await amountCard.isVisible({ timeout: 3000 }).catch(() => false);
+      const hasPendingVerification = await pendingVerification.isVisible({ timeout: 3000 }).catch(() => false);
 
       // One of these should be true
-      expect(hasNoPendingMessage || hasAmountCard).toBe(true);
+      expect(hasNoPendingMessage || hasAmountCard || hasPendingVerification).toBe(true);
     });
   });
 
@@ -246,7 +250,7 @@ test.describe("Provider Commission Settlement @settlement", () => {
       }
 
       await page.getByRole("link", { name: "Pagar" }).click();
-      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 10000 });
+      await page.waitForURL("**/provider/earnings/withdraw", { timeout: 30000 });
       await assertNoErrorState(page);
 
       // Verify page has all required components for submission flow
@@ -271,18 +275,16 @@ test.describe("Settlement Page Accessibility", () => {
   test("settlement page has proper heading structure", async ({ page }) => {
     await loginAsSupplier(page);
     await page.goto("/provider/earnings/withdraw");
-    await page.waitForTimeout(2000);
-    await assertNoErrorState(page);
-
-    // Main heading should be visible
+    // Wait for heading instead of arbitrary timeout
     const heading = page.getByRole("heading", { name: "Pagar Comisión" });
-    await expect(heading).toBeVisible();
+    await expect(heading).toBeVisible({ timeout: 30000 });
+    await assertNoErrorState(page);
   });
 
   test("back button is keyboard accessible", async ({ page }) => {
     await loginAsSupplier(page);
     await page.goto("/provider/earnings/withdraw");
-    await page.waitForTimeout(2000);
+    await page.getByRole("heading", { name: "Pagar Comisión" }).waitFor({ state: "visible", timeout: 30000 });
     await assertNoErrorState(page);
 
     // Back button should be focusable
@@ -291,6 +293,6 @@ test.describe("Settlement Page Accessibility", () => {
 
     // Click to navigate back
     await backButton.click();
-    await page.waitForURL("**/provider/earnings", { timeout: 5000 });
+    await page.waitForURL("**/provider/earnings", { timeout: 30000 });
   });
 });

@@ -110,7 +110,7 @@ test.describe("Consumer Offer Selection (Story 10-2)", () => {
       await expect(page.getByTestId("offer-selection-modal")).not.toBeVisible();
 
       // Still on offers page
-      await expect(page.getByText("Ofertas para tu solicitud")).toBeVisible();
+      await expect(page.getByText("Elige tu repartidor")).toBeVisible();
     });
   });
 
@@ -139,7 +139,7 @@ test.describe("Consumer Offer Selection (Story 10-2)", () => {
       await page.goto(`/request/${REQUEST_IDS.pending}/offers?token=${TRACKING_TOKENS.pending}`);
 
       await log({ level: "step", message: "Verify page loads for guest" });
-      await expect(page.getByText("Ofertas para tu solicitud")).toBeVisible();
+      await expect(page.getByText("Elige tu repartidor")).toBeVisible();
 
       await log({ level: "step", message: "Open selection modal" });
       await expect(page.getByTestId("consumer-offer-card").first()).toBeVisible();

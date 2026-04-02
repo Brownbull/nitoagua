@@ -78,7 +78,8 @@ test.describe("Provider Earnings Dashboard - Seeded Data @seeded @earnings", () 
     test.beforeEach(async ({ page }) => {
       await loginAsSupplier(page);
       await page.goto("/provider/earnings");
-      await page.waitForTimeout(2000);
+      // Wait for heading instead of arbitrary timeout (don't use networkidle — realtime stays open)
+      await page.getByRole("heading", { name: "Mis Ganancias" }).waitFor({ state: "visible", timeout: 30000 });
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -262,7 +263,7 @@ test.describe("Provider Earnings Dashboard - Seeded Data @seeded @earnings", () 
     test("verifies seeded customer names appear in activity", async ({ page }) => {
       await loginAsSupplier(page);
       await page.goto("/provider/earnings");
-      await page.waitForTimeout(2000);
+      await page.getByRole("heading", { name: "Mis Ganancias" }).waitFor({ state: "visible", timeout: 30000 });
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -292,7 +293,7 @@ test.describe("Provider Earnings Dashboard - Seeded Data @seeded @earnings", () 
     test("verifies commission ledger affects pending amount", async ({ page }) => {
       await loginAsSupplier(page);
       await page.goto("/provider/earnings");
-      await page.waitForTimeout(2000);
+      await page.getByRole("heading", { name: "Mis Ganancias" }).waitFor({ state: "visible", timeout: 30000 });
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -326,7 +327,7 @@ test.describe("Provider Earnings Dashboard - Seeded Data @seeded @earnings", () 
     test("handles period with no deliveries gracefully", async ({ page }) => {
       await loginAsSupplier(page);
       await page.goto("/provider/earnings");
-      await page.waitForTimeout(2000);
+      await page.getByRole("heading", { name: "Mis Ganancias" }).waitFor({ state: "visible", timeout: 30000 });
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);

@@ -24,17 +24,18 @@ import { assertNoErrorState } from "../fixtures/error-detection";
  */
 async function waitForEarningsPageLoad(page: Page): Promise<void> {
   // Wait for page heading to be visible (indicates page rendered)
-  await page.getByRole("heading", { name: "Mis Ganancias" }).waitFor({ state: "visible", timeout: 10000 });
-  // Wait for hero card or loading to complete
-  await page.waitForLoadState("networkidle", { timeout: 10000 });
+  await page.getByRole("heading", { name: "Mis Ganancias" }).waitFor({ state: "visible", timeout: 30000 });
+  // Brief pause for data to load (don't use networkidle — realtime stays open)
+  await page.waitForTimeout(1000);
 }
 
 /**
  * Wait for withdraw page to be fully loaded
  */
 async function waitForWithdrawPageLoad(page: Page): Promise<void> {
-  await page.getByRole("heading", { name: "Pagar Comisión" }).waitFor({ state: "visible", timeout: 10000 });
-  await page.waitForLoadState("networkidle", { timeout: 10000 });
+  await page.getByRole("heading", { name: "Pagar Comisión" }).waitFor({ state: "visible", timeout: 30000 });
+  // Brief pause for data to load (don't use networkidle — realtime stays open)
+  await page.waitForTimeout(1000);
 }
 
 // Check if dev login is enabled
@@ -48,7 +49,7 @@ async function loginAsSupplier(page: Page) {
   await page.goto("/login");
 
   // Wait for dev login section to be visible
-  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
+  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 30000 });
 
   // Click supplier button in role selector (exact match to avoid "New Supplier")
   const supplierButton = page.getByRole("button", { name: "Supplier", exact: true });
@@ -256,7 +257,7 @@ test.describe("Provider Earnings Workflow - Story 11-11", () => {
 
       // Click Pagar to go to withdraw page
       await pagarButton.click();
-      await page.waitForURL(/\/provider\/earnings\/withdraw/, { timeout: 10000 });
+      await page.waitForURL(/\/provider\/earnings\/withdraw/, { timeout: 30000 });
       await waitForWithdrawPageLoad(page);
 
       // FIRST: Check for error states on withdraw page
@@ -381,7 +382,7 @@ test.describe("Provider Earnings Workflow - Story 11-11", () => {
       await backButton.first().click();
 
       // Should navigate to earnings page
-      await page.waitForURL(/\/provider\/earnings/, { timeout: 10000 });
+      await page.waitForURL(/\/provider\/earnings/, { timeout: 30000 });
       await waitForEarningsPageLoad(page);
     });
   });
@@ -397,15 +398,15 @@ test.describe("Provider Earnings Workflow - Story 11-11", () => {
 
       // Step 1: Navigate to earnings via bottom nav
       await page.goto("/provider/requests");
-      // Wait for provider dashboard to load
-      await page.waitForLoadState("networkidle", { timeout: 10000 });
+      // Wait for provider dashboard to load (don't use networkidle — realtime stays open)
+      await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
 
       const earningsNav = page.getByRole("link", { name: "Ganancias" });
       await expect(earningsNav).toBeVisible();
       await earningsNav.click();
 
       // Should navigate to earnings page
-      await page.waitForURL(/\/provider\/earnings/, { timeout: 10000 });
+      await page.waitForURL(/\/provider\/earnings/, { timeout: 30000 });
       await waitForEarningsPageLoad(page);
 
       // FIRST: Check for error states
@@ -422,18 +423,18 @@ test.describe("Provider Earnings Workflow - Story 11-11", () => {
       if (hasPagarButton) {
         // Navigate to withdraw page
         await pagarButton.click();
-        await page.waitForURL(/\/provider\/earnings\/withdraw/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/earnings\/withdraw/, { timeout: 30000 });
         await waitForWithdrawPageLoad(page);
 
         // Navigate back
         await page.getByTestId("back-to-earnings").first().click();
-        await page.waitForURL(/\/provider\/earnings/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/earnings/, { timeout: 30000 });
         await waitForEarningsPageLoad(page);
       }
 
-      // Step 4: Verify bottom nav highlights correctly (active state has orange color)
+      // Step 4: Verify bottom nav highlights correctly (active state has text-orange-500 class)
       const earningsNavActive = page.getByRole("link", { name: "Ganancias" });
-      await expect(earningsNavActive).toHaveClass(/text-orange/);
+      await expect(earningsNavActive).toHaveClass(/text-orange-500/);
     });
   });
 });

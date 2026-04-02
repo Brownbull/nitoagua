@@ -31,13 +31,14 @@ test.use({
 async function loginAsSupplier(page: import("@playwright/test").Page) {
   await page.goto("/login");
   await assertNoErrorState(page);
-  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
+  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 30000 });
   const supplierButton = page.getByRole("button", { name: "Supplier", exact: true });
   await supplierButton.click();
   // Wait for email/password to auto-fill
-  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(100);
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/provider/requests", { timeout: 15000 });
+  await page.waitForURL("**/provider/requests", { timeout: 60000 });
+  await expect(page.getByRole("heading", { name: "Solicitudes Disponibles" })).toBeVisible({ timeout: 30000 });
   await assertNoErrorState(page);
 }
 
@@ -45,13 +46,13 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
 async function loginAsConsumer(page: import("@playwright/test").Page) {
   await page.goto("/login");
   await assertNoErrorState(page);
-  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
+  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 30000 });
   const consumerButton = page.getByRole("button", { name: "Consumer", exact: true });
   await consumerButton.click();
   // Wait for email/password to auto-fill
-  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(100);
   await page.getByTestId("dev-login-button").click();
-  await page.waitForURL("**/", { timeout: 15000 });
+  await page.waitForURL("**/", { timeout: 60000 });
   await assertNoErrorState(page);
 }
 

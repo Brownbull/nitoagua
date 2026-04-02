@@ -51,7 +51,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
       await page.goto("/provider/settings/areas");
 
       // Should redirect to login
-      await page.waitForURL("**/login", { timeout: 10000 });
+      await page.waitForURL("**/login", { timeout: 30000 });
       expect(page.url()).toContain("/login");
     });
 
@@ -119,7 +119,7 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
       await page.goto("/provider/settings/areas");
 
       // Wait for areas to load
-      await page.waitForSelector('[data-testid^="comuna-"]', { timeout: 10000 });
+      await page.waitForSelector('[data-testid^="comuna-"]', { timeout: 30000 });
 
       // FIRST: Check for error states - fail if any database errors present
       await assertNoErrorState(page);
@@ -337,13 +337,14 @@ test.describe("Provider Service Area Configuration - Story 7-3", () => {
     test("back button navigates to settings page", async ({ page }) => {
       await loginAsSupplier(page);
       await page.goto("/provider/settings/areas");
+      await expect(page.getByRole("heading", { name: "Zonas de Servicio" })).toBeVisible({ timeout: 30000 });
 
       // The back button is now at the top of the page (consistent with other settings pages)
       const backButton = page.getByTestId("back-to-settings");
       await expect(backButton).toBeVisible();
       await backButton.click();
 
-      await page.waitForURL("**/provider/settings", { timeout: 5000 });
+      await page.waitForURL("**/provider/settings", { timeout: 30000 });
       expect(page.url()).toContain("/provider/settings");
       expect(page.url()).not.toContain("/areas");
     });

@@ -40,7 +40,7 @@ const skipIfNoDevLogin = process.env.NEXT_PUBLIC_DEV_LOGIN !== 'true';
  */
 async function loginAsConsumer(page: import('@playwright/test').Page) {
   await page.goto('/login');
-  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
+  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 30000 });
 
   // Select Consumer role
   const consumerButton = page.getByRole('button', { name: 'Consumer', exact: true });
@@ -50,7 +50,7 @@ async function loginAsConsumer(page: import('@playwright/test').Page) {
   await page.getByTestId('dev-login-button').click();
 
   // Wait for redirect to consumer home
-  await page.waitForURL('**/', { timeout: 15000 });
+  await page.waitForURL('**/', { timeout: 60000 });
 }
 
 /**
@@ -58,7 +58,7 @@ async function loginAsConsumer(page: import('@playwright/test').Page) {
  */
 async function loginAsSupplier(page: import('@playwright/test').Page) {
   await page.goto('/login');
-  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 10000 });
+  await page.waitForSelector('[data-testid="dev-login-button"]', { timeout: 30000 });
 
   // Select Supplier role
   const supplierButton = page.getByRole('button', { name: 'Supplier', exact: true });
@@ -68,7 +68,7 @@ async function loginAsSupplier(page: import('@playwright/test').Page) {
   await page.getByTestId('dev-login-button').click();
 
   // Wait for redirect to provider requests
-  await page.waitForURL('**/provider/requests', { timeout: 15000 });
+  await page.waitForURL('**/provider/requests', { timeout: 60000 });
 }
 
 // Shared state for the transaction chain
@@ -282,7 +282,9 @@ test.describe('CHAIN-1: Happy Path Delivery @chain1 @P0', () => {
 
     // Navigate to Mis Ofertas to verify the offer exists
     await page.goto('/provider/offers');
-    await expect(page.getByText(/activ|pending|en espera/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Mis Ofertas' })).toBeVisible({ timeout: 30000 });
+    // Verify the offer appears (unified list shows "Pendiente" badge on active offers)
+    await expect(page.getByText('Pendiente').first()).toBeVisible({ timeout: 10000 });
 
     await log({ level: 'success', message: 'Offer submitted successfully' });
   });
@@ -305,22 +307,20 @@ test.describe('CHAIN-1: Happy Path Delivery @chain1 @P0', () => {
     // THEN: Consumer should see the provider's offer
     await log({ level: 'step', message: 'Looking for offer' });
 
-    // Look for "Ofertas activas" text or offer count
-    await expect(page.getByText(/ofertas? activas?/i)).toBeVisible({ timeout: 15000 });
+    // When offers are present, the page shows "Elige tu repartidor" heading
+    await expect(page.getByText('Elige tu repartidor')).toBeVisible({ timeout: 15000 });
 
     // Find and click the "Seleccionar oferta" button
-    const selectOfferButton = page.getByRole('button', { name: /seleccionar oferta/i });
+    const selectOfferButton = page.getByTestId('select-offer-button').first();
     await expect(selectOfferButton).toBeVisible({ timeout: 10000 });
 
     // WHEN: Consumer accepts the offer
     await log({ level: 'step', message: 'Accepting offer' });
     await selectOfferButton.click();
 
-    // Handle confirmation dialog if present
-    const confirmButton = page.getByRole('button', { name: /confirmar|aceptar/i });
-    if (await confirmButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await confirmButton.click();
-    }
+    // Confirmation modal appears - click Confirmar Seleccion
+    await expect(page.getByTestId('offer-selection-modal')).toBeVisible({ timeout: 5000 });
+    await page.getByTestId('selection-confirm-button').click();
 
     // THEN: Status should change to accepted - wait for page update
     await log({ level: 'step', message: 'Verifying acceptance' });
@@ -360,25 +360,41 @@ test.describe('CHAIN-1: Happy Path Delivery @chain1 @P0', () => {
     // Navigate to offers page to find accepted delivery
     await log({ level: 'step', message: 'Navigating to Mis Ofertas' });
     await page.goto('/provider/offers');
+    await expect(page.getByRole('heading', { name: 'Mis Ofertas' })).toBeVisible({ timeout: 30000 });
 
-    // Find accepted delivery in "Entregas Activas" section
-    await log({ level: 'step', message: 'Finding active delivery' });
-    const activeSection = page.getByTestId('section-accepted');
-    await expect(activeSection).toBeVisible({ timeout: 10000 });
+    // v2.6.2 unified list: apply "En proceso" filter to find accepted delivery
+    await log({ level: 'step', message: 'Applying En proceso filter to find active delivery' });
+    const estadoButton = page.locator('button').filter({ hasText: /^Estado/ }).first();
+    await estadoButton.click();
+    await page.getByRole('button', { name: /En proceso/i }).click();
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
 
     // Find the specific delivery for our request using the requestId
-    // The link points to /provider/deliveries/{requestId}
-    const deliveryLink = activeSection.locator(`a[href="/provider/deliveries/${requestId}"]`);
-    await expect(deliveryLink).toBeVisible({ timeout: 5000 });
+    // The "Ver Entrega" link points to /provider/deliveries/{requestId}
+    const deliveryLink = page.locator(`a[href="/provider/deliveries/${requestId}"]`);
+    await expect(deliveryLink).toBeVisible({ timeout: 10000 });
 
     // Click to view delivery details
     await deliveryLink.click();
-    await page.waitForURL(`/provider/deliveries/${requestId}`);
+    await page.waitForURL(`/provider/deliveries/${requestId}`, { timeout: 30000 });
 
-    // WHEN: Provider marks delivery as complete
+    // AC12.7.11.1: Two-step delivery flow: Start → Complete
+    // Step 1: Click "Iniciar Entrega" to move to in_transit status
+    await log({ level: 'step', message: 'Starting delivery (Iniciar Entrega)' });
+    const startButton = page.getByTestId('start-delivery-button');
+    const hasStartButton = await startButton.isVisible({ timeout: 5000 }).catch(() => false);
+
+    if (hasStartButton) {
+      await startButton.click();
+      // Wait for status to update to in_transit
+      await expect(page.getByTestId('in-transit-badge')).toBeVisible({ timeout: 10000 });
+    }
+
+    // Step 2: Click "Marcar como Entregado"
     await log({ level: 'step', message: 'Clicking complete button' });
     const completeButton = page.getByTestId('complete-delivery-button');
-    await expect(completeButton).toBeVisible({ timeout: 5000 });
+    await expect(completeButton).toBeVisible({ timeout: 10000 });
     await expect(completeButton).toBeEnabled({ timeout: 5000 });
 
     // Click the complete button

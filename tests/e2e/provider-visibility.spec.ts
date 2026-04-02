@@ -295,7 +295,7 @@ test.describe('P9: Delivery Details @workflow @P9', () => {
 
       // Verify delivery detail content
       // Verify delivery page loaded (check for back button or any content)
-await expect(page.getByRole("button", { name: /Volver/i })).toBeVisible({ timeout: 30000 });
+await expect(page.getByRole("link", { name: /Volver/i })).toBeVisible({ timeout: 30000 });
 
       await log({ level: 'success', message: 'P9.1 - Full request details visible' });
     } else {
@@ -308,7 +308,7 @@ await expect(page.getByRole("button", { name: /Volver/i })).toBeVisible({ timeou
       // Wait and check if page loads
       await page.waitForTimeout(2000);
 
-      const hasDeliveryDetails = await page.getByRole("button", { name: /Volver/i }).isVisible().catch(() => false);
+      const hasDeliveryDetails = await page.getByRole("link", { name: /Volver/i }).isVisible().catch(() => false);
       const has404 = await page.getByText('404').isVisible().catch(() => false);
 
       if (hasDeliveryDetails) {
@@ -363,7 +363,7 @@ await expect(page.getByRole("button", { name: /Volver/i })).toBeVisible({ timeou
       }
 
       // Verify back button exists
-      const backLink = page.getByRole("button", { name: /Volver/i });
+      const backLink = page.getByRole("link", { name: /Volver/i });
       await expect(backLink).toBeVisible();
 
       await log({ level: 'success', message: 'P9.2 - Delivery details verified' });
@@ -374,7 +374,7 @@ await expect(page.getByRole("button", { name: /Volver/i })).toBeVisible({ timeou
 
       await page.waitForTimeout(2000);
 
-      const hasDeliveryDetails = await page.getByRole("button", { name: /Volver/i }).isVisible().catch(() => false);
+      const hasDeliveryDetails = await page.getByRole("link", { name: /Volver/i }).isVisible().catch(() => false);
 
       if (hasDeliveryDetails) {
         // Look for customer info fields
@@ -426,11 +426,11 @@ test.describe('Provider Visibility - Integration @integration', () => {
 
       await page.waitForURL(/\/provider\/deliveries\//, { timeout: 30000 });
       // Verify delivery page loaded (check for back button or any content)
-await expect(page.getByRole("button", { name: /Volver/i })).toBeVisible({ timeout: 30000 });
+await expect(page.getByRole("link", { name: /Volver/i })).toBeVisible({ timeout: 30000 });
 
       // WHEN: Click back button
       await log({ level: 'step', message: 'Navigating back to offers' });
-      const backLink = page.getByRole("button", { name: /Volver/i });
+      const backLink = page.getByRole("link", { name: /Volver/i });
       await expect(backLink).toBeVisible();
       await backLink.click();
 

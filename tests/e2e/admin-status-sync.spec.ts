@@ -45,7 +45,7 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
     expect(statsLabels.join(" ")).toContain("Pendientes");
     expect(statsLabels.join(" ")).toContain("Entregados");
     expect(statsLabels.join(" ")).toContain("Cancelados");
-    expect(statsLabels.join(" ")).toContain("Total");
+    expect(statsLabels.join(" ")).toContain("Disputas");
   });
 
   test("AC12.7.4.1 - Status filter dropdown has correct options", async ({
@@ -54,8 +54,8 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
     await page.goto("/admin/orders");
     await assertNoErrorState(page);
 
-    // Open filters
-    const filterToggle = page.getByTestId("toggle-filters");
+    // Open filters (desktop toggle)
+    const filterToggle = page.getByTestId("desktop-toggle-filters");
     await filterToggle.click();
 
     // Check status dropdown options
@@ -80,8 +80,8 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
     await page.goto("/admin/orders");
     await assertNoErrorState(page);
 
-    // Open filters
-    const filterToggle = page.getByTestId("toggle-filters");
+    // Open filters (desktop toggle)
+    const filterToggle = page.getByTestId("desktop-toggle-filters");
     await filterToggle.click();
 
     // Select accepted status
@@ -93,7 +93,7 @@ test.describe("12.7-4 Admin Status Sync - Status Display", () => {
     await applyButton.click();
 
     // URL should contain status=accepted
-    await page.waitForURL("**/admin/orders?status=accepted", { timeout: 30000 });
+    await page.waitForURL("**/admin/orders**status=accepted**", { timeout: 30000 });
     expect(page.url()).toContain("status=accepted");
   });
 
@@ -173,23 +173,22 @@ test.describe("12.7-4 Admin Status Sync - Stats Card Filtering", () => {
     expect(page.url()).toContain("status=accepted");
   });
 
-  test("AC12.7.4.3 - Clicking Total stats card clears filters", async ({
+  test("AC12.7.4.3 - Clicking different stats card changes filter", async ({
     page,
   }) => {
-    // Start with a filter applied
+    // Start with accepted filter applied
     await page.goto("/admin/orders?status=accepted");
     await assertNoErrorState(page);
 
     // Verify we're on the filtered page
     await expect(page.url()).toContain("status=accepted");
 
-    // Click on Total stats card
-    const totalCard = page.getByTestId("stats-card-total");
-    await expect(totalCard).toBeVisible();
-    await totalCard.click();
+    // Click on Pendientes stats card to switch filter
+    const pendientesCard = page.getByTestId("stats-card-pendientes");
+    await expect(pendientesCard).toBeVisible();
+    await pendientesCard.click();
 
-    // Should navigate to orders page without status filter
-    // The navigation removes the status param
-    await page.waitForURL((url) => !url.toString().includes("status="), { timeout: 30000 });
+    // Should navigate to orders page with pending status filter
+    await page.waitForURL((url) => url.toString().includes("status=pending"), { timeout: 30000 });
   });
 });
