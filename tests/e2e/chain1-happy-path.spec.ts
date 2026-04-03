@@ -236,8 +236,8 @@ test.describe('CHAIN-1: Happy Path Delivery @chain1 @P0', () => {
     await log({ level: 'step', message: 'Navigating to request detail' });
     await page.goto(`/provider/requests/${requestId}`);
 
-    // Wait for request detail page to load
-    await expect(page.getByText(/detalles|solicitud/i)).toBeVisible({ timeout: 10000 });
+    // Wait for request detail page to load (hero cards section)
+    await expect(page.getByTestId("hero-cards")).toBeVisible({ timeout: 15000 });
 
     // WHEN: Provider fills offer form
     await log({ level: 'step', message: 'Looking for offer form' });
