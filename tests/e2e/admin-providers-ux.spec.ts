@@ -36,7 +36,7 @@ test.describe("Admin Providers UX & Ratings", () => {
   test("AC12.8.5.1: Status and Area filters are side-by-side", async ({ page, log }) => {
     await page.goto("/admin/providers");
     await assertNoErrorState(page);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Check that the provider directory is visible
     const directory = page.getByTestId("provider-directory");
@@ -77,7 +77,7 @@ test.describe("Admin Providers UX & Ratings", () => {
 
     await page.goto("/admin/providers");
     await assertNoErrorState(page);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Find provider cards (mobile view)
     const providerCards = page.locator('[data-testid^="provider-card-"]');
@@ -105,7 +105,7 @@ test.describe("Admin Providers UX & Ratings", () => {
 
     await page.goto("/admin/providers");
     await assertNoErrorState(page);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Find provider cards
     const providerCards = page.locator('[data-testid^="provider-card-"]');
@@ -135,7 +135,7 @@ test.describe("Admin Providers UX & Ratings", () => {
 
     await page.goto("/admin/providers");
     await assertNoErrorState(page);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Find and click on a provider card
     const providerCards = page.locator('[data-testid^="provider-card-"]');
@@ -169,7 +169,7 @@ test.describe("Admin Providers UX & Ratings", () => {
   test("Filter functionality works correctly", async ({ page, log }) => {
     await page.goto("/admin/providers");
     await assertNoErrorState(page);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Test status filter - page uses state-based filtering, not URL params
     const statusFilter = page.getByTestId("status-filter");
@@ -177,14 +177,14 @@ test.describe("Admin Providers UX & Ratings", () => {
 
     // Select approved filter
     await statusFilter.selectOption("approved");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Verify filter is applied (dropdown shows selected value)
     await expect(statusFilter).toHaveValue("approved");
 
     // Reset filter - select "all" or first option to clear
     await statusFilter.selectOption("all");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Verify filter is cleared (value is "all" for showing all)
     await expect(statusFilter).toHaveValue("all");
@@ -195,14 +195,14 @@ test.describe("Admin Providers UX & Ratings", () => {
   test("Search functionality works correctly", async ({ page, log }) => {
     await page.goto("/admin/providers");
     await assertNoErrorState(page);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Test search
     const searchInput = page.getByTestId("search-input");
     await searchInput.fill("test");
     await page.waitForTimeout(500); // Wait for debounce
 
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Check URL contains search param
     expect(page.url()).toContain("search=test");

@@ -64,7 +64,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Unified list view - look for offer cards with "Pendiente" badge (active offers)
@@ -103,7 +103,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Look for pending offers to cancel
@@ -124,7 +124,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
 
       // Wait for toast and UI update
       await expect(page.getByText("Oferta cancelada")).toBeVisible({ timeout: 5000 });
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Open Estado dropdown and select "Historial"
       await page.getByRole("button", { name: /Estado/i }).click();
@@ -149,7 +149,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       // Navigate to consumer's request that has offers
       // This test verifies the hook correctly filters by status
       await page.goto("/");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Check if consumer has any active requests with offers
@@ -162,7 +162,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       }
 
       await trackLink.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // If there are offer cards visible, verify they are all active (not cancelled)
       const offerCards = page.locator('[data-testid="consumer-offer-card"]');
@@ -193,14 +193,14 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Select "Historial" filter to see cancelled offers
       await page.getByRole("button", { name: /Estado/i }).click();
       await page.getByRole("button", { name: /Historial/i }).click();
       await page.keyboard.press("Escape"); // Close dropdown
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const cancelledCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Cancelada"),
@@ -222,14 +222,14 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Select "Historial" filter to see expired offers
       await page.getByRole("button", { name: /Estado/i }).click();
       await page.getByRole("button", { name: /Historial/i }).click();
       await page.keyboard.press("Escape"); // Close dropdown
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const expiredCards = page.locator('[data-testid="offer-card"]').filter({
         has: page.getByText("Expirada"),
@@ -250,14 +250,14 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Select "En proceso" filter to see accepted/in-progress offers
       await page.getByRole("button", { name: /Estado/i }).click();
       await page.getByRole("button", { name: /En proceso/i }).click();
       await page.keyboard.press("Escape"); // Close dropdown
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Look for accepted offers (not expired/cancelled)
       const acceptedCards = page.locator('[data-testid="offer-card"]').filter({
@@ -286,7 +286,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Connection indicator shows Wifi/WifiOff icon with "En vivo"/"Offline" text
@@ -305,7 +305,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Look for refresh button
@@ -321,7 +321,7 @@ test.describe("Offer Cancellation Flow - Story 12.7-8", () => {
 
       // Click refresh - should not error
       await refreshButton.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Page should still be functional
       await expect(page.getByRole("heading", { name: "Mis Ofertas" })).toBeVisible();

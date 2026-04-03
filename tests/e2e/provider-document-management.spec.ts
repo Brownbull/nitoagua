@@ -48,8 +48,8 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
  * not on /provider/requests (new layout).
  */
 async function navigateToSupplierDashboard(page: import("@playwright/test").Page) {
-  await page.goto("/dashboard");
-  await expect(page.getByRole("heading", { name: "Panel de Proveedor" })).toBeVisible({ timeout: 30000 });
+  await page.goto("/dashboard", { waitUntil: "domcontentloaded", timeout: 60000 });
+  await expect(page.getByRole("heading", { name: "Panel de Proveedor" })).toBeVisible({ timeout: 45000 });
 }
 
 test.describe("Provider Document Management - Story 7-5", () => {
@@ -84,7 +84,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("documents page shows back button", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
       await expect(page.getByText("Mis Documentos")).toBeVisible({ timeout: 30000 });
 
       const backButton = page.getByTestId("back-to-dashboard");
@@ -93,7 +93,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("documents page displays document cards", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       // Wait for content to load
       const container = page.getByTestId("documents-container");
@@ -118,7 +118,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("document cards show status badges", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -148,7 +148,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("clicking view opens document viewer modal", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -171,7 +171,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("document viewer modal has close button", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -199,7 +199,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("document viewer shows download option", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -228,7 +228,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("clicking update opens document updater modal", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -248,7 +248,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("document updater modal has file upload area", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -270,7 +270,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("document updater has expiration date field for certain document types", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -293,7 +293,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("document updater has submit and cancel buttons", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -320,7 +320,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("can cancel document update", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -349,7 +349,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("add document button may be visible for optional documents", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -367,7 +367,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("clicking add document opens modal", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -385,7 +385,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("add document modal has document type selector", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -425,7 +425,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("document cards show expiring soon badge", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -440,7 +440,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("expired document cards show expired badge", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -455,7 +455,7 @@ test.describe("Provider Document Management - Story 7-5", () => {
 
     test("expired/expiring documents have highlighted update button", async ({ page }) => {
       await loginAsSupplier(page);
-      await page.goto("/dashboard/documents");
+      await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
       const container = page.getByTestId("documents-container");
       await expect(container).toBeVisible({ timeout: 30000 });
@@ -476,7 +476,7 @@ test.describe("Provider Document Management - Navigation", () => {
 
   test("back button returns to dashboard", async ({ page }) => {
     await loginAsSupplier(page);
-    await page.goto("/dashboard/documents");
+    await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
     await expect(page.getByText("Mis Documentos")).toBeVisible({ timeout: 30000 });
 
     const backButton = page.getByTestId("back-to-dashboard");
@@ -492,7 +492,7 @@ test.describe("Provider Document Management - Navigation", () => {
     // This would need a separate test user who is not approved
     // For now, we just verify the route exists
     await loginAsSupplier(page);
-    await page.goto("/dashboard/documents");
+    await page.goto("/dashboard/documents", { waitUntil: "domcontentloaded", timeout: 60000 });
 
     // Should load successfully for approved provider
     const container = page.getByTestId("documents-container");

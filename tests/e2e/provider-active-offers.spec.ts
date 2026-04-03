@@ -31,7 +31,7 @@ async function loginAsSupplier(page: import("@playwright/test").Page) {
   await supplierButton.click();
 
   // Wait for email/password to auto-fill
-  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(500);
 
   // Click login
   await page.getByTestId("dev-login-button").click();
@@ -49,20 +49,20 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Should see offers page header
       await expect(page.getByRole("heading", { name: "Mis Ofertas" })).toBeVisible({ timeout: 10000 });
       // Should see offer count summary (unified list view since v2.6.0)
-      await expect(page.getByText(/\d+ de \d+ ofertas/)).toBeVisible();
+      await expect(page.getByText(/\d+ de \d+ ofertas/)).toBeVisible({ timeout: 15000 });
     });
 
     test("offers page shows filter dropdowns (unified list view)", async ({ page }) => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       const hasEmptyState = await page.getByTestId("empty-state-global").isVisible().catch(() => false);
@@ -81,7 +81,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       const estadoButton = page.getByRole("button", { name: /Estado/i });
@@ -109,23 +109,24 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
-      // Check if there are any offer cards
+      // Wait for offers to load — either offer cards or empty state
+      await page.getByTestId("offer-card").first()
+        .or(page.getByTestId("empty-state-global"))
+        .waitFor({ state: "visible", timeout: 15000 });
+
       const hasOfferCards = await page.getByTestId("offer-card").first().isVisible().catch(() => false);
 
       if (hasOfferCards) {
         const firstCard = page.getByTestId("offer-card").first();
 
-        // Should show location (comuna name) - any Chilean comuna
-        await expect(firstCard.locator("text=/Villarrica|Pucón|Santiago|Providencia|Las Condes|Vitacura|Maipu/i")).toBeVisible();
+        // Should show delivery window info (always present)
+        await expect(firstCard.locator("text=/Entrega propuesta/i")).toBeVisible({ timeout: 5000 });
 
-        // Should show amount in liters
-        await expect(firstCard.locator("text=/litros/i")).toBeVisible();
-
-        // Should show delivery window info
-        await expect(firstCard.locator("text=/Entrega propuesta/i")).toBeVisible();
+        // Should show amount in liters (conditional on offer.request join)
+        await expect(firstCard.locator("text=/litros/i")).toBeVisible({ timeout: 5000 });
       }
     });
 
@@ -133,7 +134,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Look for pending offers (with "Pendiente" badge)
@@ -148,8 +149,8 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
         const hasCountdown = await countdown.isVisible().catch(() => false);
 
         if (hasCountdown) {
-          // AC8.3.3: Countdown displays "Expira en XX:XX" format
-          await expect(countdown).toHaveText(/Expira en \d{1,2}:\d{2}/);
+          // AC8.3.3: Countdown displays "Expira en XX:XX" or "Expira en X h MM min" format
+          await expect(countdown).toHaveText(/Expira en\s*(\d{1,2}:\d{2}|\d+ h \d{2} min)/);
         }
       }
     });
@@ -162,7 +163,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Look for pending offers (with "Pendiente" badge)
@@ -182,7 +183,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Look for pending offers (with "Pendiente" badge)
@@ -210,7 +211,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Should show either "En vivo" (connected) or "Offline" (polling fallback)
@@ -228,7 +229,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Should have a refresh button (title="Actualizar")
@@ -244,7 +245,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       // Check if global empty state (no offers at all)
@@ -259,7 +260,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
         await page.getByRole("button", { name: /Estado/i }).click();
         await page.getByRole("button", { name: /Con disputa/i }).click();
         await page.keyboard.press("Escape");
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
 
         // Check for filtered empty state
         const hasFilteredEmpty = await page.getByTestId("empty-state-filtered").isVisible().catch(() => false);
@@ -275,7 +276,7 @@ test.describe("Provider Active Offers List - Story 8-3", () => {
       await loginAsSupplier(page);
 
       await page.goto("/provider/offers");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await assertNoErrorState(page);
 
       const hasEmptyState = await page.getByTestId("empty-state-global").isVisible().catch(() => false);

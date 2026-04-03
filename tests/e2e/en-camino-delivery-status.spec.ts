@@ -28,7 +28,7 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-supplier");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
@@ -36,13 +36,13 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       // Navigate to deliveries
       await page.goto("/provider/deliveries");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Look for an active delivery card or navigate to a specific delivery
       const deliveryCard = page.locator('[data-testid^="delivery-card-"]').first();
       if (await deliveryCard.isVisible().catch(() => false)) {
         await deliveryCard.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         await assertNoErrorState(page);
 
         // Check for start delivery button (only visible for accepted status)
@@ -67,19 +67,19 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-supplier");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
 
       await page.goto("/provider/deliveries");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const deliveryCard = page.locator('[data-testid^="delivery-card-"]').first();
       if (await deliveryCard.isVisible().catch(() => false)) {
         await deliveryCard.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         await assertNoErrorState(page);
 
         const startButton = page.getByTestId("start-delivery-button");
@@ -102,19 +102,19 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-supplier");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
 
       await page.goto("/provider/deliveries");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const deliveryCard = page.locator('[data-testid^="delivery-card-"]').first();
       if (await deliveryCard.isVisible().catch(() => false)) {
         await deliveryCard.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         await assertNoErrorState(page);
 
         // Check if already in_transit
@@ -126,7 +126,7 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
           const startButton = page.getByTestId("start-delivery-button");
           if (await startButton.isVisible().catch(() => false)) {
             await startButton.click();
-            await page.waitForLoadState("networkidle");
+            await page.waitForLoadState("domcontentloaded");
 
             // Verify badge appears
             await expect(page.getByTestId("in-transit-badge")).toBeVisible();
@@ -147,19 +147,19 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-supplier");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
 
       await page.goto("/provider/deliveries");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const deliveryCard = page.locator('[data-testid^="delivery-card-"]').first();
       if (await deliveryCard.isVisible().catch(() => false)) {
         await deliveryCard.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         await assertNoErrorState(page);
 
         // After starting delivery, complete button should be visible
@@ -183,19 +183,19 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-supplier");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
 
       await page.goto("/provider/deliveries");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const deliveryCard = page.locator('[data-testid^="delivery-card-"]').first();
       if (await deliveryCard.isVisible().catch(() => false)) {
         await deliveryCard.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         await assertNoErrorState(page);
 
         const startButton = page.getByTestId("start-delivery-button");
@@ -223,14 +223,14 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-admin");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
 
       await page.goto("/admin/orders");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Check for in_transit stats card
       const inTransitStats = page.getByTestId("stats-card-en-camino");
@@ -244,19 +244,19 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-admin");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
 
       await page.goto("/admin/orders");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Click on in_transit stats card to filter
       const inTransitStats = page.getByTestId("stats-card-en-camino");
       await inTransitStats.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Verify URL has status filter
       await expect(page).toHaveURL(/status=in_transit/);
@@ -269,7 +269,7 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-admin");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
@@ -277,13 +277,13 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       // Navigate to orders with in_transit filter
       await page.goto("/admin/orders?status=in_transit");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Click on first order card if exists
       const orderCard = page.locator('[data-testid^="order-card-"]').first();
       if (await orderCard.isVisible().catch(() => false)) {
         await orderCard.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         await assertNoErrorState(page);
 
         // Verify status badge shows "En Camino"
@@ -303,7 +303,7 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-consumer");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
@@ -311,13 +311,13 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       // Navigate to requests/history to find an in_transit request
       await page.goto("/requests");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Look for any request that's in_transit
       const inTransitRequest = page.locator('[data-status="in_transit"]').first();
       if (await inTransitRequest.isVisible().catch(() => false)) {
         await inTransitRequest.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         await assertNoErrorState(page);
 
         // Check for in_transit status display
@@ -359,19 +359,19 @@ test.describe("Story 12.7-11: En Camino Delivery Status", () => {
       const devLoginButton = page.getByTestId("dev-login-supplier");
       if (await devLoginButton.isVisible().catch(() => false)) {
         await devLoginButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
       } else {
         test.skip(true, "Dev login not available");
       }
 
       await page.goto("/provider/deliveries");
       await assertNoErrorState(page);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       const deliveryCard = page.locator('[data-testid^="delivery-card-"]').first();
       if (await deliveryCard.isVisible().catch(() => false)) {
         await deliveryCard.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         await assertNoErrorState(page);
 
         // Check that at least one of the delivery action buttons exists

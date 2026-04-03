@@ -137,7 +137,7 @@ test.describe("12.7-4 Admin Status Sync - Real-time Indicator", () => {
     await assertNoErrorState(page);
 
     // Wait for page to fully load
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Look for real-time indicator (should show "En vivo" or "Conectando...")
     const realtimeIndicator = page.getByText(/En vivo|Conectando/);

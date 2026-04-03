@@ -188,10 +188,10 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
         await viewButton.click();
 
         // Should navigate to delivery page
-        await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/deliveries\//, { timeout: 30000 });
 
         // Should show delivery detail content (back link visible means page loaded)
-        await expect(page.getByRole("link", { name: /Volver/i })).toBeVisible({ timeout: 5000 });
+        await expect(page.getByRole("link", { name: /Volver/i })).toBeVisible({ timeout: 15000 });
       }
     });
 
@@ -216,15 +216,15 @@ test.describe("Provider Offer Notification - Story 8-5", () => {
 
       if (hasViewButton) {
         await viewButton.click();
-        await page.waitForURL(/\/provider\/deliveries\//, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/deliveries\//, { timeout: 30000 });
 
         // Should have back link
         const backLink = page.getByRole("link", { name: /Volver/i });
-        await expect(backLink).toBeVisible();
+        await expect(backLink).toBeVisible({ timeout: 15000 });
 
         // Click back
         await backLink.click();
-        await page.waitForURL(/\/provider\/offers/, { timeout: 10000 });
+        await page.waitForURL(/\/provider\/offers/, { timeout: 30000 });
       }
     });
   });
