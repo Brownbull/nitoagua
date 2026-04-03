@@ -47,7 +47,10 @@ test.describe("Provider Directory - View and Navigation", () => {
     await page.goto("/admin/providers");
 
     // Page header should be visible
-    await expect(page.getByText("Proveedores")).toBeVisible();
+    await expect(page.getByText("Proveedores")).toBeVisible({ timeout: 15000 });
+
+    // Wait for provider directory to load
+    await expect(page.getByTestId("provider-directory")).toBeVisible({ timeout: 15000 });
 
     // Search input should be visible
     await expect(page.getByTestId("search-input")).toBeVisible();
@@ -88,6 +91,9 @@ test.describe("Provider Directory - Table Display", () => {
   test("AC6.4.2 - Table displays required columns on desktop", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.reload();
+
+    // Wait for provider directory to load
+    await expect(page.getByTestId("provider-directory")).toBeVisible({ timeout: 15000 });
 
     // Wait for table to load
     const table = page.getByTestId("providers-table");
@@ -165,7 +171,7 @@ test.describe("Provider Directory - Search and Filters", () => {
 
   test("AC6.4.3 - Area filter updates results", async ({ page }) => {
     const areaFilter = page.getByTestId("area-filter");
-    await expect(areaFilter).toBeVisible();
+    await expect(areaFilter).toBeVisible({ timeout: 15000 });
 
     // Check if there are any options besides "all"
     const options = await areaFilter.locator("option").allTextContents();

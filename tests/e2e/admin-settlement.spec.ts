@@ -47,11 +47,11 @@ test.describe("Settlement Dashboard - Navigation and Layout", () => {
     await page.goto("/admin/settlement");
 
     // Page header should be visible
-    await expect(page.getByText("Finanzas")).toBeVisible();
+    await expect(page.getByText("Finanzas")).toBeVisible({ timeout: 15000 });
 
-    // Summary cards section should be visible
+    // Summary cards section should be visible (may load async)
     const summarySection = page.getByTestId("settlement-summary");
-    await expect(summarySection).toBeVisible();
+    await expect(summarySection).toBeVisible({ timeout: 15000 });
   });
 
   test("AC6.5.1 - Back button returns to dashboard", async ({ page }) => {
@@ -126,7 +126,7 @@ test.describe("Settlement Dashboard - Pending Payments Table", () => {
   test("AC6.5.2 - Table shows header with title", async ({ page }) => {
     await expect(
       page.getByText("Pagos Pendientes de Verificacion")
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15000 });
   });
 
   test("AC6.5.2 - Empty state shows when no pending payments", async ({

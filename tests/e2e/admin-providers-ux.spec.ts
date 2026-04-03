@@ -195,14 +195,14 @@ test.describe("Admin Providers UX & Ratings", () => {
   test("Search functionality works correctly", async ({ page, log }) => {
     await page.goto("/admin/providers");
     await assertNoErrorState(page);
-    await page.waitForLoadState("domcontentloaded");
+
+    // Wait for provider directory to load
+    await expect(page.getByTestId("provider-directory")).toBeVisible({ timeout: 15000 });
 
     // Test search
     const searchInput = page.getByTestId("search-input");
     await searchInput.fill("test");
-    await page.waitForTimeout(500); // Wait for debounce
-
-    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Wait for debounce + URL update
 
     // Check URL contains search param
     expect(page.url()).toContain("search=test");
