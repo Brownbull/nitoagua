@@ -95,9 +95,10 @@ test.describe("Provider Request Browser - Story 8-1", () => {
           if (isWarningVisible) {
             await page.getByTestId("confirm-unavailable-button").click();
           }
-          // Wait for the toggle state to persist
-          await page.waitForTimeout(2000);
+          // Wait for toggle to persist — confirm switch state changed
+          await expect(switchElement).toHaveAttribute("data-state", "unchecked", { timeout: 10000 });
         }
+        // Already unchecked — provider is unavailable
       } else {
         test.skip(true, "Availability switch not found on settings page");
       }
@@ -134,7 +135,8 @@ test.describe("Provider Request Browser - Story 8-1", () => {
           if (isWarningVisible) {
             await page.getByTestId("confirm-unavailable-button").click();
           }
-          await page.waitForTimeout(2000);
+          // Wait for toggle to persist
+          await expect(switchElement).toHaveAttribute("data-state", "unchecked", { timeout: 10000 });
         }
       } else {
         test.skip(true, "Availability switch not found on settings page");
